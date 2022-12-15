@@ -74,7 +74,7 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("AddScene", bind(&Gateway::OnRPCAddScene, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("DeleteScene", bind(&Gateway::OnRPCDeleteScene, this, placeholders::_1, placeholders::_2));	
+	// OnDeviceRPCCallbackRegister("DeleteScene", bind(&Gateway::OnRPCDeleteScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
@@ -304,15 +304,14 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
 				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
-				dataValue.isMember("NAME") && dataValue["NAME"].isArray()
-				)
+				dataValue.isMember("NAME") && dataValue["NAME"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
 			int temp_groupUnicastId = 0;
-			for ( auto& x : groupList) 
+			for (auto &x : groupList)
 			{
-				if(x.first >= temp_groupUnicastId)
+				if (x.first >= temp_groupUnicastId)
 				{
 					temp_groupUnicastId = x.first;
 				}
@@ -324,7 +323,7 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 				if (group)
 				{
 					Json::Value deviceList = dataValue["DEVICES"].isArray();
-					for (int i=0; i<deviceList.size(); i++)
+					for (int i = 0; i < (int)deviceList.size(); i++)
 					{
 						string devcieId = deviceList[i].asString();
 						Device *device = getDeviceFromId(devcieId);
@@ -383,12 +382,13 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isInt())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
-			LOGI("Delete Scene id: %s", groupId);
+			LOGI("Delete Scene id: %s", groupId.c_str());
 			Group *group = getGroupFromId(groupId);
 			int temp_groupUnicastId = group->GetId();
 			delete groupList[temp_groupUnicastId];
 			groupList.erase(groupList.find(temp_groupUnicastId));
-			for(int i=0; i<group->deviceList.size(); i++){
+			for (size_t i = 0; i < group->deviceList.size(); i++)
+			{
 				group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId);
 			}
 			database->GroupDel(temp_groupUnicastId);
@@ -403,7 +403,8 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCAddDeviceToGroup");
-	try{
+	try
+	{
 		if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 		{
 			Json::Value dataValue = reqValue["DATA"];
@@ -413,7 +414,7 @@ int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 				string groupId = dataValue["GROUP_ID"].asString();
 				Json::Value deviceList = dataValue["DEVICES"].isArray();
 				Group *group = getGroupFromId(groupId);
-				for (int i=0; i<deviceList.size(); i++)
+				for (int i = 0; i < (int)deviceList.size(); i++)
 				{
 					string devcieId = deviceList[i].asString();
 					Device *device = getDeviceFromId(devcieId);
@@ -433,7 +434,7 @@ int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 		respValue["code"] = -1;
 		return -1;
 	}
-	catch(const char* msg)
+	catch (const char *msg)
 	{
 		LOGE("OnRPCAddDeviceToGroup fail");
 		return -1;
@@ -442,7 +443,7 @@ int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 
 /**
  * @brief delete device from group
- * 
+ *
  * @param [in] reqValue json input
  * @param [out] respValue json output
  * @return int -1 - error, 0 - success
@@ -459,7 +460,8 @@ int Gateway::OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 			int groupId = dataValue["GROUP_ID"].asInt();
 			Group *group = getGroup(groupId);
 			Json::Value deviceList = dataValue["DEVICES"];
-			for (int i=0; i < deviceList.size(); i++){
+			for (int i = 0; i < (int)deviceList.size(); i++)
+			{
 				string deviceId = deviceList[i].asString();
 				Device *device = getDeviceFromId(deviceId);
 				if (group && device)
@@ -480,11 +482,11 @@ int Gateway::OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 }
 
 /**
- * @brief 
- * 
- * @param reqValue 
- * @param respValue 
- * @return int 
+ * @brief
+ *
+ * @param reqValue
+ * @param respValue
+ * @return int
  */
 int Gateway::OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue)
 {
