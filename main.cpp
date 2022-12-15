@@ -24,10 +24,6 @@
 #include "ZigbeeProtocol.h"
 #define ZIGBEE_UART_PORT "/dev/ttyS0"
 #endif
-#ifdef CONFIG_ENABLE_LORA
-#include "LoraProtocol.h"
-#define LORA_UART_PORT "/dev/ttyS1"
-#endif
 
 #define TAG "MAIN"
 
@@ -66,9 +62,6 @@ int main(int argc, char *argv[])
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
-#endif
-#ifdef CONFIG_ENABLE_LORA
-	loraProtocol = new LoraProtocol((char *)LORA_UART_PORT, B9600);
 #endif
 
 	database = new Db();

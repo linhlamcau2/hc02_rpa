@@ -15,7 +15,6 @@ Group::Group(string groupUUId, int id, string name)
 	this->groupUUId = groupUUId;
 	this->id = id;
 	this->name = name;
-	this->numberOfLoraDevice = 0;
 	this->numberOfBleDevice = 0;
 	this->numberOfZigbeeDevice = 0;
 }
@@ -108,12 +107,6 @@ void Group::DelDevice(Device *device, int epId)
 		// TODO: remove from group
 		numberOfZigbeeDevice--;
 		// zigbeeProtocol->AddGroup(id, device->GetAddr(), epId);
-	}
-#endif
-#ifdef CONFIG_ENABLE_LORA
-	if (device->GetProtocol() == LORA_DEVICE)
-	{
-		numberOfLoraDevice--;
 	}
 #endif
 	// TODO: remove from list

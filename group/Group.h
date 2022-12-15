@@ -23,7 +23,6 @@ private:
 	string name;
 	string groupUUId;
 
-	int numberOfLoraDevice;
 	int numberOfBleDevice;
 	int numberOfZigbeeDevice;
 

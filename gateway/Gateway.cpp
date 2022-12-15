@@ -885,22 +885,6 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
 }
 #endif
 
-#ifdef CONFIG_ENABLE_LORA
-DeviceLora *Gateway::getDeviceLoraFromAddr(uint32_t addr)
-{
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->CheckAddr(addr) && device->GetProtocol() >= LORA_DEVICE)
-		{
-			DeviceLora *deviceLora = dynamic_cast<DeviceLora *>(device);
-			if (deviceLora)
-				return deviceLora;
-		}
-	}
-	return NULL;
-}
-#endif
-
 Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X", id.c_str(), name.c_str(), mac.c_str(), addr, type);

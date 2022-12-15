@@ -15,9 +15,6 @@
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
 #endif
-#ifdef CONFIG_ENABLE_LORA
-#include "DeviceLora.h"
-#endif
 
 using namespace std;
 
@@ -49,10 +46,6 @@ private:
 	int OnRPCZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCZigbeeResetFactory(Json::Value &reqValue, Json::Value &respValue);
-#endif
-#ifdef CONFIG_ENABLE_LORA
-	int OnRPCLoraStartScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCLoraStopScan(Json::Value &reqValue, Json::Value &respValue);
 #endif
 	int OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue);
@@ -87,9 +80,6 @@ public:
 #endif
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
-#endif
-#ifdef CONFIG_ENABLE_LORA
-	DeviceLora *getDeviceLoraFromAddr(uint32_t addr);
 #endif
 
 	Device *AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase);
