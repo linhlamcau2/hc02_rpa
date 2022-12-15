@@ -44,12 +44,8 @@ void ModulePinLevel::CheckTrigger()
 
 void ModulePinLevel::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_THINGSBOARD
-	jsonValue["pin"] = pin;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId["pin"];
 	dataValue["VALUE"] = pin;
 	jsonValue.append(dataValue);
-#endif
 }

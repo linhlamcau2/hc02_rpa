@@ -1,8 +1,9 @@
-#ifdef CONFIG_THINGSBOARD
-
 #include "CloudProtocol.h"
 #include <string.h>
 #include <Log.h>
+
+#define HC_CONTROL_TOPIC "HC.CONTROL"
+#define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
 
 CloudProtocol::CloudProtocol(string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
@@ -14,7 +15,7 @@ CloudProtocol::~CloudProtocol()
 
 void CloudProtocol::init()
 {
-	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), "v1/devices/me/rpc/request/+");
+	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
 }
 
 void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
@@ -25,18 +26,21 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 	stringstream s(payload);
 	Json::CharReaderBuilder b;
 	Json::parseFromStream(b, s, &payloadJson, &errs);
-	string id = topic.substr(strlen("v1/devices/me/rpc/request/"));
-	if (payloadJson.isMember("method") && payloadJson["method"].isString())
+	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
-		string method = payloadJson["method"].asString();
+		string method = payloadJson["CMD"].asString();
 		if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
 		{
 			OnRPCCallbackFunc onRPCCallbackFunc = onRPCCallbackFuncList[method];
 			int rs = onRPCCallbackFunc(payloadJson, respValue);
 			if (rs == 0)
 			{
-				LOGD("Call %s OK", method.c_str());
-				Publish("v1/devices/me/rpc/response/" + id, respValue.toString());
+				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				Publish(HC_RESPONSE_TOPIC, respValue.toString());
+			}
+			else if (rs == 1)
+			{
+				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
 			}
 			else
 			{
@@ -46,6 +50,7 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 		else
 		{
 			LOGW("Method %s not registed", method.c_str());
+			LOGW("OnDeviceRPC payload: %s", payload.c_str());
 		}
 	}
 	else
@@ -78,22 +83,22 @@ int CloudProtocol::OfflineDevice(string deviceName)
 
 int CloudProtocol::PublishToDeviceTelemetry(string payload)
 {
-	return Publish("v1/devices/me/telemetry", payload);
+	return Publish(HC_RESPONSE_TOPIC, payload);
 }
 
 int CloudProtocol::PublishToDeviceAttributes(string payload)
 {
-	return Publish("v1/devices/me/attributes", payload);
+	return Publish(HC_RESPONSE_TOPIC, payload);
 }
 
 int CloudProtocol::PublishToGatewayTelemetry(string payload)
 {
-	return Publish("v1/gateway/telemetry", payload);
+	return Publish(HC_RESPONSE_TOPIC, payload);
 }
 
 int CloudProtocol::PublishToGatewayAttributes(string payload)
 {
-	return Publish("v1/gateway/attributes", payload);
+	return Publish(HC_RESPONSE_TOPIC, payload);
 }
 
 int CloudProtocol::PublishToDeviceTelemetry(Json::Value payloadJson)
@@ -115,5 +120,3 @@ int CloudProtocol::PublishToGatewayAttributes(Json::Value payloadJson)
 {
 	return PublishToGatewayAttributes(payloadJson.toString());
 }
-
-#endif

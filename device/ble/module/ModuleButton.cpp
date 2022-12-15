@@ -11,7 +11,6 @@ ModuleButton::ModuleButton(Device *device, int index) : Module(device)
 	buttonName = "bt" + to_string(index);
 }
 
-#ifdef CONFIG_FPT_SERVER
 void ModuleButton::InitAttribute(int attributeId, double value)
 {
 	if (attributeId == parameterToId[buttonName])
@@ -22,14 +21,11 @@ void ModuleButton::SaveAttribute()
 {
 	database->DeviceAttributeAddOrReplace(device, parameterToId[buttonName], bt);
 }
-#endif
 
 void ModuleButton::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	bt = data[0];
-#ifdef CONFIG_FPT_SERVER
 	SaveAttribute();
-#endif
 	BuildTelemetryValue(jsonValue);
 	CheckTrigger();
 }
@@ -62,12 +58,8 @@ void ModuleButton::CheckTrigger()
 
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_THINGSBOARD
-	jsonValue[buttonName] = bt;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId[buttonName];
 	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
-#endif
 }

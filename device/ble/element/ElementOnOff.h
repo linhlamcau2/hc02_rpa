@@ -12,10 +12,8 @@ protected:
 public:
 	ElementOnOff(Device *device, uint32_t addr);
 
-#ifdef CONFIG_FPT_SERVER
 	void InitAttribute(int attributeId, double value);
 	void SaveAttribute();
-#endif
 	void ParseData(uint8_t *data, int len, Json::Value &jsonValue);
 	bool CheckData(Json::Value &dataValue, bool &rs);
 

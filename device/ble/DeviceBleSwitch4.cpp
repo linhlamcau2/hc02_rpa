@@ -24,7 +24,6 @@ int DeviceBleSwitch4::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-#ifdef CONFIG_FPT_SERVER
 void DeviceBleSwitch4::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 4; i++)
@@ -32,7 +31,6 @@ void DeviceBleSwitch4::InitAttribute(int attributeId, double value)
 		elementOnOff[i]->InitAttribute(attributeId, value);
 	}
 }
-#endif
 
 void DeviceBleSwitch4::InputData(uint8_t *data, int len, uint32_t addr)
 {
@@ -78,8 +76,6 @@ bool DeviceBleSwitch4::Do(Json::Value &dataValue)
 bool DeviceBleSwitch4::Do(int id, int value)
 {
 	LOGD("DoTrigger id: %d, value: %d", id, value);
-#ifdef CONFIG_FPT_SERVER
 	elementOnOff[id - parameterToId["bt0"]]->Do(value);
-#endif
 	return false;
 }

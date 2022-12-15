@@ -1,5 +1,3 @@
-#ifdef CONFIG_FPT_SERVER
-
 #include "Gateway.h"
 #include <Log.h>
 #include <unistd.h>
@@ -17,7 +15,6 @@
 #include "SceneInputTimer.h"
 #include "SceneOutputGroup.h"
 #include "SceneOutputDevice.h"
-#include "SceneOutputRelay.h"
 
 #ifdef CONFIG_ENABLE_BLE
 #include "BleProtocol.h"
@@ -31,11 +28,6 @@
 #include "ZigbeeProtocol.h"
 #include "DeviceZigbeeOnoff.h"
 #include "DeviceZigbeeTelinkOnoff.h"
-#endif
-
-#ifdef CONFIG_ENABLE_MODBUS
-#include "DeviceModbus.h"
-#include "ModbusProtocol.h"
 #endif
 
 #ifndef VERSION
@@ -60,10 +52,6 @@ void Gateway::init()
 	LOGI("DeviceRead");
 	database->DeviceRead();
 	database->DeviceAttributeRead();
-#ifdef CONFIG_ENABLE_MODBUS
-	database->ModbusDeviceRead();
-	database->ModbusParameterRead();
-#endif
 	database->GroupRead();
 	database->DeviceInGroupRead();
 	database->SceneRead();
@@ -521,40 +509,6 @@ int Gateway::OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue)
 			uint32_t addr = dataValue["addr"].asInt();
 			uint32_t type = dataValue["type"].asInt();
 			Device *device = AddNewDevice(deviceId, name, mac, addr, type, true, true);
-#ifdef CONFIG_ENABLE_MODBUS
-			DeviceModbus *deviceModbus = dynamic_cast<DeviceModbus *>(device);
-			if (deviceModbus)
-			{
-				LOGW("Add modbus device");
-				if (dataValue.isMember("serialPort") && dataValue["serialPort"].isString() &&
-						dataValue.isMember("baudrate") && dataValue["baudrate"].isInt() &&
-						dataValue.isMember("scanRate") && dataValue["scanRate"].isInt() &&
-						dataValue.isMember("timeout") && dataValue["timeout"].isInt())
-				{
-					string serialPort = dataValue["serialPort"].asString();
-					uint32_t baudrate = dataValue["baudrate"].asInt();
-					uint32_t scanRate = dataValue["scanRate"].asInt();
-					uint32_t timeout = dataValue["timeout"].asInt();
-					deviceModbus->SetModbusConfig(serialPort, baudrate, scanRate, timeout);
-					if (modbusProtocol)
-					{
-						modbusProtocol->AddDeviceModbus(deviceModbus);
-					}
-					else
-					{
-						LOGW("Must init Modbus Protocol first");
-					}
-				}
-				else
-				{
-					LOGW("Config modbus device message format error");
-				}
-			}
-			else
-			{
-				LOGW("Cast modbus device false");
-			}
-#endif
 			respValue["code"] = 0;
 			return 0;
 		}
@@ -613,9 +567,6 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	database->DeviceDelAll();
-#ifdef CONFIG_ENABLE_MODBUS
-	database->ModbusDeviceDelAll();
-#endif
 	deviceList.clear();
 #ifdef CONFIG_ENABLE_BLE
 	bleProtocol->ResetFactory();
@@ -1138,25 +1089,6 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 				}
 			}
 		}
-		if (outputValue.isMember("relay") && outputValue["relay"].isArray())
-		{
-			Json::Value relaySceneOutputList = outputValue["relay"];
-			for (Json::Value::ArrayIndex i = 0; i < relaySceneOutputList.size(); i++)
-			{
-				Json::Value relaySceneOutputValue = relaySceneOutputList[i];
-				if (relaySceneOutputValue.isObject())
-				{
-					if (relaySceneOutputValue.isMember("relay") && relaySceneOutputValue["relay"].isInt() &&
-							relaySceneOutputValue.isMember("value") && relaySceneOutputValue["value"].isInt())
-					{
-						int relay = relaySceneOutputValue["relay"].asInt();
-						int value = relaySceneOutputValue["value"].asInt();
-						SceneOutputRelay *sceneOutputRelay = new SceneOutputRelay(relay, value);
-						scene->AddSceneOutput(sceneOutputRelay);
-					}
-				}
-			}
-		}
 		LOGI("Add Scene %d", scene->GetId());
 		if (addGateway)
 			sceneList[scene->GetId()] = scene;
@@ -1175,5 +1107,3 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 	}
 	return NULL;
 }
-
-#endif

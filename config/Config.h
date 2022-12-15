@@ -4,11 +4,7 @@
 #include <string.h>
 
 #define STRING_VALUE_MAX_SIZE 128
-#ifdef CONFIG_THINGSBOARD
 #define CONFIG_ENV "smh.@server[0]."
-#else
-#define CONFIG_ENV "smh.@server[0]."
-#endif
 
 #define HOST_KEY "host"
 #define HOST_DEFAULT "112.137.129.232"

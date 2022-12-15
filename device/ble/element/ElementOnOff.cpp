@@ -11,7 +11,6 @@ ElementOnOff::ElementOnOff(Device *device, uint32_t addr) : Element(device, addr
 	elementName = "onoff" + to_string(addr - device->GetAddr());
 }
 
-#ifdef CONFIG_FPT_SERVER
 void ElementOnOff::InitAttribute(int attributeId, double value)
 {
 	if (attributeId == parameterToId[elementName])
@@ -22,7 +21,6 @@ void ElementOnOff::SaveAttribute()
 {
 	database->DeviceAttributeAddOrReplace(device, parameterToId[elementName], onoff);
 }
-#endif
 
 void ElementOnOff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
@@ -37,9 +35,7 @@ void ElementOnOff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 	else
 		onoff = data_message->onoff;
 
-#ifdef CONFIG_FPT_SERVER
 	SaveAttribute();
-#endif
 	BuildTelemetryValue(jsonValue);
 	CheckTrigger();
 }
@@ -74,14 +70,10 @@ void ElementOnOff::CheckTrigger()
 
 void ElementOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_THINGSBOARD
-	jsonValue[elementName] = onoff;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId[elementName];
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
-#endif
 }
 
 bool ElementOnOff::Do(Json::Value &dataValue)

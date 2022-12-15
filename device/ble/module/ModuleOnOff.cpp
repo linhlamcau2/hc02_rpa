@@ -52,12 +52,8 @@ void ModuleOnOff::CheckTrigger()
 
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_THINGSBOARD
-	jsonValue["onoff"] = onoff;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId["onoff"];
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
-#endif
 }

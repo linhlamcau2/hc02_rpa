@@ -13,10 +13,8 @@ protected:
 public:
 	ModuleButton(Device *device, int index);
 
-#ifdef CONFIG_FPT_SERVER
 	void InitAttribute(int attributeId, double value);
 	void SaveAttribute();
-#endif
 
 	void ParseData(uint8_t *data, int len, Json::Value &jsonValue);
 	bool CheckData(Json::Value dataValue);

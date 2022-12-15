@@ -18,7 +18,6 @@ Group::Group(string groupUUId, int id, string name)
 	this->numberOfLoraDevice = 0;
 	this->numberOfBleDevice = 0;
 	this->numberOfZigbeeDevice = 0;
-	this->numberOfModbusDevice = 0;
 }
 
 int Group::GetId()
@@ -115,12 +114,6 @@ void Group::DelDevice(Device *device, int epId)
 	if (device->GetProtocol() == LORA_DEVICE)
 	{
 		numberOfLoraDevice--;
-	}
-#endif
-#ifdef CONFIG_ENABLE_MODBUS
-	if (device->GetProtocol() == MODBUS_DEVICE)
-	{
-		numberOfModbusDevice--;
 	}
 #endif
 	// TODO: remove from list

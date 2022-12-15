@@ -8,10 +8,6 @@
 #include <Group.h>
 #include <Gateway.h>
 
-#ifdef CONFIG_ENABLE_MODBUS
-#include "ModbusParameter.h"
-#endif
-
 #define DB_NAME "/smh.sqlite"
 
 using namespace std;
@@ -66,18 +62,6 @@ public:
 	int SceneUpdate(int id, string scene);
 	int SceneDel(int id);
 
-#ifdef CONFIG_ENABLE_MODBUS
-	int ModbusDeviceRead();
-	int ModbusDeviceAdd(string mac, string serialPort, int baudrate, int modbusAddress, int scanRate, int timeout);
-	int ModbusDeviceUpdate(string mac, string serialPort, int baudrate, int modbusAddress, int scanRate, int timeout);
-	int ModbusDeviceDel(string mac);
-	int ModbusDeviceDelAll();
-
-	int ModbusParameterRead();
-	int ModbusParameterAdd(ModbusParameter *modbusParameter, string mac);
-	int ModbusParameterUpdate(ModbusParameter *modbusParameter);
-	int ModbusParameterDel(int id);
-#endif
 };
 
 extern Db *database;

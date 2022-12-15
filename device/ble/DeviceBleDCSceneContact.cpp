@@ -21,7 +21,6 @@ int DeviceBleDCSceneContact::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-#ifdef CONFIG_FPT_SERVER
 void DeviceBleDCSceneContact::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 6; i++)
@@ -29,7 +28,6 @@ void DeviceBleDCSceneContact::InitAttribute(int attributeId, double value)
 		moduleButton[i]->InitAttribute(attributeId, value);
 	}
 }
-#endif
 
 void DeviceBleDCSceneContact::InputData(uint8_t *data, int len, uint32_t addr)
 {

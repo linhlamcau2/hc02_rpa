@@ -14,12 +14,10 @@ int DeviceZigbeeOnoff::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-#ifdef CONFIG_FPT_SERVER
 void DeviceZigbeeOnoff::InitAttribute(int attributeId, double value)
 {
 	clusterOnoff->InitAttribute(attributeId, value);
 }
-#endif
 
 void DeviceZigbeeOnoff::InputData(uint8_t *data, int len, uint32_t addr)
 {

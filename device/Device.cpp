@@ -146,18 +146,10 @@ int Device::PushTelemetry(Json::Value jsonValue)
 		return -1;
 	Json::Value pushDataValue;
 	Json::Value deviceData;
-#ifdef CONFIG_THINGSBOARD
-	Json::Value dataValue;
-	dataValue["values"] = jsonValue;
-	dataValue["ts"] = to_string(time(NULL)) + "000";
-	deviceData.append(dataValue);
-	pushDataValue[id] = deviceData;
-#else
 	deviceData["DEVICE_ID"] = id;
 	deviceData["PROPERTIES"] = jsonValue;
 	pushDataValue["CMD"] = "DEVICE";
 	pushDataValue["DATA"].append(deviceData);
-#endif
 	return gateway->PublishToGatewayTelemetry(pushDataValue);
 }
 
@@ -180,16 +172,12 @@ int Device::PushAttributes(Json::Value jsonValue)
 	return gateway->PublishToGatewayAttributes(jsonValue);
 }
 
-#ifdef CONFIG_FPT_SERVER
 map<string, int> parameterToId;
-#endif
-
 static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
 
 void Device::InitDeviceModelList()
 {
-#ifdef CONFIG_FPT_SERVER
 	parameterToId["stt"] = 0;
 	parameterToId["dim"] = 1;
 	parameterToId["pin"] = 8;
@@ -207,7 +195,6 @@ void Device::InitDeviceModelList()
 	parameterToId["onoff5"] = 16;
 	parameterToId["temp"] = 21;
 	parameterToId["hum"] = 22;
-#endif
 
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");

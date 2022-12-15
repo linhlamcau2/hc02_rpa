@@ -77,10 +77,6 @@ void ModuleTempHum::CheckTrigger()
 
 void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	#ifdef CONFIG_THINGSBOARD
-	jsonValue["temp"] = temp;
-	jsonValue["hum"] = hum;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId["temp"];
 	dataValue["VALUE"] = temp;
@@ -88,5 +84,4 @@ void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = parameterToId["hum"];
 	dataValue["VALUE"] = hum;
 	jsonValue.append(dataValue);
-#endif
 }

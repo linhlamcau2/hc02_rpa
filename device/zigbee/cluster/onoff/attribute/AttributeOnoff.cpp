@@ -9,7 +9,6 @@ AttributeOnoff::AttributeOnoff(Cluster *cluster) : Attribute(cluster)
 {
 }
 
-#ifdef CONFIG_FPT_SERVER
 void AttributeOnoff::InitAttribute(int attributeId, double value)
 {
 	if (attributeId == parameterToId["onoff"])
@@ -20,7 +19,6 @@ void AttributeOnoff::SaveAttribute()
 {
 	database->DeviceAttributeAddOrReplace(cluster->getDevice(), parameterToId["onoff1"], onoff);
 }
-#endif
 
 void AttributeOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
@@ -29,9 +27,7 @@ void AttributeOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 	case 0x10:
 		onoff = data[1];
-#ifdef CONFIG_FPT_SERVER
 		SaveAttribute();
-#endif
 		BuildTelemetryValue(jsonValue);
 		if (cluster && cluster->getDevice())
 		{
@@ -62,12 +58,8 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 
 void AttributeOnoff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_THINGSBOARD
-	jsonValue["onoff"] = onoff;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId["onoff"];
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
-#endif
 }

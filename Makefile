@@ -1,12 +1,7 @@
 VERSION = 2.0.0
 
-THINGSBOARD = OFF
-
 BLE = ON
 ZIGBEE = OFF
-LORA = OFF
-MODBUS = OFF
-MCU = OFF
 
 CC ?= gcc
 CXX ?= g++
@@ -18,13 +13,7 @@ COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-s
 COMPFLAGS += -DVERSION=$(VERSION)
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
 
-LINKEDLIBS = -lpthread -lmosquittopp -lsqlite3 -lmodbus -luci
-
-ifeq ($(THINGSBOARD),ON)
-	COMPFLAGS += -DCONFIG_THINGSBOARD=1
-else
-	COMPFLAGS += -DCONFIG_FPT_SERVER=1
-endif
+LINKEDLIBS = -lpthread -lmosquittopp -lsqlite3 -luci
 
 ifeq ($(BLE),ON)
 	INCLUDES 	+= -Idevice/ble
@@ -43,24 +32,6 @@ ifeq ($(ZIGBEE),ON)
 	DEVICESRC += $(wildcard device/zigbee/cluster/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/attribute/*.cpp)
-endif
-
-ifeq ($(LORA),ON)
-	INCLUDES 	+= -Idevice/lora
-	COMPFLAGS += -DCONFIG_ENABLE_LORA=1
-
-	DEVICESRC += $(wildcard device/lora/*.cpp)
-endif
-
-ifeq ($(MODBUS),ON)
-	INCLUDES 	+= -Idevice/modbus
-	COMPFLAGS += -DCONFIG_ENABLE_MODBUS=1
-
-	DEVICESRC += $(wildcard device/modbus/*.cpp)
-endif
-
-ifeq ($(MCU),ON)
-	COMPFLAGS += -DCONFIG_ENABLE_MCU=1
 endif
 
 DEVICESRC += $(wildcard config/*.cpp)

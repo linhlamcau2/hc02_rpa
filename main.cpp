@@ -28,14 +28,6 @@
 #include "LoraProtocol.h"
 #define LORA_UART_PORT "/dev/ttyS1"
 #endif
-#ifdef CONFIG_ENABLE_MODBUS
-#include "ModbusProtocol.h"
-#define RTU_UART_PORT "/dev/ttyUSB0"
-#endif
-#ifdef CONFIG_ENABLE_MCU
-#include "BATProtocol.h"
-#define BAT_UART_PORT "/dev/ttyS0"
-#endif
 
 #define TAG "MAIN"
 
@@ -77,12 +69,6 @@ int main(int argc, char *argv[])
 #endif
 #ifdef CONFIG_ENABLE_LORA
 	loraProtocol = new LoraProtocol((char *)LORA_UART_PORT, B9600);
-#endif
-#ifdef CONFIG_ENABLE_MODBUS
-	modbusProtocol = new ModbusProtocol("tty", "RTU", RTU_UART_PORT, 4800, "N81");
-#endif
-#ifdef CONFIG_ENABLE_MCU
-	batProtocol = new BATProtocol((char *)BAT_UART_PORT, B9600);
 #endif
 
 	database = new Db();

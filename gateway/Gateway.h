@@ -21,11 +21,7 @@
 
 using namespace std;
 
-#ifdef CONFIG_THINGSBOARD
-class Gateway : public CloudProtocol
-#else
 class Gateway : public CloudProtocol, public Udp
-#endif
 {
 private:
 	string dormitoryId;
@@ -57,12 +53,6 @@ private:
 #ifdef CONFIG_ENABLE_LORA
 	int OnRPCLoraStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCLoraStopScan(Json::Value &reqValue, Json::Value &respValue);
-#endif
-#ifdef CONFIG_ENABLE_MCU
-	int OnRPCControlRelay(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCControlAllRelay(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCGetRelayState(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCSetDimming(Json::Value &reqValue, Json::Value &respValue);
 #endif
 	int OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue);

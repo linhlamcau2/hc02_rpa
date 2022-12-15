@@ -6,12 +6,10 @@ ClusterOnoff::ClusterOnoff(Device *device, uint8_t endpoint) : Cluster(device, e
 	attributeOnoff = new AttributeOnoff(this);
 }
 
-#ifdef CONFIG_FPT_SERVER
 void ClusterOnoff::InitAttribute(int attributeId, double value)
 {
 	attributeOnoff->InitAttribute(attributeId, value);
 }
-#endif
 
 void ClusterOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {

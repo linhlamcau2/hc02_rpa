@@ -26,7 +26,6 @@ private:
 	int numberOfLoraDevice;
 	int numberOfBleDevice;
 	int numberOfZigbeeDevice;
-	int numberOfModbusDevice;
 
 	Json::Value dataValue;
 

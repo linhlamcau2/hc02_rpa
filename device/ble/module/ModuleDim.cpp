@@ -50,12 +50,8 @@ void ModuleDim::CheckTrigger()
 
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_THINGSBOARD
-	jsonValue["dim"] = dim;
-#else
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId["dim"];
 	dataValue["VALUE"] = dim;
 	jsonValue.append(dataValue);
-#endif
 }
