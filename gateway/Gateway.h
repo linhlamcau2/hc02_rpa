@@ -9,9 +9,8 @@
 #include "Device.h"
 #include "Group.h"
 #include "Device.h"
-#ifdef CONFIG_ENABLE_BLE
 #include "DeviceBle.h"
-#endif
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
 #endif
@@ -35,13 +34,12 @@ private:
 	int OnUdpHcConnectWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
-#ifdef CONFIG_ENABLE_BLE
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
-#endif
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	int OnRPCZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
@@ -72,12 +70,9 @@ public:
 	Group *getGroupFromId(string groupId);
 
 	Device *getDevice(string mac);
-
 	Device *getDeviceFromId(string deviceId);
-
-#ifdef CONFIG_ENABLE_BLE
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
-#endif
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
 #endif

@@ -1,5 +1,3 @@
-#ifdef CONFIG_ENABLE_BLE
-
 #include "BleProtocol.h"
 #include <stdlib.h>
 #include <thread>
@@ -780,5 +778,3 @@ int BleProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 	LOGW("AddGroup err");
 	return -1;
 }
-
-#endif

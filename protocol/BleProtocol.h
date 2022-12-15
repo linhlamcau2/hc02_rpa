@@ -1,5 +1,3 @@
-#ifdef CONFIG_ENABLE_BLE
-
 #pragma once
 
 #include <stdint.h>
@@ -160,5 +158,3 @@ public:
 };
 
 extern BleProtocol *bleProtocol;
-
-#endif

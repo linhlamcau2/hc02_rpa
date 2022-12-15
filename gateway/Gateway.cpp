@@ -16,13 +16,11 @@
 #include "SceneOutputGroup.h"
 #include "SceneOutputDevice.h"
 
-#ifdef CONFIG_ENABLE_BLE
 #include "BleProtocol.h"
 #include "DeviceBleDownLightSmt.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
-#endif
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -61,13 +59,11 @@ void Gateway::init()
 	UdpCmdCallbackRegister("HC_CONNECT_WIFI", bind(&Gateway::OnUdpHcConnectWifi, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 
-#ifdef CONFIG_ENABLE_BLE
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("BleResetFactory", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("BleAddDevice", bind(&Gateway::OnRPCBleAddDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
-#endif
 
 	OnDeviceRPCCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("UpdateGroup", bind(&Gateway::OnRPCUpdateGroup, this, placeholders::_1, placeholders::_2));
@@ -198,7 +194,6 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	return 1;
 }
 
-#ifdef CONFIG_ENABLE_BLE
 int Gateway::OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	scanDeviceList.clear();
@@ -262,7 +257,6 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	}
 	return 0;
 }
-#endif
 
 int Gateway::OnRPCAddScene(Json::Value &reqValue, Json::Value &respValue)
 {
@@ -568,9 +562,7 @@ int Gateway::OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	database->DeviceDelAll();
 	deviceList.clear();
-#ifdef CONFIG_ENABLE_BLE
 	bleProtocol->ResetFactory();
-#endif
 	respValue["code"] = 0;
 	return 0;
 }
@@ -853,7 +845,6 @@ Device *Gateway::getDeviceFromId(string deviceId)
 	return NULL;
 }
 
-#ifdef CONFIG_ENABLE_BLE
 DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 {
 	for (const auto &[id, device] : deviceList)
@@ -867,7 +858,6 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 	}
 	return NULL;
 }
-#endif
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
@@ -889,7 +879,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr,
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X", id.c_str(), name.c_str(), mac.c_str(), addr, type);
 	Device *device = NULL;
-#ifdef CONFIG_ENABLE_BLE
 	if (type == BLE_DOWNLIGHT_SMT)
 	{
 		device = new DeviceBleDownLightSmt(id, name, mac, addr);
@@ -906,7 +895,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr,
 	{
 		device = new DeviceBleTempHumSensor(id, name, mac, addr);
 	}
-#endif
 #ifdef CONFIG_ENABLE_ZIGBEE
 	if (type == ZIGBEE_LUMI_PLUG)
 	{

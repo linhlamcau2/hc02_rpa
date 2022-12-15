@@ -16,10 +16,9 @@
 #include "Db.h"
 #include "TimerSchedule.h"
 
-#ifdef CONFIG_ENABLE_BLE
 #include "BleProtocol.h"
 #define BLE_UART_PORT "/dev/ttyS1"
-#endif
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
 #define ZIGBEE_UART_PORT "/dev/ttyS0"
@@ -55,10 +54,9 @@ int main(int argc, char *argv[])
 	timerSchedule = new TimerSchedule();
 	timerSchedule->init();
 
-#ifdef CONFIG_ENABLE_BLE
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
-#endif
+	
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();

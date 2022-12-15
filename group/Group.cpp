@@ -50,7 +50,6 @@ bool Group::AddDevice(Device *device, int epId)
 	if (!device)
 		return false;
 
-#ifdef CONFIG_ENABLE_BLE
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		if (bleProtocol->AddGroup(id, device->GetAddr(), epId) == 0)
@@ -68,7 +67,7 @@ bool Group::AddDevice(Device *device, int epId)
 			LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
 		}
 	}
-#endif
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	if (device->GetProtocol() == ZIGBEE_DEVICE)
 	{
@@ -93,14 +92,13 @@ bool Group::AddDevice(Device *device, int epId)
 
 void Group::DelDevice(Device *device, int epId)
 {
-#ifdef CONFIG_ENABLE_BLE
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		// TODO: remove from group
 		numberOfBleDevice--;
 		// bleProtocol->AddGroup(id, device->GetAddr(), epId);
 	}
-#endif
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	if (device->GetProtocol() == ZIGBEE_DEVICE)
 	{
@@ -118,11 +116,9 @@ bool Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 
-#ifdef CONFIG_ENABLE_BLE
 	auto doBleBind = bind(&Group::DoBle, this, placeholders::_1);
 	thread doBleThread(doBleBind, &this->dataValue);
 	doBleThread.detach();
-#endif
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
@@ -139,7 +135,6 @@ bool Group::Do(int id, int value)
 	return true;
 }
 
-#ifdef CONFIG_ENABLE_BLE
 void Group::DoBle(Json::Value *dataValue)
 {
 	if (numberOfBleDevice)
@@ -166,7 +161,6 @@ void Group::DoBle(Json::Value *dataValue)
 		}
 	}
 }
-#endif
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 void Group::DoZigbee(Json::Value *dataValue)

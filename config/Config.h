@@ -7,13 +7,13 @@
 #define CONFIG_ENV "smh.@server[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "112.137.129.232"
+#define HOST_DEFAULT "broker.hivemq.com"
 #define PORT_KEY "port"
-#define PORT_DEFAULT 3723
+#define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT "A2_TEST_TOKEN"
+#define CLIENT_ID_DEFAULT ""
 #define USERNAME_KEY "username"
-#define USERNAME_DEFAULT "A2_TEST_TOKEN"
+#define USERNAME_DEFAULT ""
 #define PASSWORD_KEY "password"
 #define PASSWORD_DEFAULT ""
 #define KEEP_ALIVE_KEY "keep_alive"
