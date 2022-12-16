@@ -6,13 +6,15 @@
 #include <stdlib.h> //exit(0);
 #include <unistd.h>
 
+#include "Util.h"
+
 #define BUFLEN 1024
 
 Udp::Udp(int port) : port(port)
 {
 	isRunning = false;
 	udpThread = NULL;
-	udpBroadcastThread = NULL;
+	// udpBroadcastThread = NULL;
 }
 
 static int UdpHandleMessage(Udp *udp)
@@ -33,7 +35,7 @@ static int UdpHandleMessage(Udp *udp)
 	}
 
 	int broadcastEnable = 1;
-	int ret = setsockopt(udp->fd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
+	setsockopt(udp->fd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
 
 	// zero out the structure
 	memset((char *)&si_me, 0, sizeof(si_me));
@@ -83,36 +85,42 @@ void Udp::stop()
 	isRunning = false;
 }
 
-static int UdpBroadcastThread(Udp *udp)
-{
-	LOGI("Start UdpBroadcastThread");
-	struct sockaddr_in s;
-	memset(&s, 0, sizeof(struct sockaddr_in));
-	s.sin_family = AF_INET;
-	s.sin_port = htons(udp->port);
-	s.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-	for (int i = 0; i < 30; i++)
-	{
-		udp->send("HC Broadcasting UDP", &s, sizeof(s));
-		sleep(1);
-	}
-	free(udp->udpBroadcastThread);
-	udp->udpBroadcastThread = NULL;
-	return 0;
-}
+// static int UdpBroadcastThread(Udp *udp)
+// {
+// 	LOGI("Start UdpBroadcastThread");
+// 	struct sockaddr_in s;
+// 	memset(&s, 0, sizeof(struct sockaddr_in));
+// 	s.sin_family = AF_INET;
+// 	s.sin_port = htons(udp->port);
+// 	s.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 
-void Udp::StartUdpBroadcast()
-{
-	if (!udpBroadcastThread)
-	{
-		udpBroadcastThread = new thread(UdpBroadcastThread, this);
-		udpBroadcastThread->detach();
-	}
-	else
-	{
-		LOGI("StartUdpBroadcast is still running...");
-	}
-}
+// 	Json::Value broadcastValue;
+// 	Json::Value deviceInfoValue;
+// 	deviceInfoValue["DORMITORY_ID"] = "";
+// 	deviceInfoValue["IP"] = Util::GetIP();
+// 	broadcastValue["CMD"] = "HC_BROADCAST";
+// 	for (int i = 0; i < 30; i++)
+// 	{
+// 		udp->send("HC Broadcasting UDP", &s, sizeof(s));
+// 		sleep(1);
+// 	}
+// 	free(udp->udpBroadcastThread);
+// 	udp->udpBroadcastThread = NULL;
+// 	return 0;
+// }
+
+// void Udp::StartUdpBroadcast()
+// {
+// 	if (!udpBroadcastThread)
+// 	{
+// 		udpBroadcastThread = new thread(UdpBroadcastThread, this);
+// 		udpBroadcastThread->detach();
+// 	}
+// 	else
+// 	{
+// 		LOGI("StartUdpBroadcast is still running...");
+// 	}
+// }
 
 int Udp::UdpCmdCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc)
 {

@@ -23,6 +23,8 @@ class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 private:
 	string mac;
 	string dormitoryId;
+	thread *udpBroadcastThread;
+	bool isUdpBroadcasting;
 
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
@@ -31,6 +33,8 @@ private:
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
+
+	int UdpBroadcastThread();
 
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
@@ -67,6 +71,12 @@ private:
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
 	void init();
+
+	/**
+	 * @brief Send udp broadcast message to app when HC enters pairing mode
+	 *
+	 */
+	void StartUdpBroadcast();
 
 	void AddDeviceToScanList(Device *scanDevice);
 	Group *getGroup(int id);
