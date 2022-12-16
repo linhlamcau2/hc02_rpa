@@ -5,6 +5,7 @@
 #include <functional>
 #include <json.h>
 #include "CloudProtocol.h"
+#include "LocalProtocol.h"
 #include "Udp.h"
 #include "Device.h"
 #include "Group.h"
@@ -17,9 +18,10 @@
 
 using namespace std;
 
-class Gateway : public CloudProtocol, public Udp
+class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 {
 private:
+	string mac;
 	string dormitoryId;
 
 	map<string, Device *> deviceList;
@@ -27,7 +29,8 @@ private:
 	map<int, Scene *> sceneList;
 	vector<Device *> scanDeviceList;
 
-	void OnConnect(bool isConnected, bool isReconnect);
+	void OnCloudConnect(bool isConnected, bool isReconnect);
+	void OnLocalConnect(bool isConnected, bool isReconnect);
 
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
@@ -62,7 +65,7 @@ private:
 	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
-	Gateway(string server_address, int server_port, string token, string username, string password, int keepalive);
+	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
 	void init();
 
 	void AddDeviceToScanList(Device *scanDevice);

@@ -37,14 +37,19 @@
 
 Gateway *gateway = NULL;
 
-Gateway::Gateway(string server_address, int server_port, string token, string username, string password, int keepalive) : CloudProtocol(server_address, server_port, token, username, password, keepalive), Udp(8181)
+Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
+	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+	  LocalProtocol(mac, "localhost", 1883, mac, "", "", 10),
+	  Udp(8181)
 {
+	this->mac = mac;
 	dormitoryId = "";
 }
 
 void Gateway::init()
 {
 	CloudProtocol::init();
+	LocalProtocol::init();
 	Udp::init();
 
 	LOGI("DeviceRead");
@@ -80,21 +85,34 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
-	auto connectFunc = bind(&Mqtt::Connect, this, placeholders::_1);
-	thread connectThread(connectFunc, 10);
-	connectThread.detach();
+	OnLocalCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
+
+	thread cloudConnectThread(bind(&CloudProtocol::CloudConnect, this, placeholders::_1), 10);
+	cloudConnectThread.detach();
+
+	thread localConnectThread(bind(&LocalProtocol::LocalConnect, this, placeholders::_1), 10);
+	localConnectThread.detach();
 }
 
-void Gateway::OnConnect(bool isConnected, bool isReconnect)
+void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
-	LOGI("Connected: %d", isConnected);
-	if (isConnected && !isReconnect)
+	LOGI("OnCloudConnect: %d", isConnected);
+	if (isConnected)
 	{
-		for (const auto &[id, device] : deviceList)
+		OnlineHC(mac);
+		if (!isReconnect)
 		{
-			device->PushAttributes();
+			for (const auto &[id, device] : deviceList)
+			{
+				device->PushAttributes();
+			}
 		}
 	}
+}
+
+void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
+{
+	LOGI("OnLocalConnect: %d", isConnected);
 }
 
 int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
@@ -107,12 +125,10 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		{
 			return -1;
 		}
-		string endOfMac = "";
-		string macStr = Util::GetMacAddress(endOfMac);
 		respValue["CMD"] = "HC_RESPONSE";
-		respValue["IP"] = Util::GetIP(); //"10.10.10.1";
-		respValue["HOSTNAME"] = "RD_HC_" + endOfMac;
-		respValue["MAC"] = macStr;
+		respValue["IP"] = Util::GetIP();
+		respValue["HOSTNAME"] = "RD_HC_" + mac.substr(mac.size() - 5, 2) + mac.substr(mac.size() - 2, 2);
+		respValue["MAC"] = mac;
 		respValue["TLS"] = false;
 		respValue["MQTT_PORT"] = 1883;
 		respValue["VERSION"] = STR(VERSION);
@@ -141,8 +157,8 @@ int Gateway::OnUdpHcConnectWifi(Json::Value &reqValue, Json::Value &respValue)
 		if (this->dormitoryId == "")
 		{
 			if (reqValue.isMember("SSID") && reqValue["SSID"].isString() &&
-					reqValue.isMember("PASSWORD") && reqValue["PASSWORD"].isString() &&
-					reqValue.isMember("ENCRYPTION") && reqValue["ENCRYPTION"].isString())
+				reqValue.isMember("PASSWORD") && reqValue["PASSWORD"].isString() &&
+				reqValue.isMember("ENCRYPTION") && reqValue["ENCRYPTION"].isString())
 			{
 				string ssidEnc = reqValue["SSID"].asString();
 				string passwordEnc = reqValue["PASSWORD"].asString();
@@ -150,7 +166,7 @@ int Gateway::OnUdpHcConnectWifi(Json::Value &reqValue, Json::Value &respValue)
 				LOGD("ssidEnc: %s, passwordEnc: %s, encryptionEnd: %s", ssidEnc.c_str(), passwordEnc.c_str(), encryption.c_str());
 				string ssid, password;
 				if (macaron::Base64::Decode(ssidEnc, ssid) == "" &&
-						macaron::Base64::Decode(passwordEnc, password) == "")
+					macaron::Base64::Decode(passwordEnc, password) == "")
 				{
 					LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
 					respValue["CMD"] = "HC_CONNECT_STATUS";
@@ -303,8 +319,8 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
-				dataValue.isMember("NAME") && dataValue["NAME"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
+			dataValue.isMember("NAME") && dataValue["NAME"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
@@ -355,7 +371,7 @@ int Gateway::OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt() &&
-				dataValue.isMember("name") && dataValue["name"].isString())
+			dataValue.isMember("name") && dataValue["name"].isString())
 		{
 			int groupId = dataValue["id"].asInt();
 			string name = dataValue["name"].asString();
@@ -409,7 +425,7 @@ int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 		{
 			Json::Value dataValue = reqValue["DATA"];
 			if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-					dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 			{
 				string groupId = dataValue["GROUP_ID"].asString();
 				Json::Value deviceList = dataValue["DEVICES"].isArray();
@@ -455,7 +471,7 @@ int Gateway::OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			int groupId = dataValue["GROUP_ID"].asInt();
 			Group *group = getGroup(groupId);
@@ -494,10 +510,10 @@ int Gateway::OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isString() &&
-				dataValue.isMember("name") && dataValue["name"].isString() &&
-				dataValue.isMember("mac") && dataValue["mac"].isString() &&
-				dataValue.isMember("addr") && dataValue["addr"].isInt() &&
-				dataValue.isMember("type") && dataValue["type"].isInt())
+			dataValue.isMember("name") && dataValue["name"].isString() &&
+			dataValue.isMember("mac") && dataValue["mac"].isString() &&
+			dataValue.isMember("addr") && dataValue["addr"].isInt() &&
+			dataValue.isMember("type") && dataValue["type"].isInt())
 		{
 			string deviceId = dataValue["id"].asString();
 			string name = dataValue["name"].asString();
@@ -520,7 +536,7 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -600,7 +616,7 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -611,8 +627,8 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					Json::Value property = properties[i];
 					if (property.isObject() &&
-							property.isMember("ID") && property["ID"].isInt() &&
-							property.isMember("VALUE") && property["VALUE"].isInt())
+						property.isMember("ID") && property["ID"].isInt() &&
+						property.isMember("VALUE") && property["VALUE"].isInt())
 					{
 						int id = property["ID"].asInt();
 						int value = property["VALUE"].asInt();
@@ -644,7 +660,7 @@ int Gateway::OnRPCControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -655,8 +671,8 @@ int Gateway::OnRPCControlGroup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					Json::Value property = properties[i];
 					if (property.isObject() &&
-							property.isMember("ID") && property["ID"].isInt() &&
-							property.isMember("VALUE") && property["VALUE"].isInt())
+						property.isMember("ID") && property["ID"].isInt() &&
+						property.isMember("VALUE") && property["VALUE"].isInt())
 					{
 						int id = property["ID"].asInt();
 						int value = property["VALUE"].asInt();
@@ -707,11 +723,11 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("type") && dataValue["type"].isString() &&
-				dataValue.isMember("key") && dataValue["key"].isString() &&
-				dataValue.isMember("user") && dataValue["user"].isString() &&
-				dataValue.isMember("host") && dataValue["host"].isString() &&
-				dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
-				dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
+			dataValue.isMember("key") && dataValue["key"].isString() &&
+			dataValue.isMember("user") && dataValue["user"].isString() &&
+			dataValue.isMember("host") && dataValue["host"].isString() &&
+			dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
+			dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = dataValue["type"].asString();
@@ -947,11 +963,11 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 {
 	// TODO: Check Scene id exist
 	if (sceneValue.isMember("id") && sceneValue["id"].isInt() &&
-			sceneValue.isMember("repeat") && sceneValue["repeat"].isInt() &&
-			sceneValue.isMember("fullDay") && sceneValue["fullDay"].isBool() &&
-			sceneValue.isMember("type") && sceneValue["type"].isString() &&
-			sceneValue.isMember("input") && sceneValue["input"].isObject() &&
-			sceneValue.isMember("output") && sceneValue["output"].isObject())
+		sceneValue.isMember("repeat") && sceneValue["repeat"].isInt() &&
+		sceneValue.isMember("fullDay") && sceneValue["fullDay"].isBool() &&
+		sceneValue.isMember("type") && sceneValue["type"].isString() &&
+		sceneValue.isMember("input") && sceneValue["input"].isObject() &&
+		sceneValue.isMember("output") && sceneValue["output"].isObject())
 	{
 		int id = sceneValue["id"].asInt();
 		int repeat = sceneValue["repeat"].asInt();
@@ -959,7 +975,7 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 		string type = sceneValue["type"].asString();
 		Scene *scene = NULL;
 		if (!fullDay && sceneValue.isMember("startTime") && sceneValue["startTime"].isString() &&
-				sceneValue.isMember("endTime") && sceneValue["endTime"].isString())
+			sceneValue.isMember("endTime") && sceneValue["endTime"].isString())
 		{
 			string startTime = sceneValue["startTime"].asString();
 			string endTime = sceneValue["endTime"].asString();
@@ -979,7 +995,7 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+				timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1001,7 +1017,7 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 				if (deviceSceneInputValue.isObject())
 				{
 					if (deviceSceneInputValue.isMember("mac") && deviceSceneInputValue["mac"].isString() &&
-							deviceSceneInputValue.isMember("data") && deviceSceneInputValue["data"].isObject())
+						deviceSceneInputValue.isMember("data") && deviceSceneInputValue["data"].isObject())
 					{
 						string mac = deviceSceneInputValue["mac"].asString();
 						Json::Value dataValue = deviceSceneInputValue["data"];
@@ -1026,7 +1042,7 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 				if (deviceSceneOutputValue.isObject())
 				{
 					if (deviceSceneOutputValue.isMember("mac") && deviceSceneOutputValue["mac"].isString() &&
-							deviceSceneOutputValue.isMember("data") && deviceSceneOutputValue["data"].isObject())
+						deviceSceneOutputValue.isMember("data") && deviceSceneOutputValue["data"].isObject())
 					{
 						Json::Value dataValue = deviceSceneOutputValue["data"];
 						string mac = deviceSceneOutputValue["mac"].asString();
@@ -1049,7 +1065,7 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 				if (groupSceneOutputValue.isObject())
 				{
 					if (groupSceneOutputValue.isMember("id") && groupSceneOutputValue["id"].isInt() &&
-							groupSceneOutputValue.isMember("data") && groupSceneOutputValue["data"].isObject())
+						groupSceneOutputValue.isMember("data") && groupSceneOutputValue["data"].isObject())
 					{
 						int id = groupSceneOutputValue["id"].asInt();
 						Json::Value dataValue = groupSceneOutputValue["data"];

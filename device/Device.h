@@ -63,9 +63,6 @@ public:
 
 	protocol_e GetProtocol();
 
-	int Online();
-	int Offline();
-
 	void RegisterTrigger(SceneInputDevice *sceneInputDevice);
 	void UnregisterTrigger(SceneInputDevice *sceneInputDevice);
 

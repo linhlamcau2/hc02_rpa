@@ -78,16 +78,6 @@ protocol_e Device::GetProtocol()
 	return protocol;
 }
 
-int Device::Online()
-{
-	return gateway->OnlineDevice(id);
-}
-
-int Device::Offline()
-{
-	return gateway->OfflineDevice(id);
-}
-
 void Device::RegisterTrigger(SceneInputDevice *sceneInputDevice)
 {
 	LOGD("RegisterTrigger");

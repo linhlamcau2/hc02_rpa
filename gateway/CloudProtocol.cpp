@@ -2,11 +2,13 @@
 #include <string.h>
 #include <Log.h>
 
-#define HC_CONTROL_TOPIC "HC.CONTROL"
-#define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
+#define HC_ONLINE "/hc/online"
+#define HC_OFFLINE "/hc/offline"
 
-CloudProtocol::CloudProtocol(string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
+CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
+	subTopic = "/server/" + mac;
+	pubTopic = "/" + mac + "/server";
 }
 
 CloudProtocol::~CloudProtocol()
@@ -15,7 +17,17 @@ CloudProtocol::~CloudProtocol()
 
 void CloudProtocol::init()
 {
-	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
+	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
+}
+
+int CloudProtocol::CloudConnect(int timeout)
+{
+	return Connect(timeout);
+}
+
+void CloudProtocol::OnConnect(bool isConnected, bool isReconnect)
+{
+	OnCloudConnect(isConnected, isReconnect);
 }
 
 void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
@@ -36,7 +48,7 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 			if (rs == 0)
 			{
 				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
+				Publish(pubTopic, respValue.toString());
 			}
 			else if (rs == 1)
 			{
@@ -67,38 +79,36 @@ int CloudProtocol::OnDeviceRPCCallbackRegister(string method, OnRPCCallbackFunc 
 	return 0;
 }
 
-int CloudProtocol::OnlineDevice(string deviceName)
+int CloudProtocol::OnlineHC(string deviceName)
 {
 	Json::Value jsonValue;
-	jsonValue["device"] = deviceName;
-	return Publish("v1/gateway/connect", jsonValue.toString());
+	jsonValue["HC_ID"] = deviceName;
+	return Publish(HC_ONLINE, jsonValue.toString());
 }
 
-int CloudProtocol::OfflineDevice(string deviceName)
+int CloudProtocol::CloudPublish(string topic, string payload)
 {
-	Json::Value jsonValue;
-	jsonValue["device"] = deviceName;
-	return Publish("v1/gateway/disconnect", jsonValue.toString());
+	return Publish(topic, payload);
 }
 
 int CloudProtocol::PublishToDeviceTelemetry(string payload)
 {
-	return Publish(HC_RESPONSE_TOPIC, payload);
+	return Publish(pubTopic, payload);
 }
 
 int CloudProtocol::PublishToDeviceAttributes(string payload)
 {
-	return Publish(HC_RESPONSE_TOPIC, payload);
+	return Publish(pubTopic, payload);
 }
 
 int CloudProtocol::PublishToGatewayTelemetry(string payload)
 {
-	return Publish(HC_RESPONSE_TOPIC, payload);
+	return Publish(pubTopic, payload);
 }
 
 int CloudProtocol::PublishToGatewayAttributes(string payload)
 {
-	return Publish(HC_RESPONSE_TOPIC, payload);
+	return Publish(pubTopic, payload);
 }
 
 int CloudProtocol::PublishToDeviceTelemetry(Json::Value payloadJson)

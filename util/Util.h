@@ -20,7 +20,7 @@ namespace Util
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(int a, int b, string op);
 
-	string GetMacAddress(string &endOfMac);
+	string GetMacAddress();
 	string GetIP();
 	void ScanWifi(Json::Value &jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);

@@ -14,6 +14,7 @@
 #include "Gateway.h"
 #include "Device.h"
 #include "Db.h"
+#include "Util.h"
 #include "TimerSchedule.h"
 
 #include "BleProtocol.h"
@@ -63,7 +64,9 @@ int main(int argc, char *argv[])
 #endif
 
 	database = new Db();
-	gateway = new Gateway(config->GetHost(), config->GetPort(), config->GetClientId() + to_string(rand()), config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
+
+	string mac = Util::GetMacAddress();
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId() + to_string(rand()), config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
 	gateway->init();
 
 	Device::InitDeviceModelList();

@@ -177,23 +177,20 @@ static string ExecuteCMD(char const *command)
 	return msg_rsp;
 }
 
-string Util::GetMacAddress(string &endOfMac)
+string Util::GetMacAddress()
 {
 	LOGD("GetMacAddress");
 	struct ifreq s;
 	unsigned char *mac = NULL;
 	char uc_Mac[100];
 	int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-
 	strcpy(s.ifr_name, "eth0");
 	if (0 == ioctl(fd, SIOCGIFHWADDR, &s))
 	{
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
-	sprintf((char *)uc_Mac, (const char *)"%02X%02X", mac[4], mac[5]);
-	endOfMac = string(uc_Mac);
-	sprintf((char *)uc_Mac, (const char *)"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	sprintf((char *)uc_Mac, (const char *)"%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return string(uc_Mac);
 }
 
