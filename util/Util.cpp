@@ -302,8 +302,14 @@ int Util::ConnectToWifi(string ssid, string password, string encryption)
 	return 0;
 }
 
-void Util::LedInternet(int value)
+static bool ledInternet = false;
+static bool ledService = false;
+static bool ledZigbee = false;
+static bool ledBle = false;
+
+void Util::LedInternet(bool value)
 {
+	ledInternet = value;
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
@@ -314,8 +320,9 @@ void Util::LedInternet(int value)
 	}
 }
 
-void Util::LedService(int value)
+void Util::LedService(bool value)
 {
+	ledService = value;
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
@@ -326,8 +333,9 @@ void Util::LedService(int value)
 	}
 }
 
-void Util::LedZigbee(int value)
+void Util::LedZigbee(bool value)
 {
+	ledZigbee = value;
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
@@ -338,8 +346,9 @@ void Util::LedZigbee(int value)
 	}
 }
 
-void Util::LedBle(int value)
+void Util::LedBle(bool value)
 {
+	ledBle = value;
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
@@ -350,9 +359,8 @@ void Util::LedBle(int value)
 	}
 }
 
-void Util::LedAll(int value)
+void Util::LedAll(bool value)
 {
-
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
@@ -367,4 +375,12 @@ void Util::LedAll(int value)
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
+}
+
+void Util::LedRestoreLastValue()
+{
+	LedInternet(ledInternet);
+	LedService(ledService);
+	LedZigbee(ledZigbee);
+	LedBle(ledBle);
 }

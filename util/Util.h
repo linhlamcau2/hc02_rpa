@@ -40,9 +40,10 @@ namespace Util
 	void ScanWifi(Json::Value &jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);
 
-	void LedInternet(int value);
-	void LedService(int value);
-	void LedZigbee(int value);
-	void LedBle(int value);
-	void LedAll(int value);
+	void LedInternet(bool value);
+	void LedService(bool value);
+	void LedZigbee(bool value);
+	void LedBle(bool value);
+	void LedAll(bool value);
+	void LedRestoreLastValue();
 }

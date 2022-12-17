@@ -75,6 +75,8 @@ int main(int argc, char *argv[])
 
 	Device::InitDeviceModelList();
 
+	Util::LedService(true);
+
 	while (1)
 	{
 		sleep(10);

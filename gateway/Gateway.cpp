@@ -100,6 +100,7 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	LOGI("OnCloudConnect: %d", isConnected);
 	if (isConnected)
 	{
+		Util::LedInternet(true);
 		OnlineHC(mac);
 		if (!isReconnect)
 		{
@@ -108,6 +109,10 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 				device->PushAttributes();
 			}
 		}
+	}
+	else
+	{
+		Util::LedInternet(false);
 	}
 }
 

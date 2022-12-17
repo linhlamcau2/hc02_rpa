@@ -32,11 +32,12 @@ void ButtonSignal::OnPress()
 	while (isBlinkLed && blinkCount < 7)
 	{
 		blinkCount++;
-		Util::LedAll(0);
+		Util::LedAll(false);
 		usleep(500000);
-		Util::LedAll(1);
+		Util::LedAll(true);
 		usleep(500000);
 	}
+	Util::LedRestoreLastValue();
 }
 
 void ButtonSignal::OnRelease()
@@ -51,7 +52,7 @@ void ButtonSignal::OnRelease()
 	}
 	else if (startProcess)
 	{
-		if (releaseTime - pressTime > 5000 && releaseTime - pressTime < 7000)
+		if (releaseTime - pressTime > 6000 && releaseTime - pressTime < 8000)
 		{
 			gateway->StartUdpBroadcast();
 		}
