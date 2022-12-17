@@ -5,6 +5,8 @@
 #include "Util.h"
 #include "Gateway.h"
 
+#define DOUBLE_CLICK_TIME 400
+
 ButtonSignal *buttonSignal = NULL;
 
 ButtonSignal::ButtonSignal()
@@ -20,7 +22,7 @@ void ButtonSignal::OnPress()
 	LOGI("OnPress");
 	int blinkCount = 0;
 	pressTime = Util::millis();
-	if (pressTime - releaseTime > 500)
+	if (pressTime - releaseTime > DOUBLE_CLICK_TIME)
 	{
 		startProcess = true;
 		clickCount = 0;
@@ -31,9 +33,9 @@ void ButtonSignal::OnPress()
 	{
 		blinkCount++;
 		Util::LedAll(0);
-		usleep(800000);
+		usleep(500000);
 		Util::LedAll(1);
-		usleep(200000);
+		usleep(500000);
 	}
 }
 
@@ -42,7 +44,7 @@ void ButtonSignal::OnRelease()
 	LOGI("OnRelease");
 	isBlinkLed = false;
 	releaseTime = Util::millis();
-	if (releaseTime - pressTime < 500)
+	if (releaseTime - pressTime < DOUBLE_CLICK_TIME)
 	{
 		clickCount++;
 		LOGI("clickCount: %d", clickCount);

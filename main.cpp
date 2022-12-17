@@ -59,6 +59,8 @@ int main(int argc, char *argv[])
 	timerSchedule = new TimerSchedule();
 	timerSchedule->init();
 
+	database = new Db();
+
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
@@ -66,8 +68,6 @@ int main(int argc, char *argv[])
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
 #endif
-
-	database = new Db();
 
 	string mac = Util::GetMacAddress();
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId() + to_string(rand()), config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
