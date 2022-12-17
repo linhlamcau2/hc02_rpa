@@ -11,7 +11,21 @@ namespace Util
 	string genRandRQI(int size);
 	string getTimeStrFromTime(time_t t);
 	string getCurrentTimeStr();
+
+	/**
+	 * @brief Get the Current Timer in minute object
+	 *
+	 * @return int
+	 */
 	int GetCurrentTimer();
+
+	/**
+	 * @brief Get the Current Time in milli seconds object
+	 *
+	 * @return int
+	 */
+	double millis();
+
 	int GetCurrentWeekDay();
 	int ConvertStrTimeToInt(string time);
 	uint8_t CalCrc(uint8_t length, uint8_t *data);
@@ -20,8 +34,15 @@ namespace Util
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(int a, int b, string op);
 
+	string ExecuteCMD(char const *command);
 	string GetMacAddress();
 	string GetIP();
 	void ScanWifi(Json::Value &jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);
+
+	void LedInternet(int value);
+	void LedService(int value);
+	void LedZigbee(int value);
+	void LedBle(int value);
+	void LedAll(int value);
 }

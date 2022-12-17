@@ -16,6 +16,7 @@
 #include "Db.h"
 #include "Util.h"
 #include "TimerSchedule.h"
+#include "ButtonSignal.h"
 
 #include "BleProtocol.h"
 #define BLE_UART_PORT "/dev/ttyS1"
@@ -34,20 +35,23 @@ static void signal_handler(int sig)
 	LOGI("signal_handler: %d", sig);
 	if (sig == SIGUSR1)
 	{
-		if (gateway)
-		{
-			gateway->StartUdpBroadcast();
-		}
+		buttonSignal->OnPress();
+	}
+	else if (sig == SIGUSR2)
+	{
+		buttonSignal->OnRelease();
 	}
 	signal(sig, signal_handler);
 }
 
 int main(int argc, char *argv[])
 {
-	signal(SIGUSR1, signal_handler);
-
 	log_set_level(LOG_VERBOSE);
 	LOGI("Start");
+
+	buttonSignal = new ButtonSignal();
+	signal(SIGUSR1, signal_handler);
+	signal(SIGUSR2, signal_handler);
 
 	config = new Config();
 	config->ReadConfig();
@@ -57,7 +61,7 @@ int main(int argc, char *argv[])
 
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
-	
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();

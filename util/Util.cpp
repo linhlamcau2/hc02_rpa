@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -46,6 +47,13 @@ int Util::GetCurrentTimer()
 	time_t t = time(NULL);
 	struct tm lt = *localtime(&t);
 	return lt.tm_hour * 60 + lt.tm_min;
+}
+
+double Util::millis()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
 }
 
 int Util::GetCurrentWeekDay()
@@ -152,7 +160,7 @@ static inline std::string &trim(std::string &s)
 	return ltrim(rtrim(s));
 }
 
-static string ExecuteCMD(char const *command)
+string Util::ExecuteCMD(char const *command)
 {
 	FILE *file;
 	string msg_rsp = "";
@@ -190,7 +198,7 @@ string Util::GetMacAddress()
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
 	sprintf((char *)uc_Mac, (const char *)"%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return string(uc_Mac);
 }
 
@@ -292,4 +300,71 @@ int Util::ConnectToWifi(string ssid, string password, string encryption)
 		return -1;
 	}
 	return 0;
+}
+
+void Util::LedInternet(int value)
+{
+	if (value)
+	{
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
+	}
+	else
+	{
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
+	}
+}
+
+void Util::LedService(int value)
+{
+	if (value)
+	{
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+	}
+	else
+	{
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+	}
+}
+
+void Util::LedZigbee(int value)
+{
+	if (value)
+	{
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+	}
+	else
+	{
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+	}
+}
+
+void Util::LedBle(int value)
+{
+	if (value)
+	{
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+	}
+	else
+	{
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+	}
+}
+
+void Util::LedAll(int value)
+{
+
+	if (value)
+	{
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+	}
+	else
+	{
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+	}
 }
