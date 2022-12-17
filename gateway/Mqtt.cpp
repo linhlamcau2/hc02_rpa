@@ -53,7 +53,6 @@ Mqtt::Mqtt(string host, int port, string client_id, string username, string pass
 	reconnected = false;
 	onMessageCallbackFunc = bind(&Mqtt::OnMessageTemp, this, placeholders::_1, placeholders::_2);
 	onConnectedCallbackFunc = bind(&Mqtt::OnConnectedTemp, this, placeholders::_1, placeholders::_2);
-	mosqpp::lib_init();
 }
 
 Mqtt::~Mqtt()
@@ -62,9 +61,24 @@ Mqtt::~Mqtt()
 	reconnected = false;
 }
 
-int Mqtt::Connect(int timeout)
+void Mqtt::SetServer(string host, int port, string client_id, string username, string password, int keepalive)
 {
-	time_t currentTime;
+	this->host = host;
+	this->port = port;
+	this->client_id = client_id;
+	this->username = username;
+	this->password = password;
+	this->keepalive = keepalive;
+}
+
+void Mqtt::SetWillset(string willset_topic, string willset_payload)
+{
+	this->willset_topic = willset_topic;
+	this->willset_payload = willset_payload;
+}
+
+int Mqtt::Connect()
+{
 	LOGD("Connect host %s, port %d", host.c_str(), port);
 	if (!username.empty() || !password.empty())
 		if (username_pw_set(username.c_str(), password.c_str()) != MOSQ_ERR_SUCCESS)
@@ -76,34 +90,25 @@ int Mqtt::Connect(int timeout)
 		LOGD("Willset topic: %s, payload:\n%s", willset_topic.c_str(), willset_payload.c_str());
 		will_set(willset_topic.c_str(), willset_payload.size(), willset_payload.c_str());
 	}
-	int result = connect_async(host.c_str(), port, keepalive);
+	int result = loop_start();
 	if (result == MOSQ_ERR_SUCCESS)
 	{
-		result = loop_start();
+		result = connect_async(host.c_str(), port, keepalive);
 		if (result != MOSQ_ERR_SUCCESS)
 		{
-			LOGE("loop_start failed result %d", result);
-			return result;
+			LOGW("connect_async failed code %d, err %s", result, strerror(result));
 		}
 	}
 	else
 	{
-		LOGE("connect_async failed result %d", result);
-		reconnect_async();
-		return result;
+		LOGE("loop_start failed code %d, err %s", result, strerror(result));
 	}
-	currentTime = time(NULL);
-	while (time(NULL) < currentTime + timeout)
-	{
-		if (connected == true)
-		{
-			return MOSQ_ERR_SUCCESS;
-		}
-		usleep(1000);
-	}
-	LOGE("Mqtt connect time out");
-	loop_stop(true);
-	return MQTT_ERR_TIMEOUT;
+	return result;
+}
+
+int Mqtt::Reconnect()
+{
+	return reconnect_async();
 }
 
 int Mqtt::removeObjectFromVector(vector<MQTTPubSub *> *mqttPubSubs, MQTTPubSub *mqttPubSub)

@@ -9,6 +9,9 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 {
 	subTopic = "/server/" + mac;
 	pubTopic = "/" + mac + "/server";
+	Json::Value jsonValue;
+	jsonValue["HC_ID"] = mac;
+	SetWillset(HC_OFFLINE, jsonValue.toString());
 }
 
 CloudProtocol::~CloudProtocol()
@@ -20,9 +23,9 @@ void CloudProtocol::init()
 	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
 }
 
-int CloudProtocol::CloudConnect(int timeout)
+int CloudProtocol::CloudConnect()
 {
-	return Connect(timeout);
+	return Connect();
 }
 
 void CloudProtocol::OnConnect(bool isConnected, bool isReconnect)

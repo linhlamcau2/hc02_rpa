@@ -23,7 +23,7 @@ public:
 
 	void init();
 
-	int CloudConnect(int timeout = 10);
+	int CloudConnect();
 	void OnConnect(bool isConnected, bool isReconnect);
 	virtual void OnCloudConnect(bool isConnected, bool isReconnect) {}
 

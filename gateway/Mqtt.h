@@ -84,7 +84,10 @@ public:
 	Mqtt(string host, int port, string client_id, string username, string password, int keepalive, string willset_topic="", string willset_payload="");
 	virtual ~Mqtt();
 
-	int Connect(int timeout = 10);
+	void SetServer(string host, int port, string client_id, string username, string password, int keepalive);
+	void SetWillset(string willset_topic, string willset_payload);
+	int Connect();
+	int Reconnect();
 	void SubscribeList();
 	int Subscribe(string topic, int maxTime = 5, int duration = 5);
 	int Unsubscribe(string topic, int maxTime = 5, int duration = 5);

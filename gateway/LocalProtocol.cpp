@@ -18,9 +18,9 @@ void LocalProtocol::init()
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
 }
 
-int LocalProtocol::LocalConnect(int timeout)
+int LocalProtocol::LocalConnect()
 {
-	return Connect(timeout);
+	return Connect();
 }
 
 void LocalProtocol::OnConnect(bool isConnected, bool isReconnect)

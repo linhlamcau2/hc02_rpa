@@ -49,6 +49,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 
 void Gateway::init()
 {
+	mosqpp::lib_init();
 	CloudProtocol::init();
 	LocalProtocol::init();
 	Udp::init();
@@ -88,11 +89,8 @@ void Gateway::init()
 
 	OnLocalCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
 
-	thread cloudConnectThread(bind(&CloudProtocol::CloudConnect, this, placeholders::_1), 10);
-	cloudConnectThread.detach();
-
-	thread localConnectThread(bind(&LocalProtocol::LocalConnect, this, placeholders::_1), 10);
-	localConnectThread.detach();
+	CloudConnect();
+	LocalConnect();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)

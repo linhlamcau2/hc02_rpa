@@ -20,7 +20,7 @@ public:
 
 	void init();
 
-	int LocalConnect(int timeout = 10);
+	int LocalConnect();
 	void OnConnect(bool isConnected, bool isReconnect);
 	virtual void OnLocalConnect(bool isConnected, bool isReconnect) {}
 

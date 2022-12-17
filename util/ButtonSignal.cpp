@@ -52,7 +52,7 @@ void ButtonSignal::OnRelease()
 	}
 	else if (startProcess)
 	{
-		if (releaseTime - pressTime > 6000 && releaseTime - pressTime < 8000)
+		if (releaseTime - pressTime > 5000 && releaseTime - pressTime < 8000)
 		{
 			gateway->StartUdpBroadcast();
 		}
