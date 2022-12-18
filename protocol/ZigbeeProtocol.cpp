@@ -87,6 +87,7 @@ void ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	uint8_t *message = data;
 	int lenRemain = len;
 	message_rsp_st *message_rsp = NULL;
+	Util::LedZigbee(true);
 	while (lenRemain >= 7 && message[0] == MESSAGE_HEADER)
 	{
 		message_rsp = (message_rsp_st *)(message + 1);
@@ -122,6 +123,7 @@ void ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 		lenRemain -= payloadLen + 7;
 		message += payloadLen + 7;
 	}
+	Util::LedZigbee(false);
 }
 
 int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout)
@@ -548,7 +550,7 @@ int ZigbeeProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 	add_group.dstEp = epId;
 
 	add_group.groupId[0] = (uint8_t)((groupId >> 8) & 0xFF);
-	add_group.groupId[1] = (uint8_t)(groupId & 0xFF);;
+	add_group.groupId[1] = (uint8_t)(groupId & 0xFF);
 	add_group.groupName[0] = 'a';
 	add_group.groupName[1] = 'b';
 

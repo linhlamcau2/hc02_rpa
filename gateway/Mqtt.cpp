@@ -81,15 +81,19 @@ int Mqtt::Connect()
 {
 	LOGD("Connect host %s, port %d", host.c_str(), port);
 	if (!username.empty() || !password.empty())
+	{
 		if (username_pw_set(username.c_str(), password.c_str()) != MOSQ_ERR_SUCCESS)
 		{
 			LOGE("setting passwd failed");
 		}
+	}
+
 	if (willset_topic.size() > 0 && willset_payload.size() > 0)
 	{
 		LOGD("Willset topic: %s, payload:\n%s", willset_topic.c_str(), willset_payload.c_str());
 		will_set(willset_topic.c_str(), willset_payload.size(), willset_payload.c_str());
 	}
+	
 	int result = loop_start();
 	if (result == MOSQ_ERR_SUCCESS)
 	{
