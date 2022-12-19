@@ -384,3 +384,18 @@ void Util::LedRestoreLastValue()
 	LedZigbee(ledZigbee);
 	LedBle(ledBle);
 }
+
+static int ledServiceCount = 0;
+void Util::LedServiceLock()
+{
+	ledServiceCount++;
+	if (ledServiceCount)
+		LedService(false);
+}
+
+void Util::LedServiceUnlock()
+{
+	ledServiceCount--;
+	if (!ledServiceCount)
+		LedService(true);
+}

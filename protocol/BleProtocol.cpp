@@ -95,6 +95,7 @@ void BleProtocol::OnMessage(unsigned char *data, int len)
 	bool is_dupplicate = false;
 	bool match;
 	Util::LedBle(false);
+	Util::LedServiceLock();
 	while (l >= 4)
 	{
 		message_rsp = (message_rsp_st *)d;
@@ -153,6 +154,7 @@ void BleProtocol::OnMessage(unsigned char *data, int len)
 		d += message_rsp->len + 2;
 	}
 	Util::LedBle(true);
+	Util::LedServiceUnlock();
 }
 
 int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data, int compare_position, int compare_len)
