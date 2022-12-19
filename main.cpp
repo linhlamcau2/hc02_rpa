@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 #endif
 
 	string mac = Util::GetMacAddress();
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId() + to_string(rand()), config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
 	gateway->init();
 
 	Device::InitDeviceModelList();

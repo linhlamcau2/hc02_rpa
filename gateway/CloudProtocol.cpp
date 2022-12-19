@@ -8,11 +8,13 @@
 
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
-	subTopic = "/server/" + mac;
-	pubTopic = "/" + mac + "/server";
 	Json::Value jsonValue;
 	jsonValue["HC_ID"] = mac;
 	SetWillset(HC_OFFLINE, jsonValue.toString());
+	
+	// mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
+	subTopic = "/server/" + mac;
+	pubTopic = "/" + mac + "/server";
 }
 
 CloudProtocol::~CloudProtocol()
