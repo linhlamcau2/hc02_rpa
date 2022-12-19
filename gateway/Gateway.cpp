@@ -175,7 +175,7 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		}
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Util::GetIP();
-		respValue["HOSTNAME"] = "RD_HC_" + mac.substr(mac.size() - 5, 2) + mac.substr(mac.size() - 2, 2);
+		respValue["HOSTNAME"] = "RD_HC_" + mac.substr(mac.size() - 4, 4);
 		respValue["MAC"] = mac;
 		respValue["TLS"] = false;
 		respValue["MQTT_PORT"] = 1883;
