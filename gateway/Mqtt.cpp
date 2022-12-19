@@ -139,6 +139,7 @@ void Mqtt::SubscribeList()
 
 int Mqtt::Subscribe(string topic, int maxTime, int duration)
 {
+	LOGD("Subscribe: %s", topic.c_str());
 	time_t currentTime;
 	mtx.lock();
 	MQTTPubSub mqttSubscribe;
