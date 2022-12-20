@@ -78,16 +78,16 @@ protocol_e Device::GetProtocol()
 	return protocol;
 }
 
-void Device::RegisterTrigger(SceneInputDevice *sceneInputDevice)
+void Device::RegisterTrigger(RuleInputDevice *ruleInputDevice)
 {
 	LOGD("RegisterTrigger");
-	deviceSceneInputList.push_back(sceneInputDevice);
+	deviceRuleInputList.push_back(ruleInputDevice);
 }
 
-void Device::UnregisterTrigger(SceneInputDevice *sceneInputDevice)
+void Device::UnregisterTrigger(RuleInputDevice *ruleInputDevice)
 {
 	LOGD("UnregisterTrigger");
-	deviceSceneInputList.erase(remove(deviceSceneInputList.begin(), deviceSceneInputList.end(), sceneInputDevice), deviceSceneInputList.end());
+	deviceRuleInputList.erase(remove(deviceRuleInputList.begin(), deviceRuleInputList.end(), ruleInputDevice), deviceRuleInputList.end());
 }
 
 int Device::BuildTelemetryValue(Json::Value &pushDataValue)
@@ -111,11 +111,11 @@ void Device::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
-	for (auto &sceneInputDevice : deviceSceneInputList)
+	for (auto &ruleInputDevice : deviceRuleInputList)
 	{
 		rs = false;
-		if (CheckData(*sceneInputDevice->GetData(), rs))
-			sceneInputDevice->Trigger(rs);
+		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
 	}
 }
 

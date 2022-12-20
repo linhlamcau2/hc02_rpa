@@ -1,10 +1,10 @@
-#include "Scene.h"
+#include "Rule.h"
 #include <functional>
 #include "TimerSchedule.h"
 #include <Util.h>
 #include <Log.h>
 
-Scene::Scene(int id, string type, unsigned char repeater)
+Rule::Rule(int id, string type, unsigned char repeater)
 {
 	this->id = id;
 	this->type = type;
@@ -16,42 +16,42 @@ Scene::Scene(int id, string type, unsigned char repeater)
 	timerRegisterIndex = 0;
 }
 
-Scene::Scene(int id, string type, unsigned char repeater, int startTime, int endTime)
+Rule::Rule(int id, string type, unsigned char repeater, int startTime, int endTime)
 {
 	this->id = id;
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
-	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Scene::Check, this));
-	// timerSchedule->RegisterTimer(endTime, bind(&Scene::Check, this));
+	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
+	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
 	count = 0;
 	lastTimeActive = 0;
 }
 
-Scene::~Scene()
+Rule::~Rule()
 {
-	LOGI("~Scene");
-	for (auto &sceneInput : sceneInputList)
+	LOGI("~Rule");
+	for (auto &ruleInput : ruleInputList)
 	{
-		delete sceneInput;
+		delete ruleInput;
 	}
-	for (auto &sceneOutput : sceneOutputList)
+	for (auto &ruleOutput : ruleOutputList)
 	{
-		delete sceneOutput;
+		delete ruleOutput;
 	}
 	if (timerRegisterIndex > 0)
 		timerSchedule->UnregisterTimer(timerRegisterIndex);
 }
 
-int Scene::GetId()
+int Rule::GetId()
 {
 	return id;
 }
 
-void Scene::Check()
+void Rule::Check()
 {
-	bool checkSceneInputResult = false;
+	bool checkRuleInputResult = false;
 	int currentTimer = Util::GetCurrentTimer();
 	int currentWeekDay = Util::GetCurrentWeekDay();
 	LOGI("currentWeekDay: %d", currentWeekDay);
@@ -64,53 +64,53 @@ void Scene::Check()
 			LOGI("Check time OK");
 			if (type == "or")
 			{
-				checkSceneInputResult = false;
-				for (auto &sceneInput : sceneInputList)
+				checkRuleInputResult = false;
+				for (auto &ruleInput : ruleInputList)
 				{
-					if (sceneInput->Check())
+					if (ruleInput->Check())
 					{
-						checkSceneInputResult = true;
+						checkRuleInputResult = true;
 						break;
 					}
 				}
 			}
 			else if (type == "and")
 			{
-				checkSceneInputResult = true;
-				for (auto &sceneInput : sceneInputList)
+				checkRuleInputResult = true;
+				for (auto &ruleInput : ruleInputList)
 				{
-					if (sceneInput->Check() == false)
+					if (ruleInput->Check() == false)
 					{
-						checkSceneInputResult = false;
+						checkRuleInputResult = false;
 						break;
 					}
 				}
 			}
 		}
 	}
-	if (checkSceneInputResult)
+	if (checkRuleInputResult)
 	{
-		LOGI("Do output scene id: %d", id);
+		LOGI("Do output rule id: %d", id);
 		RunOutput();
 		count++;
 		lastTimeActive = time(NULL);
 	}
 }
 
-void Scene::RunOutput()
+void Rule::RunOutput()
 {
-	for (auto &sceneOutput : sceneOutputList)
+	for (auto &ruleOutput : ruleOutputList)
 	{
-		sceneOutput->RunOutput();
+		ruleOutput->RunOutput();
 	}
 }
 
-void Scene::AddSceneInput(SceneInput *sceneInput)
+void Rule::AddRuleInput(RuleInput *ruleInput)
 {
-	sceneInputList.push_back(sceneInput);
+	ruleInputList.push_back(ruleInput);
 }
 
-void Scene::AddSceneOutput(SceneOutput *sceneOutput)
+void Rule::AddRuleOutput(RuleOutput *ruleOutput)
 {
-	sceneOutputList.push_back(sceneOutput);
+	ruleOutputList.push_back(ruleOutput);
 }

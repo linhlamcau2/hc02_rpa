@@ -12,9 +12,9 @@
 #include "Util.h"
 #include "Base64.h"
 
-#include "SceneInputTimer.h"
-#include "SceneOutputGroup.h"
-#include "SceneOutputDevice.h"
+#include "RuleInputTimer.h"
+#include "RuleOutputGroup.h"
+#include "RuleOutputDevice.h"
 
 #include "BleProtocol.h"
 #include "DeviceBleDownLightSmt.h"
@@ -59,7 +59,7 @@ void Gateway::init()
 	database->DeviceAttributeRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
-	database->SceneRead();
+	database->RuleRead();
 
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
@@ -80,8 +80,8 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("AddScene", bind(&Gateway::OnRPCAddScene, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("DeleteScene", bind(&Gateway::OnRPCDeleteScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("AddRule", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("DeleteRule", bind(&Gateway::OnRPCDeleteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
@@ -322,14 +322,14 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
-int Gateway::OnRPCAddScene(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRPCAddScene");
+	LOGD("OnRPCAddRule");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value dataValue = reqValue["DATA"];
-		Scene *scene = AddScene(dataValue, true, true);
-		if (scene)
+		Rule *rule = AddRule(dataValue, true, true);
+		if (rule)
 		{
 			respValue["code"] = 0;
 			return 0;
@@ -339,19 +339,19 @@ int Gateway::OnRPCAddScene(Json::Value &reqValue, Json::Value &respValue)
 	return -1;
 }
 
-int Gateway::OnRPCDeleteScene(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRPCDeleteScene");
+	LOGD("OnRPCDeleteRule");
 	if (reqValue.isMember("params") && reqValue["params"].isObject())
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt())
 		{
-			int sceneId = dataValue["id"].asInt();
-			LOGI("Delete Scene id: %d", sceneId);
-			delete sceneList[sceneId];
-			sceneList.erase(sceneList.find(sceneId));
-			database->SceneDel(sceneId);
+			int ruleId = dataValue["id"].asInt();
+			LOGI("Delete Rule id: %d", ruleId);
+			delete ruleList[ruleId];
+			ruleList.erase(ruleList.find(ruleId));
+			database->RuleDel(ruleId);
 			respValue["code"] = 0;
 			return 0;
 		}
@@ -446,7 +446,7 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isInt())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
-			LOGI("Delete Scene id: %s", groupId.c_str());
+			LOGI("Delete Rule id: %s", groupId.c_str());
 			Group *group = getGroupFromId(groupId);
 			int temp_groupUnicastId = group->GetId();
 			delete groupList[temp_groupUnicastId];
@@ -1007,38 +1007,38 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 	return group;
 }
 
-Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatabase)
+Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
 {
-	// TODO: Check Scene id exist
-	if (sceneValue.isMember("id") && sceneValue["id"].isInt() &&
-			sceneValue.isMember("repeat") && sceneValue["repeat"].isInt() &&
-			sceneValue.isMember("fullDay") && sceneValue["fullDay"].isBool() &&
-			sceneValue.isMember("type") && sceneValue["type"].isString() &&
-			sceneValue.isMember("input") && sceneValue["input"].isObject() &&
-			sceneValue.isMember("output") && sceneValue["output"].isObject())
+	// TODO: Check Rule id exist
+	if (ruleValue.isMember("id") && ruleValue["id"].isInt() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("fullDay") && ruleValue["fullDay"].isBool() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isObject())
 	{
-		int id = sceneValue["id"].asInt();
-		int repeat = sceneValue["repeat"].asInt();
-		bool fullDay = sceneValue["fullDay"].asBool();
-		string type = sceneValue["type"].asString();
-		Scene *scene = NULL;
-		if (!fullDay && sceneValue.isMember("startTime") && sceneValue["startTime"].isString() &&
-				sceneValue.isMember("endTime") && sceneValue["endTime"].isString())
+		int id = ruleValue["id"].asInt();
+		int repeat = ruleValue["repeat"].asInt();
+		bool fullDay = ruleValue["fullDay"].asBool();
+		string type = ruleValue["type"].asString();
+		Rule *rule = NULL;
+		if (!fullDay && ruleValue.isMember("startTime") && ruleValue["startTime"].isString() &&
+				ruleValue.isMember("endTime") && ruleValue["endTime"].isString())
 		{
-			string startTime = sceneValue["startTime"].asString();
-			string endTime = sceneValue["endTime"].asString();
-			scene = new Scene(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			string startTime = ruleValue["startTime"].asString();
+			string endTime = ruleValue["endTime"].asString();
+			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
 		}
 		else
 		{
-			scene = new Scene(id, type, repeat);
+			rule = new Rule(id, type, repeat);
 		}
-		if (!scene)
+		if (!rule)
 		{
-			LOGE("New scene error");
+			LOGE("New rule error");
 			return NULL;
 		}
-		Json::Value inputValue = sceneValue["input"];
+		Json::Value inputValue = ruleValue["input"];
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
 			Json::Value timerValue = inputValue["timer"];
@@ -1051,54 +1051,54 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 				int timer = Util::ConvertStrTimeToInt(timerStr);
 				if (timer > 0)
 				{
-					SceneInputTimer *sceneInputTimer = new SceneInputTimer(scene, timer, repeat);
-					scene->AddSceneInput(sceneInputTimer);
+					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, timer, repeat);
+					rule->AddRuleInput(ruleInputTimer);
 				}
 			}
 		}
 		if (inputValue.isMember("device") && inputValue["device"].isArray())
 		{
-			Json::Value deviceSceneInputList = inputValue["device"];
-			for (Json::Value::ArrayIndex i = 0; i < deviceSceneInputList.size(); i++)
+			Json::Value deviceRuleInputList = inputValue["device"];
+			for (Json::Value::ArrayIndex i = 0; i < deviceRuleInputList.size(); i++)
 			{
-				Json::Value deviceSceneInputValue = deviceSceneInputList[i];
-				if (deviceSceneInputValue.isObject())
+				Json::Value deviceRuleInputValue = deviceRuleInputList[i];
+				if (deviceRuleInputValue.isObject())
 				{
-					if (deviceSceneInputValue.isMember("mac") && deviceSceneInputValue["mac"].isString() &&
-							deviceSceneInputValue.isMember("data") && deviceSceneInputValue["data"].isObject())
+					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
+							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
-						string mac = deviceSceneInputValue["mac"].asString();
-						Json::Value dataValue = deviceSceneInputValue["data"];
+						string mac = deviceRuleInputValue["mac"].asString();
+						Json::Value dataValue = deviceRuleInputValue["data"];
 						Device *device = getDevice(mac);
 						if (device)
 						{
-							SceneInputDevice *sceneInputDevice = new SceneInputDevice(scene, device, dataValue);
-							scene->AddSceneInput(sceneInputDevice);
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, device, dataValue);
+							rule->AddRuleInput(ruleInputDevice);
 						}
 					}
 				}
 			}
 		}
 
-		Json::Value outputValue = sceneValue["output"];
+		Json::Value outputValue = ruleValue["output"];
 		if (outputValue.isMember("device") && outputValue["device"].isArray())
 		{
-			Json::Value deviceSceneOutputList = outputValue["device"];
-			for (Json::Value::ArrayIndex i = 0; i < deviceSceneOutputList.size(); i++)
+			Json::Value deviceRuleOutputList = outputValue["device"];
+			for (Json::Value::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
 			{
-				Json::Value deviceSceneOutputValue = deviceSceneOutputList[i];
-				if (deviceSceneOutputValue.isObject())
+				Json::Value deviceRuleOutputValue = deviceRuleOutputList[i];
+				if (deviceRuleOutputValue.isObject())
 				{
-					if (deviceSceneOutputValue.isMember("mac") && deviceSceneOutputValue["mac"].isString() &&
-							deviceSceneOutputValue.isMember("data") && deviceSceneOutputValue["data"].isObject())
+					if (deviceRuleOutputValue.isMember("mac") && deviceRuleOutputValue["mac"].isString() &&
+							deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
 					{
-						Json::Value dataValue = deviceSceneOutputValue["data"];
-						string mac = deviceSceneOutputValue["mac"].asString();
+						Json::Value dataValue = deviceRuleOutputValue["data"];
+						string mac = deviceRuleOutputValue["mac"].asString();
 						Device *device = getDevice(mac);
 						if (device)
 						{
-							SceneOutputDevice *sceneOutputDevice = new SceneOutputDevice(device, dataValue);
-							scene->AddSceneOutput(sceneOutputDevice);
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
 						}
 					}
 				}
@@ -1106,42 +1106,42 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 		}
 		if (outputValue.isMember("group") && outputValue["group"].isArray())
 		{
-			Json::Value groupSceneOutputList = outputValue["group"];
-			for (Json::Value::ArrayIndex i = 0; i < groupSceneOutputList.size(); i++)
+			Json::Value groupRuleOutputList = outputValue["group"];
+			for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 			{
-				Json::Value groupSceneOutputValue = groupSceneOutputList[i];
-				if (groupSceneOutputValue.isObject())
+				Json::Value groupRuleOutputValue = groupRuleOutputList[i];
+				if (groupRuleOutputValue.isObject())
 				{
-					if (groupSceneOutputValue.isMember("id") && groupSceneOutputValue["id"].isInt() &&
-							groupSceneOutputValue.isMember("data") && groupSceneOutputValue["data"].isObject())
+					if (groupRuleOutputValue.isMember("id") && groupRuleOutputValue["id"].isInt() &&
+							groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
 					{
-						int id = groupSceneOutputValue["id"].asInt();
-						Json::Value dataValue = groupSceneOutputValue["data"];
+						int id = groupRuleOutputValue["id"].asInt();
+						Json::Value dataValue = groupRuleOutputValue["data"];
 						Group *group = getGroup(id);
 						if (group)
 						{
-							SceneOutputGroup *sceneOutputGroup = new SceneOutputGroup(group, dataValue);
-							scene->AddSceneOutput(sceneOutputGroup);
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
 						}
 					}
 				}
 			}
 		}
-		LOGI("Add Scene %d", scene->GetId());
+		LOGI("Add Rule %d", rule->GetId());
 		if (addGateway)
-			sceneList[scene->GetId()] = scene;
+			ruleList[rule->GetId()] = rule;
 		if (addDatabase)
 		{
-			string sceneStr = sceneValue.toString();
-			sceneStr.erase(remove_if(sceneStr.begin(), sceneStr.end(), ::isspace), sceneStr.end());
-			database->SceneAdd(scene->GetId(), sceneStr);
+			string ruleStr = ruleValue.toString();
+			ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+			database->RuleAdd(rule->GetId(), ruleStr);
 		}
-		scene->Check();
-		return scene;
+		rule->Check();
+		return rule;
 	}
 	else
 	{
-		LOGW("Scene format error");
+		LOGW("Rule format error");
 	}
 	return NULL;
 }

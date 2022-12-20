@@ -1,13 +1,13 @@
 #pragma once
 
-#include "SceneInput.h"
-#include "Scene.h"
+#include "RuleInput.h"
+#include "Rule.h"
 #include <functional>
 #include <json.h>
 
 using namespace std;
 
-class SceneInputTimer : public SceneInput
+class RuleInputTimer : public RuleInput
 {
 private:
 	int timer;
@@ -15,7 +15,7 @@ private:
 	int timerRegisterIndex;
 
 public:
-	SceneInputTimer(Scene *scene, int timer, int repeat);
-	~SceneInputTimer();
+	RuleInputTimer(Rule *rule, int timer, int repeat);
+	~RuleInputTimer();
 	bool Check();
 };

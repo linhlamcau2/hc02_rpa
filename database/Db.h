@@ -51,16 +51,10 @@ public:
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
 	int DeviceInGroupDelAll();
 
-	int DeviceSceneRead();
-	int DeviceSceneAdd(string mac, string schedule);
-	int DeviceSceneAdd(Device *device, string schedule);
-	int DeviceSceneDel(string mac, string schedule);
-	int DeviceSceneDel(Device *device, string schedule);
-
-	int SceneRead();
-	int SceneAdd(int id, string scene);
-	int SceneUpdate(int id, string scene);
-	int SceneDel(int id);
+	int RuleRead();
+	int RuleAdd(int id, string rule);
+	int RuleUpdate(int id, string rule);
+	int RuleDel(int id);
 
 };
 

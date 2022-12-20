@@ -2,19 +2,19 @@
 
 #include <json.h>
 #include "Device.h"
-#include "SceneOutput.h"
+#include "RuleOutput.h"
 
 using namespace std;
 
-class SceneOutputDevice : public SceneOutput
+class RuleOutputDevice : public RuleOutput
 {
 private:
 	Device *device;
 	Json::Value data;
 
 public:
-	SceneOutputDevice(Device *device, Json::Value data);
-	~SceneOutputDevice();
+	RuleOutputDevice(Device *device, Json::Value data);
+	~RuleOutputDevice();
 
 	void RunOutput();
 };

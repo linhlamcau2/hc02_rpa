@@ -168,9 +168,9 @@ phản hồi:
 }
 
 
-- Scene
+- Rule
 {
-  "method": "AddScene",
+  "method": "AddRule",
   "params": {
     "id": 1,
     "repeat": 255,
@@ -223,7 +223,7 @@ repeat: thứ trong tuần, bit 0 đến bit 7
 time: thời gian trong ngày, mốc hoặc khoảng thời gian
 
 {
-  "method": "UpdateScene",
+  "method": "UpdateRule",
   "params": {
     "id": 1,
     "repeat": 255,
@@ -289,7 +289,7 @@ time: thời gian trong ngày, mốc hoặc khoảng thời gian
 
 
 {
-  "method": "DeleteScene",
+  "method": "DeleteRule",
   "params": {
     "id": 1
 	}

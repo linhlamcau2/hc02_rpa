@@ -7,7 +7,7 @@ CXX ?= g++
 OBJEXT ?= .o
 BUILD_PATH = build
 
-INCLUDES = -I. -Iconfig -Igateway -Igroup -Idevice -Idevice/ble -Ilog -Ijson -Idatabase -Iprotocol -Iscene -Iutil
+INCLUDES = -I. -Iconfig -Igateway -Igroup -Idevice -Idevice/ble -Ilog -Ijson -Idatabase -Iprotocol -Irule -Iutil
 COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-deprecated -Wno-deprecated-declarations -Wno-unused-result -flto -fPIC
 COMPFLAGS += -DVERSION=$(VERSION)
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
@@ -33,7 +33,7 @@ DEVICESRC += $(wildcard device/ble/module/*.cpp)
 DEVICESRC += $(wildcard device/ble/element/*.cpp)
 DEVICESRC += $(wildcard database/*.cpp)
 DEVICESRC += $(wildcard protocol/*.cpp)
-DEVICESRC += $(wildcard scene/*.cpp)
+DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)

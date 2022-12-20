@@ -3,9 +3,9 @@
 #include <Util.h>
 #include <Base64.h>
 
-#define TABLE_NAME "[Scene]"
+#define TABLE_NAME "[Rule]"
 
-static int SceneParse(sqlite3_stmt *stmt, void *ptr)
+static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 {
 	int s, index;
 	if (stmt)
@@ -18,18 +18,18 @@ static int SceneParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				index++; // read id
 				const string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string scene;
-				string encode = macaron::Base64::Decode(data, scene);
+				string rule;
+				string encode = macaron::Base64::Decode(data, rule);
 				if (encode == "")
 				{
-					LOGV("SceneRead scene: %s", scene.c_str());
-					Json::Value sceneValue;
+					LOGV("RuleRead rule: %s", rule.c_str());
+					Json::Value ruleValue;
 					string errs;
-					stringstream s(scene);
+					stringstream s(rule);
 					Json::CharReaderBuilder b;
-					Json::parseFromStream(b, s, &sceneValue, &errs);
-					Scene *scene = gateway->AddScene(sceneValue, true, false);
-					scene->Check();
+					Json::parseFromStream(b, s, &ruleValue, &errs);
+					Rule *rule = gateway->AddRule(ruleValue, true, false);
+					rule->Check();
 				}
 				else
 				{
@@ -42,7 +42,7 @@ static int SceneParse(sqlite3_stmt *stmt, void *ptr)
 			}
 			else
 			{
-				LOGE("SceneParse");
+				LOGE("RuleParse");
 				return 1;
 			}
 		}
@@ -50,25 +50,25 @@ static int SceneParse(sqlite3_stmt *stmt, void *ptr)
 	return 0;
 }
 
-int Db::SceneRead()
+int Db::RuleRead()
 {
-	return ReadAll(TABLE_NAME, NULL, SceneParse);
+	return ReadAll(TABLE_NAME, NULL, RuleParse);
 }
 
-int Db::SceneAdd(int id, string scene)
+int Db::RuleAdd(int id, string rule)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, scene) VALUES (" + to_string(id) + ",\"" + macaron::Base64::Encode(scene) + "\");";
-	LOGW("SceneAdd: %s", sql.c_str());
+	string sql = "INSERT INTO " TABLE_NAME " (id, rule) VALUES (" + to_string(id) + ",\"" + macaron::Base64::Encode(rule) + "\");";
+	LOGW("RuleAdd: %s", sql.c_str());
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneUpdate(int id, string scene)
+int Db::RuleUpdate(int id, string rule)
 {
-	string sql = "UPDATE " TABLE_NAME " SET scene=\"" + scene + "\" WHERE id=" + to_string(id) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET rule=\"" + rule + "\" WHERE id=" + to_string(id) + ";";
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneDel(int id)
+int Db::RuleDel(int id)
 {
 	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
 	return Sqlite_Exec(sql);

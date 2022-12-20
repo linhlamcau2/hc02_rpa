@@ -1,24 +1,24 @@
-#include "SceneInputTimer.h"
+#include "RuleInputTimer.h"
 #include "Util.h"
 #include "TimerSchedule.h"
 #include <Log.h>
 
-SceneInputTimer::SceneInputTimer(Scene *scene, int timer, int repeat)
+RuleInputTimer::RuleInputTimer(Rule *rule, int timer, int repeat)
 {
-	this->scene = scene;
+	this->rule = rule;
 	this->timer = timer;
 	this->repeat = repeat;
-	timerRegisterIndex = timerSchedule->RegisterTimer(timer, bind(&Scene::Check, scene));
+	timerRegisterIndex = timerSchedule->RegisterTimer(timer, bind(&Rule::Check, rule));
 }
 
-SceneInputTimer::~SceneInputTimer()
+RuleInputTimer::~RuleInputTimer()
 {
-	LOGI("~SceneInputTimer");
+	LOGI("~RuleInputTimer");
 	if (timerRegisterIndex > 0)
 		timerSchedule->UnregisterTimer(timerRegisterIndex);
 }
 
-bool SceneInputTimer::Check()
+bool RuleInputTimer::Check()
 {
 	int currentWeekDay = Util::GetCurrentWeekDay();
 	LOGI("currentWeekDay: %d", currentWeekDay);

@@ -4,7 +4,7 @@
 #include <vector>
 #include <json.h>
 #include <byteswap.h>
-#include <SceneInputDevice.h>
+#include <RuleInputDevice.h>
 
 using namespace std;
 
@@ -42,7 +42,7 @@ protected:
 	protocol_e protocol;
 
 public:
-	vector<SceneInputDevice *> deviceSceneInputList;
+	vector<RuleInputDevice *> deviceRuleInputList;
 
 public:
 	Device(string id, string name, string mac, uint32_t addr, uint32_t type);
@@ -63,8 +63,8 @@ public:
 
 	protocol_e GetProtocol();
 
-	void RegisterTrigger(SceneInputDevice *sceneInputDevice);
-	void UnregisterTrigger(SceneInputDevice *sceneInputDevice);
+	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
+	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);

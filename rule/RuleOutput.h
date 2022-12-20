@@ -2,10 +2,10 @@
 
 using namespace std;
 
-class SceneOutput
+class RuleOutput
 {
 protected:
 public:
-	virtual ~SceneOutput() {}
+	virtual ~RuleOutput() {}
 	virtual void RunOutput() {}
 };

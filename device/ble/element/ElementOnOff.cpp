@@ -60,11 +60,11 @@ void ElementOnOff::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
-	for (auto &sceneInputDevice : device->deviceSceneInputList)
+	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
 		rs = false;
-		if (CheckData(*sceneInputDevice->GetData(), rs))
-			sceneInputDevice->Trigger(rs);
+		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
 	}
 }
 
