@@ -77,6 +77,11 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRPCAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("REMOVE_DEVICE_FROM_GROUP", bind(&Gateway::OnRPCDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRPCCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRPCAddSceneBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRPCEditSceneBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRPCDeleteSceneBle, this, placeholders::_1, placeholders::_2));
+
 	OnDeviceRPCCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
@@ -87,7 +92,7 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("SCENE", bind(&Gateway::OnRPCControlSceneBle, this, placeholders::_1, placeholders::_2));
 
 	CloudConnect();
 	LocalConnect();
@@ -354,6 +359,122 @@ int Gateway::OnRPCDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 			database->SceneDel(sceneId);
 			respValue["code"] = 0;
 			return 0;
+		}
+	}
+	respValue["code"] = -1;
+	return -1;
+}
+
+int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() &&
+				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+		{
+			string sceneId = dataValue["SCENE_ID"].asString();
+			int temp_sceneUnicastId = 1;
+			for (auto& x : sceneList)
+			{
+				if (x.first >= temp_sceneUnicastId)
+				{
+					temp_sceneUnicastId = x.first;
+				}
+			}
+			SceneBle *scene = new SceneBle(sceneId, 1, sceneId);
+			if (scene)
+			{
+				scene = AddNewSceneBle(scene, true, true);
+				if (scene)
+				{
+					Json::Value groupList = dataValue["DEVICES"];
+					for (int i=0; i<groupList.size(); i++)
+					{
+						Json::Value deviceList = groupList["IDS"];
+						for (int j=0; j<deviceList.size(); j++)
+						{
+							string devcieId = deviceList[i].asString();
+							Device *device = getDeviceFromId(devcieId);
+							if (device)
+							{
+								int tempDeviceAddr = device->GetAddr();
+								if (scene->AddDevice(device, tempDeviceAddr))
+								{
+									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr);
+									respValue["code"] = 0;
+									return 0;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["code"] = -1;
+	return -1;
+}
+
+int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+			if (dataValue.isMember("SCENE_ID") && dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			{
+				string sceneId = dataValue["SCENE_ID"].asString();
+				SceneBle *scene = getSceneBle(sceneId);
+				if (scene)
+				{
+					Json::Value groupList = dataValue["DEVICES"];
+					for (int i=0; i<groupList.size(); i++)
+					{
+						Json::Value deviceList = groupList["IDS"];
+						for (int j=0; j<deviceList.size(); j++)
+						{
+							string devcieId = deviceList[i].asString();
+							Device *device = getDeviceFromId(devcieId);
+							if (device)
+							{
+								int tempDeviceAddr = device->GetAddr();
+								if (scene->AddDevice(device, tempDeviceAddr))
+								{
+									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr);
+									respValue["code"] = 0;
+									return 0;
+								}
+							}
+						}
+					}
+				}
+			}
+	}
+	respValue["code"] = -1;
+	return true;
+}
+
+int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
+		{
+			string sceneId = dataValue["SCENE_ID"].asString();
+			SceneBle *scene = getSceneBle(sceneId);
+			if (scene)
+			{
+				for (unsigned int i=0; i < scene->deviceList.size(); i++)
+				{
+					scene->DelDevice(scene->deviceList[i]->device, scene->deviceList[i]->epId);
+				}
+				int temp_sceneUnicastId = scene->GetId();
+				delete sceneBleList[temp_sceneUnicastId];
+				database->SceneBleDel(scene);
+				respValue["code"] = 0;
+				return 0;
+			}
 		}
 	}
 	respValue["code"] = -1;
@@ -764,6 +885,18 @@ int Gateway::OnRPCUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respVal
 	return 0;
 }
 
+int Gateway::OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("SCENE") && dataValue["SCENE"].isString())
+		{
+			
+		}
+	}
+}
+
 int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rs = 0;
@@ -940,6 +1073,16 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
 	return NULL;
 }
 #endif
+
+SceneBle *Gateway::getSceneBle(string sceneBleUUId)
+{
+	for (const auto &[id, scene] : sceneBleList)
+	{
+		if (scene->GetUUId() == sceneBleUUId)
+			return scene;
+	}
+	return NULL;
+}
 
 Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase)
 {
@@ -1144,4 +1287,23 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 		LOGW("Scene format error");
 	}
 	return NULL;
+}
+
+SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase)
+{
+	if (sceneBle)
+	{
+		if (addDatabase)
+		{
+			// int rs = database->GroupAdd(group);
+			// if (rs)
+			// {
+				// LOGW("rs: %d", rs);
+				// return NULL;
+			// }
+		}
+		if (addGateway)
+			sceneBleList[sceneBle->GetId()] = sceneBle;
+	}
+	return sceneBle;
 }

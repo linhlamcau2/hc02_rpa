@@ -73,3 +73,5 @@ int Db::SceneDel(int id)
 	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
 	return Sqlite_Exec(sql);
 }
+
+

@@ -7,7 +7,7 @@
 #define CONFIG_ENV "smh.@server[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "broker.hivemq.com"
+#define HOST_DEFAULT "localhost"
 #define PORT_KEY "port"
 #define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"

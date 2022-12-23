@@ -34,6 +34,19 @@ string Group::GetName()
 	return name;
 }
 
+int Group::GetPositionDevice(Device *device)
+{
+	int deviceAddr = device->GetAddr();
+	for (int i=0; i<deviceList.size(); i++)
+	{
+		if(deviceAddr = deviceList[i]->device->GetAddr())
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 /**
  * @brief Add device function
  * 
@@ -52,7 +65,7 @@ bool Group::AddDevice(Device *device, int epId)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->AddGroup(id, device->GetAddr(), epId) == 0)
+		if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
 		{
 			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 			if (deviceInGroup)
@@ -94,9 +107,14 @@ void Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		// TODO: remove from group
-		numberOfBleDevice--;
-		// bleProtocol->AddGroup(id, device->GetAddr(), epId);
+		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id))
+		{
+			int deviceIndex = GetPositionDevice(device);
+			if (deviceIndex > -1)
+			{
+				deviceList.erase(deviceList.begin()+deviceIndex);
+			}
+		}   
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

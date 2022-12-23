@@ -8,13 +8,12 @@
 #include <Group.h>
 #include <Gateway.h>
 
-#define DB_NAME "/smh.sqlite"
+#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
 
 using namespace std;
 
 class Db
 {
-
 private:
 	mutex mtx;
 
@@ -62,6 +61,10 @@ public:
 	int SceneUpdate(int id, string scene);
 	int SceneDel(int id);
 
+	int SceneBleRead();
+	int DevcieInSceneBleAdd(SceneBle *scene, Device *device, int epId);
+	int DevcieInSceneBleDel(SceneBle *scene, Device *device, int epId);
+	int SceneBleDel(SceneBle *scene);
 };
 
 extern Db *database;
