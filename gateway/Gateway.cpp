@@ -392,6 +392,7 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 					for (int i=0; i<groupList.size(); i++)
 					{
 						Json::Value deviceList = groupList["IDS"];
+						Json::Value deviceProperties = groupList["PROPERTIES"];
 						for (int j=0; j<deviceList.size(); j++)
 						{
 							string devcieId = deviceList[i].asString();
@@ -399,7 +400,7 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 							if (device)
 							{
 								int tempDeviceAddr = device->GetAddr();
-								if (scene->AddDevice(device, tempDeviceAddr))
+								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr))
 								{
 									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr);
 									respValue["code"] = 0;
@@ -430,15 +431,16 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 					Json::Value groupList = dataValue["DEVICES"];
 					for (int i=0; i<groupList.size(); i++)
 					{
-						Json::Value deviceList = groupList["IDS"];
+						Json::Value deviceList = groupList["IDS"][i];
+						Json::Value deviceProperties = groupList["PROPERTIES"];
 						for (int j=0; j<deviceList.size(); j++)
 						{
-							string devcieId = deviceList[i].asString();
+							string devcieId = deviceList[j].asString();
 							Device *device = getDeviceFromId(devcieId);
 							if (device)
 							{
 								int tempDeviceAddr = device->GetAddr();
-								if (scene->AddDevice(device, tempDeviceAddr))
+								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr))
 								{
 									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr);
 									respValue["code"] = 0;
@@ -467,7 +469,7 @@ int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			{
 				for (unsigned int i=0; i < scene->deviceList.size(); i++)
 				{
-					scene->DelDevice(scene->deviceList[i]->device, scene->deviceList[i]->epId);
+					scene->DelDevice(scene->deviceList[i]->device);
 				}
 				int temp_sceneUnicastId = scene->GetId();
 				delete sceneBleList[temp_sceneUnicastId];

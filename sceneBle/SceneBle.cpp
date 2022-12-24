@@ -3,22 +3,11 @@
 #include "../log/Log.h"
 #include "../protocol/BleProtocol.h"
 
-DeviceInSceneBle::DeviceInSceneBle(Device *device, int epId)
+DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 {
     this->device = device;
-	this->epId = epId;
+	this->data = data;
 }
-
-int SceneBle::Init(string sceneBleUUId, int id, string name)
-{
-    this->id = id;
-    this->sceneBleUUId = sceneBleUUId;
-    this->name = name;
-}
-
-SceneBle::SceneBle(){
-}
-
 
 SceneBle::SceneBle(string sceneBleUUId, int id, string name)
 {
@@ -49,16 +38,16 @@ int SceneBle::GetPositionDevice(Device *device)
 	return -1;
 }
 
-bool SceneBle::AddDevice(Device *device, int epId)
+bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB)
 {
-    if (bleProtocol->SetSceneLights(device->GetAddr(), id, epId))
+    if (bleProtocol->SetSceneLights(device->GetAddr(), id, modeRGB))
     {
-        DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, epId);
+        DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
         deviceList.push_back(deviceInSceneBle);
     }
 }
 
-bool SceneBle::DelDevice(Device *device, int epId)
+bool SceneBle::DelDevice(Device *device)
 {
     if (bleProtocol->DelSceneLights(device->GetAddr(), id))
     {
@@ -72,5 +61,5 @@ bool SceneBle::DelDevice(Device *device, int epId)
 
 void SceneBle::Do(int id)
 {
-   bleProtocol->CallScene(id, 10, true);
+   bleProtocol->CallScene(0xff, id, 10, true, 1);
 }
