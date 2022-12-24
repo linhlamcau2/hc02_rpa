@@ -39,6 +39,7 @@ namespace Util
 	string GetIP();
 	void ScanWifi(Json::Value &jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);
+	int SetModeApWifi();
 
 	void LedInternet(bool value);
 	void LedService(bool value);

@@ -39,7 +39,7 @@ Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
 		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, "localhost", 1883, mac, "", "", 10),
+			LocalProtocol(mac, "localhost", 1883, mac, "RD", "65EDE7539FC3ADC1DC91A37EF983FC6D5747D71D4FC5CAB9E99826C605653187", 10),
 			Udp(8181)
 {
 	this->mac = mac;
@@ -126,7 +126,17 @@ int Gateway::UdpBroadcastThread()
 	memset(&s, 0, sizeof(struct sockaddr_in));
 	s.sin_family = AF_INET;
 	s.sin_port = htons(8181);
-	s.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+	string ip = Util::GetIP();
+	LOGD("IP: %s", ip.c_str());
+	if (ip.compare("10.10.10.1") == 0)
+	{
+		inet_pton(AF_INET, "10.10.10.255", &s.sin_addr);
+	}
+	else {
+		s.sin_addr.s_addr = htonl(INADDR_BROADCAST);	
+	}
+	// inet_pton(AF_INET, "255.255.255.255", &s.sin_addr);
+	// 
 
 	Json::Value hcBroadcastValue;
 	Json::Value hcInfoValue;
