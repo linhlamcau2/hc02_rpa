@@ -55,22 +55,22 @@ int Db::SceneRead()
 	return ReadAll(TABLE_NAME, NULL, SceneParse);
 }
 
-int Db::SceneAdd(int id, string scene)
+int Db::SceneAdd(string id, string scene)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, scene) VALUES (" + to_string(id) + ",\"" + macaron::Base64::Encode(scene) + "\");";
+	string sql = "INSERT INTO " TABLE_NAME " (id, scene) VALUES (" + id + ",\"" + macaron::Base64::Encode(scene) + "\");";
 	LOGW("SceneAdd: %s", sql.c_str());
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneUpdate(int id, string scene)
+int Db::SceneUpdate(string id, string scene)
 {
-	string sql = "UPDATE " TABLE_NAME " SET scene=\"" + scene + "\" WHERE id=" + to_string(id) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET scene=\"" + scene + "\" WHERE id=" + id + ";";
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneDel(int id)
+int Db::SceneDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + id + ";";
 	return Sqlite_Exec(sql);
 }
 

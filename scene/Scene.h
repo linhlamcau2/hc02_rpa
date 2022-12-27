@@ -23,7 +23,7 @@ typedef enum
 class Scene
 {
 private:
-	int id;
+	string id;
 	string type;
 	unsigned char repeater;
 	bool fullDay;
@@ -39,11 +39,11 @@ private:
 	vector<SceneOutput *> sceneOutputList;
 
 public:
-	Scene(int id, string type, unsigned char repeater);
-	Scene(int id, string type, unsigned char repeater, int startTime, int endTime);
+	Scene(string id, string type, unsigned char repeater);
+	Scene(string id, string type, unsigned char repeater, int startTime, int endTime);
 	~Scene();
 
-	int GetId();
+	string GetId();
 	void AddSceneInput(SceneInput *sceneInput);
 	void AddSceneOutput(SceneOutput *sceneOutput);
 	void Check();

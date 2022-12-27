@@ -85,8 +85,8 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("AddScene", bind(&Gateway::OnRPCAddScene, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("DeleteScene", bind(&Gateway::OnRPCDeleteScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("AddScene", bind(&Gateway::OnRPCAddScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("DeleteScene", bind(&Gateway::OnRPCDeleteScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
@@ -352,7 +352,7 @@ int Gateway::OnRPCDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt())
 		{
-			int sceneId = dataValue["id"].asInt();
+			string sceneId = dataValue["id"].asString();
 			LOGI("Delete Scene id: %d", sceneId);
 			delete sceneList[sceneId];
 			sceneList.erase(sceneList.find(sceneId));
@@ -1155,119 +1155,156 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatabase)
 {
 	// TODO: Check Scene id exist
-	if (sceneValue.isMember("id") && sceneValue["id"].isInt() &&
-			sceneValue.isMember("repeat") && sceneValue["repeat"].isInt() &&
-			sceneValue.isMember("fullDay") && sceneValue["fullDay"].isBool() &&
-			sceneValue.isMember("type") && sceneValue["type"].isString() &&
-			sceneValue.isMember("input") && sceneValue["input"].isObject() &&
-			sceneValue.isMember("output") && sceneValue["output"].isObject())
+	if (sceneValue.isMember("EVENT_TRIGGER_ID") && sceneValue["EVENT_TRIGGER_ID"].isString() &&
+		sceneValue.isMember("PRIORITY") && sceneValue["PRIORITY"].isInt() &&
+		sceneValue.isMember("START_AT") && sceneValue["START_AT"].isString() &&
+		sceneValue.isMember("END_AT") && sceneValue["END_AT"].isString() &&
+		sceneValue.isMember("TURN_OFF_AT") && sceneValue["TURN_OFF_AT"].isString() &&
+		sceneValue.isMember("FADE_IN") && sceneValue["FADE_IN"].isInt() &&
+		sceneValue.isMember("FADE_OUT") && sceneValue["FADE_OUT"].isInt() &&
+		sceneValue.isMember("EACH_DAY") && sceneValue["EACH_DAY"].isArray() &&
+		sceneValue.isMember("LOGICAL_OPERATOR_ID") && sceneValue["LOGICAL_OPERATOR_ID"].isInt() &&
+		sceneValue.isMember("STATUS") && sceneValue["STATUS"].isInt() &&
+		sceneValue.isMember("INPUT_DEVICES") && sceneValue["INPUT_DEVICES"].isArray() &&
+		sceneValue.isMember("OUTPUT_DEVICES") && sceneValue["OUTPUT_DEVICES"].isArray() &&
+		sceneValue.isMember("OUTPUT_GROUPS") && sceneValue["OUTPUT_GROUPS"].isArray() &&
+		sceneValue.isMember("OUTPUT_SCENES") && sceneValue["OUTPUT_SCENES"].isArray())
 	{
-		int id = sceneValue["id"].asInt();
-		int repeat = sceneValue["repeat"].asInt();
-		bool fullDay = sceneValue["fullDay"].asBool();
-		string type = sceneValue["type"].asString();
+		string id = sceneValue["EVENT_TRIGGER_ID"].asString();
+		Json::Value repeatDays = sceneValue["EACH_DAY"];
+		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+		for (int i = 0; i < repeatDays.size(); ++i)
+		{
+			if (repeatDays[i] == "EACHMONDAY")
+				mon = 1;
+			else if (repeatDays[i] == "EACHTUESDAY")
+				tue = 1;
+			else if (repeatDays[i] == "EACHWEDNESDAY")
+				wed = 1;
+			else if (repeatDays[i] == "EACHTHUSDAY")
+				thu = 1;
+			else if (repeatDays[i] == "EACHFRIDAY")
+				fri = 1;
+			else if (repeatDays[i] == "EACHSATURDAY")
+				sat = 1;
+			else if(repeatDays[i] == "EACHSUNDAY")
+				sun = 1;
+		}
+		int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+		bool fullDay = (sceneValue["START_AT"].asString() == "0:0:0" && sceneValue["END_AT"].asString() == "23:59:59") ? true : false;
 		Scene *scene = NULL;
-		if (!fullDay && sceneValue.isMember("startTime") && sceneValue["startTime"].isString() &&
-				sceneValue.isMember("endTime") && sceneValue["endTime"].isString())
-		{
-			string startTime = sceneValue["startTime"].asString();
-			string endTime = sceneValue["endTime"].asString();
-			scene = new Scene(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
-		}
-		else
-		{
-			scene = new Scene(id, type, repeat);
-		}
-		if (!scene)
-		{
-			LOGE("New scene error");
-			return NULL;
-		}
-		Json::Value inputValue = sceneValue["input"];
-		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
-		{
-			Json::Value timerValue = inputValue["timer"];
-			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
-			{
-				int repeat = timerValue["repeat"].asInt();
-				string timerStr = timerValue["time"].asString();
-				LOGI("Have Timer: %s", timerStr.c_str());
-				int timer = Util::ConvertStrTimeToInt(timerStr);
-				if (timer > 0)
-				{
-					SceneInputTimer *sceneInputTimer = new SceneInputTimer(scene, timer, repeat);
-					scene->AddSceneInput(sceneInputTimer);
-				}
-			}
-		}
-		if (inputValue.isMember("device") && inputValue["device"].isArray())
-		{
-			Json::Value deviceSceneInputList = inputValue["device"];
-			for (Json::Value::ArrayIndex i = 0; i < deviceSceneInputList.size(); i++)
-			{
-				Json::Value deviceSceneInputValue = deviceSceneInputList[i];
-				if (deviceSceneInputValue.isObject())
-				{
-					if (deviceSceneInputValue.isMember("mac") && deviceSceneInputValue["mac"].isString() &&
-							deviceSceneInputValue.isMember("data") && deviceSceneInputValue["data"].isObject())
-					{
-						string mac = deviceSceneInputValue["mac"].asString();
-						Json::Value dataValue = deviceSceneInputValue["data"];
-						Device *device = getDevice(mac);
-						if (device)
-						{
-							SceneInputDevice *sceneInputDevice = new SceneInputDevice(scene, device, dataValue);
-							scene->AddSceneInput(sceneInputDevice);
-						}
-					}
-				}
-			}
-		}
 
-		Json::Value outputValue = sceneValue["output"];
-		if (outputValue.isMember("device") && outputValue["device"].isArray())
+		// TODO: Check Type of Rule:
+		/*
+			- -1: Rule Time
+			- +0: Rule OR
+			- +1: Rule AND
+			- +2: Rule Time + OR
+			- +3: Rule Time + AND
+		*/
+
+		int ruleLogicId = sceneValue["LOGICAL_OPERATOR_ID"].asInt();
+		if (ruleLogicId == -1)
 		{
-			Json::Value deviceSceneOutputList = outputValue["device"];
-			for (Json::Value::ArrayIndex i = 0; i < deviceSceneOutputList.size(); i++)
+			string type = "and";
+			if (!fullDay && sceneValue.isMember("START_AT") && sceneValue["START_AT"].isString() &&
+				sceneValue.isMember("END_AT") && sceneValue["END_AT"].isString())
 			{
-				Json::Value deviceSceneOutputValue = deviceSceneOutputList[i];
-				if (deviceSceneOutputValue.isObject())
+				string startTime = sceneValue["START_AT"].asString();
+				string endTime = sceneValue["END_AT"].asString();
+				scene = new Scene(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			}
+			else
+			{
+				scene = new Scene(id, type, repeat);
+			}
+			if (!scene)
+			{
+				LOGE("New scene error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 0)
+		{
+			string type = "or";
+			scene = new Scene(id, type, repeat);
+			if (!scene)
+			{
+				LOGE("New scene error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 1)
+		{
+			string type = "and";
+			scene = new Scene(id, type, repeat);
+			if (!scene)
+			{
+				LOGE("New scene error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 2)
+		{
+			string type = "or";
+			string startTime = sceneValue["START_AT"].asString();
+			string endTime = sceneValue["END_AT"].asString();
+			scene = new Scene(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			if (!scene)
+			{
+				LOGE("New scene error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 3)
+		{
+			string type = "and";
+			string startTime = sceneValue["START_AT"].asString();
+			string endTime = sceneValue["END_AT"].asString();
+			scene = new Scene(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			if (!scene)
+			{
+				LOGE("New scene error");
+				return NULL;
+			}
+		}
+		// Handle output
+		Json::Value deviceSceneOutputList = sceneValue["OUTPUT_DEVICES"];
+		for (Json::Value::ArrayIndex i = 0; i < deviceSceneOutputList.size(); i++)
+		{
+			Json::Value deviceSceneOutputValue = deviceSceneOutputList[i];
+			if (deviceSceneOutputValue.isObject())
+			{
+				if (deviceSceneOutputValue.isMember("DEVICE_ID") && deviceSceneOutputValue["DEVICE_ID"].isString() &&
+					deviceSceneOutputValue.isMember("PROPERTIES") && deviceSceneOutputValue["PROPERTIES"].isObject())
 				{
-					if (deviceSceneOutputValue.isMember("mac") && deviceSceneOutputValue["mac"].isString() &&
-							deviceSceneOutputValue.isMember("data") && deviceSceneOutputValue["data"].isObject())
+					Json::Value dataValue = deviceSceneOutputValue["data"];
+					string mac = deviceSceneOutputValue["DEVICE_ID"].asString();
+					Device *device = getDevice(mac);
+					if (device)
 					{
-						Json::Value dataValue = deviceSceneOutputValue["data"];
-						string mac = deviceSceneOutputValue["mac"].asString();
-						Device *device = getDevice(mac);
-						if (device)
-						{
-							SceneOutputDevice *sceneOutputDevice = new SceneOutputDevice(device, dataValue);
-							scene->AddSceneOutput(sceneOutputDevice);
-						}
+						SceneOutputDevice *sceneOutputDevice = new SceneOutputDevice(device, dataValue);
+						scene->AddSceneOutput(sceneOutputDevice);
 					}
 				}
 			}
 		}
-		if (outputValue.isMember("group") && outputValue["group"].isArray())
+		Json::Value groupSceneOutputList = sceneValue["OUTPUT_DEVICES"];
+		for (Json::Value::ArrayIndex i = 0; i < groupSceneOutputList.size(); i++)
 		{
-			Json::Value groupSceneOutputList = outputValue["group"];
-			for (Json::Value::ArrayIndex i = 0; i < groupSceneOutputList.size(); i++)
+			Json::Value groupSceneOutputValue = groupSceneOutputList[i];
+			if (groupSceneOutputValue.isObject())
 			{
-				Json::Value groupSceneOutputValue = groupSceneOutputList[i];
-				if (groupSceneOutputValue.isObject())
+				if (groupSceneOutputValue.isMember("GROUP_ID") && groupSceneOutputValue["GROUP_ID"].isInt() &&
+					groupSceneOutputValue.isMember("data") && groupSceneOutputValue["data"].isObject())
 				{
-					if (groupSceneOutputValue.isMember("id") && groupSceneOutputValue["id"].isInt() &&
-							groupSceneOutputValue.isMember("data") && groupSceneOutputValue["data"].isObject())
+					int id = groupSceneOutputValue["id"].asInt();
+					Json::Value dataValue = groupSceneOutputValue["data"];
+					Group *group = getGroup(id);
+					if (group)
 					{
-						int id = groupSceneOutputValue["id"].asInt();
-						Json::Value dataValue = groupSceneOutputValue["data"];
-						Group *group = getGroup(id);
-						if (group)
-						{
-							SceneOutputGroup *sceneOutputGroup = new SceneOutputGroup(group, dataValue);
-							scene->AddSceneOutput(sceneOutputGroup);
-						}
+						SceneOutputGroup *sceneOutputGroup = new SceneOutputGroup(group, dataValue);
+						scene->AddSceneOutput(sceneOutputGroup);
 					}
 				}
 			}
@@ -1290,6 +1327,8 @@ Scene *Gateway::AddScene(Json::Value &sceneValue, bool addGateway, bool addDatab
 	}
 	return NULL;
 }
+
+// Scene *Gateway::HandleRule
 
 SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase)
 {

@@ -29,7 +29,7 @@ private:
 
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
-	map<int, Scene *> sceneList;
+	map<string, Scene *> sceneList;
 	map<int, SceneBle *> sceneBleList;
 	vector<Device *> scanDeviceList;
 

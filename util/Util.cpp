@@ -140,6 +140,11 @@ bool Util::CompareNumber(int a, int b, string op)
 	return false;
 }
 
+int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+{
+	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
+}
+
 // trim from start
 static inline std::string &ltrim(std::string &s)
 {
@@ -385,3 +390,8 @@ void Util::LedRestoreLastValue()
 	LedZigbee(ledZigbee);
 	LedBle(ledBle);
 }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> cungdd

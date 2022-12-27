@@ -57,9 +57,9 @@ public:
 	int DeviceSceneDel(Device *device, string schedule);
 
 	int SceneRead();
-	int SceneAdd(int id, string scene);
-	int SceneUpdate(int id, string scene);
-	int SceneDel(int id);
+	int SceneAdd(string id, string scene);
+	int SceneUpdate(string id, string scene);
+	int SceneDel(string id);
 
 	int SceneBleRead();
 	int DevcieInSceneBleAdd(SceneBle *scene, Device *device, int epId);

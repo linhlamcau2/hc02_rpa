@@ -4,7 +4,7 @@
 #include <Util.h>
 #include <Log.h>
 
-Scene::Scene(int id, string type, unsigned char repeater)
+Scene::Scene(string id, string type, unsigned char repeater)
 {
 	this->id = id;
 	this->type = type;
@@ -16,7 +16,7 @@ Scene::Scene(int id, string type, unsigned char repeater)
 	timerRegisterIndex = 0;
 }
 
-Scene::Scene(int id, string type, unsigned char repeater, int startTime, int endTime)
+Scene::Scene(string id, string type, unsigned char repeater, int startTime, int endTime)
 {
 	this->id = id;
 	this->type = type;
@@ -44,7 +44,7 @@ Scene::~Scene()
 		timerSchedule->UnregisterTimer(timerRegisterIndex);
 }
 
-int Scene::GetId()
+string Scene::GetId()
 {
 	return id;
 }
