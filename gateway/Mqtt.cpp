@@ -224,6 +224,7 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 
 int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 {
+	LOGD("Publish");
 	time_t currentTime;
 	if (!connected)
 		return -1;

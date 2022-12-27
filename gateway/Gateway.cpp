@@ -38,9 +38,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
-		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, "localhost", 1883, mac, "RD", "65EDE7539FC3ADC1DC91A37EF983FC6D5747D71D4FC5CAB9E99826C605653187", 10),
-			Udp(8181)
+	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+	  LocalProtocol(mac, "localhost", 1883, mac, "RD", "65EDE7539FC3ADC1DC91A37EF983FC6D5747D71D4FC5CAB9E99826C605653187", 10),
+	  Udp(8181)
 {
 	this->mac = mac;
 	dormitoryId = "";
@@ -63,7 +63,7 @@ void Gateway::init()
 
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
-	UdpCmdCallbackRegister("HC_CONNECT_WIFI", bind(&Gateway::OnUdpHcConnectWifi, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
@@ -132,20 +132,30 @@ int Gateway::UdpBroadcastThread()
 	{
 		inet_pton(AF_INET, "10.10.10.255", &s.sin_addr);
 	}
-	else {
-		s.sin_addr.s_addr = htonl(INADDR_BROADCAST);	
+	else
+	{
+		s.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 	}
 	// inet_pton(AF_INET, "255.255.255.255", &s.sin_addr);
-	// 
+	//
 
 	Json::Value hcBroadcastValue;
 	Json::Value hcInfoValue;
+	Json::Value appInfoValaue;
+	Json::Value dataValue;
+	hcBroadcastValue["CMD"] = "HC_BROADCAST";
+	hcBroadcastValue["REQUEST_ID"] = Util::genRandRQI(16);
+	hcBroadcastValue["TIME"] = Util::GetCurrentTimeStr();
+	hcBroadcastValue["CONNECTION_TYPE"] = 0;
+	hcInfoValue["TYPE"] = 2;
 	hcInfoValue["DORMITORY_ID"] = dormitoryId;
 	hcInfoValue["MAC"] = mac;
 	hcInfoValue["VERSION"] = STR(VERSION);
 	hcInfoValue["IP"] = Util::GetIP();
-	hcBroadcastValue["CMD"] = "HC_BROADCAST";
-	hcBroadcastValue["DATA"] = hcInfoValue;
+	hcBroadcastValue["FROM"] = hcInfoValue;
+	appInfoValaue["TYPE"] = 0;
+	hcBroadcastValue["TO"] = appInfoValaue;
+	// hcBroadcastValue["DATA"] = dataValue;
 	isUdpBroadcasting = true;
 	for (int i = 0; i < 30; i++)
 	{
@@ -206,58 +216,144 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 	return 10; // respValue as an array
 }
 
-int Gateway::OnUdpHcConnectWifi(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::GatewayConnectToCloudNotice()
 {
-	LOGD("OnUdpHcConnectWifi");
-	if (reqValue.isMember("DORMITORY_ID") && reqValue["DORMITORY_ID"].isString())
+	LOGD("OnGatewayConnectToCloudNotice");
+	Json::Value respValue;
+	Json::Value from;
+	Json::Value to;
+	Json::Value data;
+
+	respValue["CMD"] = "HC_UPDATE";
+	respValue["REQUEST_ID"] = Util::genRandRQI(16);
+	respValue["TIME"] = Util::GetCurrentTimeStr();
+	respValue["CONNECTION_TYPE"] = 3;
+
+	from["TYPE"] = 2;
+	from["DORMITORY_ID"] = dormitoryId;
+	from["IP"] = Util::GetIP();
+	from["MAC"] = Util::GetMacAddress();
+	from["VERSION"] = STR(VERSION);
+	respValue["FROM"] = from;
+
+	to["TYPE"] = 1;
+	to["ENVIRONMENT"] = "test";
+	respValue["TO"] = to;
+
+	// respValue["DATA"] = data;
+
+	return CloudPublish("HC.CONTROL.RESPONSE", respValue.toString());
+}
+
+int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpHcSetup");
+	string rqi = "";
+	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
 	{
-		string dormitoryId = reqValue["DORMITORY_ID"].asString();
-		if (this->dormitoryId == "")
+		rqi = reqValue["REQUEST_ID"].asString();
+	}
+	if (reqValue.isMember("FROM") && reqValue.isMember("TO") && reqValue.isMember("DATA"))
+	{
+		Json::Value from = reqValue["FROM"];
+		Json::Value to = reqValue["TO"];
+		Json::Value data = reqValue["DATA"];
+
+		string timeValue = Util::GetCurrentTimeStr();
+		respValue["CMD"] = "SETUP_HC_RESPONSE";
+		respValue["REQUEST_ID"] = rqi;
+		respValue["TIME"] = timeValue;
+		respValue["CONNECTION_TYPE"] = 0;
+
+		Json::Value toRsp;
+		Json::Value fromRsp;
+		Json::Value dataRsp;
+
+		toRsp["TYPE"] = 0;
+		if (from.isMember("OS") && from["OS"].isString())
 		{
-			if (reqValue.isMember("SSID") && reqValue["SSID"].isString() &&
-					reqValue.isMember("PASSWORD") && reqValue["PASSWORD"].isString() &&
-					reqValue.isMember("ENCRYPTION") && reqValue["ENCRYPTION"].isString())
+			toRsp["OS"] = from["OS"].asString();
+		}
+		if (from.isMember("OS_VERSION") && from["OS_VERSION"].isString())
+		{
+			toRsp["OS_VERSION"] = from["OS_VERSION"].asString();
+		}
+		if (from.isMember("APP_BUILD") && from["APP_BUILD"].isString())
+		{
+			toRsp["APP_BUILD"] = from["APP_BUILD"].asString();
+		}
+		if (from.isMember("APP_VERSION") && from["APP_VERSION"].isString())
+		{
+			toRsp["APP_VERSION"] = from["APP_VERSION"].asString();
+		}
+		respValue["TO"] = toRsp;
+
+		fromRsp["TYPE"] = 2;
+		fromRsp["MAC"] = Util::GetMacAddress();
+		fromRsp["VERSION"] = STR(VERSION);
+
+		if (from.isMember("TYPE") && from["TYPE"].isInt() && to.isMember("TYPE") && to["TYPE"].isInt())
+		{
+			if ((from["TYPE"].asInt() == 0) && to["TYPE"].asInt())
 			{
-				string ssidEnc = reqValue["SSID"].asString();
-				string passwordEnc = reqValue["PASSWORD"].asString();
-				string encryption = reqValue["ENCRYPTION"].asString();
-				LOGD("ssidEnc: %s, passwordEnc: %s, encryptionEnd: %s", ssidEnc.c_str(), passwordEnc.c_str(), encryption.c_str());
-				string ssid, password;
-				if (macaron::Base64::Decode(ssidEnc, ssid) == "" &&
-						macaron::Base64::Decode(passwordEnc, password) == "")
+				if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString())
 				{
-					LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
-					respValue["CMD"] = "HC_CONNECT_STATUS";
-					if (Util::ConnectToWifi(ssid, password, encryption) == 0)
+					string dormitory = data["DORMITORY_ID"].asString();
+					// TODO: compare or save dormitory
+					fromRsp["IP"] = Util::GetIP();
+					fromRsp["DORMITORY_ID"] = dormitory;
+					respValue["FROM"] = fromRsp;
+					if (Util::GetIP().compare("10.10.10.1") != 0)
 					{
-						this->dormitoryId = dormitoryId;
-						respValue["DATA"] = "CONNECT_WIFI_DONE";
+						dataRsp["STATUS"] = "SUCCESS";
+						respValue["DATA"] = dataRsp;
+						GatewayConnectToCloudNotice();
+						return 0;
 					}
 					else
 					{
-						respValue["DATA"] = "CONNECT_WIFI_ERROR";
+						if (data.isMember("WIFI"))
+						{
+							Json::Value wifi = data["WIFI"];
+							if (wifi.isMember("SSID") && wifi["SSID"].isString() &&
+								wifi.isMember("PASSSWORD") && wifi["PASSSWORD"].isString() &&
+								wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
+							{
+								string ssid = wifi["SSID"].asString();
+								string password = wifi["PASSSWORD"].asString();
+								string encryption = wifi["ENCRYPTION"].asString();
+								LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
+
+								if (Util::ConnectToWifi(ssid, password, encryption) == 0)
+								{
+									dataRsp["STATUS"] = "SUCCESS";
+									respValue["DATA"] = dataRsp;
+									GatewayConnectToCloudNotice();
+								}
+								else
+								{
+									dataRsp["STATUS"] = "FAILED";
+									respValue["DATA"] = dataRsp;
+								}
+								return 0;
+							}
+						}
 					}
-					return 0;
 				}
 				else
 				{
-					LOGW("OnUdpHcConnectWifi Wifi enctyption data error");
-					LOGW("ssidEnc: %s, passwordEnc: %s, encryptionEnd: %s", ssidEnc.c_str(), passwordEnc.c_str(), encryption.c_str());
+					LOGW("OnUdpHcSetup don't have dormitory");
 				}
 			}
 			else
 			{
-				LOGW("OnUdpHcConnectWifi payload: %s error", reqValue.toString().c_str());
+				LOGW("OnUdpHcSetup error data from - to");
 			}
-		}
-		else
-		{
-			LOGW("OnUdpHcConnectWifi this->dormitoryId != \"\"");
 		}
 	}
 	else
 	{
-		LOGW("OnUdpHcConnectWifi payload: %s error", reqValue.toString().c_str());
+		LOGW("OnUdpHcSetup payload: %s error", reqValue.toString().c_str());
 	}
 	return -1;
 }
@@ -377,8 +473,8 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
-				dataValue.isMember("NAME") && dataValue["NAME"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
+			dataValue.isMember("NAME") && dataValue["NAME"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
@@ -429,7 +525,7 @@ int Gateway::OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt() &&
-				dataValue.isMember("name") && dataValue["name"].isString())
+			dataValue.isMember("name") && dataValue["name"].isString())
 		{
 			int groupId = dataValue["id"].asInt();
 			string name = dataValue["name"].asString();
@@ -483,7 +579,7 @@ int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 		{
 			Json::Value dataValue = reqValue["DATA"];
 			if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-					dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 			{
 				string groupId = dataValue["GROUP_ID"].asString();
 				Json::Value deviceList = dataValue["DEVICES"].isArray();
@@ -529,7 +625,7 @@ int Gateway::OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			int groupId = dataValue["GROUP_ID"].asInt();
 			Group *group = getGroup(groupId);
@@ -568,10 +664,10 @@ int Gateway::OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isString() &&
-				dataValue.isMember("name") && dataValue["name"].isString() &&
-				dataValue.isMember("mac") && dataValue["mac"].isString() &&
-				dataValue.isMember("addr") && dataValue["addr"].isInt() &&
-				dataValue.isMember("type") && dataValue["type"].isInt())
+			dataValue.isMember("name") && dataValue["name"].isString() &&
+			dataValue.isMember("mac") && dataValue["mac"].isString() &&
+			dataValue.isMember("addr") && dataValue["addr"].isInt() &&
+			dataValue.isMember("type") && dataValue["type"].isInt())
 		{
 			string deviceId = dataValue["id"].asString();
 			string name = dataValue["name"].asString();
@@ -594,7 +690,7 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -674,7 +770,7 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -685,8 +781,8 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					Json::Value property = properties[i];
 					if (property.isObject() &&
-							property.isMember("ID") && property["ID"].isInt() &&
-							property.isMember("VALUE") && property["VALUE"].isInt())
+						property.isMember("ID") && property["ID"].isInt() &&
+						property.isMember("VALUE") && property["VALUE"].isInt())
 					{
 						int id = property["ID"].asInt();
 						int value = property["VALUE"].asInt();
@@ -718,7 +814,7 @@ int Gateway::OnRPCControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -729,8 +825,8 @@ int Gateway::OnRPCControlGroup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					Json::Value property = properties[i];
 					if (property.isObject() &&
-							property.isMember("ID") && property["ID"].isInt() &&
-							property.isMember("VALUE") && property["VALUE"].isInt())
+						property.isMember("ID") && property["ID"].isInt() &&
+						property.isMember("VALUE") && property["VALUE"].isInt())
 					{
 						int id = property["ID"].asInt();
 						int value = property["VALUE"].asInt();
@@ -781,11 +877,11 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("type") && dataValue["type"].isString() &&
-				dataValue.isMember("key") && dataValue["key"].isString() &&
-				dataValue.isMember("user") && dataValue["user"].isString() &&
-				dataValue.isMember("host") && dataValue["host"].isString() &&
-				dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
-				dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
+			dataValue.isMember("key") && dataValue["key"].isString() &&
+			dataValue.isMember("user") && dataValue["user"].isString() &&
+			dataValue.isMember("host") && dataValue["host"].isString() &&
+			dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
+			dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = dataValue["type"].asString();
@@ -1021,11 +1117,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 {
 	// TODO: Check Rule id exist
 	if (ruleValue.isMember("id") && ruleValue["id"].isInt() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("fullDay") && ruleValue["fullDay"].isBool() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isObject())
+		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+		ruleValue.isMember("fullDay") && ruleValue["fullDay"].isBool() &&
+		ruleValue.isMember("type") && ruleValue["type"].isString() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isObject())
 	{
 		int id = ruleValue["id"].asInt();
 		int repeat = ruleValue["repeat"].asInt();
@@ -1033,7 +1129,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		string type = ruleValue["type"].asString();
 		Rule *rule = NULL;
 		if (!fullDay && ruleValue.isMember("startTime") && ruleValue["startTime"].isString() &&
-				ruleValue.isMember("endTime") && ruleValue["endTime"].isString())
+			ruleValue.isMember("endTime") && ruleValue["endTime"].isString())
 		{
 			string startTime = ruleValue["startTime"].asString();
 			string endTime = ruleValue["endTime"].asString();
@@ -1053,7 +1149,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+				timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1075,7 +1171,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				if (deviceRuleInputValue.isObject())
 				{
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
 						string mac = deviceRuleInputValue["mac"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];
@@ -1100,7 +1196,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				if (deviceRuleOutputValue.isObject())
 				{
 					if (deviceRuleOutputValue.isMember("mac") && deviceRuleOutputValue["mac"].isString() &&
-							deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
+						deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
 					{
 						Json::Value dataValue = deviceRuleOutputValue["data"];
 						string mac = deviceRuleOutputValue["mac"].asString();
@@ -1123,7 +1219,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				if (groupRuleOutputValue.isObject())
 				{
 					if (groupRuleOutputValue.isMember("id") && groupRuleOutputValue["id"].isInt() &&
-							groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
+						groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
 					{
 						int id = groupRuleOutputValue["id"].asInt();
 						Json::Value dataValue = groupRuleOutputValue["data"];

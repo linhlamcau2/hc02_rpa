@@ -12,13 +12,14 @@
 #include <algorithm>
 #include <functional>
 #include <cctype>
+#include <ctime>
 #include <locale>
 #include <Base64.h>
 #include "Log.h"
 
 using namespace std;
 
-string genRandRQI(int size)
+string Util::genRandRQI(int size)
 {
 	string rqi = "";
 	for (int i = 0; i < size; i++)
@@ -37,7 +38,7 @@ string getTimeStrFromTime(time_t t)
 	return string(timeBuffer);
 }
 
-string getCurrentTimeStr()
+string Util::GetCurrentTimeStr()
 {
 	return getTimeStrFromTime(time(NULL));
 }

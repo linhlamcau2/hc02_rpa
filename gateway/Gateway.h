@@ -36,9 +36,11 @@ private:
 
 	int UdpBroadcastThread();
 
+	int GatewayConnectToCloudNotice();
+
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
-	int OnUdpHcConnectWifi(Json::Value &reqValue, Json::Value &respValue);
+	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
