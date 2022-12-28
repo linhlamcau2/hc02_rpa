@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 #endif
 
 	string mac = Util::GetMacAddress();
+	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
 	gateway->init();
 

@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include <endian.h>
-#include <uci.h>
+// #include <uci.h>
 #include "Config.h"
 #include "Log.h"
 
@@ -14,38 +14,40 @@ Config *config = NULL;
  ***************************************/
 static bool get_str_config_entry(char *name, char *value)
 {
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
-	{
-		//		uci_perror (ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
-		return false;
-	}
-	snprintf(value, STRING_VALUE_MAX_SIZE, "%s", ptr.o->v.string);
-	uci_free_context(ctx);
-	return true;
+	// struct uci_context *ctx;
+	// struct uci_ptr ptr;
+	// char path[STRING_VALUE_MAX_SIZE];
+	// ctx = uci_alloc_context();
+	// snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
+	// if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
+	// {
+	// 	//		uci_perror (ctx, "uci_lookup_ptr Error");
+	// 	uci_free_context(ctx);
+	// 	return false;
+	// }
+	// snprintf(value, STRING_VALUE_MAX_SIZE, "%s", ptr.o->v.string);
+	// uci_free_context(ctx);
+	// return true;
+	return false;
 }
 
 static bool get_int_config_entry(char *name, int *value)
 {
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
-	{
-		//		uci_perror (ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
-		return false;
-	}
-	*value = atoi(ptr.o->v.string);
-	uci_free_context(ctx);
-	return true;
+	// struct uci_context *ctx;
+	// struct uci_ptr ptr;
+	// char path[STRING_VALUE_MAX_SIZE];
+	// ctx = uci_alloc_context();
+	// snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
+	// if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
+	// {
+	// 	//		uci_perror (ctx, "uci_lookup_ptr Error");
+	// 	uci_free_context(ctx);
+	// 	return false;
+	// }
+	// *value = atoi(ptr.o->v.string);
+	// uci_free_context(ctx);
+	// return true;
+	return false;
 }
 
 // static bool set_str_config_entry(char *name, char *section_name, const char *value)

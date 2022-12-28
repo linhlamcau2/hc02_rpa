@@ -8,7 +8,7 @@
 #include <Group.h>
 #include <Gateway.h>
 
-#define DB_NAME "/smh.sqlite"
+#define DB_NAME "smh.sqlite"
 
 using namespace std;
 

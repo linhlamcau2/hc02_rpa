@@ -12,7 +12,7 @@ COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-s
 COMPFLAGS += -DVERSION=$(VERSION)
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
 
-LINKEDLIBS = -lpthread -lmosquittopp -lsqlite3 -luci
+LINKEDLIBS = -lpthread -lmosquitto -lsqlite3
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee

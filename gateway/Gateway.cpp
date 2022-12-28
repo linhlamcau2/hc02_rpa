@@ -39,8 +39,8 @@ Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
 		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, "localhost", 1883, mac, "", "", 10),
-			Udp(8181)
+		LocalProtocol(mac, "localhost", 1883, mac, "", "", 10),
+		Udp(8181)
 {
 	this->mac = mac;
 	dormitoryId = "";
@@ -54,12 +54,13 @@ void Gateway::init()
 	LocalProtocol::init();
 	Udp::init();
 
-	LOGI("DeviceRead");
+	LOGI("Start read Db");
 	database->DeviceRead();
 	database->DeviceAttributeRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
 	database->RuleRead();
+	LOGI("Read Db done");
 
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
