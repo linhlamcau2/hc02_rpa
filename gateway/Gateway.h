@@ -71,7 +71,7 @@ private:
 	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
-	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
+	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
 
 	/**

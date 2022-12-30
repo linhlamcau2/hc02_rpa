@@ -52,7 +52,7 @@ bool Group::AddDevice(Device *device, int epId)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->AddGroup(id, device->GetAddr(), epId) == 0)
+		if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
 		{
 			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 			if (deviceInGroup)
@@ -144,15 +144,15 @@ void Group::DoBle(Json::Value *dataValue)
 			string method = (*dataValue)["method"].asString();
 			if (method == "TurnOn")
 			{
-				bleProtocol->TurnOnOff(0xC000 + id, 0);
+				// bleProtocol->TurnOnOff(0xC000 + id, 0);
 			}
 			else if (method == "TurnOff")
 			{
-				bleProtocol->TurnOnOff(0xC000 + id, 1);
+				// bleProtocol->TurnOnOff(0xC000 + id, 1);
 			}
 			else if (method == "Toggle")
 			{
-				bleProtocol->TurnOnOff(0xC000 + id, 2);
+				// bleProtocol->TurnOnOff(0xC000 + id, 2);
 			}
 			else
 			{

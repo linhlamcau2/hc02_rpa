@@ -9,12 +9,6 @@
 #define APP_REQ 0xFFE8
 #define RAL_MAGIC 0x0428
 
-// #define SCAN_RESP 0x8891
-// #define PRO_RESP 0x8B91
-// #define PROVISION_RESP 0x8991
-// #define BINDING_ALL_RESP 0x8A91
-// #define APP_RESP 0x8191
-
 enum
 {
 	// send cmd part
@@ -151,10 +145,30 @@ public:
 	int BindingAll();
 	int SetGwAddr(uint16_t devAddr, uint16_t gwAddr = 0x0002);
 	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType);
-	int TurnOnOff(uint16_t devAddr, uint8_t onoff);
-	int Dimming(uint16_t devAddr, uint16_t dim);
 
-	int AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId);
+	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
+	int GetOnoffLight(uint16_t devAddr);
+	int SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transition, bool ack);
+	int GetDimming(uint16_t devAddr);
+	int SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition, bool ack);
+	int GetCct(uint16_t devAddr);
+	int SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t L, uint16_t transition, bool ack);
+	int GetHSL(uint16_t devAddr);
+	int SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, uint16_t transition, bool ack);
+	int GetCctDimLight(uint16_t devAddr);
+
+    	//group light
+	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
+	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
+	
+	//scene lights
+	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
+	int DelSceneLights(uint16_t devAddr, uint16_t scene);
+	int CallSceneLight(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack);
+	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
+	
+	//update status lights
+	int UpdateLights(uint16_t devAddr);
 };
 
 extern BleProtocol *bleProtocol;

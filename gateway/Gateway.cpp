@@ -37,9 +37,9 @@
 
 Gateway *gateway = NULL;
 
-Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
+Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
 	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-	  LocalProtocol(mac, "localhost", 1883, mac, "RD", "65EDE7539FC3ADC1DC91A37EF983FC6D5747D71D4FC5CAB9E99826C605653187", 10),
+	  LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
 	  Udp(8181)
 {
 	this->mac = mac;
@@ -161,8 +161,11 @@ int Gateway::UdpBroadcastThread()
 	{
 		if (!isUdpBroadcasting)
 			break;
+		Util::LedInternet(false);
+		usleep(500000);
 		send(hcBroadcastValue.toString(), &s, sizeof(s));
-		sleep(1);
+		Util::LedInternet(true);
+		usleep(500000);
 	}
 	isUdpBroadcasting = false;
 	free(udpBroadcastThread);

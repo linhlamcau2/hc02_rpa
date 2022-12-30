@@ -167,6 +167,7 @@ void Config::ReadConfig()
 	char str_temp[STRING_VALUE_MAX_SIZE];
 	int int_temp = 0;
 
+	//server
 	if (get_str_config_entry((char *)CONFIG_ENV HOST_KEY, str_temp))
 		host = string(str_temp);
 	else
@@ -197,6 +198,38 @@ void Config::ReadConfig()
 	else
 		keepAlive = KEEP_ALIVE_DEFAULT;
 
+	//local
+
+	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL HOST_KEY, str_temp))
+		localHost= string(str_temp);
+	else
+		localHost = HOST_DEFAULT;
+
+	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL PORT_KEY, &int_temp))
+		localPort = int_temp;
+	else
+		localPort = PORT_DEFAULT;
+
+	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL CLIENT_ID_KEY, str_temp))
+		localClientId = string(str_temp);
+	else
+		localClientId = CLIENT_ID_DEFAULT;
+
+	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL USERNAME_KEY, str_temp))
+		localUsername = string(str_temp);
+	else
+		localUsername = USERNAME_DEFAULT;
+
+	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL PASSWORD_KEY, str_temp))
+		localPassword = string(str_temp);
+	else
+		localPassword = PASSWORD_DEFAULT;
+
+	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL KEEP_ALIVE_KEY, &int_temp))
+		localKeepAlive = int_temp;
+	else
+		localKeepAlive = KEEP_ALIVE_DEFAULT;
+
 	Print();
 }
 
@@ -210,8 +243,18 @@ void Config::Print()
 	LOGI("username: %s", username.c_str());
 	LOGI("password: %s", password.c_str());
 	LOGI("keepAlive: %d", keepAlive);
+
+	if (localHost == "")
+		LOGE("Local Null");
+	LOGI("Local host: %s", localHost.c_str());
+	LOGI("Local port: %d", localPort);
+	LOGI("Local clientId: %s", localClientId.c_str());
+	LOGI("Local username: %s", localUsername.c_str());
+	LOGI("Local password: %s", localPassword.c_str());
+	LOGI("Local keepAlive: %d", localKeepAlive);
 }
 
+//Get info server
 string Config::GetHost()
 {
 	return host;
@@ -240,4 +283,35 @@ string Config::GetPassword()
 int Config::GetKeepAlive()
 {
 	return keepAlive;
+}
+
+//Get info local
+string Config::GetLocalHost()
+{
+	return localHost;
+}
+
+int Config::GetLocalPort()
+{
+	return localPort;
+}
+
+string Config::GetLocalClientId()
+{
+	return localClientId;
+}
+
+string Config::GetLocalUsername()
+{
+	return localUsername;
+}
+
+string Config::GetLocalPassword()
+{
+	return localPassword;
+}
+
+int Config::GetLocalKeepAlive()
+{
+	return localKeepAlive;
 }

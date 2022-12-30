@@ -84,12 +84,10 @@ bool ElementOnOff::Do(Json::Value &dataValue)
 		int onoff = dataValue[elementName].asInt();
 		if (onoff == 0 || onoff == 1)
 		{
-			bleProtocol->TurnOnOff(addr, onoff);
 			return true;
 		}
 		else if (onoff == 2)
 		{
-			bleProtocol->TurnOnOff(addr, this->onoff ? 0 : 1);
 			return true;
 		}
 	}
@@ -99,6 +97,6 @@ bool ElementOnOff::Do(Json::Value &dataValue)
 bool ElementOnOff::Do(int value)
 {
 	LOGD("DoTrigger value: %d", value);
-	bleProtocol->TurnOnOff(addr, value);
+	//bleprotocol call setonoff light
 	return true;
 }
