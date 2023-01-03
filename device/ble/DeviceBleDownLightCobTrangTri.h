@@ -5,13 +5,13 @@
 
 using namespace std;
 
-class DeviceBleDownLightSmt : public DeviceBle
+class DeviceBleDownLightCobTrangTri : public DeviceBle
 {
 private:
 	ElementOnOff *elementOnOff;
 
 public:
-	DeviceBleDownLightSmt(string id, string name, string mac, uint32_t addr);
+	DeviceBleDownLightCobTrangTri(string id, string name, string mac, uint32_t addr);
 
 	int BuildTelemetryValue(Json::Value &pushDataValue);
 	void InputData(uint8_t *data, int len, uint32_t addr = 0);

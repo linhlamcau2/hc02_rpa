@@ -117,6 +117,7 @@ private:
 
 	// TODO: Add init state
 	uint8_t netKey[16];
+	uint8_t appKey[16];
 	uint8_t gwKey[16];
 	uint16_t nextAddr;
 
@@ -131,6 +132,7 @@ public:
 	virtual ~BleProtocol();
 
 	void init();
+	int GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
 	int SetGwKey();
@@ -144,7 +146,9 @@ public:
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
 	int SetGwAddr(uint16_t devAddr, uint16_t gwAddr = 0x0002);
-	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType);
+	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t deviceVersion);
+
+	int ResetDev(uint16_t devAddr);
 
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);

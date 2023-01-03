@@ -98,5 +98,6 @@ bool ElementOnOff::Do(int value)
 {
 	LOGD("DoTrigger value: %d", value);
 	//bleprotocol call setonoff light
+	bleProtocol->SetOnOffLight(addr, value, 0, true);
 	return true;
 }

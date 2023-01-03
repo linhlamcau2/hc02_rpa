@@ -32,6 +32,13 @@ public:
 	int DeviceDel(string mac);
 	int DeviceDelAll();
 
+	int GatewayRead();
+	int GatewayAdd(Gateway *gateway);
+	int GatewayUpdate(Gateway *gateway);
+	int GatewayDel(Gateway *gateway);
+	int GatewayDel(string id);
+	int GatewayDelAll();
+
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
 	int DeviceAttributeUpdate(Device *device, int attributeId, double value);

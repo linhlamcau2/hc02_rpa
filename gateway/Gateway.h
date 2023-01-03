@@ -23,6 +23,10 @@ class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 private:
 	string mac;
 	string dormitoryId;
+	string ble_netkey;
+	string ble_appkey;
+	string ble_devicekey;
+	string version;
 	thread *udpBroadcastThread;
 	bool isUdpBroadcasting;
 
@@ -95,6 +99,23 @@ public:
 	Device *AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
+
+	string getBleNetkey();
+	string getBleAppKey();
+	string getBleDeviceKey();
+	string getDormitory();
+	string getId();
+	string getVersion();
+	string getName();
+
+	void setBleNetkey(string netkey);
+	void setBleAppkey(string appkey);
+	void setBleDevicekey(string devicekey);
+	void setDormitory(string dormitory);
+	void setId(string id);
+	void setVersion(string version);
+	void setName(string name);
+
 
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);

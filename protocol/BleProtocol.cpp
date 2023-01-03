@@ -16,7 +16,7 @@ BleProtocol *bleProtocol = NULL;
 
 static uint8_t keyAes[] = {0x44, 0x69, 0x67, 0x69, 0x74, 0x61, 0x6c, 0x40, 0x32, 0x38, 0x31, 0x31, 0x32, 0x38, 0x30, 0x34};
 static uint8_t plaintext[] = {0x24, 0x02, 0x28, 0x04, 0x28, 0x11, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static uint8_t appKey[] = {0x60, 0x96, 0x47, 0x71, 0x73, 0x4f, 0xbd, 0x76, 0xe3, 0xb4, 0x05, 0x19, 0xd1, 0xd9, 0x4a, 0x48};
+// static uint8_t appKey[] = {0x60, 0x96, 0x47, 0x71, 0x73, 0x4f, 0xbd, 0x76, 0xe3, 0xb4, 0x05, 0x19, 0xd1, 0xd9, 0x4a, 0x48};
 
 BleProtocol::BleProtocol(char *uartPort, int uartBaudrate) : Uart(uartPort, 100000)
 {
@@ -205,6 +205,24 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	// return Write(dataReq, lenReq);
 }
 
+int BleProtocol::GetAppKey()
+{
+	string appkeyStr = gateway->getBleAppKey();
+	if (appkeyStr.compare("") == 0)
+	{
+		srand((int) time(0));
+		for (int i=0; i < 16; i++)
+		{
+			appKey[i] = rand() % 256;
+		}
+
+	}
+	else
+	{
+		
+	}
+}
+
 int BleProtocol::GetNetKey()
 {
 	LOGD("GetNetKey");
@@ -223,7 +241,9 @@ int BleProtocol::GetNetKey()
 			uint8_t addr[2];
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)dataRsp;
-		if (data_message->magic[0] == 0x11 && data_message->magic[1] == 0x22 && data_message->magic[2] == 0x33 && data_message->magic[3] == 0x44)
+
+		uint32_t ivIndex = (data_message->magic[0] << 24) | (data_message->magic[1] << 16) | (data_message->magic[2] << 8) | (data_message->magic[3]);
+		if ((ivIndex == 0x11223344) || (ivIndex == 0))
 		{
 			for (int i = 0; i < 16; i++)
 			{
@@ -233,17 +253,14 @@ int BleProtocol::GetNetKey()
 			if (nextAddr == 0)
 				nextAddr = 2;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
-			// for (int i = 0; i < sizeof(netKey); i++)
-			// {
-			// 	printf("%02X", netKey[i]);
-			// }
 		}
 		else
 		{
 			for (int i = 0; i < 16; i++)
 			{
-				netKey[i] = rand() & 0xFF;
-				gwKey[i] = rand() & 0xFF;
+				srand((int) time(0));
+				netKey[i] = rand() % 256;
+				gwKey[i] = rand() % 256;
 			}
 			SetNetKey();
 			SetGwKey();
@@ -360,12 +377,13 @@ string BleProtocol::uuidToStr(uuid_t *uuid)
 static uint32_t convertDeviceType(uint32_t type)
 {
 	uint8_t *arr = (uint8_t *)&type;
-	return arr[0] + (arr[1] * 1000) + (arr[2] * 10000);
+	return (arr[0] + (arr[1] * 1000) + (arr[2] * 10000));
 }
 
 void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
+	uint16_t version = 0;
 	uint32_t deviceType = 0;
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
 	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
@@ -389,13 +407,14 @@ void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						}
 						else
 						{
-							if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType))
+							if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
 							{
 								deviceType = convertDeviceType(deviceType);
 								if (deviceType == BLE_DOWNLIGHT_SMT ||
 										deviceType == BLE_SWITCH_4 ||
 										deviceType == BLE_DC_SCENE_CONTACT ||
-										deviceType == BLE_TEMP_HUM_SENSOR)
+										deviceType == BLE_TEMP_HUM_SENSOR  ||
+										deviceType == BLE_DOWNLIGHT_COB_TRANG_TRI)
 								{
 									device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, nextAddr, deviceType, true, true);
 									if (device)
@@ -405,18 +424,21 @@ void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 									else
 									{
 										// TODO: remove device
+										ResetDev(nextAddr);
 									}
 								}
 								else
 								{
 									// TODO: remove device
 									LOGW("Ble device type 0x%04X not support", deviceType);
+									ResetDev(nextAddr);
 								}
 							}
 							else
 							{
 								// TODO: remove device
 								LOGW("GetDeviceType false");
+								ResetDev(nextAddr);
 							}
 						}
 					}
@@ -424,6 +446,7 @@ void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 					{
 						// TODO: remove device
 						LOGW("SetGwAddr false");
+						ResetDev(nextAddr);
 					}
 				}
 				else
@@ -606,6 +629,7 @@ static void genSecurityKey(uint8_t *mac, uint16_t devAddr, uint8_t *out)
 		printf("%02x ", outAes[j]);
 	}
 	printf("\n");
+	//27 dc 97 0c 30 08 1c 07 82 49 ae 29 c7 ea 3b e6 95 6e b6 a0 03 87 ed 08 3d dd 1c 9e e5 99 41 91
 	for (int i = 0; i < 6; i++)
 	{
 		out[i] = outAes[i + 10];
@@ -613,7 +637,7 @@ static void genSecurityKey(uint8_t *mac, uint16_t devAddr, uint8_t *out)
 	free(outAes);
 }
 
-int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType)
+int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t deviceVersion)
 {
 	LOGD("GetDeviceType");
 	uint8_t dataRsp[100];
@@ -647,6 +671,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 			uint8_t opcode[3];
 			uint8_t header[2];
 			uint8_t deviceType[3];
+			uint8_t version[2];
 		} check_type_rsp_message_t;
 		check_type_rsp_message_t *check_type_rsp_message = (check_type_rsp_message_t *)dataRsp;
 		if (check_type_rsp_message->devAddr == devAddr)
@@ -654,13 +679,37 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 			if (check_type_rsp_message->opcode[0] == 0xE1 && check_type_rsp_message->opcode[1] == 0x11 && check_type_rsp_message->opcode[2] == 0x02 && check_type_rsp_message->header[0] == 0x03 && check_type_rsp_message->header[1] == 0x00)
 			{
 				deviceType = (check_type_rsp_message->deviceType[0] << 16) | (check_type_rsp_message->deviceType[1] << 8) | check_type_rsp_message->deviceType[2];
-				LOGD("GetDeviceType OK, deviceType: 0x%04X", deviceType);
+				deviceVersion = (check_type_rsp_message->version[0] << 8) | (check_type_rsp_message->version[1]) ;
+				LOGD("GetDeviceType OK, deviceType: 0x%04X, version: %d", deviceType, deviceVersion);
 				return 0;
 			}
 		}
 	}
 	LOGW("GetDeviceType err");
 	return -1;
+}
+
+int BleProtocol::ResetDev(uint16_t devAddr)
+{
+	LOGD("Reset dev addr: 0x%04X",devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint16_t opcode;
+	} reset_message_t;
+	reset_message_t reset_message = {0};
+	memset(&reset_message, 0x00, sizeof(reset_message));
+	uint8_t resetHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x80, 0x4a};
+	reset_message.addr = devAddr;
+	reset_message.opcode = 0x4980;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, 10, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, resetHeader, 0, 6);
+	if (rs == 0)
+	{
+		return 0;
+	}
 }
 
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)

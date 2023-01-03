@@ -18,6 +18,7 @@
 
 #include "BleProtocol.h"
 #include "DeviceBleDownLightSmt.h"
+#include "DeviceBleDownLightCobTrangTri.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
@@ -44,6 +45,9 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 {
 	this->mac = mac;
 	dormitoryId = "";
+	ble_appkey = "";
+	ble_appkey = "";
+	ble_devicekey = "";
 	udpBroadcastThread = NULL;
 }
 
@@ -56,6 +60,7 @@ void Gateway::init()
 
 	LOGI("DeviceRead");
 	database->DeviceRead();
+	database->GatewayRead();
 	database->DeviceAttributeRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
@@ -1058,6 +1063,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr,
 	{
 		device = new DeviceBleDownLightSmt(id, name, mac, addr);
 	}
+	else if (type == BLE_DOWNLIGHT_COB_TRANG_TRI)
+	{
+		device = new DeviceBleDownLightCobTrangTri(id, name, mac, addr);
+	}
 	else if (type == BLE_SWITCH_4)
 	{
 		device = new DeviceBleSwitch4(id, name, mac, addr);
@@ -1070,6 +1079,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr,
 	{
 		device = new DeviceBleTempHumSensor(id, name, mac, addr);
 	}
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	if (type == ZIGBEE_LUMI_PLUG)
 	{
@@ -1253,4 +1263,62 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		LOGW("Rule format error");
 	}
 	return NULL;
+}
+
+string Gateway::getBleNetkey()
+{
+	return ble_netkey;
+}
+string Gateway::getBleAppKey()
+{
+	return ble_appkey;
+}
+string Gateway::getBleDeviceKey()
+{
+	return ble_devicekey;
+}
+string Gateway::getDormitory()
+{
+	return dormitoryId;
+}
+string Gateway::getId()
+{
+	return mac;
+}
+string Gateway::getVersion()
+{
+	return version;
+}
+string Gateway::getName()
+{
+
+}
+
+void Gateway::setBleNetkey(string netkey)
+{
+	this->ble_netkey = netkey;
+}
+void Gateway::setBleAppkey(string appkey)
+{
+	this->ble_appkey = appkey;
+}
+void Gateway::setBleDevicekey(string devicekey)
+{
+	this->ble_devicekey = devicekey;
+}
+void Gateway::setDormitory(string dormitory)
+{
+	this->dormitoryId = dormitory;
+}
+void Gateway::setId(string id)
+{
+	this->mac = id;
+}
+void Gateway::setVersion(string version)
+{
+	this->version = version;
+}
+void Gateway::setName(string name)
+{
+
 }

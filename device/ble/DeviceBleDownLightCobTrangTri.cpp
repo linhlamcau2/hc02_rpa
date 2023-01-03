@@ -1,19 +1,19 @@
-#include "DeviceBleDownLightSmt.h"
+#include "DeviceBleDownLightCobTrangTri.h"
 #include <Log.h>
 
-DeviceBleDownLightSmt::DeviceBleDownLightSmt(string id, string name, string mac, uint32_t addr)
+DeviceBleDownLightCobTrangTri::DeviceBleDownLightCobTrangTri(string id, string name, string mac, uint32_t addr)
 		: DeviceBle(id, name, mac, addr, BLE_DOWNLIGHT_SMT)
 {
 	elementOnOff = new ElementOnOff(this, addr);
 }
 
-int DeviceBleDownLightSmt::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleDownLightCobTrangTri::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
 	return 0;
 }
 
-void DeviceBleDownLightSmt::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleDownLightCobTrangTri::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	typedef struct
 	{
@@ -29,7 +29,7 @@ void DeviceBleDownLightSmt::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBleDownLightSmt::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleDownLightCobTrangTri::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (elementOnOff->CheckData(dataValue, rs))
@@ -39,7 +39,8 @@ bool DeviceBleDownLightSmt::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-bool DeviceBleDownLightSmt::Do(int id, int value)
+
+bool DeviceBleDownLightCobTrangTri::Do(int id, int value)
 {
 	LOGD("DoTrigger id: %d, value: %d", id, value);
 	return false;
