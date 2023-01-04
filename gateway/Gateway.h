@@ -21,6 +21,7 @@ using namespace std;
 class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 {
 private:
+    string id;
 	string mac;
 	string dormitoryId;
 	string ble_netkey;

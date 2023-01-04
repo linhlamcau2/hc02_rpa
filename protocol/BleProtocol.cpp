@@ -40,6 +40,7 @@ void BleProtocol::init()
 	{
 		sleep(5);
 	}
+	GetAppKey();
 }
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -161,20 +162,20 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 {
 	int rs = 0;
 	message_rsp_list_st message_rsp_list = {
-			.status = false,
-			.opcode = opRsp,
-			.len = lenRsp,
-			.data = dataRsp,
-			.compare_data = compare_data,
-			.compare_position = compare_position,
-			.compare_len = compare_len};
+		.status = false,
+		.opcode = opRsp,
+		.len = lenRsp,
+		.data = dataRsp,
+		.compare_data = compare_data,
+		.compare_position = compare_position,
+		.compare_len = compare_len};
 	if (opRsp)
 	{
 		messageRespList.push_back(&message_rsp_list);
 	}
 
 	message_req_st message_req = {
-			.opcode = opReq};
+		.opcode = opReq};
 	for (int i = 0; i < lenReq; i++)
 	{
 		message_req.data[i] = dataReq[i];
@@ -210,16 +211,34 @@ int BleProtocol::GetAppKey()
 	string appkeyStr = gateway->getBleAppKey();
 	if (appkeyStr.compare("") == 0)
 	{
-		srand((int) time(0));
-		for (int i=0; i < 16; i++)
+		LOGD("Appkey null");
+		srand((int)time(0));
+		for (int i = 0; i < 16; i++)
 		{
 			appKey[i] = rand() % 256;
 		}
-
+		uint8_t appKeyChr[37];
+		sprintf((char *)appKeyChr, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+				appKey[0], appKey[1], appKey[2], appKey[3], appKey[4], appKey[5], appKey[6], appKey[7],
+				appKey[8], appKey[9], appKey[10], appKey[11], appKey[12], appKey[13], appKey[14], appKey[15]);
+		LOGD("New ble_appkey: %s", appKeyChr);
+		database->GatewayUpdateAppKey(gateway, string((char *)appKeyChr));
 	}
 	else
 	{
-		
+		LOGD("Appkey: %s", appkeyStr.c_str());
+		appkeyStr.erase(appkeyStr.begin() + 8, appkeyStr.begin() + 9);
+		appkeyStr.erase(appkeyStr.begin() + 12, appkeyStr.begin() + 13);
+		appkeyStr.erase(appkeyStr.begin() + 16, appkeyStr.begin() + 17);
+		appkeyStr.erase(appkeyStr.begin() + 20, appkeyStr.begin() + 21);
+		char *ak = new char[appkeyStr.length() + 1];
+		strcpy(ak, appkeyStr.c_str());
+		uint8_t temp[17] = {0};
+		for (int i = 0; i < 16; i++)
+		{
+			sscanf((char *)ak + i * 2, "%2x", &temp[i]);
+			appKey[i] = temp[i];
+		}
 	}
 }
 
@@ -256,14 +275,30 @@ int BleProtocol::GetNetKey()
 		}
 		else
 		{
+			srand((int)time(0));
 			for (int i = 0; i < 16; i++)
 			{
-				srand((int) time(0));
 				netKey[i] = rand() % 256;
 				gwKey[i] = rand() % 256;
 			}
 			SetNetKey();
 			SetGwKey();
+			uint8_t netKeyChr[37];
+			uint8_t deviceKeyChr[37];
+			sprintf((char *)netKeyChr, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+					netKey[0], netKey[1], netKey[2], netKey[3], netKey[4], netKey[5], netKey[6], netKey[7],
+					netKey[8], netKey[9], netKey[10], netKey[11], netKey[12], netKey[13], netKey[14], netKey[15]);
+			LOGD("New ble_netkey: %s", netKeyChr);
+			database->GatewayUpdateAppKey(gateway, string((char *)netKeyChr));
+
+			sprintf((char *)deviceKeyChr, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+					gwKey[0], gwKey[1], gwKey[2], gwKey[3], gwKey[4], gwKey[5], gwKey[6], gwKey[7],
+					gwKey[8], gwKey[9], gwKey[10], gwKey[11], gwKey[12], gwKey[13], gwKey[14], gwKey[15]);
+			LOGD("New ble_netkey: %s", deviceKeyChr);
+			database->GatewayUpdateAppKey(gateway, string((char *)deviceKeyChr));
+
+			database->GatewayUpdateNetKey(gateway, string((char *)netKeyChr));
+			database->GatewayUpdateDeviceKey(gateway, string((char *)deviceKeyChr));
 			rs = 1;
 		}
 	}
@@ -366,10 +401,10 @@ string BleProtocol::uuidToStr(uuid_t *uuid)
 	char buf[100];
 	uint8_t *u8Uuid = (uint8_t *)uuid;
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
-					u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
-					u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
-					u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
+			u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
+			u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
+			u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
+			u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -411,10 +446,10 @@ void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 							{
 								deviceType = convertDeviceType(deviceType);
 								if (deviceType == BLE_DOWNLIGHT_SMT ||
-										deviceType == BLE_SWITCH_4 ||
-										deviceType == BLE_DC_SCENE_CONTACT ||
-										deviceType == BLE_TEMP_HUM_SENSOR  ||
-										deviceType == BLE_DOWNLIGHT_COB_TRANG_TRI)
+									deviceType == BLE_SWITCH_4 ||
+									deviceType == BLE_DC_SCENE_CONTACT ||
+									deviceType == BLE_TEMP_HUM_SENSOR ||
+									deviceType == BLE_DOWNLIGHT_COB_TRANG_TRI)
 								{
 									device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, nextAddr, deviceType, true, true);
 									if (device)
@@ -629,7 +664,7 @@ static void genSecurityKey(uint8_t *mac, uint16_t devAddr, uint8_t *out)
 		printf("%02x ", outAes[j]);
 	}
 	printf("\n");
-	//27 dc 97 0c 30 08 1c 07 82 49 ae 29 c7 ea 3b e6 95 6e b6 a0 03 87 ed 08 3d dd 1c 9e e5 99 41 91
+	// 27 dc 97 0c 30 08 1c 07 82 49 ae 29 c7 ea 3b e6 95 6e b6 a0 03 87 ed 08 3d dd 1c 9e e5 99 41 91
 	for (int i = 0; i < 6; i++)
 	{
 		out[i] = outAes[i + 10];
@@ -679,7 +714,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 			if (check_type_rsp_message->opcode[0] == 0xE1 && check_type_rsp_message->opcode[1] == 0x11 && check_type_rsp_message->opcode[2] == 0x02 && check_type_rsp_message->header[0] == 0x03 && check_type_rsp_message->header[1] == 0x00)
 			{
 				deviceType = (check_type_rsp_message->deviceType[0] << 16) | (check_type_rsp_message->deviceType[1] << 8) | check_type_rsp_message->deviceType[2];
-				deviceVersion = (check_type_rsp_message->version[0] << 8) | (check_type_rsp_message->version[1]) ;
+				deviceVersion = (check_type_rsp_message->version[0] << 8) | (check_type_rsp_message->version[1]);
 				LOGD("GetDeviceType OK, deviceType: 0x%04X, version: %d", deviceType, deviceVersion);
 				return 0;
 			}
@@ -691,7 +726,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 
 int BleProtocol::ResetDev(uint16_t devAddr)
 {
-	LOGD("Reset dev addr: 0x%04X",devAddr);
+	LOGD("Reset dev addr: 0x%04X", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct
@@ -728,7 +763,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 	} onoff_message_t;
 	onoff_message_t onoff_message = {0};
 	memset(&onoff_message, 0x00, sizeof(onoff_message));
-	if (ack) 
+	if (ack)
 	{
 		uint8_t turnOnOffHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x82, 0x04, onoff};
 		onoff_message.addr = devAddr;
@@ -764,7 +799,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 			}
 		}
 	}
-	else 
+	else
 	{
 		onoff_message.addr = devAddr;
 		onoff_message.opcode = 0x0382;
@@ -772,7 +807,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.rev2 = 0;
 		onoff_message.transition[0] = transition & 0xFF;
 		onoff_message.transition[1] = (transition >> 8) & 0xFF;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, 0, dataRsp, &lenRsp,1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, 0, dataRsp, &lenRsp, 1000);
 		if (rs == 0)
 		{
 			return 0;
@@ -798,9 +833,9 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 	} dim_message_t;
 	dim_message_t dim_message;
 	memset(&dim_message, 0x00, sizeof(dim_message));
-	if(ack)
+	if (ack)
 	{
-		uint8_t dimmingHeader[] = {devAddr & 0xFF, (devAddr >> 8)& 0xFF, 1, 0, 0x82, 0x4E};
+		uint8_t dimmingHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x82, 0x4E};
 
 		dim_message.addr = devAddr;
 		dim_message.opcode = 0x4C82;
@@ -819,14 +854,14 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 				uint8_t data[8];
 			} dim_rsp_message_t;
 			dim_rsp_message_t *dim_rsp_message = (dim_rsp_message_t *)dataRsp;
-			if (lenRsp == 8) 
+			if (lenRsp == 8)
 			{
 				if ((dim_rsp_message->data[0] | dim_rsp_message->data[1] << 8) == dim)
 				{
 					return 0;
 				}
 			}
-			else if (lenRsp > 8) 
+			else if (lenRsp > 8)
 			{
 				if ((dim_rsp_message->data[2] | dim_rsp_message->data[3] << 8) == dim)
 				{
@@ -835,7 +870,7 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 			}
 		}
 	}
-	else 
+	else
 	{
 		dim_message.addr = devAddr;
 		dim_message.opcode = 0x4d82;
@@ -856,7 +891,8 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition, bool ack)
 {
 	LOGD("Set Cct addr: 0x%04X value %d", devAddr, cct);
-	if(devAddr < 49152) {
+	if (devAddr < 49152)
+	{
 		devAddr++;
 	}
 	uint8_t dataRsp[100];
@@ -874,11 +910,12 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 	memset(&cct_message, 0x00, sizeof(cct_message));
 	if (ack)
 	{
-		uint8_t cctHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF,1, 00, 0x82, 0x66};
+		uint8_t cctHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 00, 0x82, 0x66};
 		cct_message.addr = devAddr;
 		cct_message.opcode = 0x6482;
 		cct_message.cct = cct;
-		for(int count = 0; count < 3; count++) {
+		for (int count = 0; count < 3; count++)
+		{
 			cct_message.offset[count] = 0;
 		}
 		cct_message.transition[0] = transition & 0xFF;
@@ -916,7 +953,8 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 		cct_message.addr = devAddr;
 		cct_message.opcode = 0x6582;
 		cct_message.cct = cct;
-		for(int count = 0; count < 3; count++) {
+		for (int count = 0; count < 3; count++)
+		{
 			cct_message.offset[count] = 0;
 		}
 		cct_message.transition[0] = transition & 0xFF;
@@ -950,7 +988,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 	} hsl_message_t;
 	hsl_message_t hsl_message = {0};
 	memset(&hsl_message, 0x00, sizeof(hsl_message));
-	if (ack) 
+	if (ack)
 	{
 		uint8_t hslHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x82, 0x78};
 		hsl_message.addr = devAddr;
@@ -974,14 +1012,14 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 				uint16_t s;
 			} hsl_rsp_message_t;
 			hsl_rsp_message_t *hsl_rsp_message = (hsl_rsp_message_t *)dataRsp;
-			if (hsl_rsp_message->h ==H && hsl_rsp_message->l == L && hsl_rsp_message->s == S)
+			if (hsl_rsp_message->h == H && hsl_rsp_message->l == L && hsl_rsp_message->s == S)
 			{
 				return 0;
 			}
 			LOGW("hsl resp state not match with input control");
 		}
 	}
-	else 
+	else
 	{
 		hsl_message.addr = devAddr;
 		hsl_message.opcode = 0x7782;
@@ -991,14 +1029,14 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.offset = 0;
 		hsl_message.transition[0] = transition & 0xFF;
 		hsl_message.transition[1] = (transition >> 8) & 0xFF;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, 19, 0, dataRsp, &lenRsp,1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, 19, 0, dataRsp, &lenRsp, 1000);
 		if (rs == 0)
 		{
 			return 0;
 		}
 	}
 	LOGW("Set hsl err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, uint16_t transition, bool ack)
@@ -1018,7 +1056,7 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 	} dimcct_message_t;
 	dimcct_message_t dimcct_message = {0};
 	memset(&dimcct_message, 0x00, sizeof(dimcct_message));
-	if (ack) 
+	if (ack)
 	{
 		uint8_t dimcctHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x82, 0x60};
 		dimcct_message.addr = devAddr;
@@ -1047,7 +1085,7 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 			LOGW("dim cct resp state not match with input control");
 		}
 	}
-	else 
+	else
 	{
 		dimcct_message.addr = devAddr;
 		dimcct_message.opcode = 0x5f82;
@@ -1056,19 +1094,19 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 		dimcct_message.offset = 0;
 		dimcct_message.transition[0] = transition & 0xFF;
 		dimcct_message.transition[1] = (transition >> 8) & 0xFF;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, 19, 0, dataRsp, &lenRsp,1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, 19, 0, dataRsp, &lenRsp, 1000);
 		if (rs == 0)
 		{
 			return 0;
 		}
 	}
 	LOGW("Set dim cct err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group)
 {
-	LOGD("Add dev addr: 0x%04X  with element: 0x%04x to group: 0x%04X", devAddr, element,group);
+	LOGD("Add dev addr: 0x%04X  with element: 0x%04x to group: 0x%04X", devAddr, element, group);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t addGroupHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x80, 0x1f};
@@ -1088,7 +1126,7 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	addgroup_message.element = element;
 	addgroup_message.group = group;
 	addgroup_message.offset[0] = 0;
-	addgroup_message.offset[1] = 0x10; 
+	addgroup_message.offset[1] = 0x10;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&addgroup_message, 16, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addGroupHeader, 0, 6);
 	if (rs == 0)
 	{
@@ -1097,7 +1135,7 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 			uint16_t devAddr;
 			uint16_t gwAddr;
 			uint16_t opcode;
-			uint8_t  offset;
+			uint8_t offset;
 			uint16_t element;
 			uint16_t group;
 		} addgroup_rsp_message_t;
@@ -1109,12 +1147,12 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 		LOGW("add group resp state not match with input control");
 	}
 	LOGW("Add group err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group)
 {
-	LOGD("Del dev addr: 0x%04X  with element: 0x%04x to group: 0x%04X", devAddr, element,group);
+	LOGD("Del dev addr: 0x%04X  with element: 0x%04x to group: 0x%04X", devAddr, element, group);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t delGroupHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x80, 0x1f};
@@ -1134,14 +1172,14 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	delgroup_message.element = element;
 	delgroup_message.group = group;
 	delgroup_message.offset[0] = 0;
-	delgroup_message.offset[1] = 0x10; 
+	delgroup_message.offset[1] = 0x10;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&delgroup_message, 16, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delGroupHeader, 0, 6);
 	if (rs == 0)
 	{
 		return 0;
 	}
 	LOGW("Del group err");
-	return -1;		
+	return -1;
 }
 
 int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
@@ -1166,7 +1204,7 @@ int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRg
 	setscene_message.scene = scene;
 	setscene_message.modeRgb = modeRgb;
 	setscene_message.offset[0] = 0;
-	setscene_message.offset[1] = 0; 
+	setscene_message.offset[1] = 0;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&setscene_message, 15, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneHeader, 0, 6);
 	if (rs == 0)
 	{
@@ -1175,7 +1213,7 @@ int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRg
 			uint16_t devAddr;
 			uint16_t gwAddr;
 			uint16_t opcode;
-			uint8_t  offset;
+			uint8_t offset;
 			uint16_t scene;
 		} setscene_rsp_message_t;
 		setscene_rsp_message_t *setscene_rsp_message = (setscene_rsp_message_t *)dataRsp;
@@ -1186,7 +1224,7 @@ int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRg
 		LOGW("set scene resp state not match with input control");
 	}
 	LOGW("Set scene err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::DelSceneLights(uint16_t devAddr, uint16_t scene)
@@ -1213,7 +1251,7 @@ int BleProtocol::DelSceneLights(uint16_t devAddr, uint16_t scene)
 		return 0;
 	}
 	LOGW("Del scene err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::CallSceneLight(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack)
@@ -1233,7 +1271,7 @@ int BleProtocol::CallSceneLight(uint16_t devAddr, uint16_t scene, uint16_t trans
 	} callscene_message_t;
 	callscene_message_t callscene_message = {0};
 	memset(&callscene_message, 0x00, sizeof(callscene_message));
-	if(ack) 
+	if (ack)
 	{
 		callscene_message.addr = devAddr;
 		callscene_message.opcode = 0x4282;
@@ -1258,26 +1296,25 @@ int BleProtocol::CallSceneLight(uint16_t devAddr, uint16_t scene, uint16_t trans
 				{
 					return 0;
 				}
-				else 
+				else
 				{
 					LOGW("call scene resp state not match with input control");
 				}
-				
 			}
-			else 
+			else
 			{
 				if (scene == (callscene_rsp_message->data[0] | (callscene_rsp_message->data[1] << 8)))
 				{
 					return 0;
 				}
-				else 
+				else
 				{
 					LOGW("call scene resp state not match with input control");
 				}
 			}
 		}
 	}
-	else 
+	else
 	{
 		callscene_message.addr = devAddr;
 		callscene_message.opcode = 0x4382;
@@ -1336,7 +1373,7 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 		}
 	}
 	LOGW("call mode rgb err");
-	return -1;		
+	return -1;
 }
 
 int BleProtocol::UpdateLights(uint16_t devAddr)
@@ -1376,5 +1413,5 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 		LOGW("update lights resp state not match with input control");
 	}
 	LOGW("update lights mode rgb err");
-	return -1;	
+	return -1;
 }

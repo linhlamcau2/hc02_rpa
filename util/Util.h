@@ -36,7 +36,7 @@ namespace Util
 	string GetMacAddress();
 	string GetIP();
 	string GetCurrentTimeStr();
-	void ScanWifi(Json::Value &jsonValue);
+	void ScanWifi(Json::Value &jsonValue, string rqi);
 	int ConnectToWifi(string ssid, string password, string encryption);
 	int SetModeApWifi();
 

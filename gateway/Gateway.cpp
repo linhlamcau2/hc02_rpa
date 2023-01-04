@@ -44,10 +44,11 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	  Udp(8181)
 {
 	this->mac = mac;
-	dormitoryId = "";
-	ble_appkey = "";
-	ble_appkey = "";
-	ble_devicekey = "";
+	this->id = "";
+	this->dormitoryId = "";
+	this->ble_appkey = "";
+	this->ble_appkey = "";
+	this->ble_devicekey = "";
 	udpBroadcastThread = NULL;
 }
 
@@ -59,12 +60,20 @@ void Gateway::init()
 	Udp::init();
 
 	LOGI("DeviceRead");
-	database->DeviceRead();
 	database->GatewayRead();
+	database->DeviceRead();
 	database->DeviceAttributeRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
 	database->RuleRead();
+
+	if(gateway->getId().compare("") == 0)
+	{
+		id = mac;
+		gateway->setId(id);
+		database->GatewayUpdateId(gateway,id);
+		database->GatewayRead();
+	}
 
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
@@ -141,8 +150,6 @@ int Gateway::UdpBroadcastThread()
 	{
 		s.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 	}
-	// inet_pton(AF_INET, "255.255.255.255", &s.sin_addr);
-	//
 
 	Json::Value hcBroadcastValue;
 	Json::Value hcInfoValue;
@@ -172,6 +179,7 @@ int Gateway::UdpBroadcastThread()
 		Util::LedInternet(true);
 		usleep(500000);
 	}
+	Util::LedRestoreLastValue();
 	isUdpBroadcasting = false;
 	free(udpBroadcastThread);
 	udpBroadcastThread = NULL;
@@ -220,8 +228,39 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcScanWifi");
-	Util::ScanWifi(respValue);
-	return 10; // respValue as an array
+	string rqi = "";
+	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
+	{
+        rqi = reqValue["REQUEST_ID"].asString();
+	}
+	if (reqValue.isMember("FROM") && reqValue.isMember("TO"))
+	{
+		Json::Value from;
+		Json::Value to;
+		from = reqValue["FROM"];
+		to = reqValue["TO"];
+		if (from.isMember("TYPE") && from["TYPE"].isInt() && to.isMember("TYPE") && to["TYPE"].isInt())
+		{
+			if (from["TYPE"].asInt() == 0 && to["TYPE"].asInt() == 2)
+			{
+                Util::ScanWifi(respValue,rqi);
+				return 0;
+			}
+			else 
+			{
+				LOGW("OnUdpHcScanWifi payload: %s error direction", reqValue.toString().c_str());
+			}
+		}
+		else 
+		{
+			LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+		}
+	}
+	else {
+		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+	}
+	
+	return 0; // respValue as an array
 }
 
 int Gateway::GatewayConnectToCloudNotice()
@@ -1283,7 +1322,7 @@ string Gateway::getDormitory()
 }
 string Gateway::getId()
 {
-	return mac;
+	return id;
 }
 string Gateway::getVersion()
 {
@@ -1312,7 +1351,7 @@ void Gateway::setDormitory(string dormitory)
 }
 void Gateway::setId(string id)
 {
-	this->mac = id;
+	this->id = id;
 }
 void Gateway::setVersion(string version)
 {

@@ -199,7 +199,7 @@ string Util::GetMacAddress()
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
 	sprintf((char *)uc_Mac, (const char *)"%.2x%.2x%.2x%.2x%.2x%.2x",
-					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return string(uc_Mac);
 }
 
@@ -229,7 +229,7 @@ string Util::GetIP()
 	return "";
 }
 
-void Util::ScanWifi(Json::Value &jsonValue)
+void Util::ScanWifi(Json::Value &jsonValue, string rqi)
 {
 	size_t pos = 0;
 	string wifi;
@@ -237,8 +237,21 @@ void Util::ScanWifi(Json::Value &jsonValue)
 	char buff[128] = "Cell 02";
 	int count = 0;
 	Json::Value wifiValue;
+	Json::Value from;
+	Json::Value to;
+	Json::Value data;
 	vector<string> lineList;
 	string ssidStr, encryptionStr;
+	int quality;
+
+	jsonValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
+	jsonValue["REQUEST_ID"] = rqi;
+	jsonValue["TIME"] = Util::GetCurrentTimeStr();
+	jsonValue["CONNECTION_TYPE"] = 0;
+	from["TYPE"] = 2;
+	jsonValue["FROM"] = from;
+	to["TYPE"] = 0;
+	jsonValue["TO"] = to;
 
 	string msg_rsp = ExecuteCMD("iwinfo wlan0 scan");
 	while ((pos = msg_rsp.find(buff)) != string::npos)
@@ -261,14 +274,21 @@ void Util::ScanWifi(Json::Value &jsonValue)
 			encryptionStr = trim(lineList[4]);
 			encryptionStr.erase(0, 12);
 
-			wifiValue["CMD"] = "HC_RESPONE";
-			wifiValue["SSID"] = macaron::Base64::Encode(ssidStr);
-			wifiValue["QUALITY"] = 50;
-			wifiValue["MAC"] = lineList[0];
-			wifiValue["ENCRYPTION"] = encryptionStr;
-			jsonValue.append(wifiValue);
+			char *p;
+			p = (char *)strstr(lineList[3].c_str(), "Quality");
+			char qlt[3] = {(*(p + 9)), *(p + 10)};
+			quality = stoi(string(qlt));
+			if (quality >= 50)
+			{
+				wifiValue["SSID"] = ssidStr;
+				wifiValue["QUALITY"] = quality;
+				wifiValue["MAC"] = lineList[0];
+				wifiValue["ENCRYPTION"] = encryptionStr;
+				data.append(wifiValue);
+			}
 		}
 	}
+	jsonValue["DATA"] = data;
 }
 
 int Util::ConnectToWifi(string ssid, string password, string encryption)
@@ -276,7 +296,8 @@ int Util::ConnectToWifi(string ssid, string password, string encryption)
 	LOGD("Connect to Wifi");
 	if (encryption != "none")
 		encryption = "psk2";
-	try{
+	try
+	{
 		system("rm /output.txt");
 		system("uci del network.wan.ifname >> /output.txt 2>&1");
 		system("uci del wireless.wifinet1  >> /output.txt 2>&1");
@@ -289,7 +310,10 @@ int Util::ConnectToWifi(string ssid, string password, string encryption)
 		system(string("uci set wireless.wifinet1.encryption='" + encryption + "' >> /output.txt 2>&1").c_str());
 		system("uci commit wireless");
 		system("wifi");
-	}catch(std::exception){}
+	}
+	catch (std::exception)
+	{
+	}
 	sleep(30);
 	string ip = GetIP();
 	LOGI("GW ip: %s", GetIP().c_str());
@@ -311,11 +335,11 @@ int Util::SetModeApWifi()
 {
 	system("rm /output.txt");
 	system("uci set network.wan.ifname='eth0' >> /output.txt 2>&1");
-    system("uci commit network >> /output.txt 2>&1");
-    system("/etc/init.d/network restart >> /output.txt 2>&1");
-    system("uci del wireless.wifinet1 >> /output.txt 2>&1");
-    system("uci commit wireless >> /output.txt 2>&1");
-    system("wifi >> /output.txt 2>&1");
+	system("uci commit network >> /output.txt 2>&1");
+	system("/etc/init.d/network restart >> /output.txt 2>&1");
+	system("uci del wireless.wifinet1 >> /output.txt 2>&1");
+	system("uci commit wireless >> /output.txt 2>&1");
+	system("wifi >> /output.txt 2>&1");
 }
 
 static bool ledInternet = false;

@@ -35,9 +35,15 @@ public:
 	int GatewayRead();
 	int GatewayAdd(Gateway *gateway);
 	int GatewayUpdate(Gateway *gateway);
+	int GatewayUpdateId(Gateway *gateway, string id);
+	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
+	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
+	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
+
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
