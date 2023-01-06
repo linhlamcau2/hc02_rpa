@@ -140,6 +140,11 @@ bool Util::CompareNumber(int a, int b, string op)
 	return false;
 }
 
+int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+{
+	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
+}
+
 // trim from start
 static inline std::string &ltrim(std::string &s)
 {
@@ -192,13 +197,14 @@ string Util::GetMacAddress()
 	unsigned char *mac = NULL;
 	char uc_Mac[100];
 	int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-	strcpy(s.ifr_name, "eth0");
+	strcpy(s.ifr_name, "wlx0c8c24d05f06");
 	if (0 == ioctl(fd, SIOCGIFHWADDR, &s))
 	{
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
 	sprintf((char *)uc_Mac, (const char *)"%.2x%.2x%.2x%.2x%.2x%.2x",
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	std::cout << uc_Mac << std::endl;
 	return string(uc_Mac);
 }
 

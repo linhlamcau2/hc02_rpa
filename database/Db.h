@@ -8,13 +8,15 @@
 #include <Group.h>
 #include <Gateway.h>
 
-#define DB_NAME "/smh.sqlite"
+#include "../sceneBle/SceneBle.h"
+#include "Device.h"
+
+#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
 
 using namespace std;
 
 class Db
 {
-
 private:
 	mutex mtx;
 
@@ -51,11 +53,21 @@ public:
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
 	int DeviceInGroupDelAll();
 
+	// int DeviceSceneRead();
+	// int DeviceSceneAdd(string mac, string schedule);
+	// int DeviceSceneAdd(Device *device, string schedule);
+	// int DeviceSceneDel(string mac, string schedule);
+	// int DeviceSceneDel(Device *device, string schedule);
+
 	int RuleRead();
 	int RuleAdd(int id, string rule);
 	int RuleUpdate(int id, string rule);
 	int RuleDel(int id);
 
+	int SceneBleRead();
+	int DevcieInSceneBleAdd(SceneBle *scene, Device *device, int epId, Json::Value data);
+	int DevcieInSceneBleDel(SceneBle *scene, Device *device, int epId);
+	int SceneBleDel(SceneBle *scene);
 };
 
 extern Db *database;

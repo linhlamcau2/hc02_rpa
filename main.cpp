@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
 
 	database = new Db();
 
-	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
-	bleProtocol->init();
+	// bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
+	// bleProtocol->init();
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);

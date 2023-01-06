@@ -11,6 +11,7 @@
 #include "Group.h"
 #include "Device.h"
 #include "DeviceBle.h"
+#include "../sceneBle/SceneBle.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -29,7 +30,9 @@ private:
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
 	map<int, Rule *> ruleList;
+	map<int, SceneBle *> sceneBleList;
 	vector<Device *> scanDeviceList;
+
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
@@ -63,9 +66,17 @@ private:
 	int OnRPCGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	// int OnRPCAddDeviceToSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	// int OnRPCDelDeviceFromSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue);
+
 	int OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCControlGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
@@ -86,6 +97,8 @@ public:
 	Device *getDeviceFromId(string deviceId);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
 
+	SceneBle *getSceneBle(string sceneBleUUId);
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
 #endif
@@ -93,6 +106,7 @@ public:
 	Device *AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
+	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);

@@ -39,7 +39,7 @@ Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
 		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, "localhost", 1883, mac, "", "", 10),
+			LocalProtocol(mac, "localhost", 1883, "tuvv", "", "", 10),
 			Udp(8181)
 {
 	this->mac = mac;
@@ -60,34 +60,76 @@ void Gateway::init()
 	database->GroupRead();
 	database->DeviceInGroupRead();
 	database->RuleRead();
+	database->SceneBleRead();
+
+	cout << "scene size: " << sceneBleList.size() << endl;
+	for (const auto &[meshId, scene] : sceneBleList)
+	{
+		cout << "scene: " + scene->GetUUId() << endl;
+		for (int i=0; i<scene->deviceList.size(); i++)
+		{
+			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl; 
+		}
+	}
 
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_WIFI", bind(&Gateway::OnUdpHcConnectWifi, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 
+	// OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("BleResetFactory", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("BleAddDevice", bind(&Gateway::OnRPCBleAddDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
+
+	// OnDeviceRPCCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("UpdateGroup", bind(&Gateway::OnRPCUpdateGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRPCAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("REMOVE_DEVICE_FROM_GROUP", bind(&Gateway::OnRPCDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+
+	// OnDeviceRPCCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRPCAddSceneBle, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRPCEditSceneBle, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRPCDeleteSceneBle, this, placeholders::_1, placeholders::_2));
+
+	// OnDeviceRPCCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("AddRule", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("DeleteRule", bind(&Gateway::OnRPCDeleteRule, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
+	// // OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("SCENE", bind(&Gateway::OnRPCControlSceneBle, this, placeholders::_1, placeholders::_2));
+
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("BleResetFactory", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("BleAddDevice", bind(&Gateway::OnRPCBleAddDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
 
-	OnDeviceRPCCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("UpdateGroup", bind(&Gateway::OnRPCUpdateGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRPCAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("REMOVE_DEVICE_FROM_GROUP", bind(&Gateway::OnRPCDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRPCAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("REMOVE_DEVICE_FROM_GROUP", bind(&Gateway::OnRPCDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRPCAddSceneBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRPCEditSceneBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRPCDeleteSceneBle, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("AddRule", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("DeleteRule", bind(&Gateway::OnRPCDeleteRule, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
-
 	OnLocalCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
 	CloudConnect();
 	LocalConnect();
@@ -354,6 +396,126 @@ int Gateway::OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 			database->RuleDel(ruleId);
 			respValue["code"] = 0;
 			return 0;
+		}
+	}
+	respValue["code"] = -1;
+	return -1;
+}
+
+int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCAddSceneBle");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() &&
+				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+		{
+			string sceneId = dataValue["SCENE_ID"].asString();
+			int temp_sceneUnicastId = 1;
+			for (auto& x : sceneBleList)
+			{
+				if (x.first >= temp_sceneUnicastId)
+				{
+					temp_sceneUnicastId = x.first + 1;
+				}
+			}
+			cout << "scene id: " << temp_sceneUnicastId << endl;
+			SceneBle *scene = new SceneBle(sceneId, temp_sceneUnicastId, sceneId);
+			if (scene)
+			{
+				scene = AddNewSceneBle(scene, true, true);
+				if (scene)
+				{
+					Json::Value groupList = dataValue["DEVICES"];
+					for (int i=0; i<groupList.size(); i++)
+					{
+						Json::Value deviceList = groupList[i]["IDS"];
+						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
+						for (int j=0; j<deviceList.size(); j++)
+						{
+							string devcieId = deviceList[j].asString();
+							Device *device = getDeviceFromId(devcieId);
+							if (device)
+							{
+								int tempDeviceAddr = device->GetAddr();
+								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr))
+								{
+									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr, deviceProperties);
+									// respValue["code"] = 0;
+									// return 0;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["code"] = -1;
+	return -1;
+}
+
+int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+			if (dataValue.isMember("SCENE_ID") && dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			{
+				string sceneId = dataValue["SCENE_ID"].asString();
+				SceneBle *scene = getSceneBle(sceneId);
+				if (scene)
+				{
+					Json::Value groupList = dataValue["DEVICES"];
+					for (int i=0; i<groupList.size(); i++)
+					{
+						Json::Value deviceList = groupList[i]["IDS"];
+						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
+						for (int j=0; j<deviceList.size(); j++)
+						{
+							string devcieId = deviceList[j].asString();
+							Device *device = getDeviceFromId(devcieId);
+							if (device)
+							{
+								int tempDeviceAddr = device->GetAddr();
+								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr))
+								{
+									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr, deviceProperties);
+									// respValue["code"] = 0;
+									// return 0;
+								}
+							}
+						}
+					}
+				}
+			}
+	}
+	// respValue["code"] = -1;
+	return true;
+}
+
+int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
+		{
+			string sceneId = dataValue["SCENE_ID"].asString();
+			SceneBle *scene = getSceneBle(sceneId);
+			if (scene)
+			{
+				for (unsigned int i=0; i < scene->deviceList.size(); i++)
+				{
+					scene->DelDevice(scene->deviceList[i]->device);
+				}
+				int temp_sceneUnicastId = scene->GetId();
+				delete sceneBleList[temp_sceneUnicastId];
+				database->SceneBleDel(scene);
+				respValue["code"] = 0;
+				return 0;
+			}
 		}
 	}
 	respValue["code"] = -1;
@@ -764,6 +926,18 @@ int Gateway::OnRPCUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respVal
 	return 0;
 }
 
+int Gateway::OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("SCENE") && dataValue["SCENE"].isString())
+		{
+			
+		}
+	}
+}
+
 int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rs = 0;
@@ -941,6 +1115,16 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
 }
 #endif
 
+SceneBle *Gateway::getSceneBle(string sceneBleUUId)
+{
+	for (const auto &[id, scene] : sceneBleList)
+	{
+		if (scene->GetUUId() == sceneBleUUId)
+			return scene;
+	}
+	return NULL;
+}
+
 Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X", id.c_str(), name.c_str(), mac.c_str(), addr, type);
@@ -1104,7 +1288,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				}
 			}
 		}
-		if (outputValue.isMember("group") && outputValue["group"].isArray())
+		Json::Value groupRuleOutputList = outputValue["group"];
+		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 		{
 			Json::Value groupRuleOutputList = outputValue["group"];
 			for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
@@ -1144,4 +1329,25 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		LOGW("Rule format error");
 	}
 	return NULL;
+}
+
+// Scene *Gateway::HandleRule
+
+SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase)
+{
+	if (sceneBle)
+	{
+		if (addDatabase)
+		{
+			// int rs = database->GroupAdd(group);
+			// if (rs)
+			// {
+				// LOGW("rs: %d", rs);
+				// return NULL;
+			// }
+		}
+		if (addGateway)
+			sceneBleList[sceneBle->GetId()] = sceneBle;
+	}
+	return sceneBle;
 }
