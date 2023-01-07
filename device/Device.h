@@ -17,6 +17,7 @@ typedef enum
 enum
 {
 	BLE_DOWNLIGHT_SMT = 12001,		// 0x010201,
+	BLE_DOWNLIGHT_COB_GOC_RONG = 12002,
 	BLE_DOWNLIGHT_COB_TRANG_TRI = 12004,
 	BLE_SWITCH_4 = 22004,					// 0x020204,
 	BLE_DC_SCENE_CONTACT = 23001, // 0x020301,
@@ -36,6 +37,7 @@ protected:
 	string id;
 	string name;
 	string mac;
+	string device_id;
 	uint32_t addr;
 	uint32_t type;
 	uint16_t version;
@@ -46,13 +48,14 @@ public:
 	vector<RuleInputDevice *> deviceRuleInputList;
 
 public:
-	Device(string id, string name, string mac, uint32_t addr, uint32_t type);
+	Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
 	string GetId();
 	string GetName();
 	string GetMac();
-	uint32_t GetAddr();
+	string GetDeviceId();
+    uint32_t GetAddr();
 	virtual bool CheckAddr(uint32_t addr);
 	void SetAddr(uint32_t addr);
 	uint32_t GetType();

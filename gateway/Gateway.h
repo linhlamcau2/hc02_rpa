@@ -97,7 +97,7 @@ public:
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
 #endif
 
-	Device *AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase);
+	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 

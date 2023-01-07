@@ -19,6 +19,7 @@
 #include "BleProtocol.h"
 #include "DeviceBleDownLightSmt.h"
 #include "DeviceBleDownLightCobTrangTri.h"
+#include "DeviceBleDownLightCobGocRong.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
@@ -169,6 +170,7 @@ int Gateway::UdpBroadcastThread()
 	hcBroadcastValue["TO"] = appInfoValaue;
 	// hcBroadcastValue["DATA"] = dataValue;
 	isUdpBroadcasting = true;
+	bool ledInternet = Util::GetStatusLedInternet();
 	for (int i = 0; i < 30; i++)
 	{
 		if (!isUdpBroadcasting)
@@ -179,7 +181,7 @@ int Gateway::UdpBroadcastThread()
 		Util::LedInternet(true);
 		usleep(500000);
 	}
-	Util::LedRestoreLastValue();
+	Util::LedInternet(ledInternet);
 	isUdpBroadcasting = false;
 	free(udpBroadcastThread);
 	udpBroadcastThread = NULL;
@@ -414,7 +416,10 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	scanDeviceList.clear();
-	bleProtocol->StartScan();
+	if(bleProtocol->StartScan())
+	{
+		bleProtocol->StopScan();
+	}
 	return 1;
 }
 
@@ -714,14 +719,18 @@ int Gateway::OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue)
 			dataValue.isMember("name") && dataValue["name"].isString() &&
 			dataValue.isMember("mac") && dataValue["mac"].isString() &&
 			dataValue.isMember("addr") && dataValue["addr"].isInt() &&
-			dataValue.isMember("type") && dataValue["type"].isInt())
+			dataValue.isMember("type") && dataValue["type"].isInt() &&
+			dataValue.isMember("devicekey") && dataValue["devicekey"].isString() &&
+			dataValue.isMember("version") && dataValue["version"].isInt())
 		{
 			string deviceId = dataValue["id"].asString();
 			string name = dataValue["name"].asString();
 			string mac = dataValue["mac"].asString();
 			uint32_t addr = dataValue["addr"].asInt();
 			uint32_t type = dataValue["type"].asInt();
-			Device *device = AddNewDevice(deviceId, name, mac, addr, type, true, true);
+			string devicekey = dataValue["devicekey"].asString();
+			uint16_t version = dataValue["version"].asInt();
+			Device *device = AddNewDevice(deviceId, name, mac, devicekey,addr, type, version, true, true);
 			respValue["code"] = 0;
 			return 0;
 		}
@@ -1018,9 +1027,9 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	dataValue["DEVICE_TYPE_ID"] = scanDevice->GetType();
 	dataValue["MAC_ADDRESS"] = scanDevice->GetMac();
 	dataValue["FIRMWARE_VERSION"] = scanDevice->GetVersionStr();
-	dataValue["DEVICE_KEY"] = scanDevice->GetId();
-	dataValue["NET_KEY"] = scanDevice->GetId();
-	dataValue["APP_KEY"] = scanDevice->GetId();
+	dataValue["DEVICE_KEY"] = scanDevice->GetDeviceId();
+	dataValue["NET_KEY"] = gateway->getBleNetkey();
+	dataValue["APP_KEY"] = gateway->getBleAppKey();
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
 	PublishToDeviceTelemetry(jsonValue);
@@ -1094,29 +1103,32 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
 }
 #endif
 
-Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase)
+Device *Gateway::AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
 {
-	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X", id.c_str(), name.c_str(), mac.c_str(), addr, type);
+	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
 	Device *device = NULL;
 	if (type == BLE_DOWNLIGHT_SMT)
 	{
-		device = new DeviceBleDownLightSmt(id, name, mac, addr);
+		device = new DeviceBleDownLightSmt(id, name, mac, device_id, addr, version);
 	}
 	else if (type == BLE_DOWNLIGHT_COB_TRANG_TRI)
 	{
-		device = new DeviceBleDownLightCobTrangTri(id, name, mac, addr);
+		device = new DeviceBleDownLightCobTrangTri(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_DOWNLIGHT_COB_GOC_RONG) {
+		device = new DeviceBleDownLightCobGocRong(id, name, mac, device_id, addr, version);
 	}
 	else if (type == BLE_SWITCH_4)
 	{
-		device = new DeviceBleSwitch4(id, name, mac, addr);
+		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);
 	}
 	else if (type == BLE_DC_SCENE_CONTACT)
 	{
-		device = new DeviceBleDCSceneContact(id, name, mac, addr);
+		device = new DeviceBleDCSceneContact(id, name, mac, device_id, addr, version);
 	}
 	else if (type == BLE_TEMP_HUM_SENSOR)
 	{
-		device = new DeviceBleTempHumSensor(id, name, mac, addr);
+		device = new DeviceBleTempHumSensor(id, name, mac, device_id, addr, version);
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

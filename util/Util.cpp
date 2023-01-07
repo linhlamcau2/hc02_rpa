@@ -342,6 +342,11 @@ int Util::SetModeApWifi()
 	system("wifi >> /output.txt 2>&1");
 }
 
+bool Util::isConfigLan()
+{
+	
+}
+
 static bool ledInternet = false;
 static bool ledService = false;
 static bool ledZigbee = false;
@@ -438,4 +443,24 @@ void Util::LedServiceUnlock()
 	ledServiceCount--;
 	if (!ledServiceCount)
 		LedService(true);
+}
+
+bool Util::GetStatusLedBle()
+{
+	return ledBle;
+}
+
+bool Util::GetStatusLedService()
+{
+	return ledService;
+}
+
+bool Util::GetStatusLedZigbee()
+{
+	return ledZigbee;
+}
+
+bool Util::GetStatusLedInternet()
+{
+	return ledInternet;
 }

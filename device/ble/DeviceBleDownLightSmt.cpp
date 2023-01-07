@@ -1,15 +1,19 @@
 #include "DeviceBleDownLightSmt.h"
 #include <Log.h>
 
-DeviceBleDownLightSmt::DeviceBleDownLightSmt(string id, string name, string mac, uint32_t addr)
-		: DeviceBle(id, name, mac, addr, BLE_DOWNLIGHT_SMT)
+DeviceBleDownLightSmt::DeviceBleDownLightSmt(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_SMT, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
+	elementCct = new ElementCct(this, addr);
+	elementDim = new ElementDim(this, addr);
 }
 
 int DeviceBleDownLightSmt::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
+	elementCct->BuildTelemetryValue(pushDataValue);
+	elementDim->BuildTelemetryValue(pushDataValue);
 	return 0;
 }
 
@@ -26,6 +30,14 @@ void DeviceBleDownLightSmt::InputData(uint8_t *data, int len, uint32_t addr)
 	{
 		elementOnOff->ParseData(data_message->data, len - 2, values);
 	}
+	else if (data_message->u16Opcode == 0x6682)
+	{
+		elementCct->ParseData(data_message->data, len -2, values);
+	}
+	else if (data_message->u16Opcode == 0x4e82)
+	{
+		elementDim->ParseData(data_message->data, len -2, values);
+	}
 	PushTelemetry(values);
 }
 
@@ -39,8 +51,24 @@ bool DeviceBleDownLightSmt::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
+
 bool DeviceBleDownLightSmt::Do(int id, int value)
 {
 	LOGD("DoTrigger id: %d, value: %d", id, value);
+	if (id == 0)
+	{
+		elementOnOff->Do(value);
+	}
+	else if (id == 1)
+    {
+		elementDim->Do((value * 65535) / 100);
+	}
+	else if (id == 2)
+    {
+		elementCct->Do((value * 192) + 800);		
+	}
+	else {
+		LOGW("DoTrigger id don't");
+	}
 	return false;
 }

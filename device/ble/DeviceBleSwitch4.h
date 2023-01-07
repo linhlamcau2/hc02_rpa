@@ -2,6 +2,7 @@
 
 #include "DeviceBle.h"
 #include "element/ElementOnOff.h"
+#include "element/ElementResetNode.h"
 
 using namespace std;
 
@@ -11,7 +12,7 @@ private:
 	ElementOnOff *elementOnOff[4];
 
 public:
-	DeviceBleSwitch4(string id, string name, string mac, uint32_t addr);
+	DeviceBleSwitch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
 
 	bool CheckAddr(uint32_t addr);
 

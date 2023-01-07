@@ -1,46 +1,47 @@
-#include "ElementOnOff.h"
+#include "ElementCct.h"
 #include <Log.h>
 #include <Util.h>
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
 
-ElementOnOff::ElementOnOff(Device *device, uint32_t addr) : Element(device, addr)
+ElementCct::ElementCct(Device *device, uint32_t addr) : Element(device, addr)
 {
-	onoff = 0;
-	elementName = "status" + to_string(addr - device->GetAddr());
+	cct = 0;
+    elementName = "cct";
 }
 
-void ElementOnOff::InitAttribute(int attributeId, double value)
+void ElementCct::InitAttribute(int attributeId, double value)
 {
 	if (attributeId == parameterToId[elementName])
-		onoff = value;
+		cct = value;
 }
 
-void ElementOnOff::SaveAttribute()
+void ElementCct::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, parameterToId[elementName], onoff);
+	database->DeviceAttributeAddOrReplace(device, parameterToId[elementName], cct);
 }
 
-void ElementOnOff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
+void ElementCct::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
-		uint8_t state;
-		uint8_t onoff;
+		uint16_t cct_first;
+		uint16_t magic;
+        uint16_t cct;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (len == 1)
-		onoff = data_message->state;
+	if (len  <= 4)
+		cct = data_message->cct_first;
 	else
-		onoff = data_message->onoff;
+		cct = data_message->cct;
 
 	SaveAttribute();
 	BuildTelemetryValue(jsonValue);
 	CheckTrigger();
 }
 
-bool ElementOnOff::CheckData(Json::Value &dataValue, bool &rs)
+bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isMember("operator") && dataValue["operator"].isString())
@@ -48,15 +49,15 @@ bool ElementOnOff::CheckData(Json::Value &dataValue, bool &rs)
 		string op = dataValue["operator"].asString();
 		if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
 		{
-			int onoff = dataValue[elementName].asInt();
-			rs = Util::CompareNumber(this->onoff, onoff, op);
+			uint16_t cct = dataValue[elementName].asInt();
+			rs = Util::CompareNumber(this->cct, cct, op);
 			return true;
 		}
 	}
 	return false;
 }
 
-void ElementOnOff::CheckTrigger()
+void ElementCct::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
@@ -68,36 +69,31 @@ void ElementOnOff::CheckTrigger()
 	}
 }
 
-void ElementOnOff::BuildTelemetryValue(Json::Value &jsonValue)
+static int Para2PercentCct(uint16_t para)
+{
+    return ((para - 800) / 192);
+}
+void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = parameterToId[elementName];
-	dataValue["VALUE"] = onoff;
+	dataValue["VALUE"] = Para2PercentCct(cct);
 	jsonValue.append(dataValue);
 }
 
-bool ElementOnOff::Do(Json::Value &dataValue)
+bool ElementCct::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
 	{
-		int onoff = dataValue[elementName].asInt();
-		if (onoff == 0 || onoff == 1)
-		{
-			return true;
-		}
-		else if (onoff == 2)
-		{
-			return true;
-		}
 	}
 	return false;
 }
 
-bool ElementOnOff::Do(int value)
+bool ElementCct::Do(int value)
 {
 	LOGD("DoTrigger value: %d", value);
 	//bleprotocol call setonoff light
-	bleProtocol->SetOnOffLight(addr, value, 0, true);
+	bleProtocol->SetCctLight(addr, value, 0, true);
 	return true;
 }

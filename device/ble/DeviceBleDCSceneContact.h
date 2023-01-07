@@ -3,6 +3,7 @@
 #include "DeviceBle.h"
 #include "module/ModuleButton.h"
 #include "module/ModulePinLevel.h"
+#include "element/ElementResetNode.h"
 
 using namespace std;
 
@@ -13,7 +14,7 @@ private:
 	ModulePinLevel *modulePinLevel;
 
 public:
-	DeviceBleDCSceneContact(string id, string name, string mac, uint32_t addr);
+	DeviceBleDCSceneContact(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
 
 	int BuildTelemetryValue(Json::Value &pushDataValue);
 	void InitAttribute(int attributeId, double value);

@@ -5,13 +5,15 @@
 #include <Log.h>
 #include <unistd.h>
 
-Device::Device(string id, string name, string mac, uint32_t addr, uint32_t type)
+Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 {
 	this->id = id;
 	this->name = name;
 	this->mac = mac;
 	this->addr = addr;
 	this->type = type;
+	this->device_id = device_id;
+	this->version = version;
 }
 
 Device::~Device()
@@ -31,6 +33,11 @@ string Device::GetName()
 string Device::GetMac()
 {
 	return mac;
+}
+
+string Device::GetDeviceId()
+{
+	return device_id;
 }
 
 uint32_t Device::GetAddr()
@@ -170,6 +177,7 @@ void Device::InitDeviceModelList()
 {
 	parameterToId["stt"] = 0;
 	parameterToId["dim"] = 1;
+	parameterToId["cct"] = 2;
 	parameterToId["pin"] = 8;
 	parameterToId["bt0"] = 11;
 	parameterToId["onoff0"] = 11;

@@ -1,15 +1,15 @@
-#include "DeviceBleDownLightCobTrangTri.h"
+#include "DeviceBleDownLightCobGocRong.h"
 #include <Log.h>
 
-DeviceBleDownLightCobTrangTri::DeviceBleDownLightCobTrangTri(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_SMT, version)
+DeviceBleDownLightCobGocRong::DeviceBleDownLightCobGocRong(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_COB_GOC_RONG, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
 	elementCct = new ElementCct(this, addr);
 	elementDim = new ElementDim(this, addr);
 }
 
-int DeviceBleDownLightCobTrangTri::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleDownLightCobGocRong::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
 	elementCct->BuildTelemetryValue(pushDataValue);
@@ -17,7 +17,7 @@ int DeviceBleDownLightCobTrangTri::BuildTelemetryValue(Json::Value &pushDataValu
 	return 0;
 }
 
-void DeviceBleDownLightCobTrangTri::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleDownLightCobGocRong::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	typedef struct
 	{
@@ -41,7 +41,7 @@ void DeviceBleDownLightCobTrangTri::InputData(uint8_t *data, int len, uint32_t a
 	PushTelemetry(values);
 }
 
-bool DeviceBleDownLightCobTrangTri::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleDownLightCobGocRong::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (elementOnOff->CheckData(dataValue, rs))
@@ -51,8 +51,7 @@ bool DeviceBleDownLightCobTrangTri::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-
-bool DeviceBleDownLightCobTrangTri::Do(int id, int value)
+bool DeviceBleDownLightCobGocRong::Do(int id, int value)
 {
 	LOGD("DoTrigger id: %d, value: %d", id, value);
 	if (id == 0)

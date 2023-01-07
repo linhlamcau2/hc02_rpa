@@ -1,0 +1,11 @@
+#!/bin/sh
+
+logger "$BUTTON pressed for $SEEN seconds, action ${ACTION}"
+
+if [ "${ACTION}" = "pressed" ]; then
+	logger "killall -s USR1 smh"
+	killall -s USR1 smh
+elif [ "${ACTION}" = "released" ]; then
+	logger "killall -s USR2 smh"
+	killall -s USR2 smh
+fi

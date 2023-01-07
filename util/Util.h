@@ -39,6 +39,7 @@ namespace Util
 	void ScanWifi(Json::Value &jsonValue, string rqi);
 	int ConnectToWifi(string ssid, string password, string encryption);
 	int SetModeApWifi();
+	bool isConfigLan();
 
 	void LedInternet(bool value);
 	void LedService(bool value);
@@ -48,4 +49,9 @@ namespace Util
 	void LedRestoreLastValue();
 	void LedServiceLock();
 	void LedServiceUnlock();
+
+	bool GetStatusLedBle();
+	bool GetStatusLedService();
+	bool GetStatusLedZigbee();
+	bool GetStatusLedInternet();
 }

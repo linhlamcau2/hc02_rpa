@@ -119,9 +119,11 @@ private:
 	uint8_t netKey[16];
 	uint8_t appKey[16];
 	uint8_t gwKey[16];
+	uint8_t deviceKey[16];
 	uint16_t nextAddr;
 
 	string uuidToStr(uuid_t *uuid);
+	string arrayToString844412(uint8_t *array);
 
 	void CheckOpcodeException(message_rsp_st *message);
 	void OnMessage(unsigned char *data, int len);
@@ -146,7 +148,7 @@ public:
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
 	int SetGwAddr(uint16_t devAddr, uint16_t gwAddr = 0x0002);
-	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t deviceVersion);
+	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t &deviceVersion);
 
 	int ResetDev(uint16_t devAddr);
 
