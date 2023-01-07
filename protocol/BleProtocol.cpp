@@ -782,3 +782,156 @@ int BleProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 	LOGW("AddGroup err");
 	return -1;
 }
+
+int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
+{
+	LOGD("Set scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t setSceneHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x82, 0x45};
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint16_t opcode;
+		uint16_t scene;
+		uint8_t modeRgb;
+		uint8_t offset[2];
+	} setscene_message_t;
+	setscene_message_t setscene_message = {0};
+	memset(&setscene_message, 0x00, sizeof(setscene_message));
+	setscene_message.addr = devAddr;
+	setscene_message.opcode = 0x4682;
+	setscene_message.scene = scene;
+	setscene_message.modeRgb = modeRgb;
+	setscene_message.offset[0] = 0;
+	setscene_message.offset[1] = 0;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&setscene_message, 15, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneHeader, 0, 6);
+	if (rs == 0)
+	{
+		typedef struct
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t offset;
+			uint16_t scene;
+		} setscene_rsp_message_t;
+		setscene_rsp_message_t *setscene_rsp_message = (setscene_rsp_message_t *)dataRsp;
+		if (setscene_rsp_message->scene == scene)
+		{
+			return 0;
+		}
+		LOGW("set scene resp state not match with input control");
+	}
+	LOGW("Set scene err");
+	return -1;
+}
+
+// TODO: BelProtocol DelScene
+int BleProtocol::DelSceneLights(uint16_t devAddr, uint16_t scene)
+{
+	LOGD("Del scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t delSceneHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x82, 0x45};
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint16_t opcode;
+		uint16_t scene;
+	} delscene_message_t;
+	delscene_message_t delscene_message = {0};
+	memset(&delscene_message, 0x00, sizeof(delscene_message));
+	delscene_message.addr = devAddr;
+	delscene_message.opcode = 0x9e82;
+	delscene_message.scene = scene;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&delscene_message, 12, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneHeader, 0, 6);
+	if (rs == 0)
+	{
+		return 0;
+	}
+	LOGW("Del scene err");
+	return -1;
+}
+
+// TODO: BelProtocol ActiveScene
+int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime)
+{
+	LOGD("Call scene: 0x%04X", scene);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t callSceneHeader[] = {devAddr & 0xFF, (devAddr >> 8) & 0xFF, 1, 0, 0x5e, 0x00};
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint16_t opcode;
+		uint16_t scene;
+		uint8_t offset;
+		uint8_t transition[2];
+	} callscene_message_t;
+	callscene_message_t callscene_message = {0};
+	memset(&callscene_message, 0x00, sizeof(callscene_message));
+	if (ack)
+	{
+		callscene_message.addr = devAddr;
+		callscene_message.opcode = 0x4282;
+		callscene_message.scene = scene;
+		callscene_message.offset = 0;
+		callscene_message.transition[0] = transition;
+		callscene_message.transition[1] = (transition >> 8) & 0xFF;
+		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, 15, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, callSceneHeader, 0, 6);
+		if (rs == 0)
+		{
+			typedef struct
+			{
+				uint16_t devAddr;
+				uint16_t gwAddr;
+				uint16_t opcode;
+				uint8_t data[8];
+			} callscene_rsp_message_t;
+			callscene_rsp_message_t *callscene_rsp_message = (callscene_rsp_message_t *)dataRsp;
+			if (lenRsp == 11 || lenRsp == 13)
+			{
+				if (scene == (callscene_rsp_message->data[2] | (callscene_rsp_message->data[3] << 8)))
+				{
+					return 0;
+				}
+				else
+				{
+					LOGW("call scene resp state not match with input control");
+				}
+			}
+			else
+			{
+				if (scene == (callscene_rsp_message->data[0] | (callscene_rsp_message->data[1] << 8)))
+				{
+					return 0;
+				}
+				else
+				{
+					LOGW("call scene resp state not match with input control");
+				}
+			}
+		}
+	}
+	else
+	{
+		callscene_message.addr = devAddr;
+		callscene_message.opcode = 0x4382;
+		callscene_message.scene = scene;
+		callscene_message.offset = 0;
+		callscene_message.transition[0] = transition;
+		callscene_message.transition[1] = (transition >> 8) & 0xFF;
+		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, 15, 0, dataRsp, &lenRsp, 1000);
+		if (rs == 0)
+		{
+			return 0;
+		}
+	}
+
+	LOGW("Call scene err");
+	return -1;
+}

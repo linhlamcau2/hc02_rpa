@@ -15,6 +15,9 @@
 #include "RuleInputTimer.h"
 #include "RuleOutputGroup.h"
 #include "RuleOutputDevice.h"
+#include "RuleOutputSceneBle.h"
+
+#include "../sceneBle/SceneBle.h"
 
 #include "BleProtocol.h"
 #include "DeviceBleDownLightSmt.h"
@@ -80,7 +83,7 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("GetScanDevice", bind(&Gateway::OnRPCGetScanDevice, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRPCCallbackRegister("AddRule", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("CREATE_EVENT_TRIGGER", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRPCCallbackRegister("DeleteRule", bind(&Gateway::OnRPCDeleteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
@@ -951,6 +954,16 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
 }
 #endif
 
+SceneBle *Gateway::getSceneBleFromId(string sceneBleUUId)
+{
+	for (const auto &[id, scene] : sceneBleList)
+	{
+		if (scene->GetUUId() == sceneBleUUId)
+			return scene;
+	}
+	return NULL;
+}
+
 Device *Gateway::AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X", id.c_str(), name.c_str(), mac.c_str(), addr, type);
@@ -1020,131 +1033,183 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
 {
 	// TODO: Check Rule id exist
-	if (ruleValue.isMember("id") && ruleValue["id"].isInt() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("fullDay") && ruleValue["fullDay"].isBool() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isObject())
+	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
+		ruleValue.isMember("PRIORITY") && ruleValue["PRIORITY"].isInt() &&
+		ruleValue.isMember("START_AT") && ruleValue["START_AT"].isString() &&
+		ruleValue.isMember("END_AT") && ruleValue["END_AT"].isString() &&
+		ruleValue.isMember("TURN_OFF_AT") && ruleValue["TURN_OFF_AT"].isString() &&
+		ruleValue.isMember("FADE_IN") && ruleValue["FADE_IN"].isInt() &&
+		ruleValue.isMember("FADE_OUT") && ruleValue["FADE_OUT"].isInt() &&
+		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray() &&
+		ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
+		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+		ruleValue.isMember("INPUT_DEVICES") && ruleValue["INPUT_DEVICES"].isArray() &&
+		ruleValue.isMember("OUTPUT_DEVICES") && ruleValue["OUTPUT_DEVICES"].isArray() &&
+		ruleValue.isMember("OUTPUT_GROUPS") && ruleValue["OUTPUT_GROUPS"].isArray() &&
+		ruleValue.isMember("OUTPUT_SCENES") && ruleValue["OUTPUT_SCENES"].isArray())
 	{
-		int id = ruleValue["id"].asInt();
-		int repeat = ruleValue["repeat"].asInt();
-		bool fullDay = ruleValue["fullDay"].asBool();
-		string type = ruleValue["type"].asString();
+		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
+		// int repeat = ruleValue["EACH_DAY"].asInt();
+		Json::Value repeatDays = ruleValue["EACH_DAY"];
+		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+		for (int i = 0; i < repeatDays.size(); ++i)
+		{
+			if (repeatDays[i] == "EACHMONDAY")
+				mon = 1;
+			else if (repeatDays[i] == "EACHTUESDAY")
+				tue = 1;
+			else if (repeatDays[i] == "EACHWEDNESDAY")
+				wed = 1;
+			else if (repeatDays[i] == "EACHTHUSDAY")
+				thu = 1;
+			else if (repeatDays[i] == "EACHFRIDAY")
+				fri = 1;
+			else if (repeatDays[i] == "EACHSATURDAY")
+				sat = 1;
+			else if (repeatDays[i] == "EACHSUNDAY")
+				sun = 1;
+		}
+		int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+		bool fullDay = (ruleValue["START_AT"].asString() == "0:0:0" && ruleValue["END_AT"].asString() == "23:59:59") ? true : false;
+		// string type = ruleValue["LOGICAL_OPERATOR_ID"].asInt() == 0 ? "and" : "or";
 		Rule *rule = NULL;
-		if (!fullDay && ruleValue.isMember("startTime") && ruleValue["startTime"].isString() &&
-				ruleValue.isMember("endTime") && ruleValue["endTime"].isString())
-		{
-			string startTime = ruleValue["startTime"].asString();
-			string endTime = ruleValue["endTime"].asString();
-			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
-		}
-		else
-		{
-			rule = new Rule(id, type, repeat);
-		}
-		if (!rule)
-		{
-			LOGE("New rule error");
-			return NULL;
-		}
-		Json::Value inputValue = ruleValue["input"];
-		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
-		{
-			Json::Value timerValue = inputValue["timer"];
-			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
-			{
-				int repeat = timerValue["repeat"].asInt();
-				string timerStr = timerValue["time"].asString();
-				LOGI("Have Timer: %s", timerStr.c_str());
-				int timer = Util::ConvertStrTimeToInt(timerStr);
-				if (timer > 0)
-				{
-					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, timer, repeat);
-					rule->AddRuleInput(ruleInputTimer);
-				}
-			}
-		}
-		if (inputValue.isMember("device") && inputValue["device"].isArray())
-		{
-			Json::Value deviceRuleInputList = inputValue["device"];
-			for (Json::Value::ArrayIndex i = 0; i < deviceRuleInputList.size(); i++)
-			{
-				Json::Value deviceRuleInputValue = deviceRuleInputList[i];
-				if (deviceRuleInputValue.isObject())
-				{
-					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
-					{
-						string mac = deviceRuleInputValue["mac"].asString();
-						Json::Value dataValue = deviceRuleInputValue["data"];
-						Device *device = getDevice(mac);
-						if (device)
-						{
-							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, device, dataValue);
-							rule->AddRuleInput(ruleInputDevice);
-						}
-					}
-				}
-			}
-		}
 
-		Json::Value outputValue = ruleValue["output"];
-		if (outputValue.isMember("device") && outputValue["device"].isArray())
+		// TODO: Check Type of Rule:
+		/*
+			- -1: Rule Time
+			- +0: Rule OR
+			- +1: Rule AND
+			- +2: Rule Time + OR
+			- +3: Rule Time + AND
+		*/
+
+		int ruleLogicId = ruleValue["LOGICAL_OPERATOR_ID"].asInt();
+		if (ruleLogicId == -1)
 		{
-			Json::Value deviceRuleOutputList = outputValue["device"];
-			for (Json::Value::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
+			string type = "and";
+			if (!fullDay && ruleValue.isMember("START_AT") && ruleValue["START_AT"].isString() &&
+				ruleValue.isMember("END_AT") && ruleValue["END_AT"].isString())
 			{
-				Json::Value deviceRuleOutputValue = deviceRuleOutputList[i];
-				if (deviceRuleOutputValue.isObject())
+				string startTime = ruleValue["START_AT"].asString();
+				string endTime = ruleValue["END_AT"].asString();
+				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			}
+			else
+			{
+				rule = new Rule(id, type, repeat);
+			}
+			if (!rule)
+			{
+				LOGE("New rule error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 0)
+		{
+			string type = "or";
+			rule = new Rule(id, type, repeat);
+			if (!rule)
+			{
+				LOGE("New rule error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 1)
+		{
+			string type = "and";
+			rule = new Rule(id, type, repeat);
+			if (!rule)
+			{
+				LOGE("New rule error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 2)
+		{
+			string type = "or";
+			string startTime = ruleValue["START_AT"].asString();
+			string endTime = ruleValue["END_AT"].asString();
+			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			if (!rule)
+			{
+				LOGE("New rule error");
+				return NULL;
+			}
+		}
+		else if (ruleLogicId == 3)
+		{
+			string type = "and";
+			string startTime = ruleValue["START_AT"].asString();
+			string endTime = ruleValue["END_AT"].asString();
+			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			if (!rule)
+			{
+				LOGE("New rule error");
+				return NULL;
+			}
+		}
+		// Handle output device
+		Json::Value deviceRuleOutputList = ruleValue["OUTPUT_DEVICES"];
+		for (Json::Value::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
+		{
+			Json::Value deviceRuleOutputValue = deviceRuleOutputList[i];
+			if (deviceRuleOutputValue.isObject())
+			{
+				if (deviceRuleOutputValue.isMember("DEVICE_ID") && deviceRuleOutputValue["DEVICE_ID"].isString() &&
+					deviceRuleOutputValue.isMember("PROPERTIES") && deviceRuleOutputValue["PROPERTIES"].isObject())
 				{
-					if (deviceRuleOutputValue.isMember("mac") && deviceRuleOutputValue["mac"].isString() &&
-							deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
+					Json::Value dataValue = deviceRuleOutputValue["PROPERTIES"];
+					string deviceId = deviceRuleOutputValue["DEVICE_ID"].asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
 					{
-						Json::Value dataValue = deviceRuleOutputValue["data"];
-						string mac = deviceRuleOutputValue["mac"].asString();
-						Device *device = getDevice(mac);
-						if (device)
-						{
-							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
-							rule->AddRuleOutput(ruleOutputDevice);
-						}
+						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+						rule->AddRuleOutput(ruleOutputDevice);
 					}
 				}
 			}
 		}
-		if (outputValue.isMember("group") && outputValue["group"].isArray())
+		// Handle output group
+		Json::Value groupRuleOutputList = ruleValue["OUTPUT_GROUPS"];
+		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 		{
-			Json::Value groupRuleOutputList = outputValue["group"];
-			for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+			Json::Value groupRuleOutputValue = groupRuleOutputList[i];
+			if (groupRuleOutputValue.isObject())
 			{
-				Json::Value groupRuleOutputValue = groupRuleOutputList[i];
-				if (groupRuleOutputValue.isObject())
+				if (groupRuleOutputValue.isMember("GROUP_ID") && groupRuleOutputValue["GROUP_ID"].isString() &&
+					groupRuleOutputValue.isMember("PROPERTIES") && groupRuleOutputValue["PROPERTIES"].isObject())
 				{
-					if (groupRuleOutputValue.isMember("id") && groupRuleOutputValue["id"].isInt() &&
-							groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
+					string id = groupRuleOutputValue["GROUP_ID"].asString();
+					Json::Value dataValue = groupRuleOutputValue["PROPERTIES"];
+					Group *group = getGroupFromId(id);
+					if (group)
 					{
-						int id = groupRuleOutputValue["id"].asInt();
-						Json::Value dataValue = groupRuleOutputValue["data"];
-						Group *group = getGroup(id);
-						if (group)
-						{
-							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
-							rule->AddRuleOutput(ruleOutputGroup);
-						}
+						RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+						rule->AddRuleOutput(ruleOutputGroup);
 					}
 				}
 			}
 		}
-		LOGI("Add Rule %d", rule->GetId());
-		if (addGateway)
-			ruleList[rule->GetId()] = rule;
+		// Handle output scene
+		Json::Value sceneRuleOutputList = ruleValue["OUTPUT_SCENES"];
+		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+		{
+			string sceneRuleOutputId = sceneRuleOutputList[i].asString();
+			SceneBle *sceneBle = getSceneBleFromId(sceneRuleOutputId);
+			if (sceneBle)
+			{
+				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+				rule->AddRuleOutput(ruleOutputSceneBle);
+			}
+		}
+		// LOGI("Add Rule %s", rule->GetId().c_str());
+		// if (addGateway)
+		// 	ruleList[rule->GetId()] = rule;
 		if (addDatabase)
 		{
 			string ruleStr = ruleValue.toString();
 			ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-			database->RuleAdd(rule->GetId(), ruleStr);
+			// database->RuleAdd(rule->GetId(), ruleStr);
 		}
 		rule->Check();
 		return rule;

@@ -11,6 +11,7 @@
 #include "Group.h"
 #include "Device.h"
 #include "DeviceBle.h"
+#include "../sceneBle/SceneBle.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -28,6 +29,7 @@ private:
 
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
+	map<int, SceneBle *> sceneBleList;
 	map<int, Rule *> ruleList;
 	vector<Device *> scanDeviceList;
 
@@ -85,6 +87,8 @@ public:
 	Device *getDevice(string mac);
 	Device *getDeviceFromId(string deviceId);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
+
+	SceneBle *getSceneBleFromId(string sceneBleUUId);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);

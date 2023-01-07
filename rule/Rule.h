@@ -23,7 +23,7 @@ typedef enum
 class Rule
 {
 private:
-	int id;
+	string id;
 	string type;
 	unsigned char repeater;
 	bool fullDay;
@@ -39,11 +39,11 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(int id, string type, unsigned char repeater);
-	Rule(int id, string type, unsigned char repeater, int startTime, int endTime);
+	Rule(string id, string type, unsigned char repeater);
+	Rule(string id, string type, unsigned char repeater, int startTime, int endTime);
 	~Rule();
 
-	int GetId();
+	string GetId();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void Check();

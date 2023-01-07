@@ -155,6 +155,11 @@ public:
 	int Dimming(uint16_t devAddr, uint16_t dim);
 
 	int AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId);
+
+	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
+
+	int DelSceneLights(uint16_t devAddr, uint16_t scene);
+	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
 };
 
 extern BleProtocol *bleProtocol;
