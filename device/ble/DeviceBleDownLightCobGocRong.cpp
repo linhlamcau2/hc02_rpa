@@ -5,7 +5,7 @@ DeviceBleDownLightCobGocRong::DeviceBleDownLightCobGocRong(string id, string nam
 		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_COB_GOC_RONG, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
-	elementCct = new ElementCct(this, addr);
+	elementCct = new ElementCct(this, addr + 1);
 	elementDim = new ElementDim(this, addr);
 }
 
@@ -68,6 +68,34 @@ bool DeviceBleDownLightCobGocRong::Do(int id, int value)
 	}
 	else {
 		LOGW("DoTrigger id don't");
+	}
+	return false;
+}
+
+
+bool DeviceBleDownLightCobGocRong::Do(Json::Value &dataValue)
+{
+	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+	{
+		Json::Value property = dataValue[i];
+		if (property.isMember("ID") && property["ID"].isInt() &&
+			property.isMember("VALUE") && property["VALUE"].isInt())
+		{
+			int id = property["ID"].asInt();
+			unsigned int value = property["VALUE"].asInt();
+			if (id == 0)
+			{
+				elementOnOff->Do(value);
+			}
+			else if (id == 1)
+			{
+				elementDim->Do((value * 65535) / 100);
+			}
+			else if (id == 2)
+			{
+				elementCct->Do((value * 192) + 800);
+			}
+		}
 	}
 	return false;
 }

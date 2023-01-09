@@ -20,6 +20,23 @@
 #include "DeviceBleDownLightSmt.h"
 #include "DeviceBleDownLightCobTrangTri.h"
 #include "DeviceBleDownLightCobGocRong.h"
+#include "DeviceBleBulb.h"
+#include "DeviceBleChieuGuong.h"
+#include "DeviceBleChieuTranh.h"
+#include "DeviceBleDenBan.h"
+#include "DeviceBleDownLightCobGocHep.h"
+#include "DeviceBleFlood.h"
+#include "DeviceBleLedDayLinear.h"
+#include "DeviceBleLedDayRgbCw.h"
+#include "DeviceBleLedDayRgb.h"
+#include "DeviceBleOpTran.h"
+#include "DeviceBleOpTranLoa.h"
+#include "DeviceBleOpTuong.h"
+#include "DeviceBlePanelTron.h"
+#include "DeviceBlePanelVuong.h"
+#include "DeviceBleThaTran.h"
+#include "DeviceBleTrackLight.h"
+#include "DeviceBleTubeM16.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
@@ -833,18 +850,8 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				for (Json::Value::ArrayIndex i = 0; i < properties.size(); i++)
-				{
-					Json::Value property = properties[i];
-					if (property.isObject() &&
-						property.isMember("ID") && property["ID"].isInt() &&
-						property.isMember("VALUE") && property["VALUE"].isInt())
-					{
-						int id = property["ID"].asInt();
-						int value = property["VALUE"].asInt();
-						device->Do(id, value);
-					}
-				}
+				if (properties.isArray())
+					device->Do(properties);
 			}
 			else
 			{
@@ -1115,9 +1122,79 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	{
 		device = new DeviceBleDownLightCobTrangTri(id, name, mac, device_id, addr, version);
 	}
-	else if (type == BLE_DOWNLIGHT_COB_GOC_RONG) {
+	else if (type == BLE_DOWNLIGHT_COB_GOC_RONG) 
+	{
 		device = new DeviceBleDownLightCobGocRong(id, name, mac, device_id, addr, version);
 	}
+	else if (type == BLE_DOWNLIGHT_COB_GOC_HEP)
+	{
+		device = new DeviceBleDownLightCobGocHep(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_PANEL_TRON)
+	{
+		device = new DeviceBlePanelTron(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_PANEL_VUONG)
+	{
+		device = new DeviceBlePanelVuong(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_OP_TRAN)
+	{
+		device = new DeviceBleOpTran(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_OP_TUONG)
+	{
+		device = new DeviceBleOpTuong(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_CHIEU_TRANH)
+	{
+		device = new DeviceBleChieuTranh(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_TRACKLIGHT)
+	{
+		device = new DeviceBleTrackLight(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_THA_TRAN)
+	{
+		device = new DeviceBleThaTran(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_CHIEU_GUONG)
+	{
+		device = new DeviceBleChieuGuong(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_DAY_LINEAR)
+	{
+		device = new DeviceBleLedDayLinear(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_TUBE_M16)
+	{
+		device = new DeviceBleTubeM16(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_DEN_BAN)
+	{
+		device = new DeviceBleDenBan(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_FLOOD)
+	{
+		device = new DeviceBleFlood(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_DAY_RGBCW)
+	{
+		device = new DeviceBleLedDayRgbCw(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_BULB)
+	{
+		device = new DeviceBleBulb(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_OP_TRAN_LOA)
+	{
+		device = new DeviceBleOpTranLoa(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_LED_DAY_RGB)
+	{
+		device = new DeviceBleLedDayRgb(id, name, mac, device_id, addr, version);
+	}
+
 	else if (type == BLE_SWITCH_4)
 	{
 		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);

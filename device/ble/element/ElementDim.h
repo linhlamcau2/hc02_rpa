@@ -20,5 +20,5 @@ public:
 	void CheckTrigger();
 	void BuildTelemetryValue(Json::Value &jsonValue);
 	bool Do(Json::Value &dataValue);
-	bool Do(int value);
+	bool Do(uint16_t value);
 };

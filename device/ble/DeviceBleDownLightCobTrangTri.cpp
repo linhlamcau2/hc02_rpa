@@ -2,10 +2,10 @@
 #include <Log.h>
 
 DeviceBleDownLightCobTrangTri::DeviceBleDownLightCobTrangTri(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_SMT, version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_COB_TRANG_TRI, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
-	elementCct = new ElementCct(this, addr);
+	elementCct = new ElementCct(this, addr + 1);
 	elementDim = new ElementDim(this, addr);
 }
 
@@ -69,6 +69,33 @@ bool DeviceBleDownLightCobTrangTri::Do(int id, int value)
 	}
 	else {
 		LOGW("DoTrigger id don't");
+	}
+	return false;
+}
+
+bool DeviceBleDownLightCobTrangTri::Do(Json::Value &dataValue)
+{
+	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+	{
+		Json::Value property = dataValue[i];
+		if (property.isMember("ID") && property["ID"].isInt() &&
+			property.isMember("VALUE") && property["VALUE"].isInt())
+		{
+			int id = property["ID"].asInt();
+			unsigned int value = property["VALUE"].asInt();
+			if (id == 0)
+			{
+				elementOnOff->Do(value);
+			}
+			else if (id == 1)
+			{
+				elementDim->Do((value * 65535) / 100);
+			}
+			else if (id == 2)
+			{
+				elementCct->Do((value * 192) + 800);
+			}
+		}
 	}
 	return false;
 }

@@ -1,15 +1,15 @@
-#include "DeviceBleDownLightSmt.h"
+#include "DeviceBleThaTran.h"
 #include <Log.h>
 
-DeviceBleDownLightSmt::DeviceBleDownLightSmt(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_SMT, version)
+DeviceBleThaTran::DeviceBleThaTran(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_LED_THA_TRAN, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
 	elementDim = new ElementDim(this, addr);
 }
 
-int DeviceBleDownLightSmt::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleThaTran::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
 	elementCct->BuildTelemetryValue(pushDataValue);
@@ -17,7 +17,7 @@ int DeviceBleDownLightSmt::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-void DeviceBleDownLightSmt::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleThaTran::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	typedef struct
 	{
@@ -41,7 +41,7 @@ void DeviceBleDownLightSmt::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBleDownLightSmt::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleThaTran::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (elementOnOff->CheckData(dataValue, rs))
@@ -52,7 +52,7 @@ bool DeviceBleDownLightSmt::CheckData(Json::Value &dataValue, bool &rs)
 }
 
 
-bool DeviceBleDownLightSmt::Do(int id, int value)
+bool DeviceBleThaTran::Do(int id, int value)
 {
 	LOGD("DoTrigger id: %d, value: %d", id, value);
 	if (id == 0)
@@ -73,7 +73,7 @@ bool DeviceBleDownLightSmt::Do(int id, int value)
 	return false;
 }
 
-bool DeviceBleDownLightSmt::Do(Json::Value &dataValue)
+bool DeviceBleThaTran::Do(Json::Value &dataValue)
 {
 	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 	{

@@ -89,7 +89,7 @@ bool ElementDim::Do(Json::Value &dataValue)
     return false;
 }
 
-bool ElementDim::Do(int value)
+bool ElementDim::Do(uint16_t value)
 {
     LOGD("DoTrigger value: %d", value);
     // bleprotocol call setonoff light

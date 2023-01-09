@@ -90,7 +90,7 @@ bool ElementCct::Do(Json::Value &dataValue)
 	return false;
 }
 
-bool ElementCct::Do(int value)
+bool ElementCct::Do(uint16_t value)
 {
 	LOGD("DoTrigger value: %d", value);
 	//bleprotocol call setonoff light
