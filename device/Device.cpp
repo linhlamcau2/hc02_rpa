@@ -178,6 +178,9 @@ void Device::InitDeviceModelList()
 	parameterToId["stt"] = 0;
 	parameterToId["dim"] = 1;
 	parameterToId["cct"] = 2;
+	parameterToId["hue"] = 3;
+	parameterToId["luminance"] = 4;
+	parameterToId["saturation"] = 5;
 	parameterToId["pin"] = 8;
 	parameterToId["bt0"] = 11;
 	parameterToId["onoff0"] = 11;

@@ -5,17 +5,19 @@
 #include "element/ElementResetNode.h"
 #include "element/ElementCct.h"
 #include "element/ElementDim.h"
+#include "element/ElementHsl.h"
 
 using namespace std;
 
-class DeviceBleChieuGuong : public DeviceBle
+class DeviceBleDownLightRgbCw : public DeviceBle
 {
 private:
 	ElementOnOff *elementOnOff;
 	ElementCct *elementCct;
 	ElementDim *elementDim;
+    ElementHsl * elementHsl;
 public:
-	DeviceBleChieuGuong(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
+	DeviceBleDownLightRgbCw(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
 
 	int BuildTelemetryValue(Json::Value &pushDataValue);
 	void InputData(uint8_t *data, int len, uint32_t addr = 0);

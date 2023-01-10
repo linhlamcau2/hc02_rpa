@@ -110,7 +110,7 @@ private:
 
 	typedef function<void(scan_device_message_t *scan_device_message)> AddDeviceFunc;
 	AddDeviceFunc addDeviceFunc;
-	atomic<bool> isAdding;
+	// atomic<bool> isAdding;
 	scan_device_message_t scanDeviceMessage;
 
 	vector<message_rsp_list_st *> messageRespList;
@@ -133,6 +133,8 @@ public:
 	BleProtocol(char *uartPort, int uartBaudrate);
 	virtual ~BleProtocol();
 
+	atomic<bool> isAdding;
+	atomic<bool> isProvisioning;
 	void init();
 	int GetAppKey();
 	int GetNetKey();
@@ -143,7 +145,7 @@ public:
 	int StopScan();
 	int ResetFactory();
 
-	void AddDevice(scan_device_message_t *scan_device_message);
+	bool AddDevice(scan_device_message_t *scan_device_message);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();

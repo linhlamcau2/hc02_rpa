@@ -1,8 +1,8 @@
-#include "DeviceBleBulb.h"
+#include "DeviceBleDownLightRgbCw.h"
 #include <Log.h>
 
-DeviceBleBulb::DeviceBleBulb(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-	: DeviceBle(id, name, mac, device_id, addr, BLE_LED_BULB, version)
+DeviceBleDownLightRgbCw::DeviceBleDownLightRgbCw(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+	: DeviceBle(id, name, mac, device_id, addr, BLE_DOWNLIGHT_RGBCW, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
@@ -10,7 +10,7 @@ DeviceBleBulb::DeviceBleBulb(string id, string name, string mac, string device_i
 	elementHsl = new ElementHsl(this, addr);
 }
 
-int DeviceBleBulb::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleDownLightRgbCw::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
 	elementCct->BuildTelemetryValue(pushDataValue);
@@ -19,7 +19,7 @@ int DeviceBleBulb::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-void DeviceBleBulb::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleDownLightRgbCw::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	typedef struct
 	{
@@ -47,7 +47,7 @@ void DeviceBleBulb::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBleBulb::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleDownLightRgbCw::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (elementOnOff->CheckData(dataValue, rs))
@@ -57,7 +57,7 @@ bool DeviceBleBulb::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-bool DeviceBleBulb::Do(int id, int value)
+bool DeviceBleDownLightRgbCw::Do(int id, int value)
 {
 	LOGD("DoTrigger id: %d, value: %d", id, value);
 	if (id == 0)
@@ -77,12 +77,12 @@ bool DeviceBleBulb::Do(int id, int value)
 	}
 	else
 	{
-		LOGW("DoTrigger id don't support");
+		LOGW("DoTrigger id don't");
 	}
 	return false;
 }
 
-bool DeviceBleBulb::Do(Json::Value &dataValue)
+bool DeviceBleDownLightRgbCw::Do(Json::Value &dataValue)
 {
 	bool isIdHue = false;
 	bool isIdSaturation = false;

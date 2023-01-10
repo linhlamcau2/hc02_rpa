@@ -20,6 +20,7 @@
 #include "DeviceBleDownLightSmt.h"
 #include "DeviceBleDownLightCobTrangTri.h"
 #include "DeviceBleDownLightCobGocRong.h"
+#include "DeviceBleDownLightRgbCw.h"
 #include "DeviceBleBulb.h"
 #include "DeviceBleChieuGuong.h"
 #include "DeviceBleChieuTranh.h"
@@ -433,6 +434,8 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	scanDeviceList.clear();
+	bleProtocol->isAdding = true;
+	bleProtocol->isProvisioning = true;
 	if(bleProtocol->StartScan())
 	{
 		bleProtocol->StopScan();
@@ -443,6 +446,8 @@ int Gateway::OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	bleProtocol->StopScan();
+	bleProtocol->isAdding = false;
+	bleProtocol->isProvisioning = false;
 	respValue = reqValue;
 	return 0;
 }
@@ -1129,6 +1134,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	else if (type == BLE_DOWNLIGHT_COB_GOC_HEP)
 	{
 		device = new DeviceBleDownLightCobGocHep(id, name, mac, device_id, addr, version);
+	}
+	else if (type == BLE_DOWNLIGHT_RGBCW)
+	{
+		device = new DeviceBleDownLightRgbCw(id, name, mac, device_id, addr, version);
 	}
 	else if (type == BLE_PANEL_TRON)
 	{

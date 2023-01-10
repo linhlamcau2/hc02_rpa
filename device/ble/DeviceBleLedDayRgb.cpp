@@ -2,7 +2,7 @@
 #include <Log.h>
 
 DeviceBleLedDayRgb::DeviceBleLedDayRgb(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-	: DeviceBle(id, name, mac, device_id, addr, BLE_LED_DAY_RGBCW, version)
+	: DeviceBle(id, name, mac, device_id, addr, BLE_LED_DAY_RGB, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
 	elementHsl = new ElementHsl(this, addr);
@@ -91,6 +91,10 @@ bool DeviceBleLedDayRgb::Do(Json::Value &dataValue)
 			{
 				isIdLuminance = true;
 				valueLuminance = value;
+			}
+			else 
+			{
+				LOGW("DoTrigger id don't support");
 			}
 		}
 	}

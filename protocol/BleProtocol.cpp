@@ -47,14 +47,14 @@ void BleProtocol::init()
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
-	LOGD("CheckOpcodeException");
+	// LOGD("CheckOpcodeException");
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (!isAdding)
+		if (isAdding)
 		{
+			isAdding = false;
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
-			isAdding = true;
 			thread addDeviceThread(addDeviceFunc, &scanDeviceMessage);
 			addDeviceThread.detach();
 		}
@@ -127,7 +127,7 @@ void BleProtocol::OnMessage(unsigned char *data, int len)
 		{
 			if (message_rsp->len >= 2 && message_rsp->len <= l - 2)
 			{
-				LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
+				// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
 				for (auto &messageResp : messageRespList)
 				{
 					if (message_rsp->opcode == messageResp->opcode)
@@ -158,7 +158,7 @@ void BleProtocol::OnMessage(unsigned char *data, int len)
 		}
 		else
 		{
-			LOGW("dupplicate");
+			// LOGW("dupplicate");
 		}
 		old_message_rsp = message_rsp;
 		l -= message_rsp->len + 2;
@@ -426,7 +426,7 @@ static uint32_t convertDeviceType(uint32_t type)
 	return (arr[0] + (arr[1] * 1000) + (arr[2] * 10000));
 }
 
-void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
+bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
 	uint16_t version = 0;
@@ -434,15 +434,15 @@ void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
 	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
 	LOGI("Scan device mac 0x%s, rssi: %i", mac.c_str(), scan_device_message->rssi);
-	if (!SelectMac(scan_device_message->mac))
+	if (!SelectMac(scan_device_message->mac) && isProvisioning)
 	{
-		if (!GetNetKey())
+		if (!GetNetKey() && isProvisioning)
 		{
-			if (!Provision(nextAddr))
+			if (!Provision(nextAddr) && isProvisioning)
 			{
-				if (!BindingAll())
+				if (!BindingAll() && isProvisioning)
 				{
-					if (!SetGwAddr(nextAddr))
+					if (!SetGwAddr(nextAddr) && isProvisioning)
 					{
 						Device *device = gateway->getDevice(mac);
 						if (device)
@@ -453,69 +453,151 @@ void BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						}
 						else
 						{
-							if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
+							if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version) && isProvisioning)
 							{
 								deviceType = convertDeviceType(deviceType);
 								if (deviceType == BLE_DOWNLIGHT_SMT ||
+									deviceType == BLE_DOWNLIGHT_COB_GOC_RONG ||
+									deviceType == BLE_DOWNLIGHT_COB_GOC_HEP ||
+									deviceType == BLE_DOWNLIGHT_COB_TRANG_TRI ||
+									deviceType == BLE_DOWNLIGHT_RGBCW ||
+									deviceType == BLE_PANEL_TRON ||
+									deviceType == BLE_PANEL_VUONG ||
+									deviceType == BLE_LED_OP_TRAN ||
+									deviceType == BLE_LED_OP_TUONG ||
+									deviceType == BLE_LED_CHIEU_TRANH ||
+									deviceType == BLE_TRACKLIGHT ||
+									deviceType == BLE_LED_THA_TRAN ||
+									deviceType == BLE_LED_CHIEU_GUONG ||
+									deviceType == BLE_LED_DAY_LINEAR ||
+									deviceType == BLE_LED_TUBE_M16 ||
+									deviceType == BLE_DEN_BAN ||
+									deviceType == BLE_LED_FLOOD ||
+									deviceType == BLE_LED_DAY_RGB ||
+									deviceType == BLE_LED_DAY_RGBCW ||
+									deviceType == BLE_LED_BULB ||
+									deviceType == BLE_LED_OP_TRAN_LOA ||
 									deviceType == BLE_SWITCH_4 ||
 									deviceType == BLE_DC_SCENE_CONTACT ||
-									deviceType == BLE_TEMP_HUM_SENSOR ||
-									deviceType == BLE_DOWNLIGHT_COB_TRANG_TRI ||
-									deviceType == BLE_DOWNLIGHT_COB_GOC_RONG)
+									deviceType == BLE_TEMP_HUM_SENSOR)
 								{
 									device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, arrayToString844412((uint8_t *)deviceKey), nextAddr, deviceType, version, true, true);
 									if (device)
 									{
 										gateway->AddDeviceToScanList(device);
+										// StartScan();
+										isAdding = true;
 									}
 									else
 									{
-										// TODO: remove device
 										ResetDev(nextAddr);
+										// StartScan();
+										isAdding = true;
 									}
 								}
 								else
 								{
-									// TODO: remove device
 									LOGW("Ble device type 0x%04X not support", deviceType);
 									ResetDev(nextAddr);
+									// StartScan();
+									isAdding = true;
 								}
 							}
 							else
 							{
-								// TODO: remove device
-								LOGW("GetDeviceType false");
 								ResetDev(nextAddr);
+								if (!isProvisioning)
+								{
+									isAdding = false;
+									return false;
+								}
+								else
+								{
+									LOGW("GetDeviceType false");
+									// StartScan();
+									isAdding = true;
+								}
 							}
 						}
 					}
 					else
 					{
-						// TODO: remove device
-						LOGW("SetGwAddr false");
 						ResetDev(nextAddr);
+						if (!isProvisioning)
+						{
+							isAdding = false;
+							return false;
+						}
+						else
+						{
+							LOGW("SetGwAddr false");
+							// StartScan();
+							isAdding = true;
+						}
 					}
 				}
 				else
 				{
-					LOGW("BindingAll false");
+					ResetDev(nextAddr);
+					if (!isProvisioning)
+					{
+						isAdding = false;
+						return false;
+					}
+					else
+					{
+						LOGW("BindingAll false");
+						// StartScan();
+						isAdding = true;
+					}
 				}
 			}
 			else
 			{
-				LOGW("Provision false");
+				ResetDev(nextAddr);
+				if (!isProvisioning)
+				{
+					isAdding = false;
+					return false;
+				}
+				else
+				{
+					LOGW("Provision false");
+					isAdding = true;
+				}
 			}
 		}
 		else
 		{
-			LOGW("Get NWK false");
+			if (!isProvisioning)
+			{
+				isAdding =false;
+				return false;
+			}
+			else
+			{
+				LOGW("Get NWK false");
+				// StartScan();
+				isAdding = true;
+			}
 		}
 	}
 	else
 	{
-		LOGW("Select Mac false");
+		if (!isProvisioning)
+		{
+			isAdding = false;
+			return false;
+		}
+		else
+		{
+			LOGW("Select Mac false");
+			// StartScan();
+			isAdding = true;
+		}
 	}
 	isAdding = false;
+	return false;
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -909,10 +991,6 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition, bool ack)
 {
 	LOGD("Set Cct addr: 0x%04X value %d", devAddr, cct);
-	if (devAddr < 49152)
-	{
-		devAddr++;
-	}
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct
