@@ -1089,7 +1089,7 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 {
 	for (const auto &[id, device] : deviceList)
 	{
-		if (device->CheckAddr(addr) && device->GetProtocol() >= BLE_DEVICE)
+		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
 		{
 			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
 			if (deviceBle)
@@ -1203,7 +1203,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	{
 		device = new DeviceBleLedDayRgb(id, name, mac, device_id, addr, version);
 	}
-
 	else if (type == BLE_SWITCH_4)
 	{
 		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);

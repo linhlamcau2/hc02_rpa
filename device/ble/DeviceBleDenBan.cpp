@@ -9,6 +9,11 @@ DeviceBleDenBan::DeviceBleDenBan(string id, string name, string mac, string devi
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleDenBan::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleDenBan::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

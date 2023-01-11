@@ -9,6 +9,11 @@ DeviceBlePanelTron::DeviceBlePanelTron(string id, string name, string mac, strin
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBlePanelTron::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBlePanelTron::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

@@ -8,6 +8,11 @@ DeviceBleLedDayRgb::DeviceBleLedDayRgb(string id, string name, string mac, strin
 	elementHsl = new ElementHsl(this, addr);
 }
 
+bool DeviceBleLedDayRgb::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 3 >= addr));
+}
+
 int DeviceBleLedDayRgb::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

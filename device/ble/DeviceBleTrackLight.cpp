@@ -9,6 +9,11 @@ DeviceBleTrackLight::DeviceBleTrackLight(string id, string name, string mac, str
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleTrackLight::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleTrackLight::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

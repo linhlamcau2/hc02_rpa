@@ -9,6 +9,11 @@ DeviceBleLedDayLinear::DeviceBleLedDayLinear(string id, string name, string mac,
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleLedDayLinear::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleLedDayLinear::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

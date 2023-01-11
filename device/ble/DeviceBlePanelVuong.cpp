@@ -9,6 +9,11 @@ DeviceBlePanelVuong::DeviceBlePanelVuong(string id, string name, string mac, str
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBlePanelVuong::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBlePanelVuong::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

@@ -10,6 +10,11 @@ DeviceBleBulb::DeviceBleBulb(string id, string name, string mac, string device_i
 	elementHsl = new ElementHsl(this, addr);
 }
 
+bool DeviceBleBulb::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleBulb::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
@@ -122,6 +127,10 @@ bool DeviceBleBulb::Do(Json::Value &dataValue)
 			{
 				isIdLuminance = true;
 				valueLuminance = value;
+			}
+			else 
+			{
+				LOGW("DoTrigger id: %d don't support", id);
 			}
 		}
 	}

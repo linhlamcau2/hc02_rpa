@@ -9,6 +9,11 @@ DeviceBleFlood::DeviceBleFlood(string id, string name, string mac, string device
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleFlood::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleFlood::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

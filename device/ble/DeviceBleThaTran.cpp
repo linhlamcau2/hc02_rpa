@@ -9,6 +9,11 @@ DeviceBleThaTran::DeviceBleThaTran(string id, string name, string mac, string de
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleThaTran::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleThaTran::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

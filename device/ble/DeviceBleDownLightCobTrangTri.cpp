@@ -9,6 +9,11 @@ DeviceBleDownLightCobTrangTri::DeviceBleDownLightCobTrangTri(string id, string n
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleDownLightCobTrangTri::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleDownLightCobTrangTri::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

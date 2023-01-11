@@ -9,6 +9,11 @@ DeviceBleDownLightSmt::DeviceBleDownLightSmt(string id, string name, string mac,
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleDownLightSmt::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleDownLightSmt::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

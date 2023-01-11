@@ -485,22 +485,25 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 									if (device)
 									{
 										gateway->AddDeviceToScanList(device);
-										// StartScan();
 										isAdding = true;
+										StartScan();
+										return false;
 									}
 									else
 									{
 										ResetDev(nextAddr);
-										// StartScan();
 										isAdding = true;
+										StartScan();
+										return false;
 									}
 								}
 								else
 								{
 									LOGW("Ble device type 0x%04X not support", deviceType);
 									ResetDev(nextAddr);
-									// StartScan();
 									isAdding = true;
+									StartScan();
+									return false;
 								}
 							}
 							else
@@ -514,8 +517,9 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 								else
 								{
 									LOGW("GetDeviceType false");
-									// StartScan();
 									isAdding = true;
+									StartScan();
+									return false;
 								}
 							}
 						}
@@ -531,8 +535,9 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						else
 						{
 							LOGW("SetGwAddr false");
-							// StartScan();
 							isAdding = true;
+							StartScan();
+							return false;
 						}
 					}
 				}
@@ -547,8 +552,9 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 					else
 					{
 						LOGW("BindingAll false");
-						// StartScan();
 						isAdding = true;
+						StartScan();
+						return false;
 					}
 				}
 			}
@@ -571,13 +577,12 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 		{
 			if (!isProvisioning)
 			{
-				isAdding =false;
+				isAdding = false;
 				return false;
 			}
 			else
 			{
 				LOGW("Get NWK false");
-				// StartScan();
 				isAdding = true;
 			}
 		}
@@ -592,7 +597,6 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 		else
 		{
 			LOGW("Select Mac false");
-			// StartScan();
 			isAdding = true;
 		}
 	}
@@ -707,7 +711,7 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddr)
 	} set_gw_addr_message_t;
 	set_gw_addr_message_t set_gw_addr_message;
 	memset(&set_gw_addr_message, 0x00, sizeof(set_gw_addr_message));
-	set_gw_addr_message.header = 0x0002;
+	set_gw_addr_message.header = 0;
 	set_gw_addr_message.devAddr = devAddr;
 	set_gw_addr_message.data[0] = 0xE0;
 	set_gw_addr_message.data[1] = 0x11;
@@ -786,7 +790,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 	} check_type_message_t;
 	check_type_message_t check_type_message;
 	memset(&check_type_message, 0x00, sizeof(check_type_message));
-	check_type_message.header = 0x0002;
+	check_type_message.header = 0;
 	check_type_message.addr = devAddr;
 	check_type_message.data[0] = 0xE0;
 	check_type_message.data[1] = 0x11;

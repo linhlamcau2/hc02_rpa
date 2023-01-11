@@ -9,6 +9,11 @@ DeviceBleDownLightCobGocRong::DeviceBleDownLightCobGocRong(string id, string nam
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleDownLightCobGocRong::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleDownLightCobGocRong::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

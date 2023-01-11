@@ -9,6 +9,11 @@ DeviceBleTubeM16::DeviceBleTubeM16(string id, string name, string mac, string de
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleTubeM16::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleTubeM16::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

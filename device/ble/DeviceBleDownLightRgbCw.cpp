@@ -10,6 +10,11 @@ DeviceBleDownLightRgbCw::DeviceBleDownLightRgbCw(string id, string name, string 
 	elementHsl = new ElementHsl(this, addr);
 }
 
+bool DeviceBleDownLightRgbCw::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 4 > addr));
+}
+
 int DeviceBleDownLightRgbCw::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);

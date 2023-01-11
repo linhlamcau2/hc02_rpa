@@ -9,6 +9,11 @@ DeviceBleChieuGuong::DeviceBleChieuGuong(string id, string name, string mac, str
 	elementDim = new ElementDim(this, addr);
 }
 
+bool DeviceBleChieuGuong::CheckAddr(uint32_t addr)
+{
+	return ((this->addr <= addr) && (this->addr + 1 >= addr));
+}
+
 int DeviceBleChieuGuong::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	elementOnOff->BuildTelemetryValue(pushDataValue);
