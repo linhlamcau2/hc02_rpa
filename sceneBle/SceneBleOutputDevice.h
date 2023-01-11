@@ -2,11 +2,11 @@
 
 #include <json.h>
 #include "Device.h"
-#include "SceneOutput.h"
+#include "../rule/RuleOutput.h"
 
 using namespace std;
 
-class SceneBleOutputDevice : public SceneOutput
+class SceneBleOutputDevice : public RuleOutput
 {
 private:
 	Device *device;

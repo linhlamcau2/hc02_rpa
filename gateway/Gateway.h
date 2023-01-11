@@ -29,8 +29,8 @@ private:
 
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
-	map<int, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
+	map<int, Rule *> ruleList;
 	vector<Device *> scanDeviceList;
 
 
@@ -97,7 +97,7 @@ public:
 	Device *getDeviceFromId(string deviceId);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
 
-	SceneBle *getSceneBle(string sceneBleUUId);
+	SceneBle *getSceneBleFromId(string sceneBleUUId);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);

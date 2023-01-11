@@ -101,6 +101,11 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 	return string(buff);
 }
 
+int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+{
+	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
+}
+
 vector<string> Util::splitString(string str, char splitter)
 {
 	vector<string> result;
@@ -138,11 +143,6 @@ bool Util::CompareNumber(int a, int b, string op)
 	else if (op == "<=")
 		return a <= b;
 	return false;
-}
-
-int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
-{
-	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
 }
 
 // trim from start

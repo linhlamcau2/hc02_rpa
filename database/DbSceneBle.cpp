@@ -6,7 +6,7 @@
 
 static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 {
-    int s, index;
+	int s, index;
 	if (stmt)
 	{
 		while (1)
@@ -18,7 +18,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				int id = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string sceneBleUUId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				SceneBle * scene = new SceneBle(sceneBleUUId, id, name);
+				SceneBle *scene = new SceneBle(sceneBleUUId, id, name);
 				// gateway->AddNewSceneBle(scene, true, false);
 			}
 			else if (s == SQLITE_DONE)
@@ -40,20 +40,21 @@ int Db::SceneBleRead()
 	return ReadAll(TABLE_NAME, NULL, SceneBleParse);
 }
 
-int Db::DevcieInSceneBleAdd(SceneBle *scene, Device *device, int epId)
+int Db::DevcieInSceneBleAdd(SceneBle *scene, Device *device, int epId, Json::Value data)
 {
-	string sql = "INTER OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId) VALUES ('"+scene->GetUUId()+"', '"+device->GetId()+"');";
+	// TODO: tuvh
+	string sql = "INTER OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId) VALUES ('" + scene->GetUUId() + "', '" + device->GetId() + "');";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DevcieInSceneBleDel(SceneBle *scene, Device *device, int epId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='"+scene->GetUUId()+"' AND deviceId='"+device->GetId()+"';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetUUId() + "' AND deviceId='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::SceneBleDel(SceneBle *scene)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='"+scene->GetUUId()+"';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetUUId() + "';";
 	return Sqlite_Exec(sql);
 }
