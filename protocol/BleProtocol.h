@@ -154,7 +154,28 @@ public:
 	int TurnOnOff(uint16_t devAddr, uint8_t onoff);
 	int Dimming(uint16_t devAddr, uint16_t dim);
 
-	int AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId);
+	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
+	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
+
+	/**
+	 * @brief 
+	 * 
+	 * @param devAddr id device
+	 * @param scene id scene
+	 * @param modeRgb 0 normal scene, 1->6 id mode blink RGB light
+	 * @return int 0 success, -1 error
+	 */
+	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
+
+	/**
+	 * @brief 
+	 * 
+	 * @param devAddr id device
+	 * @param scene id scene
+	 * @return int 0 success, -1 error
+	 */
+	int DelSceneLights(uint16_t devAddr, uint16_t scene);
+	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
 };
 
 extern BleProtocol *bleProtocol;
