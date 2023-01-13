@@ -281,7 +281,8 @@ int Util::ConnectToWifi(string ssid, string password, string encryption)
 	LOGD("Connect to Wifi");
 	if (encryption != "none")
 		encryption = "psk2";
-	try{
+	try
+	{
 		system("rm /output.txt");
 		system("uci del network.wan.ifname >> /output.txt 2>&1");
 		system("uci del wireless.wifinet1  >> /output.txt 2>&1");
@@ -294,7 +295,10 @@ int Util::ConnectToWifi(string ssid, string password, string encryption)
 		system(string("uci set wireless.wifinet1.encryption='" + encryption + "' >> /output.txt 2>&1").c_str());
 		system("uci commit wireless");
 		system("wifi");
-	}catch(std::exception){}
+	}
+	catch (std::exception)
+	{
+	}
 	sleep(30);
 	string ip = GetIP();
 	LOGI("GW ip: %s", GetIP().c_str());
@@ -316,11 +320,12 @@ int Util::SetModeApWifi()
 {
 	system("rm /output.txt");
 	system("uci set network.wan.ifname='eth0' >> /output.txt 2>&1");
-    system("uci commit network >> /output.txt 2>&1");
-    system("/etc/init.d/network restart >> /output.txt 2>&1");
-    system("uci del wireless.wifinet1 >> /output.txt 2>&1");
-    system("uci commit wireless >> /output.txt 2>&1");
-    system("wifi >> /output.txt 2>&1");
+	system("uci commit network >> /output.txt 2>&1");
+	system("/etc/init.d/network restart >> /output.txt 2>&1");
+	system("uci del wireless.wifinet1 >> /output.txt 2>&1");
+	system("uci commit wireless >> /output.txt 2>&1");
+	system("wifi >> /output.txt 2>&1");
+	return 0;
 }
 
 static bool ledInternet = false;

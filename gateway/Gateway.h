@@ -12,7 +12,6 @@
 #include "Device.h"
 #include "DeviceBle.h"
 #include "../sceneBle/SceneBle.h"
-#include "RuleOutputSceneBle.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -32,7 +31,6 @@ private:
 	map<int, Group *> groupList;
 	map<int, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
-	map<int, Rule *> ruleList;
 	vector<Device *> scanDeviceList;
 
 

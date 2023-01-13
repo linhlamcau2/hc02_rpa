@@ -41,10 +41,10 @@ string Group::GetUUId()
 
 int Group::GetPositionDevice(Device *device)
 {
-	int deviceAddr = device->GetAddr();
-	for (int i=0; i<deviceList.size(); i++)
+	uint32_t deviceAddr = device->GetAddr();
+	for (unsigned int i = 0; i < deviceList.size(); i++)
 	{
-		if(deviceAddr = deviceList[i]->device->GetAddr())
+		if (deviceAddr == deviceList[i]->device->GetAddr())
 		{
 			return i;
 		}
@@ -54,7 +54,7 @@ int Group::GetPositionDevice(Device *device)
 
 /**
  * @brief Add device function
- * 
+ *
  * @param device ID Device
  * @param epId Element ID
  * @return true success
@@ -117,9 +117,9 @@ void Group::DelDevice(Device *device, int epId)
 			int deviceIndex = GetPositionDevice(device);
 			if (deviceIndex > -1)
 			{
-				deviceList.erase(deviceList.begin()+deviceIndex);
+				deviceList.erase(deviceList.begin() + deviceIndex);
 			}
-		}   
+		}
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
