@@ -6,6 +6,7 @@
 #include "Gateway.h"
 
 #define DOUBLE_CLICK_TIME 400
+#define AP_MODE_WIFI	  5
 
 ButtonSignal *buttonSignal = NULL;
 
@@ -45,10 +46,16 @@ void ButtonSignal::OnRelease()
 	LOGI("OnRelease");
 	isBlinkLed = false;
 	releaseTime = Util::millis();
+	// LOGD("interval: %ld", (releaseTime - pressTime));
 	if (releaseTime - pressTime < DOUBLE_CLICK_TIME)
 	{
 		clickCount++;
 		LOGI("clickCount: %d", clickCount);
+		if(clickCount == AP_MODE_WIFI)
+		{
+			LOGI("set AP mode wifi");
+			Util::SetModeApWifi();
+		}
 	}
 	else if (startProcess)
 	{

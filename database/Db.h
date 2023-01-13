@@ -66,7 +66,7 @@ public:
 
 	int SceneBleRead();
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
-	int DevcieInSceneBleDel(SceneBle *scene, Device *device, int epId);
+	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
 	int SceneBleDel(SceneBle *scene);
 };
 

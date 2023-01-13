@@ -101,6 +101,11 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 	return string(buff);
 }
 
+int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+{
+	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
+}
+
 vector<string> Util::splitString(string str, char splitter)
 {
 	vector<string> result;
@@ -138,11 +143,6 @@ bool Util::CompareNumber(int a, int b, string op)
 	else if (op == "<=")
 		return a <= b;
 	return false;
-}
-
-int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
-{
-	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
 }
 
 // trim from start
@@ -278,34 +278,49 @@ void Util::ScanWifi(Json::Value &jsonValue)
 
 int Util::ConnectToWifi(string ssid, string password, string encryption)
 {
+	LOGD("Connect to Wifi");
 	if (encryption != "none")
 		encryption = "psk2";
-	ExecuteCMD("uci del network.wan.ifname");
-	ExecuteCMD("uci del wireless.wifinet1");
-	ExecuteCMD("uci set wireless.wifinet1=wifi-iface");
-	ExecuteCMD("uci set wireless.wifinet1.mode='sta'");
-	ExecuteCMD("uci set wireless.wifinet1.network='wan'");
-	ExecuteCMD("uci set wireless.wifinet1.device='radio0'");
-	ExecuteCMD(string("uci set wireless.wifinet1.ssid='" + ssid + "'").c_str());
-	ExecuteCMD(string("uci set wireless.wifinet1.key='" + password + "'").c_str());
-	ExecuteCMD(string("uci set wireless.wifinet1.encryption='" + encryption + "'").c_str());
-	ExecuteCMD("uci commit wireless");
-	ExecuteCMD("wifi");
+	try{
+		system("rm /output.txt");
+		system("uci del network.wan.ifname >> /output.txt 2>&1");
+		system("uci del wireless.wifinet1  >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1=wifi-iface >> /output.txt 2>&1");
+		system(string("uci set wireless.wifinet1.ssid=\"" + ssid + "\" >> /output.txt 2>&1").c_str());
+		system("uci set wireless.wifinet1.mode='sta' >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1.network='wan' >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1.device='radio0' >> /output.txt 2>&1");
+		system(string("uci set wireless.wifinet1.key='" + password + "' >> /output.txt 2>&1").c_str());
+		system(string("uci set wireless.wifinet1.encryption='" + encryption + "' >> /output.txt 2>&1").c_str());
+		system("uci commit wireless");
+		system("wifi");
+	}catch(std::exception){}
 	sleep(30);
 	string ip = GetIP();
 	LOGI("GW ip: %s", GetIP().c_str());
 	if (ip == "10.10.10.1")
 	{
-		ExecuteCMD("uci del wireless.wifinet1");
-		ExecuteCMD("uci set wireless.wifinet1=wifi-iface");
+		system("uci del wireless.wifinet1 >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1=wifi-iface >> /output.txt 2>&1");
 		// ExecuteCMD("uci set wireless.default_radio0.mode='ap'");
-		ExecuteCMD("uci commit wireless");
-		ExecuteCMD("uci commit network");
-		ExecuteCMD("wifi");
-		ExecuteCMD("/etc/init.d/network restart");
+		system("uci commit wireless");
+		system("uci commit network");
+		system("wifi");
+		system("/etc/init.d/network restart");
 		return -1;
 	}
 	return 0;
+}
+
+int Util::SetModeApWifi()
+{
+	system("rm /output.txt");
+	system("uci set network.wan.ifname='eth0' >> /output.txt 2>&1");
+    system("uci commit network >> /output.txt 2>&1");
+    system("/etc/init.d/network restart >> /output.txt 2>&1");
+    system("uci del wireless.wifinet1 >> /output.txt 2>&1");
+    system("uci commit wireless >> /output.txt 2>&1");
+    system("wifi >> /output.txt 2>&1");
 }
 
 static bool ledInternet = false;
