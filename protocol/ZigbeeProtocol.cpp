@@ -88,6 +88,7 @@ void ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	int lenRemain = len;
 	message_rsp_st *message_rsp = NULL;
 	Util::LedZigbee(false);
+	Util::LedServiceLock();
 	while (lenRemain >= 7 && message[0] == MESSAGE_HEADER)
 	{
 		message_rsp = (message_rsp_st *)(message + 1);
@@ -124,6 +125,7 @@ void ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 		message += payloadLen + 7;
 	}
 	Util::LedZigbee(true);
+	Util::LedServiceUnlock();
 }
 
 int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout)

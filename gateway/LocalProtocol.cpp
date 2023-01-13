@@ -1,6 +1,7 @@
 #include "LocalProtocol.h"
 #include <string.h>
 #include <Log.h>
+#include "Util.h"
 
 #define HC_CONTROL_TOPIC "HC.CONTROL"
 #define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
@@ -35,6 +36,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	string errs;
 	stringstream s(payload);
 	Json::CharReaderBuilder b;
+	Util::LedServiceLock();
 	Json::parseFromStream(b, s, &payloadJson, &errs);
 	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
@@ -68,6 +70,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		LOGW("OnLocalMessage topic: %s", topic.c_str());
 		LOGW("OnLocalMessage payload: %s", payload.c_str());
 	}
+	Util::LedServiceUnlock();
 }
 
 int LocalProtocol::LocalPublish(string topic, string payload)

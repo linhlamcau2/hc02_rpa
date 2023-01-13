@@ -29,7 +29,7 @@ private:
 
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
-	map<string, Scene *> sceneList;
+	map<int, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
 	vector<Device *> scanDeviceList;
 
@@ -64,8 +64,8 @@ private:
 	int OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCAddScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDeleteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
@@ -105,7 +105,7 @@ public:
 
 	Device *AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
-	Scene *AddScene(Json::Value &sceneValue, bool addGateway, bool addDatabase);
+	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 
 	void OnTimerTest();

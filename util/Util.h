@@ -48,4 +48,6 @@ namespace Util
 	void LedBle(bool value);
 	void LedAll(bool value);
 	void LedRestoreLastValue();
+	void LedServiceLock();
+	void LedServiceUnlock();
 }

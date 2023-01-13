@@ -2,8 +2,8 @@
 
 #include <string>
 #include <vector>
-#include "SceneInput.h"
-#include "SceneOutput.h"
+#include "RuleInput.h"
+#include "RuleOutput.h"
 
 using namespace std;
 
@@ -11,19 +11,19 @@ typedef enum
 {
 	SCENE_TYPE_OR = 0,
 	SCENE_TYPE_AND
-} SceneType;
+} RuleType;
 
 typedef enum
 {
 	SCENE_MODE_ALL_DAY = 0xFE,
 	SCENE_MODE_WORK_DAY = 0xF1,
 	SCENE_MODE_WEEKEND_DAY = 0x06,
-} SceneMode;
+} RuleMode;
 
-class Scene
+class Rule
 {
 private:
-	string id;
+	int id;
 	string type;
 	unsigned char repeater;
 	bool fullDay;
@@ -35,17 +35,17 @@ private:
 	bool isAvailable;
 	int timerRegisterIndex;
 
-	vector<SceneInput *> sceneInputList;
-	vector<SceneOutput *> sceneOutputList;
+	vector<RuleInput *> ruleInputList;
+	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Scene(string id, string type, unsigned char repeater);
-	Scene(string id, string type, unsigned char repeater, int startTime, int endTime);
-	~Scene();
+	Rule(int id, string type, unsigned char repeater);
+	Rule(int id, string type, unsigned char repeater, int startTime, int endTime);
+	~Rule();
 
-	string GetId();
-	void AddSceneInput(SceneInput *sceneInput);
-	void AddSceneOutput(SceneOutput *sceneOutput);
+	int GetId();
+	void AddRuleInput(RuleInput *ruleInput);
+	void AddRuleOutput(RuleOutput *ruleOutput);
 	void Check();
 	void RunOutput();
 };

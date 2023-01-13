@@ -49,10 +49,10 @@ bool ModuleButton::CheckData(Json::Value dataValue)
 void ModuleButton::CheckTrigger()
 {
 	LOGD("CheckTrigger");
-	for (auto &sceneInputDevice : device->deviceSceneInputList)
+	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
-		if (CheckData(*sceneInputDevice->GetData()))
-			sceneInputDevice->Trigger(true);
+		if (CheckData(*ruleInputDevice->GetData()))
+			ruleInputDevice->Trigger(true);
 	}
 }
 

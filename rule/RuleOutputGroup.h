@@ -2,19 +2,19 @@
 
 #include <json.h>
 #include "Group.h"
-#include "SceneOutput.h"
+#include "RuleOutput.h"
 
 using namespace std;
 
-class SceneOutputGroup : public SceneOutput
+class RuleOutputGroup : public RuleOutput
 {
 private:
 	Group *group;
 	Json::Value data;
 
 public:
-	SceneOutputGroup(Group *group, Json::Value data);
-	~SceneOutputGroup();
+	RuleOutputGroup(Group *group, Json::Value data);
+	~RuleOutputGroup();
 
 	void RunOutput();
 };

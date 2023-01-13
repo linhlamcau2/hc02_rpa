@@ -1,17 +1,20 @@
 #include "CloudProtocol.h"
 #include <string.h>
 #include <Log.h>
+#include "Util.h"
 
 #define HC_ONLINE "/hc/online"
 #define HC_OFFLINE "/hc/offline"
 
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
-	subTopic = "/server/" + mac;
-	pubTopic = "/" + mac + "/server";
 	Json::Value jsonValue;
 	jsonValue["HC_ID"] = mac;
 	SetWillset(HC_OFFLINE, jsonValue.toString());
+	
+	// mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
+	subTopic = "/server/" + mac;
+	pubTopic = "/" + mac + "/server";
 }
 
 CloudProtocol::~CloudProtocol()
@@ -40,6 +43,8 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 	string errs;
 	stringstream s(payload);
 	Json::CharReaderBuilder b;
+	Util::LedInternet(false);
+	Util::LedServiceLock();
 	Json::parseFromStream(b, s, &payloadJson, &errs);
 	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
@@ -73,6 +78,8 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 		LOGW("OnDeviceRPC topic: %s", topic.c_str());
 		LOGW("OnDeviceRPC payload: %s", payload.c_str());
 	}
+	Util::LedInternet(true);
+	Util::LedServiceUnlock();
 }
 
 int CloudProtocol::OnDeviceRPCCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc)

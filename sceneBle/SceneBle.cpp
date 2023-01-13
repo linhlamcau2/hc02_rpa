@@ -38,13 +38,24 @@ int SceneBle::GetPositionDevice(Device *device)
 	return -1;
 }
 
-bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB)
+bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB)
 {
-    if (bleProtocol->SetSceneLights(device->GetAddr(), id, modeRGB))
+    if(addOnlyDB == false)
+    {
+        if (bleProtocol->SetSceneLights(device->GetAddr(), id, modeRGB))
+        {
+            DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+            deviceList.push_back(deviceInSceneBle);
+            return true;
+        }
+    }
+    else
     {
         DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
         deviceList.push_back(deviceInSceneBle);
+        return true;
     }
+    return false;
 }
 
 bool SceneBle::DelDevice(Device *device)
@@ -56,7 +67,9 @@ bool SceneBle::DelDevice(Device *device)
         {
             deviceList.erase(deviceList.begin()+deviceIndex);
         }
-    }   
+        return true;
+    }  
+    return false; 
 }
 
 void SceneBle::Do(int id)

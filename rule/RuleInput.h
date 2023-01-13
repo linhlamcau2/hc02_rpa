@@ -2,14 +2,14 @@
 
 using namespace std;
 
-class Scene;
-class SceneInput
+class Rule;
+class RuleInput
 {
 protected:
 	bool isAvailable;
-	Scene *scene;
+	Rule *rule;
 
 public:
-	virtual ~SceneInput() {}
+	virtual ~RuleInput() {}
 	virtual bool Check() { return isAvailable; }
 };
