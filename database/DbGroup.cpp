@@ -42,7 +42,7 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, name) VALUES (" + to_string(group->GetId()) + ",\"" + group->GetName() + "\")";
+	string sql = "INSERT INTO " TABLE_NAME " (name, groupId, meshId) VALUES ('" + group->GetName() + "','" + group->GetUUId() + "', "")";
 	return Sqlite_Exec(sql);
 }
 

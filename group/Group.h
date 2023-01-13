@@ -37,6 +37,7 @@ public:
 	int GetId();
 	void SetName(string name);
 	string GetName();
+	string GetUUId();
 	int GetPositionDevice(Device *device);
 	
 	bool AddDevice(Device *device, int epId);

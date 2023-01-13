@@ -65,8 +65,8 @@ public:
 	int RuleDel(int id);
 
 	int SceneBleRead();
-	int DevcieInSceneBleAdd(SceneBle *scene, Device *device, int epId, Json::Value data);
-	int DevcieInSceneBleDel(SceneBle *scene, Device *device, int epId);
+	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
+	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
 	int SceneBleDel(SceneBle *scene);
 };
 

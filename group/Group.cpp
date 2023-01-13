@@ -34,6 +34,11 @@ string Group::GetName()
 	return name;
 }
 
+string Group::GetUUId()
+{
+	return groupUUId;
+}
+
 int Group::GetPositionDevice(Device *device)
 {
 	int deviceAddr = device->GetAddr();

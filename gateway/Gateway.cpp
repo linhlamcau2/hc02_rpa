@@ -15,9 +15,6 @@
 #include "RuleInputTimer.h"
 #include "RuleOutputGroup.h"
 #include "RuleOutputDevice.h"
-#include "RuleOutputSceneBle.h"
-
-#include "../sceneBle/SceneBle.h"
 
 #include "BleProtocol.h"
 #include "DeviceBleDownLightSmt.h"
@@ -42,7 +39,7 @@ Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive)
 		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, "localhost", 1883, mac, "RD", "65EDE7539FC3ADC1DC91A37EF983FC6D5747D71D4FC5CAB9E99826C605653187", 10),
+			LocalProtocol(mac, "localhost", 1883, "tuvv", "", "", 10),
 			Udp(8181)
 {
 	this->mac = mac;
@@ -452,11 +449,9 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 							if (device)
 							{
 								int tempDeviceAddr = device->GetAddr();
-								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr))
+								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr, false))
 								{
-									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr, deviceProperties);
-									// respValue["code"] = 0;
-									// return 0;
+									database->DeviceInSceneBleAdd(scene, device, deviceProperties);
 								}
 							}
 						}
@@ -492,9 +487,9 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 							if (device)
 							{
 								int tempDeviceAddr = device->GetAddr();
-								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr))
+								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr, false))
 								{
-									database->DevcieInSceneBleAdd(scene, device, tempDeviceAddr, deviceProperties);
+									database->DeviceInSceneBleAdd(scene, device, deviceProperties);
 									// respValue["code"] = 0;
 									// return 0;
 								}
@@ -1278,7 +1273,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				return NULL;
 			}
 		}
-		else if (ruleLogicId == 0)
+		if (!rule)
 		{
 			string type = "or";
 			rule = new Rule(id, type, repeat);
@@ -1288,7 +1283,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				return NULL;
 			}
 		}
-		else if (ruleLogicId == 1)
+		Json::Value inputValue = ruleValue["input"];
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
 			string type = "and";
 			rule = new Rule(id, type, repeat);

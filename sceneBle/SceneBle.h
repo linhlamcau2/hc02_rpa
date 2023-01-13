@@ -28,7 +28,7 @@ class SceneBle
         int GetId();
         string GetUUId();
         int GetPositionDevice(Device *device);
-        bool AddDevice(Device *device, Json::Value data, int modeRGB);
+        bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
         bool DelDevice(Device *device);
         void Do(int id);
 };
