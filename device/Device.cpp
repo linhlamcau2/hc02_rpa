@@ -5,13 +5,15 @@
 #include <Log.h>
 #include <unistd.h>
 
-Device::Device(string id, string name, string mac, uint32_t addr, uint32_t type)
+Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 {
 	this->id = id;
 	this->name = name;
 	this->mac = mac;
 	this->addr = addr;
 	this->type = type;
+	this->device_id = device_id;
+	this->version = version;
 }
 
 Device::~Device()
@@ -31,6 +33,11 @@ string Device::GetName()
 string Device::GetMac()
 {
 	return mac;
+}
+
+string Device::GetDeviceId()
+{
+	return device_id;
 }
 
 uint32_t Device::GetAddr()
@@ -185,6 +192,7 @@ void Device::InitDeviceModelList()
 	parameterToId["onoff5"] = 16;
 	parameterToId["temp"] = 21;
 	parameterToId["hum"] = 22;
+	parameterToId["modeRgb"] = 23;
 
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");

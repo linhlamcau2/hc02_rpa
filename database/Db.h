@@ -9,14 +9,14 @@
 #include <Gateway.h>
 
 #include "../sceneBle/SceneBle.h"
-#include "Device.h"
 
-#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
+#define DB_NAME "/home/anhnv/Desktop/smh_master/smh_HC/smh.sqlite"
 
 using namespace std;
 
 class Db
 {
+
 private:
 	mutex mtx;
 
@@ -33,6 +33,19 @@ public:
 	int DeviceDel(Device *device);
 	int DeviceDel(string mac);
 	int DeviceDelAll();
+
+	int GatewayRead();
+	int GatewayAdd(Gateway *gateway);
+	int GatewayUpdate(Gateway *gateway);
+	int GatewayUpdateId(Gateway *gateway, string id);
+	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
+	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
+	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
+	int GatewayDel(Gateway *gateway);
+	int GatewayDel(string id);
+	int GatewayDelAll();
+
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);

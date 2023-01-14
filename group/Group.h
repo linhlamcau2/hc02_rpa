@@ -27,7 +27,7 @@ private:
 	int numberOfZigbeeDevice;
 
 	Json::Value dataValue;
-
+	
 public:
 	vector<DeviceInGroup *> deviceList;
 

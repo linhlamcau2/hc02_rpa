@@ -8,7 +8,7 @@
 ElementOnOff::ElementOnOff(Device *device, uint32_t addr) : Element(device, addr)
 {
 	onoff = 0;
-	elementName = "onoff" + to_string(addr - device->GetAddr());
+	elementName = "status" + to_string(addr - device->GetAddr());
 }
 
 void ElementOnOff::InitAttribute(int attributeId, double value)
@@ -84,12 +84,10 @@ bool ElementOnOff::Do(Json::Value &dataValue)
 		int onoff = dataValue[elementName].asInt();
 		if (onoff == 0 || onoff == 1)
 		{
-			bleProtocol->TurnOnOff(addr, onoff);
 			return true;
 		}
 		else if (onoff == 2)
 		{
-			bleProtocol->TurnOnOff(addr, this->onoff ? 0 : 1);
 			return true;
 		}
 	}
@@ -99,6 +97,7 @@ bool ElementOnOff::Do(Json::Value &dataValue)
 bool ElementOnOff::Do(int value)
 {
 	LOGD("DoTrigger value: %d", value);
-	bleProtocol->TurnOnOff(addr, value);
+	//bleprotocol call setonoff light
+	bleProtocol->SetOnOffLight(addr, value, 0, true);
 	return true;
 }

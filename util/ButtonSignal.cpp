@@ -6,7 +6,8 @@
 #include "Gateway.h"
 
 #define DOUBLE_CLICK_TIME 400
-#define AP_MODE_WIFI	  5
+#define AP_MODE_WIFI	5
+#define MODE_SEND_UDP_BROADCAST	3
 
 ButtonSignal *buttonSignal = NULL;
 
@@ -46,22 +47,21 @@ void ButtonSignal::OnRelease()
 	LOGI("OnRelease");
 	isBlinkLed = false;
 	releaseTime = Util::millis();
-	// LOGD("interval: %ld", (releaseTime - pressTime));
 	if (releaseTime - pressTime < DOUBLE_CLICK_TIME)
 	{
 		clickCount++;
 		LOGI("clickCount: %d", clickCount);
-		if(clickCount == AP_MODE_WIFI)
+		if (clickCount == MODE_SEND_UDP_BROADCAST)
 		{
-			LOGI("set AP mode wifi");
-			Util::SetModeApWifi();
+			gateway->StartUdpBroadcast();
 		}
 	}
 	else if (startProcess)
 	{
 		if (releaseTime - pressTime > 5000 && releaseTime - pressTime < 8000)
 		{
-			gateway->StartUdpBroadcast();
+			LOGI("set AP mode wifi");
+			Util::SetModeApWifi();
 		}
 	}
 }
