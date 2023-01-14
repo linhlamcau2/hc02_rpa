@@ -44,7 +44,7 @@ int Group::GetPositionDevice(Device *device)
 	int deviceAddr = device->GetAddr();
 	for (int i=0; i<deviceList.size(); i++)
 	{
-		if(deviceAddr = deviceList[i]->device->GetAddr())
+		if(deviceAddr == deviceList[i]->device->GetAddr())
 		{
 			return i;
 		}
