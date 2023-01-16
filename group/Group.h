@@ -27,7 +27,7 @@ private:
 	int numberOfZigbeeDevice;
 
 	Json::Value dataValue;
-
+	
 public:
 	vector<DeviceInGroup *> deviceList;
 
@@ -37,6 +37,8 @@ public:
 	int GetId();
 	void SetName(string name);
 	string GetName();
+	string GetUUId();
+	int GetPositionDevice(Device *device);
 	
 	bool AddDevice(Device *device, int epId);
 	void DelDevice(Device *device, int epId);

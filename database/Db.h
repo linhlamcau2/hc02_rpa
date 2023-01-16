@@ -32,6 +32,19 @@ public:
 	int DeviceDel(string mac);
 	int DeviceDelAll();
 
+	int GatewayRead();
+	int GatewayAdd(Gateway *gateway);
+	int GatewayUpdate(Gateway *gateway);
+	int GatewayUpdateId(Gateway *gateway, string id);
+	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
+	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
+	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
+	int GatewayDel(Gateway *gateway);
+	int GatewayDel(string id);
+	int GatewayDelAll();
+
+
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
 	int DeviceAttributeUpdate(Device *device, int attributeId, double value);
@@ -51,11 +64,21 @@ public:
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
 	int DeviceInGroupDelAll();
 
+	// int DeviceSceneRead();
+	// int DeviceSceneAdd(string mac, string schedule);
+	// int DeviceSceneAdd(Device *device, string schedule);
+	// int DeviceSceneDel(string mac, string schedule);
+	// int DeviceSceneDel(Device *device, string schedule);
+
 	int RuleRead();
 	int RuleAdd(int id, string rule);
 	int RuleUpdate(int id, string rule);
 	int RuleDel(int id);
 
+	int SceneBleRead();
+	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
+	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
+	int SceneBleDel(SceneBle *scene);
 };
 
 extern Db *database;

@@ -12,13 +12,14 @@
 #include <algorithm>
 #include <functional>
 #include <cctype>
+#include <ctime>
 #include <locale>
 #include <Base64.h>
 #include "Log.h"
 
 using namespace std;
 
-string genRandRQI(int size)
+string Util::genRandRQI(int size)
 {
 	string rqi = "";
 	for (int i = 0; i < size; i++)
@@ -37,7 +38,7 @@ string getTimeStrFromTime(time_t t)
 	return string(timeBuffer);
 }
 
-string getCurrentTimeStr()
+string Util::GetCurrentTimeStr()
 {
 	return getTimeStrFromTime(time(NULL));
 }
@@ -99,6 +100,11 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 		sprintf(buff + i * 2, "%02X", data[i]);
 	}
 	return string(buff);
+}
+
+int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+{
+	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
 }
 
 vector<string> Util::splitString(string str, char splitter)
@@ -198,7 +204,7 @@ string Util::GetMacAddress()
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
 	sprintf((char *)uc_Mac, (const char *)"%.2x%.2x%.2x%.2x%.2x%.2x",
-					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return string(uc_Mac);
 }
 
@@ -228,7 +234,7 @@ string Util::GetIP()
 	return "";
 }
 
-void Util::ScanWifi(Json::Value &jsonValue)
+void Util::ScanWifi(Json::Value &jsonValue, string rqi)
 {
 	size_t pos = 0;
 	string wifi;
@@ -236,8 +242,21 @@ void Util::ScanWifi(Json::Value &jsonValue)
 	char buff[128] = "Cell 02";
 	int count = 0;
 	Json::Value wifiValue;
+	Json::Value from;
+	Json::Value to;
+	Json::Value data;
 	vector<string> lineList;
 	string ssidStr, encryptionStr;
+	int quality;
+
+	jsonValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
+	jsonValue["REQUEST_ID"] = rqi;
+	jsonValue["TIME"] = Util::GetCurrentTimeStr();
+	jsonValue["CONNECTION_TYPE"] = 0;
+	from["TYPE"] = 2;
+	jsonValue["FROM"] = from;
+	to["TYPE"] = 0;
+	jsonValue["TO"] = to;
 
 	string msg_rsp = ExecuteCMD("iwinfo wlan0 scan");
 	while ((pos = msg_rsp.find(buff)) != string::npos)
@@ -260,46 +279,82 @@ void Util::ScanWifi(Json::Value &jsonValue)
 			encryptionStr = trim(lineList[4]);
 			encryptionStr.erase(0, 12);
 
-			wifiValue["CMD"] = "HC_RESPONE";
-			wifiValue["SSID"] = macaron::Base64::Encode(ssidStr);
-			wifiValue["QUALITY"] = 50;
-			wifiValue["MAC"] = lineList[0];
-			wifiValue["ENCRYPTION"] = encryptionStr;
-			jsonValue.append(wifiValue);
+			char *p;
+			p = (char *)strstr(lineList[3].c_str(), "Quality");
+			char qlt[3] = {(*(p + 9)), *(p + 10)};
+			quality = stoi(string(qlt));
+			if (quality >= 50)
+			{
+				wifiValue["SSID"] = ssidStr;
+				wifiValue["QUALITY"] = quality;
+				wifiValue["MAC"] = lineList[0];
+				wifiValue["ENCRYPTION"] = encryptionStr;
+				data.append(wifiValue);
+			}
 		}
 	}
+	jsonValue["DATA"] = data;
 }
 
 int Util::ConnectToWifi(string ssid, string password, string encryption)
 {
-	if (encryption != "none")
+	LOGD("Connect to Wifi");
+	if (encryption == "WPA2 PSK (CCMP)")
+	{
 		encryption = "psk2";
-	ExecuteCMD("uci del network.wan.ifname");
-	ExecuteCMD("uci del wireless.wifinet1");
-	ExecuteCMD("uci set wireless.wifinet1=wifi-iface");
-	ExecuteCMD("uci set wireless.wifinet1.mode='sta'");
-	ExecuteCMD("uci set wireless.wifinet1.network='wan'");
-	ExecuteCMD("uci set wireless.wifinet1.device='radio0'");
-	ExecuteCMD(string("uci set wireless.wifinet1.ssid='" + ssid + "'").c_str());
-	ExecuteCMD(string("uci set wireless.wifinet1.key='" + password + "'").c_str());
-	ExecuteCMD(string("uci set wireless.wifinet1.encryption='" + encryption + "'").c_str());
-	ExecuteCMD("uci commit wireless");
-	ExecuteCMD("wifi");
+	}
+	else if (encryption == "none")
+	{
+		encryption = "psk2";
+	}
+	else if (encryption == "WPA PSK")
+	{
+		encryption = "psk";
+	}
+	try
+	{
+		system("rm /output.txt");
+		system("uci del network.wan.ifname >> /output.txt 2>&1");
+		system("uci del wireless.wifinet1  >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1=wifi-iface >> /output.txt 2>&1");
+		system(string("uci set wireless.wifinet1.ssid=\"" + ssid + "\" >> /output.txt 2>&1").c_str());
+		system("uci set wireless.wifinet1.mode='sta' >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1.network='wan' >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1.device='radio0' >> /output.txt 2>&1");
+		system(string("uci set wireless.wifinet1.key='" + password + "' >> /output.txt 2>&1").c_str());
+		system(string("uci set wireless.wifinet1.encryption='" + encryption + "' >> /output.txt 2>&1").c_str());
+		system("uci commit wireless");
+		system("wifi");
+	}
+	catch (std::exception)
+	{
+	}
 	sleep(30);
 	string ip = GetIP();
 	LOGI("GW ip: %s", GetIP().c_str());
 	if (ip == "10.10.10.1")
 	{
-		ExecuteCMD("uci del wireless.wifinet1");
-		ExecuteCMD("uci set wireless.wifinet1=wifi-iface");
+		system("uci del wireless.wifinet1 >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1=wifi-iface >> /output.txt 2>&1");
 		// ExecuteCMD("uci set wireless.default_radio0.mode='ap'");
-		ExecuteCMD("uci commit wireless");
-		ExecuteCMD("uci commit network");
-		ExecuteCMD("wifi");
-		ExecuteCMD("/etc/init.d/network restart");
+		system("uci commit wireless");
+		system("uci commit network");
+		system("wifi");
+		system("/etc/init.d/network restart");
 		return -1;
 	}
 	return 0;
+}
+
+int Util::SetModeApWifi()
+{
+	system("rm /output.txt");
+	system("uci set network.wan.ifname='eth0' >> /output.txt 2>&1");
+	system("uci commit network >> /output.txt 2>&1");
+	system("/etc/init.d/network restart >> /output.txt 2>&1");
+	system("uci del wireless.wifinet1 >> /output.txt 2>&1");
+	system("uci commit wireless >> /output.txt 2>&1");
+	system("wifi >> /output.txt 2>&1");
 }
 
 static bool ledInternet = false;
@@ -398,4 +453,24 @@ void Util::LedServiceUnlock()
 	ledServiceCount--;
 	if (!ledServiceCount)
 		LedService(true);
+}
+
+bool Util::GetStatusLedBle()
+{
+	return ledBle;
+}
+
+bool Util::GetStatusLedService()
+{
+	return ledService;
+}
+
+bool Util::GetStatusLedZigbee()
+{
+	return ledZigbee;
+}
+
+bool Util::GetStatusLedInternet()
+{
+	return ledInternet;
 }

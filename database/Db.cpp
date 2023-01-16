@@ -1,4 +1,4 @@
-#include <Db.h>
+#include "Db.h"
 #include <Log.h>
 
 #define STRINGIZE_(x) #x
@@ -23,7 +23,7 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 
 int Db::Sqlite_Exec(string &sql)
 {
-	// LOGD("Sqlite_Exec sql: %s", sql);
+	LOGD("Sqlite_Exec sql: %s", sql.c_str());
 	int rc;
 	sqlite3 *db;
 	char *err_msg = 0;

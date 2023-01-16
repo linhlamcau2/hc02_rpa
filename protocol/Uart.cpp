@@ -167,7 +167,7 @@ static void HandleInMessage(Uart *uart)
 			memset(uart->rx_buf, 0, BUFFER_SIZE);
 		}
 		else
-			usleep(10000);
+			usleep(5000);
 	}
 }
 
