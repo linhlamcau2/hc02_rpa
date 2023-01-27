@@ -65,6 +65,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->mac = mac;
 	this->id = "";
 	this->dormitoryId = "";
+	this->ble_unicast = 0;
 	this->ble_appkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
@@ -91,9 +92,9 @@ void Gateway::init()
 	for (const auto &[meshId, scene] : sceneBleList)
 	{
 		cout << "scene: " + scene->GetUUId() << endl;
-		for (int i=0; i<scene->deviceList.size(); i++)
+		for (int i = 0; i < scene->deviceList.size(); i++)
 		{
-			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl; 
+			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl;
 		}
 	}
 	if (gateway->getId().compare("") == 0)
@@ -530,7 +531,7 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 		for (Json::Value::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
 			string deviceId = dataValue[i].asString();
-			Device * device = getDeviceFromId(deviceId);
+			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
 				// device->Do()
@@ -591,11 +592,11 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			string sceneId = dataValue["SCENE_ID"].asString();
 			int temp_sceneUnicastId = 1;
-			for (auto& x : sceneBleList)
+			for (auto &x : sceneBleList)
 			{
 				if (x.first >= temp_sceneUnicastId)
 				{
@@ -610,11 +611,11 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 				if (scene)
 				{
 					Json::Value groupList = dataValue["DEVICES"];
-					for (int i=0; i<groupList.size(); i++)
+					for (int i = 0; i < groupList.size(); i++)
 					{
 						Json::Value deviceList = groupList[i]["IDS"];
 						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-						for (int j=0; j<deviceList.size(); j++)
+						for (int j = 0; j < deviceList.size(); j++)
 						{
 							string devcieId = deviceList[j].asString();
 							Device *device = getDeviceFromId(devcieId);
@@ -641,35 +642,35 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value dataValue = reqValue["DATA"];
-			if (dataValue.isMember("SCENE_ID") && dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+		if (dataValue.isMember("SCENE_ID") && dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+		{
+			string sceneId = dataValue["SCENE_ID"].asString();
+			SceneBle *scene = getSceneBleFromId(sceneId);
+			if (scene)
 			{
-				string sceneId = dataValue["SCENE_ID"].asString();
-				SceneBle *scene = getSceneBleFromId(sceneId);
-				if (scene)
+				Json::Value groupList = dataValue["DEVICES"];
+				for (int i = 0; i < groupList.size(); i++)
 				{
-					Json::Value groupList = dataValue["DEVICES"];
-					for (int i=0; i<groupList.size(); i++)
+					Json::Value deviceList = groupList[i]["IDS"];
+					Json::Value deviceProperties = groupList[i]["PROPERTIES"];
+					for (int j = 0; j < deviceList.size(); j++)
 					{
-						Json::Value deviceList = groupList[i]["IDS"];
-						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-						for (int j=0; j<deviceList.size(); j++)
+						string devcieId = deviceList[j].asString();
+						Device *device = getDeviceFromId(devcieId);
+						if (device)
 						{
-							string devcieId = deviceList[j].asString();
-							Device *device = getDeviceFromId(devcieId);
-							if (device)
+							int tempDeviceAddr = device->GetAddr();
+							if (scene->AddDevice(device, deviceProperties, tempDeviceAddr, false))
 							{
-								int tempDeviceAddr = device->GetAddr();
-								if (scene->AddDevice(device, deviceProperties, tempDeviceAddr, false))
-								{
-									database->DeviceInSceneBleAdd(scene, device, deviceProperties);
-									// respValue["code"] = 0;
-									// return 0;
-								}
+								database->DeviceInSceneBleAdd(scene, device, deviceProperties);
+								// respValue["code"] = 0;
+								// return 0;
 							}
 						}
 					}
 				}
 			}
+		}
 	}
 	// respValue["code"] = -1;
 	return true;
@@ -686,7 +687,7 @@ int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			SceneBle *scene = getSceneBleFromId(sceneId);
 			if (scene)
 			{
-				for (unsigned int i=0; i < scene->deviceList.size(); i++)
+				for (unsigned int i = 0; i < scene->deviceList.size(); i++)
 				{
 					scene->DelDevice(scene->deviceList[i]->device);
 				}
@@ -704,22 +705,21 @@ int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRPCAddGroup");
+	LOGD("OnRPCAddGroup %s", reqValue.toString().c_str());
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
-			dataValue.isMember("NAME") && dataValue["NAME"].isArray())
+			dataValue.isMember("NAME") && dataValue["NAME"].isString())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
-			int temp_groupUnicastId = 0;
+			int temp_groupUnicastId = 1;
 			for (auto &x : groupList)
 			{
 				if (x.first >= temp_groupUnicastId)
 				{
-					temp_groupUnicastId = x.first;
+					temp_groupUnicastId = x.first + 1;
 				}
 			}
 			Group *group = new Group(groupId, temp_groupUnicastId, groupName);
@@ -728,30 +728,41 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 				group = AddNewGroup(group, true, true);
 				if (group)
 				{
-					Json::Value deviceList = dataValue["DEVICES"].isArray();
-					for (int i = 0; i < (int)deviceList.size(); i++)
+					respValue["CMD"] = "CREATE_GROUP";
+					Json::Value data;
+					data["GROUP_ID"] = groupId;
+					if (dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 					{
-						string devcieId = deviceList[i].asString();
-						Device *device = getDeviceFromId(devcieId);
-						if (group && device)
+						Json::Value deviceList = dataValue["DEVICES"];
+						for (Json::ArrayIndex i = 0; i < deviceList.size(); i++)
 						{
-							int tempDeviceAddr = device->GetAddr();
-							if (group->AddDevice(device, tempDeviceAddr))
+							string devcieId = deviceList[i].asString();
+							Device *device = getDeviceFromId(devcieId);
+							if (device)
 							{
-								database->DeviceInGroupAdd(group, device, tempDeviceAddr);
-								respValue["code"] = 0;
-								return 0;
+								int tempDeviceAddr = device->GetAddr();
+								if (group->AddDevice(device, tempDeviceAddr, true))
+								{
+									database->DeviceInGroupAdd(group, device, tempDeviceAddr);
+									data["SUCCESS"].append(device->GetId());
+									// respValue["code"] = 0;
+									// return 0;
+								}
+								else
+								{
+									data["FAILED"].append(device->GetId());
+								}
 							}
 						}
+						// respValue["code"] = 0;
+						// return 0;
+						respValue["DATA"] = data;
 					}
-					respValue["code"] = 0;
-					return 0;
 				}
 			}
 		}
 	}
-	respValue["code"] = -1;
-	return -1;
+	return 0;
 }
 
 int Gateway::OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -785,25 +796,39 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value dataValue = reqValue["DATA"];
-		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isInt())
+		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString())
 		{
+			respValue["CMD"] = "DELETE_GROUP";
+			Json::Value data;
 			string groupId = dataValue["GROUP_ID"].asString();
-			LOGI("Delete Rule id: %s", groupId.c_str());
+			data["GROUP_ID"] = groupId;
 			Group *group = getGroupFromId(groupId);
-			int temp_groupUnicastId = group->GetId();
-			delete groupList[temp_groupUnicastId];
-			groupList.erase(groupList.find(temp_groupUnicastId));
-			for (size_t i = 0; i < group->deviceList.size(); i++)
+			if (group)
 			{
-				group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId);
+				int temp_groupUnicastId = group->GetId();
+				delete groupList[temp_groupUnicastId];
+				groupList.erase(groupList.find(temp_groupUnicastId));
+				for (size_t i = 0; i < group->deviceList.size(); i++)
+				{
+					if (group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId))
+					{
+						database->GroupDel(temp_groupUnicastId);
+						data["SUCCESS"].append(group->deviceList[i]->device->GetId());
+					}
+					else
+					{
+						data["FAILED"].append(group->deviceList[i]->device->GetId());
+					}
+				}
+
+				// respValue["code"] = 0;
+				// return 0;
 			}
-			database->GroupDel(temp_groupUnicastId);
-			respValue["code"] = 0;
-			return 0;
+			respValue["DATA"] = data;
 		}
 	}
-	respValue["code"] = -1;
-	return -1;
+	// respValue["code"] = -1;
+	return 0;
 }
 
 int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -817,34 +842,51 @@ int Gateway::OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 			if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
 				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 			{
+				respValue["CMD"] = "ADD_DEVICE_TO_GROUP";
+				Json::Value data;
 				string groupId = dataValue["GROUP_ID"].asString();
-				Json::Value deviceList = dataValue["DEVICES"].isArray();
+				data["GROUP_ID"] = groupId;
+				Json::Value deviceList = dataValue["DEVICES"];
 				Group *group = getGroupFromId(groupId);
-				for (int i = 0; i < (int)deviceList.size(); i++)
+				if (group)
 				{
-					string devcieId = deviceList[i].asString();
-					Device *device = getDeviceFromId(devcieId);
-					if (group && device)
+					for (int i = 0; i < (int)deviceList.size(); i++)
 					{
-						int tempDeviceAddr = device->GetAddr();
-						if (group->AddDevice(device, tempDeviceAddr))
+						string devcieId = deviceList[i].asString();
+						Device *device = getDeviceFromId(devcieId);
+						if (device)
 						{
-							database->DeviceInGroupAdd(group, device, tempDeviceAddr);
-							respValue["code"] = 0;
-							return 0;
+							int tempDeviceAddr = device->GetAddr();
+							if (group->AddDevice(device, tempDeviceAddr, true))
+							{
+								database->DeviceInGroupAdd(group, device, tempDeviceAddr);
+								data["SUCCESS"].append(device->GetId());
+								// respValue["code"] = 0;
+								// return 0;
+							}
+							else
+							{
+								data["FAILED"].append(device->GetId());
+							}
 						}
 					}
 				}
+				else
+				{
+					LOGW("Group id: %s does not exist", groupId.c_str());
+				}
+				respValue["DATA"] = data;
 			}
 		}
-		respValue["code"] = -1;
-		return -1;
+		// respValue["code"] = -1;
+		// return -1;
 	}
 	catch (const char *msg)
 	{
 		LOGE("OnRPCAddDeviceToGroup fail");
 		return -1;
 	}
+	return 0;
 }
 
 /**
@@ -863,28 +905,44 @@ int Gateway::OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
 			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
-			int groupId = dataValue["GROUP_ID"].asInt();
-			Group *group = getGroup(groupId);
-			Json::Value deviceList = dataValue["DEVICES"];
-			for (int i = 0; i < (int)deviceList.size(); i++)
+			respValue["CMD"] = "REMOVE_DEVICE_FROM_GROUP";
+			Json::Value data;
+			string groupId = dataValue["GROUP_ID"].asString();
+			data["GROUP_ID"] = groupId;
+			Group *group = getGroupFromId(groupId);
+			if (group)
 			{
-				string deviceId = deviceList[i].asString();
-				Device *device = getDeviceFromId(deviceId);
-				if (group && device)
+				Json::Value deviceList = dataValue["DEVICES"];
+				for (int i = 0; i < (int)deviceList.size(); i++)
 				{
-					int tempDeviceAddr = device->GetAddr();
-					if (group->AddDevice(device, tempDeviceAddr))
+					string deviceId = deviceList[i].asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
 					{
-						database->DeviceInGroupDel(group, device, tempDeviceAddr);
-						respValue["code"] = 0;
-						return 0;
+						int tempDeviceAddr = device->GetAddr();
+						if (group->DelDevice(device, tempDeviceAddr))
+						{
+							database->DeviceInGroupDel(group, device, tempDeviceAddr);
+							data["SUCCESS"].append(device->GetId());
+							// respValue["code"] = 0;
+							// return 0;
+						}
+						else
+						{
+							data["FAILED"].append(device->GetId());
+						}
 					}
 				}
 			}
+			else
+			{
+				LOGW("Group id: %s does not exist", groupId.c_str());
+			}
+			respValue["DATA"] = data;
 		}
 	}
-	respValue["code"] = -1;
-	return -1;
+	// respValue["code"] = -1;
+	return 0;
 }
 
 /**
@@ -1100,7 +1158,7 @@ int Gateway::OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
 		{
 			string sceneId = dataValue["SCENE_ID"].asString();
-			SceneBle * scene = getSceneBleFromId(sceneId);
+			SceneBle *scene = getSceneBleFromId(sceneId);
 			if (scene)
 			{
 				scene->Do(scene->GetId());
@@ -1231,7 +1289,7 @@ Group *Gateway::getGroupFromId(string groupId)
 {
 	for (const auto &[id, group] : groupList)
 	{
-		if (group->GetName() == groupId)
+		if (group->GetUUId() == groupId)
 			return group;
 	}
 	return NULL;
@@ -1646,14 +1704,19 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 			// int rs = database->GroupAdd(group);
 			// if (rs)
 			// {
-				// LOGW("rs: %d", rs);
-				// return NULL;
+			// LOGW("rs: %d", rs);
+			// return NULL;
 			// }
 		}
 		if (addGateway)
 			sceneBleList[sceneBle->GetId()] = sceneBle;
 	}
 	return sceneBle;
+}
+
+uint16_t Gateway::getBleUnicast()
+{
+	return ble_unicast;
 }
 
 string Gateway::getBleNetkey()
@@ -1684,6 +1747,10 @@ string Gateway::getName()
 {
 }
 
+void Gateway::setBleUnicast(uint16_t unicast)
+{
+	this->ble_unicast = unicast;
+}
 void Gateway::setBleNetkey(string netkey)
 {
 	this->ble_netkey = netkey;

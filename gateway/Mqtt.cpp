@@ -347,6 +347,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 {
 	string topic = string(message->topic);
 	string payload = string((char *)message->payload);
+	LOGD("on_message topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	makeThreadOnMessageCallback(topic, payload);
 
 	// ActionCallback *actionCallback;
@@ -370,7 +371,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 
 void Mqtt::OnMessageTemp(string topic, string payload)
 {
-	// LOGD("OnMessage not set");
+	LOGD("OnMessageTemp topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	ActionCallback *actionCallback;
 	int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
 	if (getCallback == 1)
@@ -403,6 +404,7 @@ void Mqtt::SetOnConnectedCallback(OnConnectedCallbackFunc onConnectedCallbackFun
 
 void Mqtt::makeThreadOnMessageCallback(string topic, string payload)
 {
+	LOGD("makeThreadOnMessageCallback topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	try
 	{
 		auto onMessageFunc = bind(&Mqtt::OnMessage, this, placeholders::_1, placeholders::_2);

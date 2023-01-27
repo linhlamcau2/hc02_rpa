@@ -10,7 +10,7 @@
 
 #include "../sceneBle/SceneBle.h"
 
-#define DB_NAME "/home/anhnv/Desktop/smh_master/smh_HC/smh.sqlite"
+#define DB_NAME "/smh.sqlite"
 
 using namespace std;
 
@@ -41,6 +41,7 @@ public:
 	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
 	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
 	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast);
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);

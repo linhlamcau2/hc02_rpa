@@ -4,6 +4,7 @@
 #include "ZigbeeProtocol.h"
 #include "BleProtocol.h"
 
+#define ID_START (49152)
 
 DeviceInGroup::DeviceInGroup(Device *device, int epId)
 {
@@ -14,7 +15,7 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 Group::Group(string groupUUId, int id, string name)
 {
 	this->groupUUId = groupUUId;
-	this->id = id;
+	this->id = id + ID_START;
 	this->name = name;
 	this->numberOfBleDevice = 0;
 	this->numberOfZigbeeDevice = 0;
@@ -61,7 +62,7 @@ int Group::GetPositionDevice(Device *device)
  * @return true success
  * @return false fail
  */
-bool Group::AddDevice(Device *device, int epId)
+bool Group::AddDevice(Device *device, int epId, bool sendBle)
 {
 	// TODO: Check exsit
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
@@ -71,19 +72,31 @@ bool Group::AddDevice(Device *device, int epId)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
+		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+		if (sendBle)
 		{
-			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
+			{
+				if (deviceInGroup)
+				{
+					deviceList.push_back(deviceInGroup);
+					numberOfBleDevice++;
+				}
+				return true;
+			}
+			else
+			{
+				LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
+			}
+		}
+		else
+		{
 			if (deviceInGroup)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
 			}
 			return true;
-		}
-		else
-		{
-			LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
 		}
 	}
 
@@ -109,7 +122,7 @@ bool Group::AddDevice(Device *device, int epId)
 	return false;
 }
 
-void Group::DelDevice(Device *device, int epId)
+bool Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -120,6 +133,7 @@ void Group::DelDevice(Device *device, int epId)
 			{
 				deviceList.erase(deviceList.begin() + deviceIndex);
 			}
+			return true;
 		}
 	}
 
@@ -134,6 +148,7 @@ void Group::DelDevice(Device *device, int epId)
 	// TODO: remove from list
 	// if (device)
 	// 	deviceList.erase(remove(deviceList.begin(), deviceList.end(), device), deviceList.end());
+	return false;
 }
 
 bool Group::Do(Json::Value &dataValue)
@@ -161,23 +176,28 @@ bool Group::Do(int id, int value)
 
 void Group::DoBle(Json::Value *dataValue)
 {
+	LOGE("%s", dataValue->toString().c_str());
 	if (numberOfBleDevice)
 	{
 		bool isIdHue = false;
 		bool isIdSaturation = false;
 		bool isIdLuminance = false;
 		uint16_t valueHue, valueSaturation, valueLuminance;
+		LOGE("TP1: %d", dataValue->size());
 		for (Json::ArrayIndex i = 0; i < dataValue->size(); i++)
 		{
+			LOGE("TP2");
 			Json::Value property = dataValue[i];
+			LOGE("TP3: %s", property.toString().c_str());
 			if (property.isMember("ID") && property["ID"].isInt() &&
 				property.isMember("VALUE") && property["VALUE"].isInt())
 			{
+				LOGE("TP4");
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(id,value, 0, true);
+					bleProtocol->SetOnOffLight(id, value, 0, true);
 				}
 				else if (idProperty == 1)
 				{
@@ -216,7 +236,7 @@ void Group::DoBle(Json::Value *dataValue)
 		{
 			bleProtocol->SetHSLLight(id, valueHue, valueSaturation, valueLuminance, 0, true);
 		}
-		return ;
+		return;
 	}
 }
 

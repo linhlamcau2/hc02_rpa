@@ -332,6 +332,9 @@ int BleProtocol::SetNetKey()
 	set_netkey_message.magic[3] = 0x44;
 	set_netkey_message.addr[0] = 0x01;
 	set_netkey_message.addr[1] = 0x00;
+	uint16_t adrGw = set_netkey_message.addr[0] | (set_netkey_message.addr[1] << 8);
+	gateway->setBleUnicast(adrGw);
+	database->GatewayUpdateUnicast(gateway, adrGw);
 	return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, 26, HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 }
 
@@ -1235,11 +1238,12 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 			uint16_t gwAddr;
 			uint16_t opcode;
 			uint8_t offset;
-			uint16_t element;
-			uint16_t group;
+			uint8_t element[2];
+			uint8_t group[2];
 		} addgroup_rsp_message_t;
 		addgroup_rsp_message_t *addgroup_rsp_message = (addgroup_rsp_message_t *)dataRsp;
-		if (addgroup_rsp_message->element == element && addgroup_rsp_message->group == group)
+		LOGD("adr : 0x%04x, gw:0x%04x, opcode:0x%04x, offset:0x%02x, element: 0x%04x, group: 0x%04x",addgroup_rsp_message->devAddr, addgroup_rsp_message->gwAddr,addgroup_rsp_message->opcode, addgroup_rsp_message->offset, addgroup_rsp_message->element[0] | (addgroup_rsp_message->element[1] << 8), addgroup_rsp_message->group[0] | (addgroup_rsp_message->group[1] << 8));
+		if (element == (addgroup_rsp_message->element[0] | (addgroup_rsp_message->element[1] << 8)) && (addgroup_rsp_message->group[0] | (addgroup_rsp_message->group[1] << 8) == group))
 		{
 			return 0;
 		}
