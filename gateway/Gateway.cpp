@@ -113,6 +113,7 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRPCCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
@@ -493,6 +494,7 @@ int Gateway::OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
 	bleProtocol->init();
 	respValue["code"] = 0;
@@ -534,10 +536,13 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				// device->Do()
+				bleProtocol->ResetDev(device->GetAddr());
+				LOGD("remove deviceId: %s", deviceId.c_str());
 			}
-
-			LOGD("remove deviceId: %s", deviceId.c_str());
+			else
+			{
+				LOGD("deviceId %s dose not exist", deviceId.c_str());
+			}			
 		}
 	}
 	else
@@ -725,8 +730,7 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 			Group *group = new Group(groupId, temp_groupUnicastId, groupName);
 			if (group)
 			{
-				group = AddNewGroup(group, true, true);
-				if (group)
+				if (AddNewGroup(group, true, true))
 				{
 					respValue["CMD"] = "CREATE_GROUP";
 					Json::Value data;
@@ -808,17 +812,23 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 				int temp_groupUnicastId = group->GetId();
 				delete groupList[temp_groupUnicastId];
 				groupList.erase(groupList.find(temp_groupUnicastId));
-				for (size_t i = 0; i < group->deviceList.size(); i++)
+				bool hasDeviceDelGroupFailed = false;
+				for (unsigned int i = 0; i < group->deviceList.size(); i++)
 				{
-					if (group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId))
+					if (group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->device->GetAddr()))
 					{
-						database->GroupDel(temp_groupUnicastId);
+						database->DeviceInGroupAdd(group, group->deviceList[i]->device, temp_groupUnicastId);
 						data["SUCCESS"].append(group->deviceList[i]->device->GetId());
 					}
 					else
 					{
+						hasDeviceDelGroupFailed = true;
 						data["FAILED"].append(group->deviceList[i]->device->GetId());
 					}
+				}
+				if (hasDeviceDelGroupFailed)
+				{
+					database->GroupDel(group->GetId());
 				}
 
 				// respValue["code"] = 0;

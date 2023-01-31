@@ -388,7 +388,7 @@ int BleProtocol::ResetFactory()
 {
 	LOGD("ResetFactory");
 	uint8_t d = HCI_GATEWAY_CMD_RESET;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 1, 0, 0, 10000);
 	if (rs)
 	{
 		LOGE("Send reset factory error, rs: %d", rs);

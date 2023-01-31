@@ -15,7 +15,7 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 Group::Group(string groupUUId, int id, string name)
 {
 	this->groupUUId = groupUUId;
-	this->id = id + ID_START;
+	this->id = id;
 	this->name = name;
 	this->numberOfBleDevice = 0;
 	this->numberOfZigbeeDevice = 0;
@@ -75,7 +75,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 		if (sendBle)
 		{
-			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
+			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
 			{
 				if (deviceInGroup)
 				{
@@ -124,14 +124,20 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 
 bool Group::DelDevice(Device *device, int epId)
 {
+	LOGE("TPP1");
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id))
+		LOGE("TPP2");
+		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
 		{
+			LOGE("TPP3");
 			int deviceIndex = GetPositionDevice(device);
+			LOGE("TPP4");
 			if (deviceIndex > -1)
 			{
+				LOGE("TPP5");
 				deviceList.erase(deviceList.begin() + deviceIndex);
+				LOGE("TPP6");
 			}
 			return true;
 		}
@@ -176,55 +182,50 @@ bool Group::Do(int id, int value)
 
 void Group::DoBle(Json::Value *dataValue)
 {
-	LOGE("%s", dataValue->toString().c_str());
 	if (numberOfBleDevice)
 	{
 		bool isIdHue = false;
 		bool isIdSaturation = false;
 		bool isIdLuminance = false;
 		uint16_t valueHue, valueSaturation, valueLuminance;
-		LOGE("TP1: %d", dataValue->size());
 		for (Json::ArrayIndex i = 0; i < dataValue->size(); i++)
 		{
-			LOGE("TP2");
-			Json::Value property = dataValue[i];
-			LOGE("TP3: %s", property.toString().c_str());
+			Json::Value property = dataValue[0][i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
 				property.isMember("VALUE") && property["VALUE"].isInt())
 			{
-				LOGE("TP4");
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(id, value, 0, true);
+					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
 				}
 				else if (idProperty == 1)
 				{
-					bleProtocol->SetDimmingLight(id, (value * 65535) / 100, 0, true);
+					bleProtocol->SetDimmingLight(id + ID_START, (value * 65535) / 100, 0, true);
 				}
 				else if (idProperty == 2)
 				{
-					bleProtocol->SetDimmingLight(id, (value * 192) + 800, 0, true);
+					bleProtocol->SetCctLight(id + ID_START, (value * 192) + 800, 0, true);
 				}
-				else if (id == 3)
+				else if (idProperty == 3)
 				{
 					isIdHue = true;
 					valueHue = value;
 				}
-				else if (id == 4)
+				else if (idProperty == 4)
 				{
 					isIdSaturation = true;
 					valueSaturation = value;
 				}
-				else if (id == 5)
+				else if (idProperty == 5)
 				{
 					isIdLuminance = true;
 					valueLuminance = value;
 				}
-				else if (id == 23)
+				else if (idProperty == 23)
 				{
-					bleProtocol->CallModeRgb(id, value);
+					bleProtocol->CallModeRgb(id + ID_START, value);
 				}
 				else
 				{
@@ -234,9 +235,8 @@ void Group::DoBle(Json::Value *dataValue)
 		}
 		if (isIdHue && isIdLuminance && isIdSaturation)
 		{
-			bleProtocol->SetHSLLight(id, valueHue, valueSaturation, valueLuminance, 0, true);
+			bleProtocol->SetHSLLight(id + ID_START, valueHue, valueSaturation, valueLuminance, 0, true);
 		}
-		return;
 	}
 }
 
