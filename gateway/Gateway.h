@@ -32,7 +32,6 @@ private:
 	map<int, Group *> groupList;
 	map<int, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
-	map<int, Rule *> ruleList;
 	vector<Device *> scanDeviceList;
 
 

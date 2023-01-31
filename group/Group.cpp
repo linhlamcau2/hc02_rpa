@@ -13,7 +13,7 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 Group::Group(string groupUUId, int id, string name)
 {
 	this->groupUUId = groupUUId;
-	this->id = id;
+	this->id = id+49152;
 	this->name = name;
 	this->numberOfBleDevice = 0;
 	this->numberOfZigbeeDevice = 0;

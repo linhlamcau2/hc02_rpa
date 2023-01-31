@@ -538,16 +538,16 @@ int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
 				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray() &&
-				dataValue.isMember("NAME") && dataValue["NAME"].isArray())
+				dataValue.isMember("NAME") && dataValue["NAME"].isString())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
-			int temp_groupUnicastId = 0;
+			int temp_groupUnicastId = 1;
 			for (auto &x : groupList)
 			{
 				if (x.first >= temp_groupUnicastId)
 				{
-					temp_groupUnicastId = x.first;
+					temp_groupUnicastId = x.first + 1;
 				}
 			}
 			Group *group = new Group(groupId, temp_groupUnicastId, groupName);
