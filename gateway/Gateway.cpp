@@ -810,8 +810,6 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 			if (group)
 			{
 				int temp_groupUnicastId = group->GetId();
-				delete groupList[temp_groupUnicastId];
-				groupList.erase(groupList.find(temp_groupUnicastId));
 				bool hasDeviceDelGroupFailed = false;
 				for (unsigned int i = 0; i < group->deviceList.size(); i++)
 				{
@@ -1320,6 +1318,20 @@ Device *Gateway::getDeviceFromId(string deviceId)
 	{
 		if (device->GetId() == deviceId)
 			return device;
+	}
+	return NULL;
+}
+
+Device *Gateway::getDeviceFromAddr(uint32_t addr)
+{
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->CheckAddr(addr))
+		{
+			Device *device = dynamic_cast<Device *>(device);
+			if (device)
+				return device;
+		}
 	}
 	return NULL;
 }

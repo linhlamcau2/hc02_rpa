@@ -103,6 +103,7 @@ public:
 
 	Device *getDevice(string mac);
 	Device *getDeviceFromId(string deviceId);
+	Device *getDeviceFromAddr(uint32_t addr);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
 
 	SceneBle *getSceneBleFromId(string sceneBleUUId);

@@ -19,10 +19,10 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 				// int groupId = sqlite3_column_int(stmt, index++);
 				string deviceMac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string groupId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				// int epId = sqlite3_column_int(stmt, index++);
+				int epId = sqlite3_column_int(stmt, index++);
 				LOGI("Mac: %s, groupId: %s", deviceMac.c_str(), groupId.c_str());
 				Group *group = gateway->getGroupFromId(groupId);
-				Device *device = gateway->getDevice(deviceMac);
+				Device *device = gateway->getDeviceFromAddr(epId);
 				if (!group)
 				{
 					LOGE("group dose not exist");

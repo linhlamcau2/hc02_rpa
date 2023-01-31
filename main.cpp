@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 
-	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
-	bleProtocol->init();
+	// bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
+	// bleProtocol->init();
 
 	Device::InitDeviceModelList();
 
