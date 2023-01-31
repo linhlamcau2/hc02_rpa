@@ -613,19 +613,22 @@ int Gateway::OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value dataValue = reqValue["DATA"];
-		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isInt())
+		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			LOGI("Delete Rule id: %s", groupId.c_str());
 			Group *group = getGroupFromId(groupId);
 			int temp_groupUnicastId = group->GetId();
-			delete groupList[temp_groupUnicastId];
-			groupList.erase(groupList.find(temp_groupUnicastId));
+			cout << "groupId: "+group->GetUUId() << " " << "meshId: " << temp_groupUnicastId << endl;
+			// delete groupList[temp_groupUnicastId];
+			// groupList.erase(groupList.find(temp_groupUnicastId));
+			cout << "groupSize: " << group->deviceList.size() << endl;
 			for (size_t i = 0; i < group->deviceList.size(); i++)
 			{
-				group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId);
+				cout << group->deviceList[i]->device->GetId() << endl;
+				// group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId);
 			}
-			database->GroupDel(temp_groupUnicastId);
+			// database->GroupDel(temp_groupUnicastId);
 			respValue["code"] = 0;
 			return 0;
 		}
@@ -1068,7 +1071,7 @@ Group *Gateway::getGroupFromId(string groupId)
 {
 	for (const auto &[id, group] : groupList)
 	{
-		if (group->GetName() == groupId)
+		if (group->GetUUId() == groupId)
 			return group;
 	}
 	return NULL;

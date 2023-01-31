@@ -15,10 +15,11 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				int id = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string groupUUId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				int id = sqlite3_column_int(stmt, index++);
 				Group *group = new Group(groupUUId, id, name);
+				cout << "db get group: "+group->GetUUId()<< "meshId: " << id<< endl;
 				gateway->AddNewGroup(group, true, false);
 			}
 			else if (s == SQLITE_DONE)
@@ -48,7 +49,7 @@ int Db::GroupAdd(Group *group)
 
 int Db::GroupUpdate(Group *group)
 {
-	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE id=" + to_string(group->GetId()) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE meshId=" + to_string(group->GetId()) + ";";
 	return Sqlite_Exec(sql);
 }
 
@@ -59,7 +60,7 @@ int Db::GroupDel(Group *group)
 
 int Db::GroupDel(int id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE meshId=" + to_string(id) + ";";
 	return Sqlite_Exec(sql);
 }
 

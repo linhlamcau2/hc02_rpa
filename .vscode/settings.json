@@ -6,6 +6,10 @@
         "**/requirements{/**,*}.{txt,in}": "pip-requirements",
         "iosfwd": "cpp",
         "iostream": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     }
 }
