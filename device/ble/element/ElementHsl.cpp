@@ -77,7 +77,7 @@ bool ElementHsl::CheckData(Json::Value &dataValue, bool &rs)
         }
         if (dataValue.isMember(elementNameL) && dataValue[elementNameL].isInt())
         {
-            uint16_t dlim = dataValue[elementNameL].asInt();
+            uint16_t l = dataValue[elementNameL].asInt();
             rs = Util::CompareNumber(this->l, l, op);
             return true;
         }
