@@ -10,35 +10,6 @@
 
 using namespace mosqpp;
 
-ActionCallback::ActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
-{
-	this->type = 1;
-	this->topic = topic;
-	this->actionCallbackFuncType1 = actionCallbackFuncType1;
-}
-
-ActionCallback::ActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic)
-{
-	this->type = 2;
-	this->topic = topic;
-	this->actionCallbackFuncType2 = actionCallbackFuncType2;
-}
-
-int ActionCallback::getType()
-{
-	return type;
-}
-
-void ActionCallback::setTopic(string topic)
-{
-	this->topic = topic;
-}
-
-string ActionCallback::getTopic()
-{
-	return topic;
-}
-
 Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
 {
 	this->host = host;
@@ -59,6 +30,10 @@ Mqtt::~Mqtt()
 {
 	connected = false;
 	reconnected = false;
+}
+
+void Mqtt::init()
+{
 }
 
 void Mqtt::SetServer(string host, int port, string client_id, string username, string password, int keepalive)
@@ -93,7 +68,7 @@ int Mqtt::Connect()
 		LOGD("Willset topic: %s, payload:\n%s", willset_topic.c_str(), willset_payload.c_str());
 		will_set(willset_topic.c_str(), willset_payload.size(), willset_payload.c_str());
 	}
-	
+
 	int result = loop_start();
 	if (result == MOSQ_ERR_SUCCESS)
 	{
@@ -346,6 +321,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 {
 	string topic = string(message->topic);
 	string payload = string((char *)message->payload);
+	LOGD("on_message topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	makeThreadOnMessageCallback(topic, payload);
 
 	// ActionCallback *actionCallback;
@@ -369,7 +345,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 
 void Mqtt::OnMessageTemp(string topic, string payload)
 {
-	// LOGD("OnMessage not set");
+	LOGD("OnMessageTemp topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	ActionCallback *actionCallback;
 	int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
 	if (getCallback == 1)
@@ -402,6 +378,7 @@ void Mqtt::SetOnConnectedCallback(OnConnectedCallbackFunc onConnectedCallbackFun
 
 void Mqtt::makeThreadOnMessageCallback(string topic, string payload)
 {
+	LOGD("makeThreadOnMessageCallback topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	try
 	{
 		auto onMessageFunc = bind(&Mqtt::OnMessage, this, placeholders::_1, placeholders::_2);

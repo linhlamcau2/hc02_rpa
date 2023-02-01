@@ -15,6 +15,7 @@
 #include "Device.h"
 #include "Db.h"
 #include "Util.h"
+#include "Wifi.h"
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
 
@@ -53,6 +54,8 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, signal_handler);
 	signal(SIGUSR2, signal_handler);
 
+	mosqpp::lib_init();
+
 	config = new Config();
 	config->ReadConfig();
 
@@ -69,8 +72,7 @@ int main(int argc, char *argv[])
 	zigbeeProtocol->init();
 #endif
 
-	string mac = Util::GetMacAddress();
-	LOGI("mac: %s", mac.c_str());
+	string mac = Wifi::GetMacAddress();
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	// gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
 	gateway->init();

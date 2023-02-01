@@ -40,8 +40,8 @@ public:
 	string GetUUId();
 	int GetPositionDevice(Device *device);
 	
-	bool AddDevice(Device *device, int epId);
-	void DelDevice(Device *device, int epId);
+	bool AddDevice(Device *device, int epId, bool sendBle);
+	bool DelDevice(Device *device, int epId);
 
 	bool Do(Json::Value &dataValue);
 	bool Do(int id, int value);

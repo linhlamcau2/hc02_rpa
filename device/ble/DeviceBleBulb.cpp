@@ -154,5 +154,5 @@ bool DeviceBleBulb::Do(Json::Value &dataValue)
 bool DeviceBleBulb::AddGroup(uint16_t idGroup, uint16_t epId)
 {
 	LOGD("AddGroup id: %d epId: %d", idGroup, epId);
-	
+	return 0;
 }

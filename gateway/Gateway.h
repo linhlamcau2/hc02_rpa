@@ -30,6 +30,7 @@ private:
 	string ble_netkey;
 	string ble_appkey;
 	string ble_devicekey;
+	uint16_t ble_unicast;
 	string version;
 	thread *udpBroadcastThread;
 	bool isUdpBroadcasting;
@@ -96,6 +97,7 @@ public:
 	 *
 	 */
 	void StartUdpBroadcast();
+	void StopUdpBroadcast();
 
 	void AddDeviceToScanList(Device *scanDevice);
 	Group *getGroup(int id);
@@ -116,6 +118,7 @@ public:
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 
+	uint16_t getBleUnicast();
 	string getBleNetkey();
 	string getBleAppKey();
 	string getBleDeviceKey();
@@ -124,6 +127,7 @@ public:
 	string getVersion();
 	string getName();
 
+	void setBleUnicast(uint16_t unicast);
 	void setBleNetkey(string netkey);
 	void setBleAppkey(string appkey);
 	void setBleDevicekey(string devicekey);

@@ -7,8 +7,13 @@
 #include <Device.h>
 #include <Group.h>
 #include <Gateway.h>
+#include "SceneBle.h"
 
-#define DB_NAME "smh.sqlite"
+#ifdef ESP_PLATFORM
+#define DB_NAME "/spiffs/smh.sqlite"
+#else
+#define DB_NAME "/smh.sqlite"
+#endif
 
 using namespace std;
 
@@ -16,7 +21,8 @@ class Db
 {
 
 private:
-	mutex mtx;
+	// TODO: 
+	// mutex mtx;
 
 	int Sqlite_Exec(string &sql);
 	int ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
@@ -24,6 +30,8 @@ private:
 public:
 	Db();
 	~Db() {}
+
+	void init(void);
 
 	int DeviceRead();
 	int DeviceAdd(Device *device);
@@ -39,6 +47,7 @@ public:
 	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
 	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
 	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast);
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);

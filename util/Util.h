@@ -37,12 +37,7 @@ namespace Util
 	bool CompareNumber(int a, int b, string op);
 
 	string ExecuteCMD(char const *command);
-	string GetMacAddress();
-	string GetIP();
 	string GetCurrentTimeStr();
-	void ScanWifi(Json::Value &jsonValue, string rqi);
-	int ConnectToWifi(string ssid, string password, string encryption);
-	int SetModeApWifi();
 
 	void LedInternet(bool value);
 	void LedService(bool value);

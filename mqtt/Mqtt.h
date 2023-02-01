@@ -6,6 +6,8 @@
 #include <mutex>
 #include <mosquittopp.h>
 
+#include "ActionCallback.h"
+
 using namespace std;
 
 enum mqtt_err_t
@@ -59,30 +61,13 @@ public:
 	bool getState() { return state; }
 };
 
-typedef void (*ActionCallbackFuncType1)(string &topic, string &payload);
-typedef function<void(string &topic, string &payload)> ActionCallbackFuncType2;
-
-class ActionCallback
-{
-private:
-	int type;
-	string topic;
-
-public:
-	ActionCallbackFuncType1 actionCallbackFuncType1;
-	ActionCallbackFuncType2 actionCallbackFuncType2;
-	ActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
-	ActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);
-	int getType();
-	void setTopic(string topic);
-	string getTopic();
-};
-
 class Mqtt : public mosqpp::mosquittopp
 {
 public:
 	Mqtt(string host, int port, string client_id, string username, string password, int keepalive, string willset_topic="", string willset_payload="");
 	virtual ~Mqtt();
+
+	void init();
 
 	void SetServer(string host, int port, string client_id, string username, string password, int keepalive);
 	void SetWillset(string willset_topic, string willset_payload);

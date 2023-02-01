@@ -2,19 +2,20 @@
 #include <string.h>
 #include <Log.h>
 #include "Util.h"
-
-#define HC_ONLINE "/hc/online"
-#define HC_OFFLINE "/hc/offline"
+#include "Wifi.h"
 
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
+	subTopic = "/v1/server/hc/" + mac + "/json";
+	pubTopic = "/v1/hc/" + mac + "/server/json";
+
 	Json::Value jsonValue;
-	jsonValue["HC_ID"] = mac;
-	SetWillset(HC_OFFLINE, jsonValue.toString());
-	
-	// mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
-	subTopic = "/server/" + mac;
-	pubTopic = "/" + mac + "/server";
+	Json::Value datanValue;
+	datanValue["STATUS_ID"] = 0;
+	datanValue["IP_ADDRESS"] = "0.0.0.0";
+	jsonValue["CMD"] = "HOME_CONTROLLER";
+	jsonValue["DATA"] = datanValue;
+	SetWillset(pubTopic, jsonValue.toString());
 }
 
 CloudProtocol::~CloudProtocol()
@@ -23,6 +24,7 @@ CloudProtocol::~CloudProtocol()
 
 void CloudProtocol::init()
 {
+	Mqtt::init();
 	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
 }
 
@@ -92,8 +94,12 @@ int CloudProtocol::OnDeviceRPCCallbackRegister(string method, OnRPCCallbackFunc 
 int CloudProtocol::OnlineHC(string deviceName)
 {
 	Json::Value jsonValue;
-	jsonValue["HC_ID"] = deviceName;
-	return Publish(HC_ONLINE, jsonValue.toString());
+	Json::Value datanValue;
+	datanValue["STATUS_ID"] = 1;
+	datanValue["IP_ADDRESS"] = Wifi::GetIP();
+	jsonValue["CMD"] = "HOME_CONTROLLER";
+	jsonValue["DATA"] = datanValue;
+	return Publish(pubTopic, jsonValue.toString());
 }
 
 int CloudProtocol::CloudPublish(string topic, string payload)

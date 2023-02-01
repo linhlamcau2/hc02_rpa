@@ -26,6 +26,10 @@ Uart::~Uart()
 	}
 }
 
+void Uart::init()
+{
+}
+
 int Uart::Open(int baudrate)
 {
 	LOGI("Open port %s baudrate: %d", port, baudrate);
@@ -171,7 +175,7 @@ static void HandleInMessage(Uart *uart)
 	}
 }
 
-void Uart::OnMessage(unsigned char *data, int len)
+int Uart::OnMessage(unsigned char *data, int len)
 {
 	LOGE("OnMessage len: %d, data: %s", len, data);
 }

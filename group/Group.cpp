@@ -4,6 +4,7 @@
 #include "ZigbeeProtocol.h"
 #include "BleProtocol.h"
 
+#define ID_START (49152)
 
 DeviceInGroup::DeviceInGroup(Device *device, int epId)
 {
@@ -45,7 +46,7 @@ int Group::GetPositionDevice(Device *device)
 	int deviceAddr = device->GetAddr();
 	for (int i = 0; i < deviceList.size(); i++)
 	{
-		if (deviceAddr = deviceList[i]->device->GetAddr())
+		if (deviceAddr == deviceList[i]->device->GetAddr())
 		{
 			return i;
 		}
@@ -61,7 +62,7 @@ int Group::GetPositionDevice(Device *device)
  * @return true success
  * @return false fail
  */
-bool Group::AddDevice(Device *device, int epId)
+bool Group::AddDevice(Device *device, int epId, bool sendBle)
 {
 	// TODO: Check exsit
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
@@ -71,19 +72,31 @@ bool Group::AddDevice(Device *device, int epId)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
+		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+		if (sendBle)
 		{
-			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
+			{
+				if (deviceInGroup)
+				{
+					deviceList.push_back(deviceInGroup);
+					numberOfBleDevice++;
+				}
+				return true;
+			}
+			else
+			{
+				LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
+			}
+		}
+		else
+		{
 			if (deviceInGroup)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
 			}
 			return true;
-		}
-		else
-		{
-			LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
 		}
 	}
 
@@ -109,17 +122,24 @@ bool Group::AddDevice(Device *device, int epId)
 	return false;
 }
 
-void Group::DelDevice(Device *device, int epId)
+bool Group::DelDevice(Device *device, int epId)
 {
+	LOGE("TPP1");
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id))
+		LOGE("TPP2");
+		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
 		{
+			LOGE("TPP3");
 			int deviceIndex = GetPositionDevice(device);
+			LOGE("TPP4");
 			if (deviceIndex > -1)
 			{
+				LOGE("TPP5");
 				deviceList.erase(deviceList.begin() + deviceIndex);
+				LOGE("TPP6");
 			}
+			return true;
 		}
 	}
 
@@ -134,6 +154,7 @@ void Group::DelDevice(Device *device, int epId)
 	// TODO: remove from list
 	// if (device)
 	// 	deviceList.erase(remove(deviceList.begin(), deviceList.end(), device), deviceList.end());
+	return false;
 }
 
 bool Group::Do(Json::Value &dataValue)
@@ -169,7 +190,7 @@ void Group::DoBle(Json::Value *dataValue)
 		uint16_t valueHue, valueSaturation, valueLuminance;
 		for (Json::ArrayIndex i = 0; i < dataValue->size(); i++)
 		{
-			Json::Value property = dataValue[i];
+			Json::Value property = dataValue[0][i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
 				property.isMember("VALUE") && property["VALUE"].isInt())
 			{
@@ -177,34 +198,34 @@ void Group::DoBle(Json::Value *dataValue)
 				unsigned int value = property["VALUE"].asInt();
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(id,value, 0, true);
+					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
 				}
 				else if (idProperty == 1)
 				{
-					bleProtocol->SetDimmingLight(id, (value * 65535) / 100, 0, true);
+					bleProtocol->SetDimmingLight(id + ID_START, (value * 65535) / 100, 0, true);
 				}
 				else if (idProperty == 2)
 				{
-					bleProtocol->SetDimmingLight(id, (value * 192) + 800, 0, true);
+					bleProtocol->SetCctLight(id + ID_START, (value * 192) + 800, 0, true);
 				}
-				else if (id == 3)
+				else if (idProperty == 3)
 				{
 					isIdHue = true;
 					valueHue = value;
 				}
-				else if (id == 4)
+				else if (idProperty == 4)
 				{
 					isIdSaturation = true;
 					valueSaturation = value;
 				}
-				else if (id == 5)
+				else if (idProperty == 5)
 				{
 					isIdLuminance = true;
 					valueLuminance = value;
 				}
-				else if (id == 23)
+				else if (idProperty == 23)
 				{
-					bleProtocol->CallModeRgb(id, value);
+					bleProtocol->CallModeRgb(id + ID_START, value);
 				}
 				else
 				{
@@ -214,9 +235,8 @@ void Group::DoBle(Json::Value *dataValue)
 		}
 		if (isIdHue && isIdLuminance && isIdSaturation)
 		{
-			bleProtocol->SetHSLLight(id, valueHue, valueSaturation, valueLuminance, 0, true);
+			bleProtocol->SetHSLLight(id + ID_START, valueHue, valueSaturation, valueLuminance, 0, true);
 		}
-		return ;
 	}
 }
 
