@@ -109,7 +109,7 @@ int Device::BuildAttributesValue(Json::Value &pushDataValue)
 	deviceData["gateway"] = "Farm Gateway RAL";
 	deviceData["name"] = name;
 	deviceData["mac"] = mac;
-	deviceData["type"] = type;
+	deviceData["type"] = (int)type;
 	pushDataValue[id] = deviceData;
 	return 0;
 }

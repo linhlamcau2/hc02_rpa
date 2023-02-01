@@ -23,6 +23,7 @@ CloudProtocol::~CloudProtocol()
 
 void CloudProtocol::init()
 {
+	Mqtt::init();
 	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
 }
 

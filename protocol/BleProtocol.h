@@ -4,6 +4,7 @@
 #include <vector>
 #include <Uart.h>
 #include <atomic>
+#include <functional>
 
 #define SYSTEM_REQ 0xFFE9
 #define APP_REQ 0xFFE8
@@ -125,11 +126,15 @@ private:
 	string arrayToString844412(uint8_t *array);
 
 	void CheckOpcodeException(message_rsp_st *message);
-	void OnMessage(unsigned char *data, int len);
+	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
+#ifdef ESP_PLATFORM
+	BleProtocol(int num, int txPin, int rxPin, int baudrate);
+#else
 	BleProtocol(char *uartPort, int uartBaudrate);
+#endif
 	virtual ~BleProtocol();
 
 	atomic<bool> isAdding;
@@ -164,13 +169,13 @@ public:
 	int SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, uint16_t transition, bool ack);
 	int GetCctDimLight(uint16_t devAddr);
 
-    	//group light
+	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 
 	/**
-	 * @brief 
-	 * 
+	 * @brief
+	 *
 	 * @param devAddr id device
 	 * @param scene id scene
 	 * @param modeRgb 0 normal scene, 1->6 id mode blink RGB light
@@ -179,8 +184,8 @@ public:
 	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
 
 	/**
-	 * @brief 
-	 * 
+	 * @brief
+	 *
 	 * @param devAddr id device
 	 * @param scene id scene
 	 * @return int 0 success, -1 error
@@ -188,8 +193,8 @@ public:
 	int DelSceneLights(uint16_t devAddr, uint16_t scene);
 	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
-	
-	//update status lights
+
+	// update status lights
 	int UpdateLights(uint16_t devAddr);
 };
 

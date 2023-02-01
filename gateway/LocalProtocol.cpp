@@ -6,7 +6,11 @@
 #define HC_CONTROL_TOPIC "HC.CONTROL"
 #define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
 
+#ifdef ESP_PLATFORM
+LocalProtocol::LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : MqttBroker()
+#else
 LocalProtocol::LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
+#endif
 {
 }
 
@@ -16,6 +20,11 @@ LocalProtocol::~LocalProtocol()
 
 void LocalProtocol::init()
 {
+#ifdef ESP_PLATFORM
+	MqttBroker::init();
+#else
+	Mqtt::init();
+#endif
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
 }
 

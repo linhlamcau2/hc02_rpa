@@ -22,7 +22,7 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 				int epId = sqlite3_column_int(stmt, index++);
 				LOGI("Mac: %s, groupId: %s", deviceMac.c_str(), groupId.c_str());
 				Group *group = gateway->getGroupFromId(groupId);
-				Device *device = gateway->getDeviceFromAddr(epId);
+				Device *device = gateway->getDeviceBleFromAddr(epId);
 				if (!group)
 				{
 					LOGE("group dose not exist");

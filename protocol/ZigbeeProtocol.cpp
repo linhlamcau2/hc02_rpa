@@ -81,7 +81,7 @@ void ZigbeeProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 	}
 }
 
-void ZigbeeProtocol::OnMessage(unsigned char *data, int len)
+int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 {
 	LOGD("OnMessage len: %d", len);
 	uint8_t *message = data;

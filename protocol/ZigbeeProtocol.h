@@ -207,7 +207,7 @@ private:
 
 	int RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc);
 	void CheckOpcodeException(message_rsp_st *message);
-	void OnMessage(unsigned char *data, int len);
+	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout);
 
 	int OnDeviceAnnounce(uint8_t *buff, uint16_t len);
