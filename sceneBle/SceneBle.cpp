@@ -1,7 +1,7 @@
 #include "SceneBle.h"
 #include <thread>
-#include "../log/Log.h"
-#include "../protocol/BleProtocol.h"
+#include "Log.h"
+#include "BleProtocol.h"
 
 DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 {

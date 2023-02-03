@@ -1,8 +1,10 @@
 #include "Group.h"
 #include <thread>
 #include <Log.h>
-#include "ZigbeeProtocol.h"
 #include "BleProtocol.h"
+#ifdef CONFIG_ENABLE_ZIGBEE
+#include "ZigbeeProtocol.h"
+#endif
 
 #define ID_START (49152)
 

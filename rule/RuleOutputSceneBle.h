@@ -1,7 +1,7 @@
 #pragma once
 
 #include <json.h>
-#include "../sceneBle/SceneBle.h"
+#include "SceneBle.h"
 #include "RuleOutput.h"
 
 using namespace std;

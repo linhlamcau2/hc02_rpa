@@ -7,7 +7,7 @@ CXX ?= g++
 OBJEXT ?= .o
 BUILD_PATH = build
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol -Irule -IsceneBle -Iuart -Iutil -Iwifi
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi
 COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-deprecated -Wno-deprecated-declarations -Wno-unused-result -flto -fPIC
 COMPFLAGS += -DVERSION=$(VERSION)
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
@@ -16,9 +16,10 @@ LINKEDLIBS = -lpthread -lmosquitto -lsqlite3 -luci
 
 
 ifeq ($(ZIGBEE),ON)
-	INCLUDES 	+= -Idevice/zigbee
+	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
 	COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
 
+	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/*.cpp)
@@ -37,7 +38,7 @@ DEVICESRC += $(wildcard group/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)
 DEVICESRC += $(wildcard mqtt/*.cpp)
-DEVICESRC += $(wildcard protocol/*.cpp)
+DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard sceneBle/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
