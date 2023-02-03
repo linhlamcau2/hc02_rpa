@@ -12,7 +12,7 @@
 #include "Group.h"
 #include "Device.h"
 #include "DeviceBle.h"
-#include "../sceneBle/SceneBle.h"
+#include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE

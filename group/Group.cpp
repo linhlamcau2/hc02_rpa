@@ -1,8 +1,10 @@
 #include "Group.h"
 #include <thread>
 #include <Log.h>
-#include "ZigbeeProtocol.h"
 #include "BleProtocol.h"
+#ifdef CONFIG_ENABLE_ZIGBEE
+#include "ZigbeeProtocol.h"
+#endif
 
 #define ID_START (49152)
 
@@ -43,8 +45,8 @@ string Group::GetUUId()
 
 int Group::GetPositionDevice(Device *device)
 {
-	int deviceAddr = device->GetAddr();
-	for (int i = 0; i < deviceList.size(); i++)
+	uint32_t deviceAddr = device->GetAddr();
+	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
 		if (deviceAddr == deviceList[i]->device->GetAddr())
 		{
@@ -192,7 +194,7 @@ void Group::DoBle(Json::Value *dataValue)
 		{
 			Json::Value property = dataValue[0][i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
-				property.isMember("VALUE") && property["VALUE"].isInt())
+					property.isMember("VALUE") && property["VALUE"].isInt())
 			{
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();

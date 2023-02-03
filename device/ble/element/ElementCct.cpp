@@ -8,7 +8,7 @@
 ElementCct::ElementCct(Device *device, uint32_t addr) : Element(device, addr)
 {
 	cct = 0;
-    elementName = "cct";
+	elementName = "cct";
 }
 
 void ElementCct::InitAttribute(int attributeId, double value)
@@ -28,10 +28,10 @@ void ElementCct::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		uint16_t cct_first;
 		uint16_t magic;
-        uint16_t cct;
+		uint16_t cct;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (len  <= 4)
+	if (len <= 4)
 		cct = data_message->cct_first;
 	else
 		cct = data_message->cct;
@@ -71,7 +71,7 @@ void ElementCct::CheckTrigger()
 
 static int Para2PercentCct(uint16_t para)
 {
-    return ((para - 800) / 192);
+	return ((para - 800) / 192);
 }
 void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
@@ -93,7 +93,7 @@ bool ElementCct::Do(Json::Value &dataValue)
 bool ElementCct::Do(uint16_t value)
 {
 	LOGD("DoTrigger value: %d", value);
-	//bleprotocol call setonoff light
+	// bleprotocol call setonoff light
 	bleProtocol->SetCctLight(addr, value, 0, true);
 	return true;
 }
