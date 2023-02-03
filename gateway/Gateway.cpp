@@ -92,7 +92,7 @@ void Gateway::init()
 	for (const auto &[meshId, scene] : sceneBleList)
 	{
 		cout << "scene: " + scene->GetUUId() << endl;
-		for (uint32_t i = 0; i < scene->deviceList.size(); i++)
+		for (int i = 0; i < scene->deviceList.size(); i++)
 		{
 			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl;
 		}
@@ -640,11 +640,11 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 				if (scene)
 				{
 					Json::Value groupList = dataValue["DEVICES"];
-					for (uint32_t i = 0; i < groupList.size(); i++)
+					for (int i = 0; i < groupList.size(); i++)
 					{
 						Json::Value deviceList = groupList[i]["IDS"];
 						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-						for (uint32_t j = 0; j < deviceList.size(); j++)
+						for (int j = 0; j < deviceList.size(); j++)
 						{
 							string devcieId = deviceList[j].asString();
 							Device *device = getDeviceFromId(devcieId);
@@ -678,11 +678,11 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			if (scene)
 			{
 				Json::Value groupList = dataValue["DEVICES"];
-				for (uint32_t i = 0; i < groupList.size(); i++)
+				for (int i = 0; i < groupList.size(); i++)
 				{
 					Json::Value deviceList = groupList[i]["IDS"];
 					Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-					for (uint32_t j = 0; j < deviceList.size(); j++)
+					for (int j = 0; j < deviceList.size(); j++)
 					{
 						string devcieId = deviceList[j].asString();
 						Device *device = getDeviceFromId(devcieId);
@@ -1560,7 +1560,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		// int repeat = ruleValue["EACH_DAY"].asInt();
 		Json::Value repeatDays = ruleValue["EACH_DAY"];
 		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
-		for (uint32_t i = 0; i < repeatDays.size(); ++i)
+		for (int i = 0; i < repeatDays.size(); ++i)
 		{
 			if (repeatDays[i] == "EACHMONDAY")
 				mon = 1;

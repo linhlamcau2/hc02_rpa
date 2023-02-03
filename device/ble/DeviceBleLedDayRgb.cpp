@@ -76,7 +76,7 @@ bool DeviceBleLedDayRgb::Do(Json::Value &dataValue)
 	bool isIdSaturation = false;
 	bool isIdLuminance = false;
 	uint16_t valueHue, valueSaturation, valueLuminance;
-	for (uint32_t i = 0; i < dataValue.size(); i++)
+	for (int i = 0; i < dataValue.size(); i++)
 	{
 		Json::Value property = dataValue[i];
 		if (property.isMember("ID") && property["ID"].isInt() &&
