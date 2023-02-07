@@ -24,12 +24,17 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				{
 					LOGV("RuleRead rule: %s", rule.c_str());
 					Json::Value ruleValue;
-					string errs;
-					stringstream s(rule);
-					Json::CharReaderBuilder b;
-					Json::parseFromStream(b, s, &ruleValue, &errs);
-					Rule *rule = gateway->AddRule(ruleValue, true, false);
-					rule->Check();
+					Json::Reader r;
+					r.parse(rule, ruleValue);
+					if (ruleValue.isObject())
+					{
+						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						rule->Check();
+					}
+					else
+					{
+						LOGW("RuleRead json format error rule: %s", rule.c_str());
+					}
 				}
 				else
 				{

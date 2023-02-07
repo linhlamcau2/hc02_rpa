@@ -46,7 +46,7 @@ string Group::GetUUId()
 int Group::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();
-	for (int i = 0; i < deviceList.size(); i++)
+	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
 		if (deviceAddr == deviceList[i]->device->GetAddr())
 		{

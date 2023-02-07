@@ -42,13 +42,11 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	string errs;
-	stringstream s(payload);
-	Json::CharReaderBuilder b;
+	Json::Reader r;
+	r.parse(payload, payloadJson);
 	Util::LedInternet(false);
 	Util::LedServiceLock();
-	Json::parseFromStream(b, s, &payloadJson, &errs);
-	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string method = payloadJson["CMD"].asString();
 		if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
