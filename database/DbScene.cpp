@@ -19,8 +19,8 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				index++; // read id
 				const string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string rule;
-				string encode = macaron::Base64::Decode(data, rule);
-				if (encode == "")
+				string decode = macaron::Base64::Decode(data, rule);
+				if (decode == "")
 				{
 					LOGV("RuleRead rule: %s", rule.c_str());
 					Json::Value ruleValue;
@@ -38,7 +38,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				}
 				else
 				{
-					LOGW("Decode data err: %s", encode.c_str());
+					LOGW("Decode data err: %s", decode.c_str());
 				}
 			}
 			else if (s == SQLITE_DONE)

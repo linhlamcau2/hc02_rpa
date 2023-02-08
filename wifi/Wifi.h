@@ -19,8 +19,8 @@ namespace Wifi
 	void ScanWifi(Json::Value &jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);
 	int SetModeApWifi();
-	void WifiInitAP(void);
-	void WifiStopAP(void);
+	void WifiStartAP(void);
+	void WifiStartSta(void);
 	bool WifiIsAPMode(void);
 	bool WifiIsStaMode(void);
 

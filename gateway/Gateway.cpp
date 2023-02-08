@@ -184,6 +184,11 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 	LOGI("OnLocalConnect: %d", isConnected);
 }
 
+void Gateway::resetFactory()
+{
+	database->GatewayDelAll();
+}
+
 int Gateway::UdpBroadcastThread()
 {
 	LOGI("Start UdpBroadcastThread");
@@ -293,6 +298,27 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcScanWifi");
+#ifdef CONFIG_USE_OLD_APP
+	Json::Value wifiList;
+	Json::Value wifi;
+	Json::Value wifiResp;
+	gateway->StopUdpBroadcast();
+	Wifi::ScanWifi(wifiList);
+	if (wifiList.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < wifiList.size(); i++)
+		{
+			wifi = wifiList[i];
+			wifiResp["CMD"] = "HC_RESPONE";
+			wifiResp["SSID"] = wifi["SSID"];
+			wifiResp["QUALITY"] = 55;
+			wifiResp["MAC"] = wifi["MAC"];
+			wifiResp["ENCRYPTION"] = wifi["ENCRYPTION"];
+			respValue.append(wifiResp);
+		}
+	}
+	return 10; // respValue as an array
+#else
 	string rqi = "";
 	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
 	{
@@ -339,7 +365,8 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
 	}
 
-	return -1; // respValue as an array
+	return -1;
+#endif
 }
 
 int Gateway::GatewayConnectToCloudNotice()
@@ -1225,7 +1252,7 @@ int Gateway::OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 {
-	int rs = 0;
+	int err = 0;
 	if (reqValue.isMember("params") && reqValue["params"].isObject())
 	{
 		Json::Value dataValue = reqValue["params"];
@@ -1250,10 +1277,11 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 			if (type == "base64")
 			{
 				string keyBase64 = dataValue["key"].asString();
-				string encode = macaron::Base64::Decode(keyBase64, key);
-				if (encode != "")
+				string decode = macaron::Base64::Decode(keyBase64, key);
+				if (decode != "")
 				{
-					rs = 1;
+					err = 1;
+					LOGW("Base64 decode err: %s", decode.c_str());
 				}
 			}
 			else
@@ -1261,7 +1289,7 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 				key = dataValue["key"].asString();
 			}
 
-			if (rs == 0)
+			if (err == 0)
 			{
 				// save key file
 				system("rm /key.txt");
@@ -1306,8 +1334,8 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	respValue["code"] = -1;
-	return -1;
+	respValue["code"] = err;
+	return 0;
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)

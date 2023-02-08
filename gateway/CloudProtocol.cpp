@@ -12,7 +12,7 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 	Json::Value jsonValue;
 	Json::Value datanValue;
 	datanValue["STATUS_ID"] = 0;
-	datanValue["IP_ADDRESS"] = "0.0.0.0";
+	datanValue["IP_ADDRESS"] = Wifi::GetIP();
 	jsonValue["CMD"] = "HOME_CONTROLLER";
 	jsonValue["DATA"] = datanValue;
 	SetWillset(pubTopic, jsonValue.toString());
