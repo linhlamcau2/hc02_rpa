@@ -224,6 +224,7 @@ int Wifi::SetModeApWifi()
 	system("uci del wireless.wifinet1 >> /output.txt 2>&1");
 	system("uci commit wireless >> /output.txt 2>&1");
 	system("wifi >> /output.txt 2>&1");
+	return 0;
 }
 
 bool Wifi::WifiIsAPMode(void)

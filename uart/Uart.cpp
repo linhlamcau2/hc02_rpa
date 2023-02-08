@@ -178,4 +178,5 @@ static void HandleInMessage(Uart *uart)
 int Uart::OnMessage(unsigned char *data, int len)
 {
 	LOGE("OnMessage len: %d, data: %s", len, data);
+	return 0;
 }

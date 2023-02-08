@@ -27,8 +27,8 @@ string SceneBle::GetUUId(){
 
 int SceneBle::GetPositionDevice(Device *device)
 {
-	int deviceAddr = device->GetAddr();
-	for (int i=0; i<deviceList.size(); i++)
+	uint32_t deviceAddr = device->GetAddr();
+	for (uint32_t i=0; i<deviceList.size(); i++)
 	{
 		if(deviceAddr == deviceList[i]->device->GetAddr())
 		{

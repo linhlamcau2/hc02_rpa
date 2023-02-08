@@ -92,7 +92,7 @@ void Gateway::init()
 	for (const auto &[meshId, scene] : sceneBleList)
 	{
 		cout << "scene: " + scene->GetUUId() << endl;
-		for (int i = 0; i < scene->deviceList.size(); i++)
+		for (uint32_t i = 0; i < scene->deviceList.size(); i++)
 		{
 			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl;
 		}
@@ -554,7 +554,7 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
 	{
 		Json::Value dataValue = reqValue["DATA"];
-		for (Json::Value::ArrayIndex i = 0; i < dataValue.size(); i++)
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
 			string deviceId = dataValue[i].asString();
 			Device *device = getDeviceFromId(deviceId);
@@ -640,11 +640,11 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 				if (scene)
 				{
 					Json::Value groupList = dataValue["DEVICES"];
-					for (int i = 0; i < groupList.size(); i++)
+					for (Json::ArrayIndex i = 0; i < groupList.size(); i++)
 					{
 						Json::Value deviceList = groupList[i]["IDS"];
 						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-						for (int j = 0; j < deviceList.size(); j++)
+						for (Json::ArrayIndex j = 0; j < deviceList.size(); j++)
 						{
 							string devcieId = deviceList[j].asString();
 							Device *device = getDeviceFromId(devcieId);
@@ -678,11 +678,11 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			if (scene)
 			{
 				Json::Value groupList = dataValue["DEVICES"];
-				for (int i = 0; i < groupList.size(); i++)
+				for (Json::ArrayIndex i = 0; i < groupList.size(); i++)
 				{
 					Json::Value deviceList = groupList[i]["IDS"];
 					Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-					for (int j = 0; j < deviceList.size(); j++)
+					for (Json::ArrayIndex j = 0; j < deviceList.size(); j++)
 					{
 						string devcieId = deviceList[j].asString();
 						Device *device = getDeviceFromId(devcieId);
@@ -1032,7 +1032,7 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 			// Device *device = getDeviceFromId(deviceId);
 			// if (device)
 			// {
-			// 	for (Json::Value::ArrayIndex i = 0; i < properties.size(); i++)
+			// 	for (Json::ArrayIndex i = 0; i < properties.size(); i++)
 			// 	{
 			// 		Json::Value property = properties[i];
 			// 		if (property.isObject() &&
@@ -1560,7 +1560,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		// int repeat = ruleValue["EACH_DAY"].asInt();
 		Json::Value repeatDays = ruleValue["EACH_DAY"];
 		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
-		for (int i = 0; i < repeatDays.size(); ++i)
+		for (Json::ArrayIndex i = 0; i < repeatDays.size(); ++i)
 		{
 			if (repeatDays[i] == "EACHMONDAY")
 				mon = 1;
@@ -1659,7 +1659,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		}
 		// Handle output device
 		Json::Value deviceRuleOutputList = ruleValue["OUTPUT_DEVICES"];
-		for (Json::Value::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
+		for (Json::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
 		{
 			Json::Value deviceRuleOutputValue = deviceRuleOutputList[i];
 			if (deviceRuleOutputValue.isObject())
@@ -1680,7 +1680,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		}
 		// Handle output group
 		Json::Value groupRuleOutputList = ruleValue["OUTPUT_GROUPS"];
-		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+		for (Json::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 		{
 			Json::Value groupRuleOutputValue = groupRuleOutputList[i];
 			if (groupRuleOutputValue.isObject())
@@ -1701,7 +1701,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		}
 		// Handle output scene
 		Json::Value sceneRuleOutputList = ruleValue["OUTPUT_SCENES"];
-		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+		for (Json::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 		{
 			string sceneRuleOutputId = sceneRuleOutputList[i].asString();
 			SceneBle *sceneBle = getSceneBleFromId(sceneRuleOutputId);

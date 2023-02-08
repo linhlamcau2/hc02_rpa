@@ -117,7 +117,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
 				if (respValue.isArray())
 				{
-					for (Json::Value::ArrayIndex i = 0; i < respValue.size(); i++)
+					for (Json::ArrayIndex i = 0; i < respValue.size(); i++)
 					{
 						send(respValue[i].toString(), si_other, slen);
 					}
