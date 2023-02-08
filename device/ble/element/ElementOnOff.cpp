@@ -8,7 +8,7 @@
 ElementOnOff::ElementOnOff(Device *device, uint32_t addr) : Element(device, addr)
 {
 	onoff = 0;
-	elementName = "status" + to_string(addr - device->GetAddr());
+	elementName = "onoff" + to_string(addr - device->GetAddr());
 }
 
 void ElementOnOff::InitAttribute(int attributeId, double value)
@@ -78,16 +78,16 @@ void ElementOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 
 bool ElementOnOff::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
+	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	int id = parameterToId[elementName];
+	if (dataValue.isMember("ID") && dataValue["ID"].isInt() &&
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 	{
-		int onoff = dataValue[elementName].asInt();
-		if (onoff == 0 || onoff == 1)
+		int idJson = dataValue["ID"].asInt();
+		if (idJson == id)
 		{
-			return true;
-		}
-		else if (onoff == 2)
-		{
+			int value = dataValue["VALUE"].asInt();
+			bleProtocol->SetOnOffLight(addr, value, 0, true);
 			return true;
 		}
 	}
@@ -97,7 +97,7 @@ bool ElementOnOff::Do(Json::Value &dataValue)
 bool ElementOnOff::Do(int value)
 {
 	LOGD("DoTrigger value: %d", value);
-	//bleprotocol call setonoff light
+	// bleprotocol call setonoff light
 	bleProtocol->SetOnOffLight(addr, value, 0, true);
 	return true;
 }

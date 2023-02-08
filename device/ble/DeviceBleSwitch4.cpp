@@ -1,8 +1,8 @@
 #include "DeviceBleSwitch4.h"
 #include <Log.h>
 
-DeviceBleSwitch4::DeviceBleSwitch4(string id, string name, string mac,string device_id, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac,device_id, addr, BLE_SWITCH_4, version)
+DeviceBleSwitch4::DeviceBleSwitch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_SWITCH_4, version)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -66,9 +66,13 @@ bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
 bool DeviceBleSwitch4::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	for (int i = 0; i < 4; i++)
+	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 	{
-		elementOnOff[i]->Do(dataValue);
+		Json::Value property = dataValue[i];
+		for (int j = 0; j < 4; j++)
+		{
+			elementOnOff[j]->Do(property);
+		}
 	}
 	return true;
 }

@@ -186,7 +186,13 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 
 void Gateway::resetFactory()
 {
+	LOGI("resetFactory");
+	database->DeviceDelAll();
 	database->GatewayDelAll();
+	database->DeviceAttributeDelAll();
+	database->GroupDelAll();
+	database->DeviceInGroupDelAll();
+	bleProtocol->ResetFactory();
 }
 
 int Gateway::UdpBroadcastThread()
@@ -566,7 +572,6 @@ int Gateway::OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
-	bleProtocol->init();
 	respValue["code"] = 0;
 	return 0;
 }
@@ -1357,7 +1362,11 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	dataValue["APP_KEY"] = gateway->getBleAppKey();
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
+#ifdef CONFIG_USE_OLD_APP
+	PublishToLocalMessage(jsonValue);
+#else
 	PublishToDeviceTelemetry(jsonValue);
+#endif
 }
 
 Group *Gateway::getGroup(int id)

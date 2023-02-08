@@ -147,6 +147,7 @@ int Device::PushTelemetry(Json::Value jsonValue)
 	deviceData["PROPERTIES"] = jsonValue;
 	pushDataValue["CMD"] = "DEVICE";
 	pushDataValue["DATA"].append(deviceData);
+	gateway->PublishToLocalMessage(pushDataValue);
 	return gateway->PublishToGatewayTelemetry(pushDataValue);
 }
 
