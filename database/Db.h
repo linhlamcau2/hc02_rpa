@@ -21,7 +21,7 @@ class Db
 {
 
 private:
-	// TODO: 
+	// TODO:
 	// mutex mtx;
 
 	int Sqlite_Exec(string &sql);
@@ -52,7 +52,6 @@ public:
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
-
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);

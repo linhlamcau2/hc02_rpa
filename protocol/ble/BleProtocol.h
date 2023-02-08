@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <stdint.h>
 #include <vector>
 #include <Uart.h>
@@ -153,7 +154,7 @@ public:
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
-	int SetGwAddr(uint16_t devAddr, uint16_t gwAddr = 0x0002);
+	int SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet = 0x0001);
 	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t &deviceVersion);
 
 	int ResetDev(uint16_t devAddr);

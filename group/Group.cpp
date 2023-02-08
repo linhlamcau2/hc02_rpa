@@ -1,8 +1,10 @@
 #include "Group.h"
 #include <thread>
 #include <Log.h>
-#include "ZigbeeProtocol.h"
 #include "BleProtocol.h"
+#ifdef CONFIG_ENABLE_ZIGBEE
+#include "ZigbeeProtocol.h"
+#endif
 
 #define ID_START (49152)
 
@@ -192,7 +194,7 @@ void Group::DoBle(Json::Value *dataValue)
 		{
 			Json::Value property = dataValue[0][i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
-				property.isMember("VALUE") && property["VALUE"].isInt())
+					property.isMember("VALUE") && property["VALUE"].isInt())
 			{
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();

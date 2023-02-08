@@ -96,11 +96,9 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	LOGD("UdpOnMessage message: %s", message.c_str());
 	Json::Value respValue;
 	Json::Value payloadJson;
-	string errs;
-	stringstream s(message);
-	Json::CharReaderBuilder b;
-	Json::parseFromStream(b, s, &payloadJson, &errs);
-	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+	Json::Reader r;
+	r.parse(message, payloadJson);
+	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string method = payloadJson["CMD"].asString();
 		if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())

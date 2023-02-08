@@ -2,7 +2,7 @@
 
 #include <json.h>
 #include "Device.h"
-#include "../rule/RuleOutput.h"
+#include "RuleOutput.h"
 
 using namespace std;
 
