@@ -22,5 +22,4 @@ public:
 	void InputData(uint8_t *data, int len, uint32_t addr = 0);
 	bool CheckData(Json::Value &dataValue, bool &rs);
 	bool Do(Json::Value &dataValue);
-	bool Do(int id, int value);
 };

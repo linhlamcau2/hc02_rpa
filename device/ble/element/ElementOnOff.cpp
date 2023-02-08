@@ -22,6 +22,29 @@ void ElementOnOff::SaveAttribute()
 	database->DeviceAttributeAddOrReplace(device, parameterToId[elementName], onoff);
 }
 
+bool ElementOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+{
+	typedef struct
+	{
+		uint16_t opcode;
+		uint8_t state;
+		uint8_t onoff;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == 0x0482)
+	{
+		if (len == 3)
+			onoff = data_message->state;
+		else
+			onoff = data_message->onoff;
+		SaveAttribute();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
+}
+
 void ElementOnOff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct

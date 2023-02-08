@@ -30,6 +30,25 @@ void ModuleTempHum::SetHum(float hum)
 	this->hum = hum;
 }
 
+bool ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+{
+	if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
+	{
+		typedef struct
+		{
+			uint16_t temp;
+			uint16_t hum;
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)&data[3];
+		temp = bswap_16(data_message->temp);
+		hum = bswap_16(data_message->hum);
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
+}
+
 void ModuleTempHum::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
@@ -38,8 +57,8 @@ void ModuleTempHum::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint16_t hum;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	temp = bswap_16(data_message->temp) / 10;
-	hum = bswap_16(data_message->hum) / 10;
+	temp = bswap_16(data_message->temp);
+	hum = bswap_16(data_message->hum);
 	BuildTelemetryValue(jsonValue);
 	CheckTrigger();
 }

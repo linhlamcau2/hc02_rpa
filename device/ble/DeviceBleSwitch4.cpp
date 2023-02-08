@@ -36,18 +36,13 @@ void DeviceBleSwitch4::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	if (!CheckAddr(addr))
 		return;
-	typedef struct
-	{
-		uint16_t u16Opcode;
-		uint8_t data[];
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
 	values = Json::Value::null;
-	if (data_message->u16Opcode == 0x0482)
+	if (elementOnOff[addr - this->addr]->InputData(data, len, values))
 	{
-		elementOnOff[addr - this->addr]->ParseData(data_message->data, len - 2, values);
+		PushTelemetry(values);
+		return;
 	}
-	PushTelemetry(values);
+	return;
 }
 
 bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
@@ -65,21 +60,15 @@ bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
 
 bool DeviceBleSwitch4::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 	{
 		Json::Value property = dataValue[i];
 		for (int j = 0; j < 4; j++)
 		{
-			elementOnOff[j]->Do(property);
+			if (elementOnOff[j]->Do(property))
+				return true;
 		}
 	}
-	return true;
-}
-
-bool DeviceBleSwitch4::Do(int id, int value)
-{
-	LOGD("DoTrigger id: %d, value: %d", id, value);
-	elementOnOff[id - parameterToId["bt0"]]->Do(value);
 	return false;
 }

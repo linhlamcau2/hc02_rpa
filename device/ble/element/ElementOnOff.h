@@ -14,6 +14,7 @@ public:
 
 	void InitAttribute(int attributeId, double value);
 	void SaveAttribute();
+	bool InputData(uint8_t *data, int len, Json::Value &jsonValue);
 	void ParseData(uint8_t *data, int len, Json::Value &jsonValue);
 	bool CheckData(Json::Value &dataValue, bool &rs);
 

@@ -18,21 +18,14 @@ int DeviceBleTempHumSensor::BuildTelemetryValue(Json::Value &pushDataValue)
 void DeviceBleTempHumSensor::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
-	if (data[0] == 0x52)
+	if (!moduleTempHum->InputData(data, len, values))
 	{
-		if (data[1] == 0x01 && data[2] == 0x00)
+		if (!modulePinLevel->InputData(data, len, values))
 		{
-			modulePinLevel->ParseData(&data[4], len - 4, values);
-		}
-		else if (data[1] == 0x06 && data[2] == 0x00)
-		{
-			moduleTempHum->ParseData(&data[3], len - 3, values);
+			return;
 		}
 	}
-	if (values != Json::Value::null)
-	{
-		PushTelemetry(values);
-	}
+	PushTelemetry(values);
 }
 
 bool DeviceBleTempHumSensor::Do(Json::Value &dataValue)

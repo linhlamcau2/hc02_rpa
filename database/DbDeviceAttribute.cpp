@@ -57,8 +57,9 @@ int Db::DeviceAttributeUpdate(Device *device, int attributeId, double value)
 
 int Db::DeviceAttributeAddOrReplace(Device *device, int attributeId, double value)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES (\"" + device->GetMac() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
-	return Sqlite_Exec(sql);
+	// string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES (\"" + device->GetMac() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
+	// return Sqlite_Exec(sql);
+	return 0;
 }
 
 int Db::DeviceAttributeDel(Device *device, int attributeId)
