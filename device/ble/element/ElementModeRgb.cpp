@@ -1,6 +1,7 @@
 #include "ElementModeRgb.h"
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -8,58 +9,67 @@
 ElementModeRgb::ElementModeRgb(Device *device, uint32_t addr) : Element(device, addr)
 {
 	mode = 0;
-	elementName = "modeRgb";
+	id = BLE_ATTRIBUTE_SCENE_RGB;
 }
 
-void ElementModeRgb::InitAttribute(int attributeId, double value)
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ElementModeRgb::InitAttribute(int id, double value)
 {
-	if (attributeId == parameterToId[elementName])
+	if (this->id == id)
 		mode = value;
 }
 
 void ElementModeRgb::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, parameterToId[elementName], mode);
+	database->DeviceAttributeAddOrReplace(device, id, mode);
 }
+#endif
 
-void ElementModeRgb::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
+// TODO: recheck
+bool ElementModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
+		uint16_t opcode;
+		uint16_t reverse;
 		uint16_t idScene;
 		uint16_t magic;
 		uint8_t mode;
 	} data_message_t;
-	data_message_t *data_message = NULL;
-	if (len == 5 || len == 7)
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == BLE_MESH_OPCODE_RGB)
 	{
-		data_message = (data_message_t *)(data + 2);
-	}
-	else
-	{
-		data_message = (data_message_t *)(data + 2);
-	}
-	if (data_message->idScene == 0)
-	{
-		mode = data_message->mode;
-		if (1 <= mode && mode <= 6)
+		if (data_message->idScene == 0)
 		{
-			SaveAttribute();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
+			mode = data_message->mode;
+			// TODO: recheck
+			if (1 <= mode && mode <= 6)
+			{
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+#endif
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return true;
+			}
 		}
 	}
+	return false;
 }
 
 bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t mode = dataValue[elementName].asInt();
+			uint16_t mode = dataValue["VALUE"].asInt();
+			string op = dataValue["OP"].asString();
 			rs = Util::CompareNumber(this->mode, mode, op);
 			return true;
 		}
@@ -67,6 +77,7 @@ bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
+// TODO: can nhac di chuyen den Element.cpp
 void ElementModeRgb::CheckTrigger()
 {
 	LOGD("CheckTrigger");
@@ -82,7 +93,7 @@ void ElementModeRgb::CheckTrigger()
 void ElementModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId[elementName];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = mode;
 	jsonValue.append(dataValue);
 }
@@ -90,16 +101,17 @@ void ElementModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 bool ElementModeRgb::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			bleProtocol->CallModeRgb(addr, value);
+			return true;
+		}
 	}
 	return false;
-}
-
-bool ElementModeRgb::Do(uint16_t value)
-{
-	LOGD("DoTrigger value: %d", value);
-	// bleprotocol call setonoff light
-	bleProtocol->CallModeRgb(addr, value);
-	return true;
 }

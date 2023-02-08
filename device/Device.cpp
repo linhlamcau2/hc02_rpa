@@ -126,6 +126,22 @@ void Device::CheckTrigger()
 	}
 }
 
+bool Device::DoJsonArray(Json::Value &dataValue)
+{
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			Do(dataValue[i]);
+		}
+	}
+	else
+	{
+		Do(dataValue);
+	}
+	return true;
+}
+
 int Device::PushTelemetry()
 {
 	Json::Value pushData;
@@ -170,6 +186,7 @@ int Device::PushAttributes(Json::Value jsonValue)
 	return gateway->PublishToGatewayAttributes(jsonValue);
 }
 
+// TODO: remove
 map<string, int> parameterToId;
 static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
@@ -178,6 +195,8 @@ void Device::InitDeviceModelList()
 {
 	parameterToId["stt"] = 0;
 	parameterToId["dim"] = 1;
+	parameterToId["cct"] = 2;
+	parameterToId["hue"] = 3;
 	parameterToId["pin"] = 8;
 	parameterToId["bt0"] = 11;
 	parameterToId["onoff0"] = 11;

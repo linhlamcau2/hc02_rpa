@@ -15,5 +15,5 @@ SceneBleOutputDevice::~SceneBleOutputDevice()
 void SceneBleOutputDevice::RunOutput()
 {
 	if (device)
-		device->Do(data);
+		device->DoJsonArray(data);
 }

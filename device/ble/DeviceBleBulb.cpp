@@ -2,7 +2,7 @@
 #include <Log.h>
 
 DeviceBleBulb::DeviceBleBulb(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-	: DeviceBle(id, name, mac, device_id, addr, BLE_LED_BULB, version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_LED_BULB, version)
 {
 	elementOnOff = new ElementOnOff(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
@@ -28,32 +28,22 @@ int DeviceBleBulb::BuildTelemetryValue(Json::Value &pushDataValue)
 
 void DeviceBleBulb::InputData(uint8_t *data, int len, uint32_t addr)
 {
-	typedef struct
-	{
-		uint16_t u16Opcode;
-		uint8_t data[];
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
 	values = Json::Value::null;
-	if (data_message->u16Opcode == 0x0482)
+	if (!elementOnOff->InputData(data, len, values))
 	{
-		elementOnOff->ParseData(data_message->data, len - 2, values);
-	}
-	else if (data_message->u16Opcode == 0x6682)
-	{
-		elementCct->ParseData(data_message->data, len - 2, values);
-	}
-	else if (data_message->u16Opcode == 0x4e82)
-	{
-		elementDim->ParseData(data_message->data, len - 2, values);
-	}
-	else if (data_message->u16Opcode == 0x7882)
-	{
-		elementHsl->ParseData(data_message->data, len - 2, values);
-	}
-	else if (data_message->u16Opcode == 0x005e)
-	{
-		elementModeRgb->ParseData(data_message->data, len - 2, values);
+		if (!elementCct->InputData(data, len, values))
+		{
+			if (!elementDim->InputData(data, len, values))
+			{
+				if (!elementHsl->InputData(data, len, values))
+				{
+					if (!elementModeRgb->InputData(data, len, values))
+					{
+						return;
+					}
+				}
+			}
+		}
 	}
 	PushTelemetry(values);
 }
@@ -61,94 +51,44 @@ void DeviceBleBulb::InputData(uint8_t *data, int len, uint32_t addr)
 bool DeviceBleBulb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (elementOnOff->CheckData(dataValue, rs))
+	if (!elementOnOff->CheckData(dataValue, rs))
 	{
-		return true;
+		if (!elementCct->CheckData(dataValue, rs))
+		{
+			if (!elementDim->CheckData(dataValue, rs))
+			{
+				if (!elementHsl->CheckData(dataValue, rs))
+				{
+					if (!elementModeRgb->CheckData(dataValue, rs))
+					{
+						return false;
+					}
+				}
+			}
+		}
 	}
-	return false;
-}
-
-bool DeviceBleBulb::Do(int id, int value)
-{
-	LOGD("DoTrigger id: %d, value: %d", id, value);
-	if (id == 0)
-	{
-		elementOnOff->Do(value);
-	}
-	else if (id == 1)
-	{
-		elementDim->Do((value * 65535) / 100);
-	}
-	else if (id == 2)
-	{
-		elementCct->Do((value * 192) + 800);
-	}
-	else if (id == 3)
-	{
-	}
-	else
-	{
-		LOGW("DoTrigger id don't support");
-	}
-	return false;
+	return true;
 }
 
 bool DeviceBleBulb::Do(Json::Value &dataValue)
 {
-	bool isIdHue = false;
-	bool isIdSaturation = false;
-	bool isIdLuminance = false;
-	uint16_t valueHue, valueSaturation, valueLuminance;
-	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+	if (!elementOnOff->Do(dataValue))
 	{
-		Json::Value property = dataValue[i];
-		if (property.isMember("ID") && property["ID"].isInt() &&
-			property.isMember("VALUE") && property["VALUE"].isInt())
+		if (!elementCct->Do(dataValue))
 		{
-			int id = property["ID"].asInt();
-			unsigned int value = property["VALUE"].asInt();
-			if (id == 0)
+			if (!elementDim->Do(dataValue))
 			{
-				elementOnOff->Do(value);
-			}
-			else if (id == 1)
-			{
-				elementDim->Do((value * 65535) / 100);
-			}
-			else if (id == 2)
-			{
-				elementCct->Do((value * 192) + 800);
-			}
-			else if (id == 3)
-			{
-				isIdHue = true;
-				valueHue = value;
-			}
-			else if (id == 4)
-			{
-				isIdSaturation = true;
-				valueSaturation = value;
-			}
-			else if (id == 5)
-			{
-				isIdLuminance = true;
-				valueLuminance = value;
-			}
-			else if (id == 23)
-			{
-				elementModeRgb->Do(value);
-			}
-			else 
-			{
-				LOGW("DoTrigger id: %d don't support", id);
+				if (!elementHsl->Do(dataValue))
+				{
+					if (!elementModeRgb->Do(dataValue))
+					{
+						return false;
+					}
+				}
 			}
 		}
 	}
-	if (isIdHue && isIdLuminance && isIdSaturation)
-	{
-		elementHsl->Do(valueHue, valueSaturation, valueLuminance);
-	}
-	return false;
+	return true;
 }
 
 bool DeviceBleBulb::AddGroup(uint16_t idGroup, uint16_t epId)

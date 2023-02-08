@@ -18,27 +18,8 @@
 #include "RuleOutputDevice.h"
 
 #include "BleProtocol.h"
-#include "DeviceBleDownLightSmt.h"
-#include "DeviceBleDownLightCobTrangTri.h"
-#include "DeviceBleDownLightCobGocRong.h"
-#include "DeviceBleDownLightRgbCw.h"
+#include "DeviceBleOnoffCctDim.h"
 #include "DeviceBleBulb.h"
-#include "DeviceBleChieuGuong.h"
-#include "DeviceBleChieuTranh.h"
-#include "DeviceBleDenBan.h"
-#include "DeviceBleDownLightCobGocHep.h"
-#include "DeviceBleFlood.h"
-#include "DeviceBleLedDayLinear.h"
-#include "DeviceBleLedDayRgbCw.h"
-#include "DeviceBleLedDayRgb.h"
-#include "DeviceBleOpTran.h"
-#include "DeviceBleOpTranLoa.h"
-#include "DeviceBleOpTuong.h"
-#include "DeviceBlePanelTron.h"
-#include "DeviceBlePanelVuong.h"
-#include "DeviceBleThaTran.h"
-#include "DeviceBleTrackLight.h"
-#include "DeviceBleTubeM16.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
@@ -1092,7 +1073,7 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 			// 		{
 			// 			int id = property["ID"].asInt();
 			// 			string cmd = property["CMD"].asString();
-			// 			device->Do(id, value);
+			// 			device->DoJsonArrayDo(id, value);
 			// 		}
 			// 	}
 			// }
@@ -1163,7 +1144,7 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				if (properties.isArray())
-					device->Do(properties);
+					device->DoJsonArray(properties);
 			}
 			else
 			{
@@ -1451,101 +1432,27 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
 	Device *device = NULL;
-	if (type == BLE_DOWNLIGHT_SMT)
+	switch (type)
 	{
-		device = new DeviceBleDownLightSmt(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_COB_TRANG_TRI)
-	{
-		device = new DeviceBleDownLightCobTrangTri(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_COB_GOC_RONG)
-	{
-		device = new DeviceBleDownLightCobGocRong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_COB_GOC_HEP)
-	{
-		device = new DeviceBleDownLightCobGocHep(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_RGBCW)
-	{
-		device = new DeviceBleDownLightRgbCw(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_PANEL_TRON)
-	{
-		device = new DeviceBlePanelTron(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_PANEL_VUONG)
-	{
-		device = new DeviceBlePanelVuong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_OP_TRAN)
-	{
-		device = new DeviceBleOpTran(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_OP_TUONG)
-	{
-		device = new DeviceBleOpTuong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_CHIEU_TRANH)
-	{
-		device = new DeviceBleChieuTranh(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_TRACKLIGHT)
-	{
-		device = new DeviceBleTrackLight(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_THA_TRAN)
-	{
-		device = new DeviceBleThaTran(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_CHIEU_GUONG)
-	{
-		device = new DeviceBleChieuGuong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_DAY_LINEAR)
-	{
-		device = new DeviceBleLedDayLinear(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_TUBE_M16)
-	{
-		device = new DeviceBleTubeM16(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DEN_BAN)
-	{
-		device = new DeviceBleDenBan(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_FLOOD)
-	{
-		device = new DeviceBleFlood(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_DAY_RGBCW)
-	{
-		device = new DeviceBleLedDayRgbCw(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_BULB)
-	{
+	case BLE_LED_CHIEU_TRANH:
+	case BLE_LED_CHIEU_GUONG:
+		device = new DeviceBleOnoffCctDim(id, name, mac, device_id, addr, type, version);
+		break;
+	case BLE_LED_BULB:
 		device = new DeviceBleBulb(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_OP_TRAN_LOA)
-	{
-		device = new DeviceBleOpTranLoa(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_DAY_RGB)
-	{
-		device = new DeviceBleLedDayRgb(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_SWITCH_4)
-	{
+		break;
+	case BLE_SWITCH_4:
 		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DC_SCENE_CONTACT)
-	{
+		break;
+	case BLE_DC_SCENE_CONTACT:
 		device = new DeviceBleDCSceneContact(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_TEMP_HUM_SENSOR)
-	{
+		break;
+	case BLE_TEMP_HUM_SENSOR:
 		device = new DeviceBleTempHumSensor(id, name, mac, device_id, addr, version);
+		break;
+	default:
+		LOGW("Add new device not support type: 0x%04X", type);
+		break;
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

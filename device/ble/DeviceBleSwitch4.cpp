@@ -24,6 +24,7 @@ int DeviceBleSwitch4::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void DeviceBleSwitch4::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 4; i++)
@@ -31,18 +32,18 @@ void DeviceBleSwitch4::InitAttribute(int attributeId, double value)
 		elementOnOff[i]->InitAttribute(attributeId, value);
 	}
 }
+#endif
 
 void DeviceBleSwitch4::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	if (!CheckAddr(addr))
 		return;
 	values = Json::Value::null;
-	if (elementOnOff[addr - this->addr]->InputData(data, len, values))
+	if (!elementOnOff[addr - this->addr]->InputData(data, len, values))
 	{
-		PushTelemetry(values);
 		return;
 	}
-	return;
+	PushTelemetry(values);
 }
 
 bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)

@@ -6,22 +6,68 @@ using namespace std;
 class ElementHsl : public Element
 {
 protected:
-	uint16_t h;
-    uint16_t s;
-    uint16_t l;
-    string elementNameH;
-    string elementNameL;
-    string elementNameS;
+	uint16_t h, s, l;
+	int idH, idS, idL;
+
 public:
 	ElementHsl(Device *device, uint32_t addr);
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
+	/**
+	 * @brief Init parameter value from database after system start
+	 *
+	 * @param attributeId id of attribute
+	 * @param value value of attribute
+	 */
 	void InitAttribute(int attributeId, double value);
+
+	/**
+	 * @brief Save parameter value to database
+	 *
+	 */
 	void SaveAttribute();
-	void ParseData(uint8_t *data, int len, Json::Value &jsonValue);
+#endif
+
+	/**
+	 * @brief Parse raw data to element parameter value
+	 *
+	 * @param data data from device driver (uart)
+	 * @param len length of data
+	 * @param jsonValue json value to put parameter after parsing
+	 * @return true if data include this element opcode
+	 * @return false
+	 */
+	bool InputData(uint8_t *data, int len, Json::Value &jsonValue);
+
+	/**
+	 * @brief Check rule input
+	 *
+	 * @param dataValue json rule data input
+	 * @param rs result of checking
+	 * @return true if dataValue uses this element paramter
+	 * @return false if dataValue don't use this element paramter
+	 */
 	bool CheckData(Json::Value &dataValue, bool &rs);
 
+	/**
+	 * @brief Check rules related with this element
+	 *
+	 */
 	void CheckTrigger();
+
+	/**
+	 * @brief Build telemetry message with this element
+	 *
+	 * @param jsonValue
+	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
+
+	/**
+	 * @brief Do an action
+	 *
+	 * @param dataValue data of action
+	 * @return true
+	 * @return false
+	 */
 	bool Do(Json::Value &dataValue);
-	bool Do(uint16_t valueH, uint16_t valueS, uint16_t valueL);
 };
