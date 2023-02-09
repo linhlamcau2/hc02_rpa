@@ -6,9 +6,9 @@ DeviceBleDCSceneContact::DeviceBleDCSceneContact(string id, string name, string 
 {
 	for (int i = 0; i < 6; i++)
 	{
-		moduleButton[i] = new ModuleButton(this, i);
+		moduleButton[i] = new ModuleButton(this, addr, i);
 	}
-	modulePinLevel = new ModulePinLevel(this);
+	modulePinLevel = new ModulePinLevel(this, addr);
 }
 
 int DeviceBleDCSceneContact::BuildTelemetryValue(Json::Value &pushDataValue)

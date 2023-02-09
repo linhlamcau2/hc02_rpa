@@ -1,23 +1,22 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "element/ElementOnOff.h"
-#include "element/ElementResetNode.h"
-#include "element/ElementCct.h"
-#include "element/ElementDim.h"
-#include "element/ElementHsl.h"
-#include "element/ElementModeRgb.h"
+#include "ModuleOnOff.h"
+#include "ElementCct.h"
+#include "ModuleDim.h"
+#include "ModuleHsl.h"
+#include "ModuleModeRgb.h"
 
 using namespace std;
 
 class DeviceBleOnoffCctDimHslModeRGB : public DeviceBle
 {
 private:
-	ElementOnOff *elementOnOff;
+	ModuleOnOff *moduleOnOff;
+	ModuleDim *moduleDim;
+	ModuleModeRgb *moduleModeRgb;
+	ModuleHsl *moduleHsl;
 	ElementCct *elementCct;
-	ElementDim *elementDim;
-	ElementHsl *elementHsl;
-	ElementModeRgb *elementModeRgb;
 
 public:
 	DeviceBleOnoffCctDimHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);

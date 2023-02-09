@@ -6,10 +6,14 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleButton::ModuleButton(Device *device, int index) : Module(device)
+ModuleButton::ModuleButton(Device *device, uint32_t addr) : ModuleButton(device, addr, 0)
+{
+}
+
+ModuleButton::ModuleButton(Device *device, uint32_t addr, int index) : Module(device, addr)
 {
 	bt = 0;
-	id = BLE_ATTRIBUTE_BUTTON_1 + index;
+	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr() + index;
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

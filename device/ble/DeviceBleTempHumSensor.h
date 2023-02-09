@@ -3,7 +3,6 @@
 #include "DeviceBle.h"
 #include "module/ModuleTempHum.h"
 #include "module/ModulePinLevel.h"
-#include "element/ElementResetNode.h"
 
 using namespace std;
 

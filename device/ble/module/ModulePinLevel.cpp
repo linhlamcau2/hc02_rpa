@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModulePinLevel::ModulePinLevel(Device *device) : Module(device)
+ModulePinLevel::ModulePinLevel(Device *device, uint32_t addr) : Module(device, addr)
 {
 	pin = 0;
 	id = BLE_ATTRIBUTE_BATTERY;

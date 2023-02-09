@@ -4,9 +4,9 @@
 DeviceBleOnoffCctDim::DeviceBleOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, type, version)
 {
-	elementOnOff = new ElementOnOff(this, addr);
+	moduleOnOff = new ModuleOnOff(this, addr);
+	moduleDim = new ModuleDim(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
-	elementDim = new ElementDim(this, addr);
 }
 
 bool DeviceBleOnoffCctDim::CheckAddr(uint32_t addr)
@@ -16,20 +16,20 @@ bool DeviceBleOnoffCctDim::CheckAddr(uint32_t addr)
 
 int DeviceBleOnoffCctDim::BuildTelemetryValue(Json::Value &pushDataValue)
 {
-	elementOnOff->BuildTelemetryValue(pushDataValue);
+	moduleOnOff->BuildTelemetryValue(pushDataValue);
+	moduleDim->BuildTelemetryValue(pushDataValue);
 	elementCct->BuildTelemetryValue(pushDataValue);
-	elementDim->BuildTelemetryValue(pushDataValue);
 	return 0;
 }
 
 void DeviceBleOnoffCctDim::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
-	if (!elementOnOff->InputData(data, len, values))
+	if (!moduleOnOff->InputData(data, len, values))
 	{
-		if (!elementCct->InputData(data, len, values))
+		if (!moduleDim->InputData(data, len, values))
 		{
-			if (!elementDim->InputData(data, len, values))
+			if (!elementCct->InputData(data, len, values))
 			{
 				return;
 			}
@@ -41,11 +41,11 @@ void DeviceBleOnoffCctDim::InputData(uint8_t *data, int len, uint32_t addr)
 bool DeviceBleOnoffCctDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (!elementOnOff->CheckData(dataValue, rs))
+	if (!moduleOnOff->CheckData(dataValue, rs))
 	{
-		if (!elementCct->CheckData(dataValue, rs))
+		if (!moduleDim->CheckData(dataValue, rs))
 		{
-			if (!elementDim->CheckData(dataValue, rs))
+			if (!elementCct->CheckData(dataValue, rs))
 			{
 				return false;
 			}
@@ -56,11 +56,11 @@ bool DeviceBleOnoffCctDim::CheckData(Json::Value &dataValue, bool &rs)
 
 bool DeviceBleOnoffCctDim::Do(Json::Value &dataValue)
 {
-	if (!elementOnOff->Do(dataValue))
+	if (!moduleOnOff->Do(dataValue))
 	{
-		if (!elementCct->Do(dataValue))
+		if (!moduleDim->Do(dataValue))
 		{
-			if (!elementDim->Do(dataValue))
+			if (!elementCct->Do(dataValue))
 			{
 				return false;
 			}

@@ -1,4 +1,4 @@
-#include "ElementHsl.h"
+#include "ModuleHsl.h"
 #include <Log.h>
 #include <Util.h>
 #include "BleDefine.h"
@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ElementHsl::ElementHsl(Device *device, uint32_t addr) : Element(device, addr)
+ModuleHsl::ModuleHsl(Device *device, uint32_t addr) : Module(device, addr)
 {
 	h = 0;
 	s = 0;
@@ -17,7 +17,7 @@ ElementHsl::ElementHsl(Device *device, uint32_t addr) : Element(device, addr)
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ElementHsl::InitAttribute(int id, double value)
+void ModuleHsl::InitAttribute(int id, double value)
 {
 	if (this->idH == id)
 	{
@@ -33,7 +33,7 @@ void ElementHsl::InitAttribute(int id, double value)
 	}
 }
 
-void ElementHsl::SaveAttribute()
+void ModuleHsl::SaveAttribute()
 {
 	database->DeviceAttributeAddOrReplace(device, idH, h);
 	database->DeviceAttributeAddOrReplace(device, idS, s);
@@ -41,7 +41,7 @@ void ElementHsl::SaveAttribute()
 }
 #endif
 
-bool ElementHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -66,7 +66,7 @@ bool ElementHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	return false;
 }
 
-bool ElementHsl::CheckData(Json::Value &dataValue, bool &rs)
+bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -93,7 +93,7 @@ bool ElementHsl::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-void ElementHsl::CheckTrigger()
+void ModuleHsl::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
@@ -105,7 +105,7 @@ void ElementHsl::CheckTrigger()
 	}
 }
 
-void ElementHsl::BuildTelemetryValue(Json::Value &jsonValue)
+void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = idH;
@@ -119,7 +119,7 @@ void ElementHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-bool ElementHsl::Do(Json::Value &dataValue)
+bool ModuleHsl::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&

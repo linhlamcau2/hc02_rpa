@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleOnOff::ModuleOnOff(Device *device) : Module(device)
+ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr) : Module(device, addr)
 {
 	onoff = 0;
 	id = BLE_ATTRIBUTE_ONOFF;
@@ -57,22 +57,20 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
-		if (this->id == id)
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
-			{
-				uint16_t value = dataValue["VALUE"].asInt();
-				string op = dataValue["OP"].asString();
-				if (this->id == id)
-					rs = Util::CompareNumber(this->onoff, value, op);
-				return true;
-			}
+			uint16_t onoff = dataValue["VALUE"].asInt();
+			string op = dataValue["OP"].asString();
+			rs = Util::CompareNumber(this->onoff, onoff, op);
+			return true;
 		}
 	}
 	return false;
 }
 
+// TODO: can nhac di chuyen den Module.cpp
 void ModuleOnOff::CheckTrigger()
 {
 	LOGD("CheckTrigger");
@@ -91,4 +89,22 @@ void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
+}
+
+bool ModuleOnOff::Do(Json::Value &dataValue)
+{
+	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			bleProtocol->SetOnOffLight(addr, value, 0, true);
+			return true;
+		}
+	}
+	return false;
 }

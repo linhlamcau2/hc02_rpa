@@ -4,9 +4,9 @@
 DeviceBleOnoffHslModeRGB::DeviceBleOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, type, version)
 {
-	elementOnOff = new ElementOnOff(this, addr);
-	elementHsl = new ElementHsl(this, addr);
-	elementModeRgb = new ElementModeRgb(this, addr);
+	moduleOnOff = new ModuleOnOff(this, addr);
+	moduleModeRgb = new ModuleModeRgb(this, addr);
+	moduleHsl = new ModuleHsl(this, addr);
 }
 
 bool DeviceBleOnoffHslModeRGB::CheckAddr(uint32_t addr)
@@ -16,20 +16,20 @@ bool DeviceBleOnoffHslModeRGB::CheckAddr(uint32_t addr)
 
 int DeviceBleOnoffHslModeRGB::BuildTelemetryValue(Json::Value &pushDataValue)
 {
-	elementOnOff->BuildTelemetryValue(pushDataValue);
-	elementHsl->BuildTelemetryValue(pushDataValue);
-	elementModeRgb->BuildTelemetryValue(pushDataValue);
+	moduleOnOff->BuildTelemetryValue(pushDataValue);
+	moduleHsl->BuildTelemetryValue(pushDataValue);
+	moduleModeRgb->BuildTelemetryValue(pushDataValue);
 	return 0;
 }
 
 void DeviceBleOnoffHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
-	if (!elementOnOff->InputData(data, len, values))
+	if (!moduleOnOff->InputData(data, len, values))
 	{
-		if (!elementHsl->InputData(data, len, values))
+		if (!moduleHsl->InputData(data, len, values))
 		{
-			if (!elementModeRgb->InputData(data, len, values))
+			if (!moduleModeRgb->InputData(data, len, values))
 			{
 				return;
 			}
@@ -41,11 +41,11 @@ void DeviceBleOnoffHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
 bool DeviceBleOnoffHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (!elementOnOff->CheckData(dataValue, rs))
+	if (!moduleOnOff->CheckData(dataValue, rs))
 	{
-		if (!elementHsl->CheckData(dataValue, rs))
+		if (!moduleHsl->CheckData(dataValue, rs))
 		{
-			if (!elementModeRgb->CheckData(dataValue, rs))
+			if (!moduleModeRgb->CheckData(dataValue, rs))
 			{
 				return false;
 			}
@@ -56,11 +56,11 @@ bool DeviceBleOnoffHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
 
 bool DeviceBleOnoffHslModeRGB::Do(Json::Value &dataValue)
 {
-	if (!elementOnOff->Do(dataValue))
+	if (!moduleOnOff->Do(dataValue))
 	{
-		if (!elementHsl->Do(dataValue))
+		if (!moduleHsl->Do(dataValue))
 		{
-			if (!elementModeRgb->Do(dataValue))
+			if (!moduleModeRgb->Do(dataValue))
 			{
 				return false;
 			}

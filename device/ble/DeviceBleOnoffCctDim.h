@@ -1,19 +1,18 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "element/ElementOnOff.h"
-#include "element/ElementResetNode.h"
-#include "element/ElementCct.h"
-#include "element/ElementDim.h"
+#include "ModuleOnOff.h"
+#include "ModuleDim.h"
+#include "ElementCct.h"
 
 using namespace std;
 
 class DeviceBleOnoffCctDim : public DeviceBle
 {
 private:
-	ElementOnOff *elementOnOff;
+	ModuleOnOff *moduleOnOff;
+	ModuleDim *moduleDim;
 	ElementCct *elementCct;
-	ElementDim *elementDim;
 
 public:
 	DeviceBleOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);

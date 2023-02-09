@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDim::ModuleDim(Device *device) : Module(device)
+ModuleDim::ModuleDim(Device *device, uint32_t addr) : Module(device, addr)
 {
 	dim = 0;
 	id = BLE_ATTRIBUTE_DIM;
@@ -57,17 +57,14 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
-		if (this->id == id)
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
-			{
-				uint16_t value = dataValue["VALUE"].asInt();
-				string op = dataValue["OP"].asString();
-				if (this->id == id)
-					rs = Util::CompareNumber(this->dim, value, op);
-				return true;
-			}
+			uint16_t dim = dataValue["VALUE"].asInt();
+			string op = dataValue["OP"].asString();
+			rs = Util::CompareNumber(this->dim, dim, op);
+			return true;
 		}
 	}
 	return false;
@@ -91,4 +88,23 @@ void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = dim;
 	jsonValue.append(dataValue);
+}
+
+bool ModuleDim::Do(Json::Value &dataValue)
+{
+	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			int dim = (value * 65535) / 100;
+			bleProtocol->SetDimmingLight(addr, dim, 0, true);
+			return true;
+		}
+	}
+	return false;
 }
