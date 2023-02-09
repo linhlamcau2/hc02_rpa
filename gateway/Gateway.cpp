@@ -24,6 +24,7 @@
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
+#include "DeviceBlePmSensor.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -1470,6 +1471,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 		break;
 	case BLE_TEMP_HUM_SENSOR:
 		device = new DeviceBleTempHumSensor(id, name, mac, device_id, addr, version);
+		break;
+	case BLE_PM_SENSOR:
+		device = new DeviceBlePmSensor(id, name, mac, device_id, addr, version);
 		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);

@@ -468,61 +468,16 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version) && isProvisioning)
 						{
 							deviceType = convertDeviceType(deviceType);
-							if (deviceType == BLE_DOWNLIGHT_SMT ||
-									deviceType == BLE_DOWNLIGHT_COB_GOC_RONG ||
-									deviceType == BLE_DOWNLIGHT_COB_GOC_HEP ||
-									deviceType == BLE_DOWNLIGHT_COB_TRANG_TRI ||
-									deviceType == BLE_DOWNLIGHT_RGBCW ||
-									deviceType == BLE_PANEL_TRON ||
-									deviceType == BLE_PANEL_VUONG ||
-									deviceType == BLE_LED_OP_TRAN ||
-									deviceType == BLE_LED_OP_TUONG ||
-									deviceType == BLE_LED_CHIEU_TRANH ||
-									deviceType == BLE_TRACKLIGHT ||
-									deviceType == BLE_LED_THA_TRAN ||
-									deviceType == BLE_LED_CHIEU_GUONG ||
-									deviceType == BLE_LED_DAY_LINEAR ||
-									deviceType == BLE_LED_TUBE_M16 ||
-									deviceType == BLE_DEN_BAN ||
-									deviceType == BLE_LED_FLOOD ||
-									deviceType == BLE_LED_DAY_RGB ||
-									deviceType == BLE_LED_DAY_RGBCW ||
-									deviceType == BLE_LED_BULB ||
-									deviceType == BLE_LED_OP_TRAN_LOA ||
-									deviceType == BLE_SWITCH_4 ||
-									deviceType == BLE_DC_SCENE_CONTACT ||
-									deviceType == BLE_TEMP_HUM_SENSOR)
+							Device *device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, arrayToString844412((uint8_t *)deviceKey), nextAddr, deviceType, version, true, true);
+							if (device)
 							{
-								// Device *device = gateway->getDevice(mac);
-								// if (device)
-								// {
-								// 	LOGI("Update device");
-								// 	device->SetAddr(nextAddr);
-								// 	gateway->updateListDevice(device);
-								// 	database->DeviceUpdate(device);
-								// }
-								// else
-								// {
-								Device *device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, arrayToString844412((uint8_t *)deviceKey), nextAddr, deviceType, version, true, true);
-								if (device)
-								{
-									gateway->AddDeviceToScanList(device);
-									isAdding = true;
-									StartScan();
-									return false;
-								}
-								else
-								{
-									ResetDev(nextAddr);
-									isAdding = true;
-									StartScan();
-									return false;
-								}
-								// }
+								gateway->AddDeviceToScanList(device);
+								isAdding = true;
+								StartScan();
+								return false;
 							}
 							else
 							{
-								LOGW("Ble device type 0x%04X not support", deviceType);
 								ResetDev(nextAddr);
 								isAdding = true;
 								StartScan();
