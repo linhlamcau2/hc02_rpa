@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class DeviceBleOnoffCctDim : public DeviceBle
+class DeviceBleLightOnoffCctDim : public DeviceBle
 {
 private:
 	ModuleOnOff *moduleOnOff;
@@ -15,7 +15,7 @@ private:
 	ElementCct *elementCct;
 
 public:
-	DeviceBleOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 
 	bool CheckAddr(uint32_t addr);
 	int BuildTelemetryValue(Json::Value &pushDataValue);

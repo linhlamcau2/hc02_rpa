@@ -2,24 +2,20 @@
 
 #include "DeviceBle.h"
 #include "ModuleOnOff.h"
-#include "ElementCct.h"
-#include "ModuleDim.h"
 #include "ModuleHsl.h"
 #include "ModuleModeRgb.h"
 
 using namespace std;
 
-class DeviceBleOnoffCctDimHslModeRGB : public DeviceBle
+class DeviceBleLightOnoffHslModeRGB : public DeviceBle
 {
 private:
 	ModuleOnOff *moduleOnOff;
-	ModuleDim *moduleDim;
 	ModuleModeRgb *moduleModeRgb;
 	ModuleHsl *moduleHsl;
-	ElementCct *elementCct;
 
 public:
-	DeviceBleOnoffCctDimHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 
 	bool CheckAddr(uint32_t addr);
 	int BuildTelemetryValue(Json::Value &pushDataValue);

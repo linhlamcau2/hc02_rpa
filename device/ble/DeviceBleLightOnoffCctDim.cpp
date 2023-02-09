@@ -1,7 +1,7 @@
-#include "DeviceBleOnoffCctDim.h"
+#include "DeviceBleLightOnoffCctDim.h"
 #include <Log.h>
 
-DeviceBleOnoffCctDim::DeviceBleOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
+DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, type, version)
 {
 	moduleOnOff = new ModuleOnOff(this, addr);
@@ -9,12 +9,12 @@ DeviceBleOnoffCctDim::DeviceBleOnoffCctDim(string id, string name, string mac, s
 	elementCct = new ElementCct(this, addr + 1);
 }
 
-bool DeviceBleOnoffCctDim::CheckAddr(uint32_t addr)
+bool DeviceBleLightOnoffCctDim::CheckAddr(uint32_t addr)
 {
 	return ((this->addr <= addr) && (this->addr + 1 >= addr));
 }
 
-int DeviceBleOnoffCctDim::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleLightOnoffCctDim::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	moduleOnOff->BuildTelemetryValue(pushDataValue);
 	moduleDim->BuildTelemetryValue(pushDataValue);
@@ -22,7 +22,7 @@ int DeviceBleOnoffCctDim::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-void DeviceBleOnoffCctDim::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleLightOnoffCctDim::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
 	if (!moduleOnOff->InputData(data, len, values))
@@ -38,7 +38,7 @@ void DeviceBleOnoffCctDim::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBleOnoffCctDim::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleLightOnoffCctDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (!moduleOnOff->CheckData(dataValue, rs))
@@ -54,7 +54,7 @@ bool DeviceBleOnoffCctDim::CheckData(Json::Value &dataValue, bool &rs)
 	return true;
 }
 
-bool DeviceBleOnoffCctDim::Do(Json::Value &dataValue)
+bool DeviceBleLightOnoffCctDim::Do(Json::Value &dataValue)
 {
 	if (!moduleOnOff->Do(dataValue))
 	{

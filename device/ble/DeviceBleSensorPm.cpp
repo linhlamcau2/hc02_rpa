@@ -1,19 +1,19 @@
-#include "DeviceBlePmSensor.h"
+#include "DeviceBleSensorPm.h"
 #include <Log.h>
 
-DeviceBlePmSensor::DeviceBlePmSensor(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+DeviceBleSensorPm::DeviceBleSensorPm(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, BLE_PM_SENSOR, version)
 {
 	modulePmSensor = new ModulePmSensor(this, addr);
 }
 
-int DeviceBlePmSensor::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleSensorPm::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	modulePmSensor->BuildTelemetryValue(pushDataValue);
 	return 0;
 }
 
-void DeviceBlePmSensor::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleSensorPm::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
 	if (!modulePmSensor->InputData(data, len, values))
@@ -23,7 +23,7 @@ void DeviceBlePmSensor::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBlePmSensor::Do(Json::Value &dataValue)
+bool DeviceBleSensorPm::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	return false;

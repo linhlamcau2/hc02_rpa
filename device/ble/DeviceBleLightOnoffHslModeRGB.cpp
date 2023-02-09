@@ -1,7 +1,7 @@
-#include "DeviceBleOnoffHslModeRGB.h"
+#include "DeviceBleLightOnoffHslModeRGB.h"
 #include <Log.h>
 
-DeviceBleOnoffHslModeRGB::DeviceBleOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
+DeviceBleLightOnoffHslModeRGB::DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, type, version)
 {
 	moduleOnOff = new ModuleOnOff(this, addr);
@@ -9,12 +9,12 @@ DeviceBleOnoffHslModeRGB::DeviceBleOnoffHslModeRGB(string id, string name, strin
 	moduleHsl = new ModuleHsl(this, addr);
 }
 
-bool DeviceBleOnoffHslModeRGB::CheckAddr(uint32_t addr)
+bool DeviceBleLightOnoffHslModeRGB::CheckAddr(uint32_t addr)
 {
 	return ((this->addr <= addr) && (this->addr + 1 >= addr));
 }
 
-int DeviceBleOnoffHslModeRGB::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleLightOnoffHslModeRGB::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	moduleOnOff->BuildTelemetryValue(pushDataValue);
 	moduleHsl->BuildTelemetryValue(pushDataValue);
@@ -22,7 +22,7 @@ int DeviceBleOnoffHslModeRGB::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
-void DeviceBleOnoffHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleLightOnoffHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
 	if (!moduleOnOff->InputData(data, len, values))
@@ -38,7 +38,7 @@ void DeviceBleOnoffHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBleOnoffHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleLightOnoffHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (!moduleOnOff->CheckData(dataValue, rs))
@@ -54,7 +54,7 @@ bool DeviceBleOnoffHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
 	return true;
 }
 
-bool DeviceBleOnoffHslModeRGB::Do(Json::Value &dataValue)
+bool DeviceBleLightOnoffHslModeRGB::Do(Json::Value &dataValue)
 {
 	if (!moduleOnOff->Do(dataValue))
 	{
@@ -69,7 +69,7 @@ bool DeviceBleOnoffHslModeRGB::Do(Json::Value &dataValue)
 	return true;
 }
 
-bool DeviceBleOnoffHslModeRGB::AddGroup(uint16_t idGroup, uint16_t epId)
+bool DeviceBleLightOnoffHslModeRGB::AddGroup(uint16_t idGroup, uint16_t epId)
 {
 	LOGD("AddGroup id: %d epId: %d", idGroup, epId);
 	return 0;

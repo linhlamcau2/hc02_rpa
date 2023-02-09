@@ -1,19 +1,18 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "module/ModuleTempHum.h"
+#include "module/ModulePmSensor.h"
 #include "module/ModulePinLevel.h"
 
 using namespace std;
 
-class DeviceBleTempHumSensor : public DeviceBle
+class DeviceBleSensorPm : public DeviceBle
 {
 private:
-	ModuleTempHum *moduleTempHum;
-	ModulePinLevel *modulePinLevel;
+	ModulePmSensor *modulePmSensor;
 
 public:
-	DeviceBleTempHumSensor(string id, string name, string mac,string device_id, uint32_t addr, uint16_t version);
+	DeviceBleSensorPm(string id, string name, string mac,string device_id, uint32_t addr, uint16_t version);
 
 	int BuildTelemetryValue(Json::Value &pushDataValue);
 	void InputData(uint8_t *data, int len, uint32_t addr = 0);

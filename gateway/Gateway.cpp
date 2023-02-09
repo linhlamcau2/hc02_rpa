@@ -18,13 +18,13 @@
 #include "RuleOutputDevice.h"
 
 #include "BleProtocol.h"
-#include "DeviceBleOnoffCctDim.h"
-#include "DeviceBleOnoffHslModeRGB.h"
-#include "DeviceBleOnoffCctDimHslModeRGB.h"
-#include "DeviceBleSwitch4.h"
-#include "DeviceBleDCSceneContact.h"
-#include "DeviceBleTempHumSensor.h"
-#include "DeviceBlePmSensor.h"
+#include "DeviceBleLightOnoffCctDim.h"
+#include "DeviceBleLightOnoffHslModeRGB.h"
+#include "DeviceBleLightOnoffCctDimHslModeRGB.h"
+#include "DeviceBleSwitchTouch4.h"
+#include "DeviceBleSwitchScene6DC.h"
+#include "DeviceBleSensorTempHum.h"
+#include "DeviceBleSensorPm.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -1453,27 +1453,27 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
-		device = new DeviceBleOnoffCctDim(id, name, mac, device_id, addr, type, version);
+		device = new DeviceBleLightOnoffCctDim(id, name, mac, device_id, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
-		device = new DeviceBleOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
+		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
 		break;
 	case BLE_LED_DAY_RGB:
-		device = new DeviceBleOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
+		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
 		break;
 	case BLE_SWITCH_4:
-		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchTouch4(id, name, mac, device_id, addr, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
-		device = new DeviceBleDCSceneContact(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchScene6DC(id, name, mac, device_id, addr, version);
 		break;
 	case BLE_TEMP_HUM_SENSOR:
-		device = new DeviceBleTempHumSensor(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSensorTempHum(id, name, mac, device_id, addr, version);
 		break;
 	case BLE_PM_SENSOR:
-		device = new DeviceBlePmSensor(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSensorPm(id, name, mac, device_id, addr, version);
 		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
