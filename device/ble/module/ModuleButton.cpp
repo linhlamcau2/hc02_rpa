@@ -27,7 +27,7 @@ void ModuleButton::SaveAttribute()
 
 bool ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00)
+	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00 && data[3] + 10 == id)
 	{
 		bt = data[4];
 		BuildTelemetryValue(jsonValue);
