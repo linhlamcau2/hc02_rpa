@@ -6,7 +6,7 @@ DeviceBleSwitch4::DeviceBleSwitch4(string id, string name, string mac, string de
 {
 	for (int i = 0; i < 4; i++)
 	{
-		elementOnOff[i] = new ElementOnOff(this, addr + i);
+		elementButton[i] = new ElementButton(this, addr + i);
 	}
 }
 
@@ -19,7 +19,7 @@ int DeviceBleSwitch4::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		elementOnOff[i]->BuildTelemetryValue(pushDataValue);
+		elementButton[i]->BuildTelemetryValue(pushDataValue);
 	}
 	return 0;
 }
@@ -29,7 +29,7 @@ void DeviceBleSwitch4::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		elementOnOff[i]->InitAttribute(attributeId, value);
+		elementButton[i]->InitAttribute(attributeId, value);
 	}
 }
 #endif
@@ -39,7 +39,7 @@ void DeviceBleSwitch4::InputData(uint8_t *data, int len, uint32_t addr)
 	if (!CheckAddr(addr))
 		return;
 	values = Json::Value::null;
-	if (!elementOnOff[addr - this->addr]->InputData(data, len, values))
+	if (!elementButton[addr - this->addr]->InputData(data, len, values))
 	{
 		return;
 	}
@@ -51,7 +51,7 @@ bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	for (int i = 0; i < 4; i++)
 	{
-		if (elementOnOff[i]->CheckData(dataValue, rs))
+		if (elementButton[i]->CheckData(dataValue, rs))
 		{
 			return true;
 		}
@@ -62,12 +62,11 @@ bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
 bool DeviceBleSwitch4::Do(Json::Value &dataValue)
 {
 	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+	if (dataValue.isObject())
 	{
-		Json::Value property = dataValue[i];
 		for (int j = 0; j < 4; j++)
 		{
-			if (elementOnOff[j]->Do(property))
+			if (elementButton[j]->Do(dataValue))
 				return true;
 		}
 	}

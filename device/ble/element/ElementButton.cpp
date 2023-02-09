@@ -1,4 +1,4 @@
-#include "ElementOnOff.h"
+#include "ElementButton.h"
 #include <Log.h>
 #include <Util.h>
 #include "BleDefine.h"
@@ -6,40 +6,40 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ElementOnOff::ElementOnOff(Device *device, uint32_t addr) : Element(device, addr)
+ElementButton::ElementButton(Device *device, uint32_t addr) : Element(device, addr)
 {
-	onoff = 0;
-	id = BLE_ATTRIBUTE_ONOFF;
+	bt = 0;
+	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr();
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ElementOnOff::InitAttribute(int id, double value)
+void ElementButton::InitAttribute(int id, double value)
 {
 	if (this->id == id)
-		onoff = value;
+		bt = value;
 }
 
-void ElementOnOff::SaveAttribute()
+void ElementButton::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, onoff);
+	database->DeviceAttributeAddOrReplace(device, id, bt);
 }
 #endif
 
-bool ElementOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
 		uint16_t opcode;
 		uint8_t state;
-		uint8_t onoff;
+		uint8_t bt;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
 		if (len == 3)
-			onoff = data_message->state;
+			bt = data_message->state;
 		else
-			onoff = data_message->onoff;
+			bt = data_message->bt;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
@@ -50,7 +50,7 @@ bool ElementOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	return false;
 }
 
-bool ElementOnOff::CheckData(Json::Value &dataValue, bool &rs)
+bool ElementButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -61,9 +61,9 @@ bool ElementOnOff::CheckData(Json::Value &dataValue, bool &rs)
 				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
 				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t onoff = dataValue["VALUE"].asInt();
+			uint16_t bt = dataValue["VALUE"].asInt();
 			string op = dataValue["OP"].asString();
-			rs = Util::CompareNumber(this->onoff, onoff, op);
+			rs = Util::CompareNumber(this->bt, bt, op);
 			return true;
 		}
 	}
@@ -71,7 +71,7 @@ bool ElementOnOff::CheckData(Json::Value &dataValue, bool &rs)
 }
 
 // TODO: can nhac di chuyen den Element.cpp
-void ElementOnOff::CheckTrigger()
+void ElementButton::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
@@ -83,15 +83,15 @@ void ElementOnOff::CheckTrigger()
 	}
 }
 
-void ElementOnOff::BuildTelemetryValue(Json::Value &jsonValue)
+void ElementButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = id;
-	dataValue["VALUE"] = onoff;
+	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
 }
 
-bool ElementOnOff::Do(Json::Value &dataValue)
+bool ElementButton::Do(Json::Value &dataValue)
 {
 	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&

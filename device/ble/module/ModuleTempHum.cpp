@@ -1,9 +1,10 @@
 #include "ModuleTempHum.h"
-#include <byteswap.h>
 #include <Log.h>
 #include <Util.h>
 #include "BleDefine.h"
 #include "Device.h"
+#include "BleProtocol.h"
+#include "Db.h"
 
 ModuleTempHum::ModuleTempHum(Device *device) : Module(device)
 {
@@ -13,25 +14,21 @@ ModuleTempHum::ModuleTempHum(Device *device) : Module(device)
 	idHum = BLE_ATTRIBUTE_HUMIDITY;
 }
 
-int ModuleTempHum::GetTemp()
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModuleTempHum::InitAttribute(int id, double value)
 {
-	return temp;
+	if (this->id == idTemp)
+		temp = value;
+	else if (this->id == idHum)
+		hum = value;
 }
 
-void ModuleTempHum::SetTemp(int temp)
+void ModuleTempHum::SaveAttribute()
 {
-	this->temp = temp;
+	database->DeviceAttributeAddOrReplace(device, idTemp, temp);
+	database->DeviceAttributeAddOrReplace(device, idHum, hum);
 }
-
-int ModuleTempHum::GetHum()
-{
-	return hum;
-}
-
-void ModuleTempHum::SetHum(int hum)
-{
-	this->hum = hum;
-}
+#endif
 
 bool ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {

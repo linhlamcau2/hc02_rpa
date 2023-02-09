@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "element/ElementOnOff.h"
+#include "element/ElementButton.h"
 #include "element/ElementResetNode.h"
 
 using namespace std;
@@ -9,7 +9,7 @@ using namespace std;
 class DeviceBleSwitch4 : public DeviceBle
 {
 private:
-	ElementOnOff *elementOnOff[4];
+	ElementButton *elementButton[4];
 
 public:
 	DeviceBleSwitch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);

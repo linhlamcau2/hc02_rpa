@@ -1,7 +1,7 @@
 #include "DeviceBleDCSceneContact.h"
 #include <Log.h>
 
-DeviceBleDCSceneContact::DeviceBleDCSceneContact(string id, string name, string mac,string device_id, uint32_t addr, uint16_t version)
+DeviceBleDCSceneContact::DeviceBleDCSceneContact(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, BLE_DC_SCENE_CONTACT, version)
 {
 	for (int i = 0; i < 6; i++)
@@ -21,6 +21,7 @@ int DeviceBleDCSceneContact::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void DeviceBleDCSceneContact::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 6; i++)
@@ -28,27 +29,23 @@ void DeviceBleDCSceneContact::InitAttribute(int attributeId, double value)
 		moduleButton[i]->InitAttribute(attributeId, value);
 	}
 }
+#endif
 
 void DeviceBleDCSceneContact::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
-	if (data[0] == 0x52)
+	for (int i = 0; i < 6; i++)
 	{
-		if (data[1] == 0x02 && data[2] == 0x00)
+		if (moduleButton[i]->InputData(data, len, values))
 		{
-			moduleButton[data[3] - 1]->ParseData(&data[4], len - 4, values);
+			PushTelemetry(values);
+			return;
 		}
 	}
-	else if (data[0] == 0x82)
-	{
-		if (data[1] == 0x24)
-		{
-			modulePinLevel->ParseData(&data[4], len - 4, values);
-		}
-	}
-	if (values != Json::Value::null)
+	if (modulePinLevel->InputData(data, len, values))
 	{
 		PushTelemetry(values);
+		return;
 	}
 }
 

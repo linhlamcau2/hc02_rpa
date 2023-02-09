@@ -1,13 +1,29 @@
 #include "ModulePinLevel.h"
-#include <byteswap.h>
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
+#include "BleProtocol.h"
+#include "Db.h"
 
 ModulePinLevel::ModulePinLevel(Device *device) : Module(device)
 {
 	pin = 0;
+	id = BLE_ATTRIBUTE_BATTERY;
 }
+
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModulePinLevel::InitAttribute(int id, double value)
+{
+	if (this->id == id)
+		pin = value;
+}
+
+void ModulePinLevel::SaveAttribute()
+{
+	database->DeviceAttributeAddOrReplace(device, id, pin);
+}
+#endif
 
 bool ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
@@ -21,36 +37,38 @@ bool ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	return false;
 }
 
-void ModulePinLevel::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
-{
-	pin = data[0];
-	BuildTelemetryValue(jsonValue);
-	CheckTrigger();
-}
-
-bool ModulePinLevel::CheckData(Json::Value dataValue)
+bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	bool rs = false;
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember("pin") && dataValue["pin"].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->id == id)
 		{
-			int pin = dataValue["pin"].asInt();
-			rs = Util::CompareNumber(this->pin, pin, op);
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+					dataValue.isMember("OP") && dataValue["OP"].isString())
+			{
+				uint16_t value = dataValue["VALUE"].asInt();
+				string op = dataValue["OP"].asString();
+				if (this->id == id)
+					rs = Util::CompareNumber(this->pin, value, op);
+				return true;
+			}
 		}
 	}
-	return rs;
+	return false;
 }
 
 void ModulePinLevel::CheckTrigger()
 {
 	LOGD("CheckTrigger");
+	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
-		if (CheckData(*ruleInputDevice->GetData()))
-			ruleInputDevice->Trigger(true);
+		rs = false;
+		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
 	}
 }
 

@@ -1,16 +1,16 @@
 #pragma once
-#include "Module.h"
+#include "Element.h"
 
 using namespace std;
 
-class ModuleButton : public Module
+class ElementButton : public Element
 {
 protected:
 	uint8_t bt;
 	int id;
 
 public:
-	ModuleButton(Device *device, int index);
+	ElementButton(Device *device, uint32_t addr);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
@@ -61,4 +61,13 @@ public:
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
+
+	/**
+	 * @brief Do an action
+	 *
+	 * @param dataValue data of action
+	 * @return true
+	 * @return false
+	 */
+	bool Do(Json::Value &dataValue);
 };
