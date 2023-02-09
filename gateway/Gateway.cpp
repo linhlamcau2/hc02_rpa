@@ -19,7 +19,8 @@
 
 #include "BleProtocol.h"
 #include "DeviceBleOnoffCctDim.h"
-#include "DeviceBleBulb.h"
+#include "DeviceBleOnoffHslModeRGB.h"
+#include "DeviceBleOnoffCctDimHslModeRGB.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
@@ -1436,10 +1437,30 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	{
 	case BLE_LED_CHIEU_TRANH:
 	case BLE_LED_CHIEU_GUONG:
+	case BLE_DEN_BAN:
+	case BLE_DOWNLIGHT_SMT:
+	case BLE_DOWNLIGHT_COB_GOC_HEP:
+	case BLE_DOWNLIGHT_COB_GOC_RONG:
+	case BLE_DOWNLIGHT_COB_TRANG_TRI:
+	case BLE_LED_FLOOD:
+	case BLE_LED_DAY_LINEAR:
+	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TUONG:
+	case BLE_LED_OP_TRAN_LOA:
+	case BLE_PANEL_TRON:
+	case BLE_PANEL_VUONG:
+	case BLE_TRACKLIGHT:
+	case BLE_LED_THA_TRAN:
+	case BLE_LED_TUBE_M16:
 		device = new DeviceBleOnoffCctDim(id, name, mac, device_id, addr, type, version);
 		break;
+	case BLE_DOWNLIGHT_RGBCW:
+	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
-		device = new DeviceBleBulb(id, name, mac, device_id, addr, version);
+		device = new DeviceBleOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
+		break;
+	case BLE_LED_DAY_RGB:
+		device = new DeviceBleOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
 		break;
 	case BLE_SWITCH_4:
 		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);

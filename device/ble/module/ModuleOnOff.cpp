@@ -88,7 +88,7 @@ void ModuleOnOff::CheckTrigger()
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["onoff"];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
 }

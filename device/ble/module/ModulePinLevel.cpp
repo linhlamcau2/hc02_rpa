@@ -75,7 +75,7 @@ void ModulePinLevel::CheckTrigger()
 void ModulePinLevel::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["pin"];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = pin;
 	jsonValue.append(dataValue);
 }

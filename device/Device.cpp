@@ -187,33 +187,11 @@ int Device::PushAttributes(Json::Value jsonValue)
 }
 
 // TODO: remove
-map<string, int> parameterToId;
 static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
 
 void Device::InitDeviceModelList()
 {
-	parameterToId["stt"] = 0;
-	parameterToId["dim"] = 1;
-	parameterToId["cct"] = 2;
-	parameterToId["hue"] = 3;
-	parameterToId["pin"] = 8;
-	parameterToId["bt0"] = 11;
-	parameterToId["onoff0"] = 11;
-	parameterToId["bt1"] = 12;
-	parameterToId["onoff1"] = 12;
-	parameterToId["bt2"] = 13;
-	parameterToId["onoff2"] = 13;
-	parameterToId["bt3"] = 14;
-	parameterToId["onoff3"] = 14;
-	parameterToId["bt4"] = 15;
-	parameterToId["onoff4"] = 15;
-	parameterToId["bt5"] = 16;
-	parameterToId["onoff5"] = 16;
-	parameterToId["temp"] = 21;
-	parameterToId["hum"] = 22;
-	parameterToId["modeRgb"] = 23;
-
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
 	RegisterDeviceModel(ZIGBEE_PIR_RH3040, "RH3040", "Cảm biến chuyển động Zigbee");

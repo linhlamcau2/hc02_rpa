@@ -47,8 +47,6 @@ enum
 	ZIGBEE_TELINK_TLSR82xx = 0x02000201
 };
 
-extern map<string, int> parameterToId;
-
 class Device
 {
 protected:

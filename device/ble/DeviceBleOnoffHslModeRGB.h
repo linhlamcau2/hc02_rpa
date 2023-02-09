@@ -10,17 +10,15 @@
 
 using namespace std;
 
-class DeviceBleBulb : public DeviceBle
+class DeviceBleOnoffHslModeRGB : public DeviceBle
 {
 private:
 	ElementOnOff *elementOnOff;
-	ElementCct *elementCct;
-	ElementDim *elementDim;
 	ElementHsl *elementHsl;
 	ElementModeRgb *elementModeRgb;
 
 public:
-	DeviceBleBulb(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
+	DeviceBleOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 
 	bool CheckAddr(uint32_t addr);
 	int BuildTelemetryValue(Json::Value &pushDataValue);

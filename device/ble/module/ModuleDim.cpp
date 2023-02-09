@@ -88,7 +88,7 @@ void ModuleDim::CheckTrigger()
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["dim"];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = dim;
 	jsonValue.append(dataValue);
 }

@@ -89,10 +89,10 @@ void ModuleTempHum::CheckTrigger()
 void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["temp"];
+	dataValue["ID"] = idTemp;
 	dataValue["VALUE"] = temp;
 	jsonValue.append(dataValue);
-	dataValue["ID"] = parameterToId["hum"];
+	dataValue["ID"] = idHum;
 	dataValue["VALUE"] = hum;
 	jsonValue.append(dataValue);
 }

@@ -76,7 +76,7 @@ void ModuleButton::CheckTrigger()
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["bt"];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
 }
