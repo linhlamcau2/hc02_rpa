@@ -27,8 +27,6 @@
 #define ZIGBEE_UART_PORT "/dev/ttyS0"
 #endif
 
-#define TAG "MAIN"
-
 using namespace std;
 
 static void signal_handler(int sig)

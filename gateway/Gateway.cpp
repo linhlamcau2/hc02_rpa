@@ -442,7 +442,7 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					dormitoryId = data["DORMITORY_ID"].asString();
 					database->GatewayUpdateDormitory(gateway, dormitoryId);
-#ifdef UNIX
+#ifndef ESP_PLATFORM
 					if (Wifi::GetIP().compare("10.10.10.1") != 0)
 					{
 						LOGI("Hc have IP: %s", Wifi::GetIP().c_str());
@@ -493,7 +493,7 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 								LOGW("OnUdpHcSetup don't have wifi data");
 							}
 						}
-#ifdef UNIX
+#ifndef ESP_PLATFORM
 						else
 						{
 							LOGW("OnUdpHcSetup don't have wifi object");

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "ModuleOnOff.h"
-#include "ElementCct.h"
-#include "ModuleDim.h"
-#include "ModuleHsl.h"
-#include "ModuleModeRgb.h"
+#include "module/ModuleOnOff.h"
+#include "module/ModuleDim.h"
+#include "module/ModuleHsl.h"
+#include "module/ModuleModeRgb.h"
+#include "element/ElementCct.h"
 
 using namespace std;
 

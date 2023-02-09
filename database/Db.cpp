@@ -16,7 +16,7 @@ Db::Db()
 void Db::init(void)
 {
 #ifdef ESP_PLATFORM
-	ESP_LOGI(TAG, "Initializing SPIFFS");
+	LOGI("Initializing SPIFFS");
 
 	esp_vfs_spiffs_conf_t conf = {
 			.base_path = "/spiffs",
@@ -32,15 +32,15 @@ void Db::init(void)
 	{
 		if (ret == ESP_FAIL)
 		{
-			ESP_LOGE(TAG, "Failed to mount or format filesystem");
+			LOGE("Failed to mount or format filesystem");
 		}
 		else if (ret == ESP_ERR_NOT_FOUND)
 		{
-			ESP_LOGE(TAG, "Failed to find SPIFFS partition");
+			LOGE("Failed to find SPIFFS partition");
 		}
 		else
 		{
-			ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+			LOGE("Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
 		}
 		return;
 	}
@@ -49,18 +49,18 @@ void Db::init(void)
 	ret = esp_spiffs_info(conf.partition_label, &total, &used);
 	if (ret != ESP_OK)
 	{
-		ESP_LOGE(TAG, "Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+		LOGE("Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
 	}
 	else
 	{
-		ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
+		LOGI("Partition size: total: %d, used: %d", total, used);
 	}
 
 	sqlite3_initialize();
 
 // // All done, unmount partition and disable SPIFFS
 // esp_vfs_spiffs_unregister(conf.partition_label);
-// ESP_LOGI(TAG, "SPIFFS unmounted");
+// LOGI("SPIFFS unmounted");
 #endif
 }
 

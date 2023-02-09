@@ -6,8 +6,6 @@
 #include <Log.h>
 #include <Util.h>
 
-#define TAG "Mqtt"
-
 using namespace mosqpp;
 
 Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
