@@ -93,6 +93,12 @@ public:
 	void init();
 
 	/**
+	 * @brief Factory reset (call when hold reset button in 5s)
+	 *
+	 */
+	void resetFactory();
+
+	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode
 	 *
 	 */

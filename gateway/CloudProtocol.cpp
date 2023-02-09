@@ -12,7 +12,7 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 	Json::Value jsonValue;
 	Json::Value datanValue;
 	datanValue["STATUS_ID"] = 0;
-	datanValue["IP_ADDRESS"] = "0.0.0.0";
+	datanValue["IP_ADDRESS"] = Wifi::GetIP();
 	jsonValue["CMD"] = "HOME_CONTROLLER";
 	jsonValue["DATA"] = datanValue;
 	SetWillset(pubTopic, jsonValue.toString());
@@ -42,13 +42,11 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	string errs;
-	stringstream s(payload);
-	Json::CharReaderBuilder b;
+	Json::Reader r;
+	r.parse(payload, payloadJson);
 	Util::LedInternet(false);
 	Util::LedServiceLock();
-	Json::parseFromStream(b, s, &payloadJson, &errs);
-	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string method = payloadJson["CMD"].asString();
 		if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())

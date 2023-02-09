@@ -1,6 +1,7 @@
 #include "ElementHsl.h"
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -8,24 +9,25 @@
 ElementHsl::ElementHsl(Device *device, uint32_t addr) : Element(device, addr)
 {
 	h = 0;
-	l = 0;
 	s = 0;
-	elementNameH = "hue";
-	elementNameL = "luminance";
-	elementNameS = "saturation";
+	l = 0;
+	idH = BLE_ATTRIBUTE_HUE;
+	idS = BLE_ATTRIBUTE_SATURATION;
+	idL = BLE_ATTRIBUTE_LUMINANCE;
 }
 
-void ElementHsl::InitAttribute(int attributeId, double value)
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ElementHsl::InitAttribute(int id, double value)
 {
-	if (attributeId == parameterToId[elementNameH])
+	if (this->idH == id)
 	{
 		h = value;
 	}
-	else if (attributeId == parameterToId[elementNameS])
+	else if (this->idS == id)
 	{
 		s = value;
 	}
-	else if (attributeId == parameterToId[elementNameL])
+	else if (this->idL == id)
 	{
 		l = value;
 	}
@@ -33,52 +35,59 @@ void ElementHsl::InitAttribute(int attributeId, double value)
 
 void ElementHsl::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, parameterToId[elementNameH], h);
-	database->DeviceAttributeAddOrReplace(device, parameterToId[elementNameS], s);
-	database->DeviceAttributeAddOrReplace(device, parameterToId[elementNameL], l);
+	database->DeviceAttributeAddOrReplace(device, idH, h);
+	database->DeviceAttributeAddOrReplace(device, idS, s);
+	database->DeviceAttributeAddOrReplace(device, idL, l);
 }
+#endif
 
-void ElementHsl::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ElementHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
+		uint16_t opcode;
 		uint16_t l;
 		uint16_t h;
 		uint16_t s;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	l = data_message->l;
-	h = data_message->h;
-	s = data_message->s;
-
-	SaveAttribute();
-	BuildTelemetryValue(jsonValue);
-	CheckTrigger();
+	if (data_message->opcode == BLE_MESH_OPCODE_HSL)
+	{
+		l = data_message->l;
+		h = data_message->h;
+		s = data_message->s;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+		SaveAttribute();
+#endif
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
 }
 
 bool ElementHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember(elementNameH) && dataValue[elementNameH].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->idH == id || this->idS == id || this->idL == id)
 		{
-			uint16_t h = dataValue[elementNameH].asInt();
-			rs = Util::CompareNumber(this->h, h, op);
-			return true;
-		}
-		if (dataValue.isMember(elementNameS) && dataValue[elementNameS].isInt())
-		{
-			uint16_t s = dataValue[elementNameS].asInt();
-			rs = Util::CompareNumber(this->s, s, op);
-			return true;
-		}
-		if (dataValue.isMember(elementNameL) && dataValue[elementNameL].isInt())
-		{
-			uint16_t l = dataValue[elementNameL].asInt();
-			rs = Util::CompareNumber(this->l, l, op);
-			return true;
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+					dataValue.isMember("OP") && dataValue["OP"].isString())
+			{
+				uint16_t value = dataValue["VALUE"].asInt();
+				string op = dataValue["OP"].asString();
+				if (this->idH == id)
+					rs = Util::CompareNumber(this->h, value, op);
+				else if (this->idS == id)
+					rs = Util::CompareNumber(this->s, value, op);
+				else if (this->idL == id)
+					rs = Util::CompareNumber(this->l, value, op);
+				return true;
+			}
 		}
 	}
 	return false;
@@ -99,13 +108,13 @@ void ElementHsl::CheckTrigger()
 void ElementHsl::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId[elementNameH];
+	dataValue["ID"] = idH;
 	dataValue["VALUE"] = h;
 	jsonValue.append(dataValue);
-	dataValue["ID"] = parameterToId[elementNameS];
+	dataValue["ID"] = idS;
 	dataValue["VALUE"] = s;
 	jsonValue.append(dataValue);
-	dataValue["ID"] = parameterToId[elementNameL];
+	dataValue["ID"] = idL;
 	dataValue["VALUE"] = l;
 	jsonValue.append(dataValue);
 }
@@ -113,13 +122,24 @@ void ElementHsl::BuildTelemetryValue(Json::Value &jsonValue)
 bool ElementHsl::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idH == id || this->idH == id || this->idH == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				int value = dataValue["VALUE"].asInt();
+				if (this->idH == id)
+					bleProtocol->SetHSLLight(addr, value, s, l, 0, true);
+				else if (this->idS == id)
+					bleProtocol->SetHSLLight(addr, h, value, l, 0, true);
+				else if (this->idL == id)
+					bleProtocol->SetHSLLight(addr, h, s, value, 0, true);
+				return true;
+			}
+		}
+	}
 	return false;
-}
-
-bool ElementHsl::Do(uint16_t valueH, uint16_t valueS, uint16_t valueL)
-{
-	LOGD("DoTrigger value: %d - %d - %d", valueH, valueS, valueL);
-	// bleprotocol call setonoff light
-	bleProtocol->SetHSLLight(addr, valueH, valueS, valueL, 0, true);
-	return true;
 }

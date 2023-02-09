@@ -126,6 +126,22 @@ void Device::CheckTrigger()
 	}
 }
 
+bool Device::DoJsonArray(Json::Value &dataValue)
+{
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			Do(dataValue[i]);
+		}
+	}
+	else
+	{
+		Do(dataValue);
+	}
+	return true;
+}
+
 int Device::PushTelemetry()
 {
 	Json::Value pushData;
@@ -147,6 +163,7 @@ int Device::PushTelemetry(Json::Value jsonValue)
 	deviceData["PROPERTIES"] = jsonValue;
 	pushDataValue["CMD"] = "DEVICE";
 	pushDataValue["DATA"].append(deviceData);
+	gateway->PublishToLocalMessage(pushDataValue);
 	return gateway->PublishToGatewayTelemetry(pushDataValue);
 }
 
@@ -169,31 +186,12 @@ int Device::PushAttributes(Json::Value jsonValue)
 	return gateway->PublishToGatewayAttributes(jsonValue);
 }
 
-map<string, int> parameterToId;
+// TODO: remove
 static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
 
 void Device::InitDeviceModelList()
 {
-	parameterToId["stt"] = 0;
-	parameterToId["dim"] = 1;
-	parameterToId["pin"] = 8;
-	parameterToId["bt0"] = 11;
-	parameterToId["onoff0"] = 11;
-	parameterToId["bt1"] = 12;
-	parameterToId["onoff1"] = 12;
-	parameterToId["bt2"] = 13;
-	parameterToId["onoff2"] = 13;
-	parameterToId["bt3"] = 14;
-	parameterToId["onoff3"] = 14;
-	parameterToId["bt4"] = 15;
-	parameterToId["onoff4"] = 15;
-	parameterToId["bt5"] = 16;
-	parameterToId["onoff5"] = 16;
-	parameterToId["temp"] = 21;
-	parameterToId["hum"] = 22;
-	parameterToId["modeRgb"] = 23;
-
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
 	RegisterDeviceModel(ZIGBEE_PIR_RH3040, "RH3040", "Cảm biến chuyển động Zigbee");

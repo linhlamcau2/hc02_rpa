@@ -21,22 +21,27 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				int meshId = sqlite3_column_int(stmt, index++);
 				string propertiesData = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				Json::Value payloadJson;
-				string errs;
-				stringstream s(propertiesData);
-				Json::CharReaderBuilder b;
-				Json::parseFromStream(b, s, &payloadJson, &errs);
-				SceneBle *scene = gateway->getSceneBleFromId(sceneId);
-				Device *device = gateway->getDevice(deviceId);
-				cout << "sceneId: " + sceneId + "---data: " + propertiesData << endl;
-				if (scene)
+				Json::Reader r;
+				r.parse(propertiesData, payloadJson);
+				if (payloadJson.isObject())
 				{
-					scene->AddDevice(device, payloadJson, 0, true);
-					gateway->AddNewSceneBle(scene, true, false);
+					SceneBle *scene = gateway->getSceneBleFromId(sceneId);
+					Device *device = gateway->getDevice(deviceId);
+					cout << "sceneId: " + sceneId + "---data: " + propertiesData << endl;
+					if (scene)
+					{
+						scene->AddDevice(device, payloadJson, 0, true);
+						gateway->AddNewSceneBle(scene, true, false);
+					}
+					else
+					{
+						SceneBle *tempScene = new SceneBle(sceneId, meshId, sceneId);
+						gateway->AddNewSceneBle(tempScene, true, false);
+					}
 				}
 				else
 				{
-					SceneBle *tempScene = new SceneBle(sceneId, meshId, sceneId);
-					gateway->AddNewSceneBle(tempScene, true, false);
+					LOGW("SceneBle json format error data: %s", propertiesData.c_str());
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -60,7 +65,7 @@ int Db::SceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('"+scene->GetUUId()+"', '"+device->GetId()+"', '"+scene->GetUUId()+"', "+to_string(scene->GetId())+", '"+data.toString()+"');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('" + scene->GetUUId() + "', '" + device->GetId() + "', '" + scene->GetUUId() + "', " + to_string(scene->GetId()) + ", '" + data.toString() + "');";
 	return Sqlite_Exec(sql);
 }
 

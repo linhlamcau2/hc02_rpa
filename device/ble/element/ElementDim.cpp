@@ -1,6 +1,7 @@
 #include "ElementDim.h"
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -8,47 +9,60 @@
 ElementDim::ElementDim(Device *device, uint32_t addr) : Element(device, addr)
 {
 	dim = 0;
-	elementName = "dim";
+	id = BLE_ATTRIBUTE_DIM;
 }
 
-void ElementDim::InitAttribute(int attributeId, double value)
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ElementDim::InitAttribute(int id, double value)
 {
-	if (attributeId == parameterToId[elementName])
+	if (this->id == id)
 		dim = value;
 }
 
 void ElementDim::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, parameterToId[elementName], dim);
+	database->DeviceAttributeAddOrReplace(device, id, dim);
 }
+#endif
 
-void ElementDim::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ElementDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
+		uint16_t opcode;
 		uint16_t dim_first;
 		uint16_t dim;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (len <= 3)
-		dim = data_message->dim_first;
-	else
-		dim = data_message->dim;
-
-	SaveAttribute();
-	BuildTelemetryValue(jsonValue);
-	CheckTrigger();
+	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
+	{
+		if (len <= 5)
+			dim = data_message->dim_first;
+		else
+			dim = data_message->dim;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+		SaveAttribute();
+#endif
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
 }
 
 bool ElementDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t dim = dataValue[elementName].asInt();
+			uint16_t dim = dataValue["VALUE"].asInt();
+			string op = dataValue["OP"].asString();
 			rs = Util::CompareNumber(this->dim, dim, op);
 			return true;
 		}
@@ -68,31 +82,29 @@ void ElementDim::CheckTrigger()
 	}
 }
 
-static int Para2PercentDim(uint16_t para)
-{
-	return ((para * 100) / 65535);
-}
 void ElementDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId[elementName];
-	dataValue["VALUE"] = Para2PercentDim(dim);
+	dataValue["ID"] = id;
+	dataValue["VALUE"] = dim;
 	jsonValue.append(dataValue);
 }
 
 bool ElementDim::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember(elementName) && dataValue[elementName].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			int dim = (value * 65535) / 100;
+			bleProtocol->SetDimmingLight(addr, dim, 0, true);
+			return true;
+		}
 	}
 	return false;
-}
-
-bool ElementDim::Do(uint16_t value)
-{
-	LOGD("DoTrigger value: %d", value);
-	// bleprotocol call setonoff light
-	bleProtocol->SetDimmingLight(addr, value, 0, true);
-	return true;
 }

@@ -64,6 +64,10 @@ int main(int argc, char *argv[])
 
 	database = new Db();
 
+	string mac = Wifi::GetMacAddress();
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), "127.0.0.1", 1883, "", "", 10);
+	gateway->init();
+
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
@@ -71,11 +75,6 @@ int main(int argc, char *argv[])
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
 #endif
-
-	string mac = Wifi::GetMacAddress();
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
-	// gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
-	gateway->init();
 
 	Device::InitDeviceModelList();
 

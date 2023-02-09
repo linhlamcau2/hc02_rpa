@@ -15,5 +15,5 @@ RuleOutputDevice::~RuleOutputDevice()
 void RuleOutputDevice::RunOutput()
 {
 	if (device)
-		device->Do(data);
+		device->DoJsonArray(data);
 }

@@ -18,27 +18,9 @@
 #include "RuleOutputDevice.h"
 
 #include "BleProtocol.h"
-#include "DeviceBleDownLightSmt.h"
-#include "DeviceBleDownLightCobTrangTri.h"
-#include "DeviceBleDownLightCobGocRong.h"
-#include "DeviceBleDownLightRgbCw.h"
-#include "DeviceBleBulb.h"
-#include "DeviceBleChieuGuong.h"
-#include "DeviceBleChieuTranh.h"
-#include "DeviceBleDenBan.h"
-#include "DeviceBleDownLightCobGocHep.h"
-#include "DeviceBleFlood.h"
-#include "DeviceBleLedDayLinear.h"
-#include "DeviceBleLedDayRgbCw.h"
-#include "DeviceBleLedDayRgb.h"
-#include "DeviceBleOpTran.h"
-#include "DeviceBleOpTranLoa.h"
-#include "DeviceBleOpTuong.h"
-#include "DeviceBlePanelTron.h"
-#include "DeviceBlePanelVuong.h"
-#include "DeviceBleThaTran.h"
-#include "DeviceBleTrackLight.h"
-#include "DeviceBleTubeM16.h"
+#include "DeviceBleOnoffCctDim.h"
+#include "DeviceBleOnoffHslModeRGB.h"
+#include "DeviceBleOnoffCctDimHslModeRGB.h"
 #include "DeviceBleSwitch4.h"
 #include "DeviceBleDCSceneContact.h"
 #include "DeviceBleTempHumSensor.h"
@@ -92,7 +74,7 @@ void Gateway::init()
 	for (const auto &[meshId, scene] : sceneBleList)
 	{
 		cout << "scene: " + scene->GetUUId() << endl;
-		for (uint32_t i = 0; i < scene->deviceList.size(); i++)
+		for (Json::Value::ArrayIndex i = 0; i < scene->deviceList.size(); i++)
 		{
 			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl;
 		}
@@ -133,7 +115,26 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRPCAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("REMOVE_DEVICE_FROM_GROUP", bind(&Gateway::OnRPCDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRPCAddSceneBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRPCEditSceneBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRPCDeleteSceneBle, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRPCAddTuyaDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DelAllDevice", bind(&Gateway::OnRPCDelAllDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DEVICE", bind(&Gateway::OnRPCControlDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("GROUP", bind(&Gateway::OnRPCControlGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("SCENE", bind(&Gateway::OnRPCControlSceneBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
 	CloudConnect();
 	LocalConnect();
@@ -163,6 +164,17 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 {
 	LOGI("OnLocalConnect: %d", isConnected);
+}
+
+void Gateway::resetFactory()
+{
+	LOGI("resetFactory");
+	database->DeviceDelAll();
+	database->GatewayDelAll();
+	database->DeviceAttributeDelAll();
+	database->GroupDelAll();
+	database->DeviceInGroupDelAll();
+	bleProtocol->ResetFactory();
 }
 
 int Gateway::UdpBroadcastThread()
@@ -274,6 +286,27 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcScanWifi");
+#ifdef CONFIG_USE_OLD_APP
+	Json::Value wifiList;
+	Json::Value wifi;
+	Json::Value wifiResp;
+	gateway->StopUdpBroadcast();
+	Wifi::ScanWifi(wifiList);
+	if (wifiList.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < wifiList.size(); i++)
+		{
+			wifi = wifiList[i];
+			wifiResp["CMD"] = "HC_RESPONE";
+			wifiResp["SSID"] = wifi["SSID"];
+			wifiResp["QUALITY"] = 55;
+			wifiResp["MAC"] = wifi["MAC"];
+			wifiResp["ENCRYPTION"] = wifi["ENCRYPTION"];
+			respValue.append(wifiResp);
+		}
+	}
+	return 10; // respValue as an array
+#else
 	string rqi = "";
 	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
 	{
@@ -320,7 +353,8 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
 	}
 
-	return -1; // respValue as an array
+	return -1;
+#endif
 }
 
 int Gateway::GatewayConnectToCloudNotice()
@@ -520,7 +554,6 @@ int Gateway::OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
-	bleProtocol->init();
 	respValue["code"] = 0;
 	return 0;
 }
@@ -554,7 +587,7 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
 	{
 		Json::Value dataValue = reqValue["DATA"];
-		for (Json::Value::ArrayIndex i = 0; i < dataValue.size(); i++)
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
 			string deviceId = dataValue[i].asString();
 			Device *device = getDeviceFromId(deviceId);
@@ -640,11 +673,11 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 				if (scene)
 				{
 					Json::Value groupList = dataValue["DEVICES"];
-					for (uint32_t i = 0; i < groupList.size(); i++)
+					for (Json::ArrayIndex i = 0; i < groupList.size(); i++)
 					{
 						Json::Value deviceList = groupList[i]["IDS"];
 						Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-						for (uint32_t j = 0; j < deviceList.size(); j++)
+						for (Json::ArrayIndex j = 0; j < deviceList.size(); j++)
 						{
 							string devcieId = deviceList[j].asString();
 							Device *device = getDeviceFromId(devcieId);
@@ -678,11 +711,11 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			if (scene)
 			{
 				Json::Value groupList = dataValue["DEVICES"];
-				for (uint32_t i = 0; i < groupList.size(); i++)
+				for (Json::ArrayIndex i = 0; i < groupList.size(); i++)
 				{
 					Json::Value deviceList = groupList[i]["IDS"];
 					Json::Value deviceProperties = groupList[i]["PROPERTIES"];
-					for (uint32_t j = 0; j < deviceList.size(); j++)
+					for (Json::ArrayIndex j = 0; j < deviceList.size(); j++)
 					{
 						string devcieId = deviceList[j].asString();
 						Device *device = getDeviceFromId(devcieId);
@@ -1032,7 +1065,7 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 			// Device *device = getDeviceFromId(deviceId);
 			// if (device)
 			// {
-			// 	for (Json::Value::ArrayIndex i = 0; i < properties.size(); i++)
+			// 	for (Json::ArrayIndex i = 0; i < properties.size(); i++)
 			// 	{
 			// 		Json::Value property = properties[i];
 			// 		if (property.isObject() &&
@@ -1041,7 +1074,7 @@ int Gateway::OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 			// 		{
 			// 			int id = property["ID"].asInt();
 			// 			string cmd = property["CMD"].asString();
-			// 			device->Do(id, value);
+			// 			device->DoJsonArrayDo(id, value);
 			// 		}
 			// 	}
 			// }
@@ -1112,7 +1145,7 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				if (properties.isArray())
-					device->Do(properties);
+					device->DoJsonArray(properties);
 			}
 			else
 			{
@@ -1206,7 +1239,7 @@ int Gateway::OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 {
-	int rs = 0;
+	int err = 0;
 	if (reqValue.isMember("params") && reqValue["params"].isObject())
 	{
 		Json::Value dataValue = reqValue["params"];
@@ -1231,10 +1264,11 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 			if (type == "base64")
 			{
 				string keyBase64 = dataValue["key"].asString();
-				string encode = macaron::Base64::Decode(keyBase64, key);
-				if (encode != "")
+				string decode = macaron::Base64::Decode(keyBase64, key);
+				if (decode != "")
 				{
-					rs = 1;
+					err = 1;
+					LOGW("Base64 decode err: %s", decode.c_str());
 				}
 			}
 			else
@@ -1242,7 +1276,7 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 				key = dataValue["key"].asString();
 			}
 
-			if (rs == 0)
+			if (err == 0)
 			{
 				// save key file
 				system("rm /key.txt");
@@ -1287,8 +1321,8 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	respValue["code"] = -1;
-	return -1;
+	respValue["code"] = err;
+	return 0;
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)
@@ -1310,7 +1344,11 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	dataValue["APP_KEY"] = gateway->getBleAppKey();
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
+#ifdef CONFIG_USE_OLD_APP
+	PublishToLocalMessage(jsonValue);
+#else
 	PublishToDeviceTelemetry(jsonValue);
+#endif
 }
 
 Group *Gateway::getGroup(int id)
@@ -1395,101 +1433,47 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
 	Device *device = NULL;
-	if (type == BLE_DOWNLIGHT_SMT)
+	switch (type)
 	{
-		device = new DeviceBleDownLightSmt(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_COB_TRANG_TRI)
-	{
-		device = new DeviceBleDownLightCobTrangTri(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_COB_GOC_RONG)
-	{
-		device = new DeviceBleDownLightCobGocRong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_COB_GOC_HEP)
-	{
-		device = new DeviceBleDownLightCobGocHep(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DOWNLIGHT_RGBCW)
-	{
-		device = new DeviceBleDownLightRgbCw(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_PANEL_TRON)
-	{
-		device = new DeviceBlePanelTron(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_PANEL_VUONG)
-	{
-		device = new DeviceBlePanelVuong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_OP_TRAN)
-	{
-		device = new DeviceBleOpTran(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_OP_TUONG)
-	{
-		device = new DeviceBleOpTuong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_CHIEU_TRANH)
-	{
-		device = new DeviceBleChieuTranh(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_TRACKLIGHT)
-	{
-		device = new DeviceBleTrackLight(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_THA_TRAN)
-	{
-		device = new DeviceBleThaTran(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_CHIEU_GUONG)
-	{
-		device = new DeviceBleChieuGuong(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_DAY_LINEAR)
-	{
-		device = new DeviceBleLedDayLinear(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_TUBE_M16)
-	{
-		device = new DeviceBleTubeM16(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DEN_BAN)
-	{
-		device = new DeviceBleDenBan(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_FLOOD)
-	{
-		device = new DeviceBleFlood(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_DAY_RGBCW)
-	{
-		device = new DeviceBleLedDayRgbCw(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_BULB)
-	{
-		device = new DeviceBleBulb(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_OP_TRAN_LOA)
-	{
-		device = new DeviceBleOpTranLoa(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_LED_DAY_RGB)
-	{
-		device = new DeviceBleLedDayRgb(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_SWITCH_4)
-	{
+	case BLE_LED_CHIEU_TRANH:
+	case BLE_LED_CHIEU_GUONG:
+	case BLE_DEN_BAN:
+	case BLE_DOWNLIGHT_SMT:
+	case BLE_DOWNLIGHT_COB_GOC_HEP:
+	case BLE_DOWNLIGHT_COB_GOC_RONG:
+	case BLE_DOWNLIGHT_COB_TRANG_TRI:
+	case BLE_LED_FLOOD:
+	case BLE_LED_DAY_LINEAR:
+	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TUONG:
+	case BLE_LED_OP_TRAN_LOA:
+	case BLE_PANEL_TRON:
+	case BLE_PANEL_VUONG:
+	case BLE_TRACKLIGHT:
+	case BLE_LED_THA_TRAN:
+	case BLE_LED_TUBE_M16:
+		device = new DeviceBleOnoffCctDim(id, name, mac, device_id, addr, type, version);
+		break;
+	case BLE_DOWNLIGHT_RGBCW:
+	case BLE_LED_DAY_RGBCW:
+	case BLE_LED_BULB:
+		device = new DeviceBleOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
+		break;
+	case BLE_LED_DAY_RGB:
+		device = new DeviceBleOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
+		break;
+	case BLE_SWITCH_4:
 		device = new DeviceBleSwitch4(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_DC_SCENE_CONTACT)
-	{
+		break;
+	case BLE_DC_SCENE_CONTACT:
 		device = new DeviceBleDCSceneContact(id, name, mac, device_id, addr, version);
-	}
-	else if (type == BLE_TEMP_HUM_SENSOR)
-	{
+		break;
+	case BLE_TEMP_HUM_SENSOR:
 		device = new DeviceBleTempHumSensor(id, name, mac, device_id, addr, version);
+		break;
+	default:
+		LOGW("Add new device not support type: 0x%04X", type);
+		break;
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -1560,7 +1544,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		// int repeat = ruleValue["EACH_DAY"].asInt();
 		Json::Value repeatDays = ruleValue["EACH_DAY"];
 		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
-		for (uint32_t i = 0; i < repeatDays.size(); ++i)
+		for (Json::ArrayIndex i = 0; i < repeatDays.size(); ++i)
 		{
 			if (repeatDays[i] == "EACHMONDAY")
 				mon = 1;
@@ -1659,7 +1643,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		}
 		// Handle output device
 		Json::Value deviceRuleOutputList = ruleValue["OUTPUT_DEVICES"];
-		for (Json::Value::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
+		for (Json::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
 		{
 			Json::Value deviceRuleOutputValue = deviceRuleOutputList[i];
 			if (deviceRuleOutputValue.isObject())
@@ -1680,7 +1664,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		}
 		// Handle output group
 		Json::Value groupRuleOutputList = ruleValue["OUTPUT_GROUPS"];
-		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+		for (Json::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 		{
 			Json::Value groupRuleOutputValue = groupRuleOutputList[i];
 			if (groupRuleOutputValue.isObject())
@@ -1701,7 +1685,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		}
 		// Handle output scene
 		Json::Value sceneRuleOutputList = ruleValue["OUTPUT_SCENES"];
-		for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+		for (Json::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
 		{
 			string sceneRuleOutputId = sceneRuleOutputList[i].asString();
 			SceneBle *sceneBle = getSceneBleFromId(sceneRuleOutputId);

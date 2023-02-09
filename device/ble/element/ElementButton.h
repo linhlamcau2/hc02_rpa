@@ -3,14 +3,14 @@
 
 using namespace std;
 
-class ElementHsl : public Element
+class ElementButton : public Element
 {
 protected:
-	uint16_t h, s, l;
-	int idH, idS, idL;
+	uint8_t bt;
+	int id;
 
 public:
-	ElementHsl(Device *device, uint32_t addr);
+	ElementButton(Device *device, uint32_t addr);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

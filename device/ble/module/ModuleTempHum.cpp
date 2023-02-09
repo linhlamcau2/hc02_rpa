@@ -1,87 +1,98 @@
 #include "ModuleTempHum.h"
-#include <byteswap.h>
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
+#include "BleProtocol.h"
+#include "Db.h"
 
 ModuleTempHum::ModuleTempHum(Device *device) : Module(device)
 {
 	temp = 0;
 	hum = 0;
+	idTemp = BLE_ATTRIBUTE_TEMP;
+	idHum = BLE_ATTRIBUTE_HUMIDITY;
 }
 
-float ModuleTempHum::GetTemp()
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModuleTempHum::InitAttribute(int id, double value)
 {
-	return temp;
+	if (this->id == idTemp)
+		temp = value;
+	else if (this->id == idHum)
+		hum = value;
 }
 
-void ModuleTempHum::SetTemp(float temp)
+void ModuleTempHum::SaveAttribute()
 {
-	this->temp = temp;
+	database->DeviceAttributeAddOrReplace(device, idTemp, temp);
+	database->DeviceAttributeAddOrReplace(device, idHum, hum);
 }
+#endif
 
-float ModuleTempHum::GetHum()
+bool ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	return hum;
-}
-
-void ModuleTempHum::SetHum(float hum)
-{
-	this->hum = hum;
-}
-
-void ModuleTempHum::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
-{
-	typedef struct
+	if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
 	{
-		uint16_t temp;
-		uint16_t hum;
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
-	temp = bswap_16(data_message->temp) / 10;
-	hum = bswap_16(data_message->hum) / 10;
-	BuildTelemetryValue(jsonValue);
-	CheckTrigger();
+		typedef struct
+		{
+			uint16_t temp;
+			uint16_t hum;
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)&data[3];
+		temp = bswap_16(data_message->temp);
+		hum = bswap_16(data_message->hum);
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
 }
 
-bool ModuleTempHum::CheckData(Json::Value dataValue)
+bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	bool rs = false;
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember("temp") && dataValue["temp"].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->idTemp == id || this->idHum == id)
 		{
-			int temp = dataValue["temp"].asInt();
-			rs = Util::CompareNumber(this->temp, temp, op);
-		}
-		else if (dataValue.isMember("hum") && dataValue["hum"].isInt())
-		{
-			int hum = dataValue["hum"].asInt();
-			rs = Util::CompareNumber(this->hum, hum, op);
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+					dataValue.isMember("OP") && dataValue["OP"].isString())
+			{
+				uint16_t value = dataValue["VALUE"].asInt();
+				string op = dataValue["OP"].asString();
+				if (this->idTemp == id)
+					rs = Util::CompareNumber(this->temp, value, op);
+				else if (this->idHum == id)
+					rs = Util::CompareNumber(this->hum, value, op);
+				return true;
+			}
 		}
 	}
-	return rs;
+	return false;
 }
 
 void ModuleTempHum::CheckTrigger()
 {
 	LOGD("CheckTrigger");
+	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
-		if (CheckData(*ruleInputDevice->GetData()))
-			ruleInputDevice->Trigger(true);
+		rs = false;
+		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
 	}
 }
 
 void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["temp"];
+	dataValue["ID"] = idTemp;
 	dataValue["VALUE"] = temp;
 	jsonValue.append(dataValue);
-	dataValue["ID"] = parameterToId["hum"];
+	dataValue["ID"] = idHum;
 	dataValue["VALUE"] = hum;
 	jsonValue.append(dataValue);
 }

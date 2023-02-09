@@ -1,59 +1,94 @@
 #include "ModuleOnOff.h"
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
+#include "BleProtocol.h"
+#include "Db.h"
 
 ModuleOnOff::ModuleOnOff(Device *device) : Module(device)
 {
 	onoff = 0;
+	id = BLE_ATTRIBUTE_ONOFF;
 }
 
-void ModuleOnOff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModuleOnOff::InitAttribute(int id, double value)
+{
+	if (this->id == id)
+		onoff = value;
+}
+
+void ModuleOnOff::SaveAttribute()
+{
+	database->DeviceAttributeAddOrReplace(device, id, onoff);
+}
+#endif
+
+bool ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
+		uint16_t opcode;
 		uint8_t state;
 		uint8_t onoff;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (len == 1)
-		onoff = data_message->state;
-	else
-		onoff = data_message->onoff;
-	BuildTelemetryValue(jsonValue);
-	CheckTrigger();
+	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
+	{
+		if (len == 3)
+			onoff = data_message->state;
+		else
+			onoff = data_message->onoff;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+		SaveAttribute();
+#endif
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
 }
 
-bool ModuleOnOff::CheckData(Json::Value dataValue)
+bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	bool rs = false;
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember("onoff") && dataValue["onoff"].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->id == id)
 		{
-			int onoff = dataValue["onoff"].asInt();
-			rs = Util::CompareNumber(this->onoff, onoff, op);
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+					dataValue.isMember("OP") && dataValue["OP"].isString())
+			{
+				uint16_t value = dataValue["VALUE"].asInt();
+				string op = dataValue["OP"].asString();
+				if (this->id == id)
+					rs = Util::CompareNumber(this->onoff, value, op);
+				return true;
+			}
 		}
 	}
-	return rs;
+	return false;
 }
 
 void ModuleOnOff::CheckTrigger()
 {
-	LOGD("CheckTriggerOnOff");
+	LOGD("CheckTrigger");
+	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
-		if (CheckData(*ruleInputDevice->GetData()))
-			ruleInputDevice->Trigger(true);
+		rs = false;
+		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
 	}
 }
 
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["onoff"];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
 }

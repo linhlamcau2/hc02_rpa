@@ -1,12 +1,12 @@
 #include "DeviceBleSwitch4.h"
 #include <Log.h>
 
-DeviceBleSwitch4::DeviceBleSwitch4(string id, string name, string mac,string device_id, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac,device_id, addr, BLE_SWITCH_4, version)
+DeviceBleSwitch4::DeviceBleSwitch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, device_id, addr, BLE_SWITCH_4, version)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		elementOnOff[i] = new ElementOnOff(this, addr + i);
+		elementButton[i] = new ElementButton(this, addr + i);
 	}
 }
 
@@ -19,33 +19,29 @@ int DeviceBleSwitch4::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		elementOnOff[i]->BuildTelemetryValue(pushDataValue);
+		elementButton[i]->BuildTelemetryValue(pushDataValue);
 	}
 	return 0;
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void DeviceBleSwitch4::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		elementOnOff[i]->InitAttribute(attributeId, value);
+		elementButton[i]->InitAttribute(attributeId, value);
 	}
 }
+#endif
 
 void DeviceBleSwitch4::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	if (!CheckAddr(addr))
 		return;
-	typedef struct
-	{
-		uint16_t u16Opcode;
-		uint8_t data[];
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
 	values = Json::Value::null;
-	if (data_message->u16Opcode == 0x0482)
+	if (!elementButton[addr - this->addr]->InputData(data, len, values))
 	{
-		elementOnOff[addr - this->addr]->ParseData(data_message->data, len - 2, values);
+		return;
 	}
 	PushTelemetry(values);
 }
@@ -55,7 +51,7 @@ bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	for (int i = 0; i < 4; i++)
 	{
-		if (elementOnOff[i]->CheckData(dataValue, rs))
+		if (elementButton[i]->CheckData(dataValue, rs))
 		{
 			return true;
 		}
@@ -65,17 +61,14 @@ bool DeviceBleSwitch4::CheckData(Json::Value &dataValue, bool &rs)
 
 bool DeviceBleSwitch4::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	for (int i = 0; i < 4; i++)
+	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject())
 	{
-		elementOnOff[i]->Do(dataValue);
+		for (int j = 0; j < 4; j++)
+		{
+			if (elementButton[j]->Do(dataValue))
+				return true;
+		}
 	}
-	return true;
-}
-
-bool DeviceBleSwitch4::Do(int id, int value)
-{
-	LOGD("DoTrigger id: %d, value: %d", id, value);
-	elementOnOff[id - parameterToId["bt0"]]->Do(value);
 	return false;
 }

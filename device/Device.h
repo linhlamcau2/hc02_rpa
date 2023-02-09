@@ -16,21 +16,21 @@ typedef enum
 
 enum
 {
-	BLE_DOWNLIGHT_SMT = 12001,		// 0x010201,
+	BLE_DOWNLIGHT_SMT = 12001, // 0x010201,
 	BLE_DOWNLIGHT_COB_GOC_RONG = 12002,
 	BLE_DOWNLIGHT_COB_GOC_HEP = 12003,
 	BLE_DOWNLIGHT_COB_TRANG_TRI = 12004,
-	BLE_PANEL_TRON	= 12005,
+	BLE_PANEL_TRON = 12005,
 	BLE_PANEL_VUONG = 12006,
 	BLE_LED_OP_TRAN = 12007,
 	BLE_LED_OP_TUONG = 12008,
 	BLE_LED_CHIEU_TRANH = 12009,
-	BLE_TRACKLIGHT	= 12010,
+	BLE_TRACKLIGHT = 12010,
 	BLE_LED_THA_TRAN = 12011,
 	BLE_LED_CHIEU_GUONG = 12012,
 	BLE_LED_DAY_LINEAR = 12013,
 	BLE_LED_TUBE_M16 = 12014,
-	BLE_DEN_BAN	= 12015,
+	BLE_DEN_BAN = 12015,
 	BLE_LED_FLOOD = 12016,
 	BLE_LED_DAY_RGB = 13001,
 	BLE_LED_DAY_RGBCW = 14001,
@@ -46,8 +46,6 @@ enum
 	ZIGBEE_PIR_RH3040 = 0x02000102,
 	ZIGBEE_TELINK_TLSR82xx = 0x02000201
 };
-
-extern map<string, int> parameterToId;
 
 class Device
 {
@@ -96,7 +94,7 @@ public:
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 	virtual void CheckTrigger();
 	virtual bool Do(Json::Value &dataValue) { return false; }
-	virtual bool Do(int id, int value) { return false; }
+	virtual bool DoJsonArray(Json::Value &dataValue);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value jsonValue);

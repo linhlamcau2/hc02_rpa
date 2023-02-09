@@ -11,9 +11,7 @@ ElementResetNode::ElementResetNode(Device *device, uint32_t addr) : Element(devi
 
 void ElementResetNode::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	BuildTelemetryValue(jsonValue);
 }
-
 
 void ElementResetNode::BuildTelemetryValue(Json::Value &jsonValue)
 {
@@ -22,7 +20,6 @@ void ElementResetNode::BuildTelemetryValue(Json::Value &jsonValue)
 bool ElementResetNode::Do()
 {
 	LOGD("DoTrigger reset");
-	//bleprotocol call setonoff light
 	bleProtocol->ResetDev(addr);
 	return true;
 }

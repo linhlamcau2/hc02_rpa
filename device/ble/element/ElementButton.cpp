@@ -1,4 +1,4 @@
-#include "ElementModeRgb.h"
+#include "ElementButton.h"
 #include <Log.h>
 #include <Util.h>
 #include "BleDefine.h"
@@ -6,58 +6,51 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ElementModeRgb::ElementModeRgb(Device *device, uint32_t addr) : Element(device, addr)
+ElementButton::ElementButton(Device *device, uint32_t addr) : Element(device, addr)
 {
-	mode = 0;
-	id = BLE_ATTRIBUTE_SCENE_RGB;
+	bt = 0;
+	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr();
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ElementModeRgb::InitAttribute(int id, double value)
+void ElementButton::InitAttribute(int id, double value)
 {
 	if (this->id == id)
-		mode = value;
+		bt = value;
 }
 
-void ElementModeRgb::SaveAttribute()
+void ElementButton::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, mode);
+	database->DeviceAttributeAddOrReplace(device, id, bt);
 }
 #endif
 
-// TODO: recheck
-bool ElementModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
 		uint16_t opcode;
-		uint16_t reverse;
-		uint16_t idScene;
-		uint16_t magic;
-		uint8_t mode;
+		uint8_t state;
+		uint8_t bt;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == BLE_MESH_OPCODE_RGB)
+	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
-		if (data_message->idScene == 0)
-		{
-			mode = data_message->mode;
-			// TODO: recheck
-			if (1 <= mode && mode <= 6)
-			{
+		if (len == 3)
+			bt = data_message->state;
+		else
+			bt = data_message->bt;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
+		SaveAttribute();
 #endif
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return true;
-			}
-		}
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
 	}
 	return false;
 }
 
-bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
+bool ElementButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -68,9 +61,9 @@ bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
 				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t mode = dataValue["VALUE"].asInt();
+			uint16_t bt = dataValue["VALUE"].asInt();
 			string op = dataValue["OP"].asString();
-			rs = Util::CompareNumber(this->mode, mode, op);
+			rs = Util::CompareNumber(this->bt, bt, op);
 			return true;
 		}
 	}
@@ -78,7 +71,7 @@ bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 }
 
 // TODO: can nhac di chuyen den Element.cpp
-void ElementModeRgb::CheckTrigger()
+void ElementButton::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
@@ -90,17 +83,17 @@ void ElementModeRgb::CheckTrigger()
 	}
 }
 
-void ElementModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
+void ElementButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = id;
-	dataValue["VALUE"] = mode;
+	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
 }
 
-bool ElementModeRgb::Do(Json::Value &dataValue)
+bool ElementButton::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -109,7 +102,7 @@ bool ElementModeRgb::Do(Json::Value &dataValue)
 				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
-			bleProtocol->CallModeRgb(addr, value);
+			bleProtocol->SetOnOffLight(addr, value, 0, true);
 			return true;
 		}
 	}
