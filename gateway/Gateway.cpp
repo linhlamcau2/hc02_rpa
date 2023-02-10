@@ -212,7 +212,7 @@ int Gateway::CheckOnlineThread()
 			if (device->lastOnlineState) // online
 			{
 				// neu thiet bi ho tro ban tin check trang thai online/offline
-				if (device->isHaveCheckOnline())
+				if (device->isNeedCheckOnline())
 				{
 					// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
 					if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
@@ -242,7 +242,7 @@ int Gateway::CheckOnlineThread()
 			}
 			else
 			{
-				if (device->isHaveCheckOnline())
+				if (device->isNeedCheckOnline())
 				{
 					// thoi gian check qua 1 chu ky thi check lai
 					if ((device->lastTimeCheck + allTimeCheck) <= currentTime)

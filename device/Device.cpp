@@ -95,7 +95,7 @@ bool Device::isOnline()
 	return lastOnlineState;
 }
 
-bool Device::isHaveCheckOnline()
+bool Device::isNeedCheckOnline()
 {
 	return powerSource == POWER_AC;
 }

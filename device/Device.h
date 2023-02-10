@@ -97,7 +97,7 @@ public:
 	protocol_e GetProtocol();
 
 	bool isOnline();
-	bool isHaveCheckOnline();
+	bool isNeedCheckOnline();
 
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
