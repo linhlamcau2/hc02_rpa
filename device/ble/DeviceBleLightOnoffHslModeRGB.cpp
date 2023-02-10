@@ -7,6 +7,7 @@ DeviceBleLightOnoffHslModeRGB::DeviceBleLightOnoffHslModeRGB(string id, string n
 	moduleOnOff = new ModuleOnOff(this, addr);
 	moduleModeRgb = new ModuleModeRgb(this, addr);
 	moduleHsl = new ModuleHsl(this, addr);
+	powerSource = POWER_AC;
 }
 
 bool DeviceBleLightOnoffHslModeRGB::CheckAddr(uint32_t addr)

@@ -17,6 +17,7 @@
 #include "RuleOutputGroup.h"
 #include "RuleOutputDevice.h"
 
+#include "BleDefine.h"
 #include "BleProtocol.h"
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
@@ -187,6 +188,20 @@ int Gateway::CheckOnlineThread()
 	time_t currentTime = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
+	Json::Value onlineValue;
+	Json::Value datasValue;
+	Json::Value dataValue;
+	Json::Value propertysValue;
+	Json::Value propertyValue;
+	propertyValue["ID"] = BLE_ATTRIBUTE_ONLINE_OFFLINE;
+	propertyValue["VALUE"] = 0;
+	propertysValue.append(propertyValue);
+	dataValue["DEVICE_ID"] = "";
+	dataValue["PROPERTIES"] = propertysValue;
+	datasValue.append(dataValue);
+	onlineValue["CMD"] = "DEVICE";
+	onlineValue["DATA"] = datasValue;
+
 	while (1)
 	{
 		currentTime = time(NULL);
@@ -196,34 +211,71 @@ int Gateway::CheckOnlineThread()
 			deviceStateChange = false;
 			if (device->lastOnlineState) // online
 			{
-				if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+				// neu thiet bi ho tro ban tin check trang thai online/offline
+				if (device->isHaveCheckOnline())
 				{
-					bleProtocol->SendOnlineCheck(device->GetAddr());
-					device->lastTimeCheck = currentTime;
+					// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
+					if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+					{
+						bleProtocol->SendOnlineCheck(device->GetAddr());
+						device->lastTimeCheck = currentTime;
+					}
+					// 2 chu ky khong co ban tin phan hoi thi bao offline
+					if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+					{
+						LOGI("Device 0x%04X offline", device->GetAddr());
+						device->lastOnlineState = false;
+						deviceStateChange = true;
+					}
 				}
-				if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+				// neu thiet bi khong ho tro ban tin check trang thai online/offline
+				else
 				{
-					LOGI("Device 0x%04X offline", device->GetAddr());
-					device->lastOnlineState = false;
-					deviceStateChange = true;
+					// 1 ngay khong co ban tin moi thi bao offline
+					if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
+					{
+						LOGI("Device 0x%04X offline", device->GetAddr());
+						device->lastOnlineState = false;
+						deviceStateChange = true;
+					}
 				}
 			}
 			else
 			{
-				if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
+				if (device->isHaveCheckOnline())
 				{
-					bleProtocol->SendOnlineCheck(device->GetAddr());
-					device->lastTimeCheck = currentTime;
+					// thoi gian check qua 1 chu ky thi check lai
+					if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
+					{
+						bleProtocol->SendOnlineCheck(device->GetAddr());
+						device->lastTimeCheck = currentTime;
+					}
+					// neu co ban tin moi trong vong 2 chu ky check thi bao online
+					if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
+					{
+						LOGI("Device 0x%04X online", device->GetAddr());
+						device->lastOnlineState = true;
+						deviceStateChange = true;
+					}
 				}
-				if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
+				else
 				{
-					LOGI("Device 0x%04X online", device->GetAddr());
-					device->lastOnlineState = true;
-					deviceStateChange = true;
+					// trong ngay co ban tin thi online
+					if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+					{
+						LOGI("Device 0x%04X online", device->GetAddr());
+						device->lastOnlineState = true;
+						deviceStateChange = true;
+					}
 				}
 			}
+			//send device state to server
 			if (deviceStateChange)
 			{
+				onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
+				onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
+				PublishToLocalMessage(onlineValue);
+				PublishToGatewayTelemetry(onlineValue);
 			}
 		}
 		sleep(1);

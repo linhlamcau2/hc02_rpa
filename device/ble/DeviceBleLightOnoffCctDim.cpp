@@ -7,6 +7,7 @@ DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, str
 	moduleOnOff = new ModuleOnOff(this, addr);
 	moduleDim = new ModuleDim(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
+	powerSource = POWER_AC;
 }
 
 bool DeviceBleLightOnoffCctDim::CheckAddr(uint32_t addr)

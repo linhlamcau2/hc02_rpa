@@ -5,6 +5,7 @@ DeviceBleSensorPm::DeviceBleSensorPm(string id, string name, string mac, string 
 		: DeviceBle(id, name, mac, device_id, addr, BLE_PM_SENSOR, version)
 {
 	modulePmSensor = new ModulePmSensor(this, addr);
+	powerSource = POWER_BATTERY;
 }
 
 int DeviceBleSensorPm::BuildTelemetryValue(Json::Value &pushDataValue)

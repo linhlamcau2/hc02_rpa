@@ -8,6 +8,7 @@ DeviceBleSwitchTouch4::DeviceBleSwitchTouch4(string id, string name, string mac,
 	{
 		elementButton[i] = new ElementButton(this, addr + i);
 	}
+	powerSource = POWER_AC;
 }
 
 bool DeviceBleSwitchTouch4::CheckAddr(uint32_t addr)

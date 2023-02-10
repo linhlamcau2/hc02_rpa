@@ -14,6 +14,7 @@ Device::Device(string id, string name, string mac, string device_id, uint32_t ad
 	this->type = type;
 	this->device_id = device_id;
 	this->version = version;
+	powerSource = POWER_UNKNOWN;
 
 	lastOnlineState = false;
 	lastTimeActive = 0;
@@ -92,6 +93,11 @@ protocol_e Device::GetProtocol()
 bool Device::isOnline()
 {
 	return lastOnlineState;
+}
+
+bool Device::isHaveCheckOnline()
+{
+	return powerSource == POWER_AC;
 }
 
 void Device::RegisterTrigger(RuleInputDevice *ruleInputDevice)
