@@ -87,6 +87,7 @@ private:
 	int OnRPCUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCUpdateFirmware(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);

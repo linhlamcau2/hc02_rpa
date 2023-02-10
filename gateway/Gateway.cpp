@@ -11,6 +11,7 @@
 #include "Db.h"
 #include "Util.h"
 #include "Wifi.h"
+#include "Ota.h"
 #include "Base64.h"
 
 #include "RuleInputTimer.h"
@@ -137,6 +138,7 @@ void Gateway::init()
 	OnLocalCallbackRegister("SCENE", bind(&Gateway::OnRPCControlSceneBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("UPDATE_FIRMWARE", bind(&Gateway::OnRPCUpdateFirmware, this, placeholders::_1, placeholders::_2));
 
 	CloudConnect();
 	LocalConnect();
@@ -269,7 +271,7 @@ int Gateway::CheckOnlineThread()
 					}
 				}
 			}
-			//send device state to server
+			// send device state to server
 			if (deviceStateChange)
 			{
 				onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
@@ -1428,6 +1430,34 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 		}
 	}
 	respValue["code"] = err;
+	return 0;
+}
+
+int Gateway::OnRPCUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCUpdateFirmware");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
+	{
+		Json::Value datasValue = reqValue["DATA"];
+		for (Json::ArrayIndex i = 0; i < datasValue.size(); i++)
+		{
+			Json::Value dataValue = datasValue[0];
+			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
+					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+					dataValue.isMember("URL") && dataValue["URL"].isString())
+			{
+				string name = dataValue["NAME"].asString();
+				string sum = dataValue["CHECK_SUM"].asString();
+				string url = dataValue["URL"].asString();
+				Ota::startOta(name, url, sum);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LOGW("Format error");
+	}
 	return 0;
 }
 
