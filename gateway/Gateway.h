@@ -43,6 +43,7 @@ private:
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
 
+	int CheckOnlineThread();
 	int UdpBroadcastThread();
 
 	int GatewayConnectToCloudNotice();

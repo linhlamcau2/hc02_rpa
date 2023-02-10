@@ -139,6 +139,9 @@ void Gateway::init()
 
 	CloudConnect();
 	LocalConnect();
+
+	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	checkOnlineThread.detach();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -176,6 +179,56 @@ void Gateway::resetFactory()
 	database->GroupDelAll();
 	database->DeviceInGroupDelAll();
 	bleProtocol->ResetFactory();
+}
+
+int Gateway::CheckOnlineThread()
+{
+	LOGI("Start CheckOnlineThread");
+	time_t currentTime = 0;
+	uint32_t allTimeCheck = 0; // time total in a loop check
+	bool deviceStateChange = false;
+	while (1)
+	{
+		currentTime = time(NULL);
+		allTimeCheck = deviceList.size() * 4;
+		for (const auto &[id, device] : deviceList)
+		{
+			deviceStateChange = false;
+			if (device->lastOnlineState) // online
+			{
+				if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+				{
+					bleProtocol->SendOnlineCheck(device->GetAddr());
+					device->lastTimeCheck = currentTime;
+				}
+				if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+				{
+					LOGI("Device 0x%04X offline", device->GetAddr());
+					device->lastOnlineState = false;
+					deviceStateChange = true;
+				}
+			}
+			else
+			{
+				if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
+				{
+					bleProtocol->SendOnlineCheck(device->GetAddr());
+					device->lastTimeCheck = currentTime;
+				}
+				if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
+				{
+					LOGI("Device 0x%04X online", device->GetAddr());
+					device->lastOnlineState = true;
+					deviceStateChange = true;
+				}
+			}
+			if (deviceStateChange)
+			{
+			}
+		}
+		sleep(1);
+	}
+	return 0;
 }
 
 int Gateway::UdpBroadcastThread()

@@ -159,6 +159,8 @@ public:
 
 	int ResetDev(uint16_t devAddr);
 
+	int SendOnlineCheck(uint16_t devAddr);
+
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);
 	int SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transition, bool ack);

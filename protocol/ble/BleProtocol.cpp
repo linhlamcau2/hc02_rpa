@@ -81,7 +81,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		if (deviceBle)
 		{
 			LOGD("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
-			deviceBle->InputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+			deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 		}
 		else
 		{
@@ -828,6 +828,12 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 		return 0;
 	}
 	return -1;
+}
+
+int BleProtocol::SendOnlineCheck(uint16_t devAddr)
+{
+	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+	return 0;
 }
 
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)

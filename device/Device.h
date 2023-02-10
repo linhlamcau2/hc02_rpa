@@ -64,6 +64,10 @@ protected:
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
 
+	bool lastOnlineState;
+	time_t lastTimeActive;
+	time_t lastTimeCheck;
+
 public:
 	Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
@@ -84,11 +88,15 @@ public:
 
 	protocol_e GetProtocol();
 
+	bool isOnline();
+
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
+	
+	void DeviceInputData(uint8_t *data, int len, uint32_t addr);
 
 	virtual void InitAttribute(int attributeId, double value) {}
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0) {}
