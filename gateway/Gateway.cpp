@@ -1628,6 +1628,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 
 	if (device)
 	{
+		device->lastTimeActive = time(NULL);
 		if (addGateway)
 			deviceList[mac] = device;
 		if (addDatabase)
