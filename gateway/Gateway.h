@@ -56,6 +56,7 @@ private:
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCBleResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
 
@@ -97,7 +98,7 @@ public:
 	 * @brief Factory reset (call when hold reset button in 5s)
 	 *
 	 */
-	void resetFactory();
+	void ResetFactory();
 
 	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode

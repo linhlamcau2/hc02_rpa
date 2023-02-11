@@ -99,6 +99,7 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("RESET_HC", bind(&Gateway::OnRPCBleResetHC, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRPCCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
@@ -121,6 +122,7 @@ void Gateway::init()
 	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_HC", bind(&Gateway::OnRPCBleResetHC, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
@@ -173,15 +175,20 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 	LOGI("OnLocalConnect: %d", isConnected);
 }
 
-void Gateway::resetFactory()
+void Gateway::ResetFactory()
 {
-	LOGI("resetFactory");
+	LOGI("ResetFactory");
 	database->DeviceDelAll();
 	database->GatewayDelAll();
 	database->DeviceAttributeDelAll();
 	database->GroupDelAll();
 	database->DeviceInGroupDelAll();
 	bleProtocol->ResetFactory();
+	deviceList.clear();
+	groupList.clear();
+	ruleList.clear();
+	sceneBleList.clear();
+	scanDeviceList.clear();
 }
 
 int Gateway::CheckOnlineThread()
@@ -662,6 +669,14 @@ int Gateway::OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
+	respValue["code"] = 0;
+	return 0;
+}
+
+int Gateway::OnRPCBleResetHC(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGW("Reset ble");
+	ResetFactory();
 	respValue["code"] = 0;
 	return 0;
 }

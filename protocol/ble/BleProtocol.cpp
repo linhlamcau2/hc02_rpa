@@ -833,7 +833,7 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 int BleProtocol::SendOnlineCheck(uint16_t devAddr)
 {
 	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	return 0;
+	return GetOnoffLight(devAddr);
 }
 
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)
@@ -903,6 +903,43 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		}
 	}
 	LOGW("SetOnOff err");
+	return -1;
+}
+
+int BleProtocol::GetOnoffLight(uint16_t devAddr)
+{
+	LOGD("Get OnOff addr: 0x%04X", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint16_t opcode;
+	} onoff_message_t;
+	onoff_message_t onoff_message = {0};
+	memset(&onoff_message, 0x00, sizeof(onoff_message));
+	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
+	onoff_message.addr = devAddr;
+	onoff_message.opcode = G_ONOFF_GET;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 10, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, getOnOffHeader, 0, 6);
+	if (rs == 0)
+	{
+		typedef struct
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t data[3];
+		} onoff_rsp_message_t;
+		onoff_rsp_message_t *onoff_rsp_message = (onoff_rsp_message_t *)dataRsp;
+		if (onoff_rsp_message->opcode == G_ONOFF_STATUS)
+		{
+			return 0;
+		}
+	}
+
+	LOGW("GetOnOff err");
 	return -1;
 }
 
