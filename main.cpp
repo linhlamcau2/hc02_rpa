@@ -67,12 +67,13 @@ int main(int argc, char *argv[])
 	zigbeeProtocol->init();
 #endif
 
-	string mac = Wifi::GetMacAddress();
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), "127.0.0.1", 1883, "", "", 10);
+	// string mac = Wifi::GetMacAddress();
+	string mac = "aa:bb:cc:dd:ee:ff";
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), "localhost", 1883, "", "", 10);
 	gateway->init();
 
-	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
-	bleProtocol->init();
+	// bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
+	// bleProtocol->init();
 
 	Device::InitDeviceModelList();
 

@@ -59,7 +59,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 
 void Gateway::init()
 {
-	CloudProtocol::init();
+	// CloudProtocol::init();
 	LocalProtocol::init();
 	Udp::init();
 

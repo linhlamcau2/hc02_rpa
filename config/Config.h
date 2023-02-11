@@ -8,12 +8,12 @@
 #define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "broker.hivemq.com"
+#define HOST_DEFAULT "localhost"
 #define PORT_KEY "port"
 #define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT ""
-#define USERNAME_KEY "username"
+#define CLIENT_ID_DEFAULT "hjhdsjkhf"
+#define USERNAME_KEY ""
 #define USERNAME_DEFAULT ""
 #define PASSWORD_KEY "password"
 #define PASSWORD_DEFAULT ""
