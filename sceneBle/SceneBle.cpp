@@ -66,7 +66,7 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 
 bool SceneBle::DelDevice(Device *device)
 {
-	if (bleProtocol->DelSceneLights(device->GetAddr(), id))
+	if (bleProtocol->DelSceneLights(device->GetAddr(), id) == 0)
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)

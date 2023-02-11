@@ -942,6 +942,7 @@ int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("OnRPCCreateRoom error: %s", respValue.toString().c_str());
 		}
 	}
+	return 0;
 }
 
 int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -997,6 +998,8 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 						}
 
+						listGroupDevAddRoom[groupId] = listDevAddGroup;
+						listDevAddGroup.clear();
 						dataJsonRsp["GROUPS"].append(groupJsonRsp);
 						if (groupJsonRsp.isMember("SUCCESS"))
 							groupJsonRsp.removeMember("SUCCESS");
@@ -1047,6 +1050,8 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 										}
 									}
 								}
+								listGroupDevAddRoom[groupId] = listDevAddGroup;
+								listDevAddGroup.clear();
 							}
 							else
 							{
@@ -1060,11 +1065,6 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							groupJsonRsp["FAILED"] = Json::arrayValue;
 						}
 					}
-					listGroupDevAddRoom[groupId] = listDevAddGroup;
-					for(int va = 0; va < listGroupDevAddRoom[groupId].size(); va++)
-					{
-						LOGW("%s",listGroupDevAddRoom[groupId][va]);
-					}
 				}
 			}
 
@@ -1077,7 +1077,6 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 					string sceneId = sceneAddDev["SCENE_ID"].asString();
 					Json::Value infoDevsAdd = sceneAddDev["GROUPS"];
 					sceneJsonRsp["SCENE_ID"] = sceneId;
-					LOGE("SceneId: %s", sceneId.c_str());
 					SceneBle *sceneOfGw = gateway->getSceneBleFromId(sceneId);
 					if (sceneOfGw)
 					{
@@ -1110,7 +1109,6 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 										}
 									}
 								}
-								LOGE("Num device set add to room: %d", listGroupDevAddRoom[groupIdInScene].size());
 								for (int g = 0; g < listGroupDevAddRoom[groupIdInScene].size(); g++)
 								{
 									string deviceIdInScene = listGroupDevAddRoom[groupIdInScene][g];
@@ -1151,6 +1149,7 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("OnRPCAddDevToRoom error: %s", respValue.toString().c_str());
 		}
 	}
+	return 0;
 }
 
 int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -1275,7 +1274,8 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 			LOGW("OnRPCRemoveDevFromRoom msg error");
 		}
 	}
-	return 1;
+	LOGE("Return");
+	return 0;
 }
 
 int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -1286,6 +1286,7 @@ int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value data = reqValue["DATA"];
 		if (data.isMember("GROUPS") && data["GROUPS"].isArray() && data.isMember("SCENES") && data["SCENES"].isArray())
 		{
+			respValue["CMD"] = "DELETE_ROOM";
 			Json::Value groupsDelRoom = data["GROUPS"];
 			Json::Value scenesDelRoom = data["SCENES"];
 			Json::Value dataJsonRsp;
@@ -1327,14 +1328,13 @@ int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				{
 					LOGW("Group %s does not exsit", groupId.c_str());
 				}
+				dataJsonRsp["GROUPS"] = groupJsonRsp;
+				if (groupJsonRsp.isMember("SUCCESS"))
+					groupJsonRsp.removeMember("SUCCESS");
+				if (groupJsonRsp.isMember("FAILED"))
+					groupJsonRsp.removeMember("FAILED");
+				groupJsonRsp["FAILED"] = Json::arrayValue;
 			}
-
-			dataJsonRsp["GROUPS"] = groupJsonRsp;
-			if (groupJsonRsp.isMember("SUCCESS"))
-				groupJsonRsp.removeMember("SUCCESS");
-			if (groupJsonRsp.isMember("FAILED"))
-				groupJsonRsp.removeMember("FAILED");
-			groupJsonRsp["FAILED"] = Json::arrayValue;
 
 			for (Json::ArrayIndex n = 0; n < scenesDelRoom.size(); n++)
 			{
@@ -1361,20 +1361,21 @@ int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				{
 					LOGW("Scene %s does not exsit", sceneId.c_str());
 				}
+				dataJsonRsp["SCENES"].append(sceneJsonRsp);
+				if (sceneJsonRsp.isMember("SUCCESS"))
+					sceneJsonRsp.removeMember("SUCCESS");
+				if (sceneJsonRsp.isMember("FAILED"))
+					sceneJsonRsp.removeMember("FAILED");
+				sceneJsonRsp["FAILED"] = Json::arrayValue;
 			}
-			dataJsonRsp["SCENES"].append(sceneJsonRsp);
-			if (sceneJsonRsp.isMember("SUCCESS"))
-				sceneJsonRsp.removeMember("SUCCESS");
-			if (sceneJsonRsp.isMember("FAILED"))
-				sceneJsonRsp.removeMember("FAILED");
-			sceneJsonRsp["FAILED"] = Json::arrayValue;
+			respValue["DATA"] = dataJsonRsp;
 		}
 	}
 	else
 	{
 		LOGW("OnRPCDeleteRoom msg error");
 	}
-	return 1;
+	return 0;
 }
 
 int Gateway::OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue)

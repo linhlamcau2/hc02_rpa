@@ -126,20 +126,14 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 
 bool Group::DelDevice(Device *device, int epId)
 {
-	LOGE("TPP1");
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		LOGE("TPP2");
 		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
 		{
-			LOGE("TPP3");
 			int deviceIndex = GetPositionDevice(device);
-			LOGE("TPP4");
 			if (deviceIndex > -1)
 			{
-				LOGE("TPP5");
 				deviceList.erase(deviceList.begin() + deviceIndex);
-				LOGE("TPP6");
 			}
 			return true;
 		}
