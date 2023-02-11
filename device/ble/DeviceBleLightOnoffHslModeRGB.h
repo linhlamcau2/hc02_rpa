@@ -1,9 +1,9 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "ModuleOnOff.h"
-#include "ModuleHsl.h"
-#include "ModuleModeRgb.h"
+#include "module/ModuleOnOff.h"
+#include "module/ModuleHsl.h"
+#include "module/ModuleModeRgb.h"
 
 using namespace std;
 

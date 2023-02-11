@@ -162,10 +162,7 @@ bool Group::DelDevice(Device *device, int epId)
 bool Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
-
-	auto doBleBind = bind(&Group::DoBle, this, placeholders::_1);
-	thread doBleThread(doBleBind, &this->dataValue);
-	doBleThread.detach();
+	DoBle(&this->dataValue);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);

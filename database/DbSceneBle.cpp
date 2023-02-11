@@ -23,7 +23,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				Json::Value payloadJson;
 				Json::Reader r;
 				r.parse(propertiesData, payloadJson);
-				if (payloadJson.isObject())
+				if (payloadJson.isArray())
 				{
 					SceneBle *scene = gateway->getSceneBleFromId(sceneId);
 					Device *device = gateway->getDevice(deviceId);
@@ -65,7 +65,7 @@ int Db::SceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('" + scene->GetUUId() + "', '" + device->GetId() + "', '" + scene->GetUUId() + "', " + to_string(scene->GetId()) + ", '" + data.toString() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('" + scene->GetUUId() + "', '" + device->GetId() + "', '" + scene->GetName() + "', " + to_string(scene->GetId()) + ", '" + data.toString() + "');";
 	return Sqlite_Exec(sql);
 }
 

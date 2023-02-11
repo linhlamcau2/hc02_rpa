@@ -10,7 +10,8 @@ BUILD_PATH = build
 INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi
 COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-deprecated -Wno-deprecated-declarations -Wno-unused-result -flto -fPIC
 COMPFLAGS += -DVERSION=$(VERSION)
-# COMPFLAGS += -DCONFIG_USE_OLD_APP
+COMPFLAGS += -DCONFIG_USE_OLD_APP
+COMPFLAGS += -DUNIX
 # COMPFLAGS += -DCONFIG_SAVE_ATTRIBUTE
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
 

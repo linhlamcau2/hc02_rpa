@@ -64,7 +64,7 @@ public:
 	int GroupAdd(Group *group);
 	int GroupUpdate(Group *group);
 	int GroupDel(Group *group);
-	int GroupDel(int id);
+	int GroupDel(string id);
 	int GroupDelAll();
 
 	int DeviceInGroupRead();

@@ -60,12 +60,12 @@ int Db::GroupUpdate(Group *group)
 
 int Db::GroupDel(Group *group)
 {
-	return GroupDel(group->GetId());
+	return GroupDel(group->GetUUId());
 }
 
-int Db::GroupDel(int id)
+int Db::GroupDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId = \'" + id + "\';";
 	return Sqlite_Exec(sql);
 }
 
