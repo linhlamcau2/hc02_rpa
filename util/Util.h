@@ -9,10 +9,8 @@ using namespace std;
 
 namespace Util
 {
-	string genRandRQI(int size);
-	string getTimeStrFromTime(time_t t);
+	// string getTimeStrFromTime(time_t t);
 	string getCurrentTimeStr();
-
 	/**
 	 * @brief Get the Current Timer in minute object
 	 *
@@ -27,6 +25,8 @@ namespace Util
 	 */
 	double millis();
 
+	string genRandRQI(int size);
+
 	int GetCurrentWeekDay();
 	int ConvertStrTimeToInt(string time);
 	uint8_t CalCrc(uint8_t length, uint8_t *data);
@@ -37,11 +37,7 @@ namespace Util
 	bool CompareNumber(int a, int b, string op);
 
 	string ExecuteCMD(char const *command);
-	string GetMacAddress();
-	string GetIP();
-	void ScanWifi(Json::Value &jsonValue);
-	int ConnectToWifi(string ssid, string password, string encryption);
-	int SetModeApWifi();
+	string GetCurrentTimeStr();
 
 	void LedInternet(bool value);
 	void LedService(bool value);
@@ -51,4 +47,9 @@ namespace Util
 	void LedRestoreLastValue();
 	void LedServiceLock();
 	void LedServiceUnlock();
+
+	bool GetStatusLedBle();
+	bool GetStatusLedService();
+	bool GetStatusLedZigbee();
+	bool GetStatusLedInternet();
 }

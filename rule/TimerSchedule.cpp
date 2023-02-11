@@ -55,7 +55,7 @@ void TimerSchedule::init()
 static void run(TimerSchedule *timerSchedule)
 {
 	LOGI("Start Timer run");
-	int currentTimer, oldTimer;
+	int currentTimer, oldTimer = 0;
 	while (1)
 	{
 		currentTimer = Util::GetCurrentTimer();

@@ -11,7 +11,7 @@
 #include "Group.h"
 #include "Device.h"
 #include "DeviceBle.h"
-#include "../sceneBle/SceneBle.h"
+#include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -23,8 +23,14 @@ using namespace std;
 class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 {
 private:
+	string id;
 	string mac;
 	string dormitoryId;
+	string ble_netkey;
+	string ble_appkey;
+	string ble_devicekey;
+	uint16_t ble_unicast;
+	string version;
 	thread *udpBroadcastThread;
 	bool isUdpBroadcasting;
 
@@ -34,15 +40,17 @@ private:
 	map<int, SceneBle *> sceneBleList;
 	vector<Device *> scanDeviceList;
 
-
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
 
+	int CheckOnlineThread();
 	int UdpBroadcastThread();
+
+	int GatewayConnectToCloudNotice();
 
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
-	int OnUdpHcConnectWifi(Json::Value &reqValue, Json::Value &respValue);
+	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
@@ -81,14 +89,21 @@ private:
 	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
-	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
+	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
+
+	/**
+	 * @brief Factory reset (call when hold reset button in 5s)
+	 *
+	 */
+	void resetFactory();
 
 	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode
 	 *
 	 */
 	void StartUdpBroadcast();
+	void StopUdpBroadcast();
 
 	void AddDeviceToScanList(Device *scanDevice);
 	Group *getGroup(int id);
@@ -104,11 +119,28 @@ public:
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
 #endif
 
-	Device *AddNewDevice(string id, string name, string mac, uint32_t addr, uint32_t type, bool addGateway, bool addDatabase);
+	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 
+	uint16_t getBleUnicast();
+	string getBleNetkey();
+	string getBleAppKey();
+	string getBleDeviceKey();
+	string getDormitory();
+	string getId();
+	string getVersion();
+	string getName();
+
+	void setBleUnicast(uint16_t unicast);
+	void setBleNetkey(string netkey);
+	void setBleAppkey(string appkey);
+	void setBleDevicekey(string devicekey);
+	void setDormitory(string dormitory);
+	void setId(string id);
+	void setVersion(string version);
+	void setName(string name);
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 };

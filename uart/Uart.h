@@ -1,6 +1,6 @@
 #pragma once
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 2048
 
 #include <unistd.h>
 #include <thread>
@@ -24,6 +24,8 @@ public:
 
 	Uart(char *port, int timeout);
 	virtual ~Uart();
+	
+	void init();
 
 	int Open(int baudrate);
 	int Close();
@@ -31,5 +33,5 @@ public:
 	ssize_t Read(void *buf, size_t count);
 	ssize_t Write(const void *buf, size_t count);
 
-	virtual void OnMessage(unsigned char *data, int len);
+	virtual int OnMessage(unsigned char *data, int len);
 };

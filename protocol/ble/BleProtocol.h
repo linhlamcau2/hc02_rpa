@@ -1,19 +1,15 @@
 #pragma once
 
+#include <string>
 #include <stdint.h>
 #include <vector>
 #include <Uart.h>
 #include <atomic>
+#include <functional>
 
 #define SYSTEM_REQ 0xFFE9
 #define APP_REQ 0xFFE8
 #define RAL_MAGIC 0x0428
-
-// #define SCAN_RESP 0x8891
-// #define PRO_RESP 0x8B91
-// #define PROVISION_RESP 0x8991
-// #define BINDING_ALL_RESP 0x8A91
-// #define APP_RESP 0x8191
 
 enum
 {
@@ -116,27 +112,36 @@ private:
 
 	typedef function<void(scan_device_message_t *scan_device_message)> AddDeviceFunc;
 	AddDeviceFunc addDeviceFunc;
-	atomic<bool> isAdding;
 	scan_device_message_t scanDeviceMessage;
 
 	vector<message_rsp_list_st *> messageRespList;
 
 	// TODO: Add init state
 	uint8_t netKey[16];
+	uint8_t appKey[16];
 	uint8_t gwKey[16];
+	uint8_t deviceKey[16];
 	uint16_t nextAddr;
 
 	string uuidToStr(uuid_t *uuid);
+	string arrayToString844412(uint8_t *array);
 
 	void CheckOpcodeException(message_rsp_st *message);
-	void OnMessage(unsigned char *data, int len);
+	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
+#ifdef ESP_PLATFORM
+	BleProtocol(int num, int txPin, int rxPin, int baudrate);
+#else
 	BleProtocol(char *uartPort, int uartBaudrate);
+#endif
 	virtual ~BleProtocol();
 
+	atomic<bool> isAdding;
+	atomic<bool> isProvisioning;
 	void init();
+	int GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
 	int SetGwKey();
@@ -145,21 +150,35 @@ public:
 	int StopScan();
 	int ResetFactory();
 
-	void AddDevice(scan_device_message_t *scan_device_message);
+	bool AddDevice(scan_device_message_t *scan_device_message);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
-	int SetGwAddr(uint16_t devAddr, uint16_t gwAddr = 0x0002);
-	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType);
-	int TurnOnOff(uint16_t devAddr, uint8_t onoff);
-	int Dimming(uint16_t devAddr, uint16_t dim);
+	int SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet = 0x0001);
+	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t &deviceVersion);
 
+	int ResetDev(uint16_t devAddr);
+
+	int SendOnlineCheck(uint16_t devAddr);
+
+	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
+	int GetOnoffLight(uint16_t devAddr);
+	int SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transition, bool ack);
+	int GetDimming(uint16_t devAddr);
+	int SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition, bool ack);
+	int GetCct(uint16_t devAddr);
+	int SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t L, uint16_t transition, bool ack);
+	int GetHSL(uint16_t devAddr);
+	int SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, uint16_t transition, bool ack);
+	int GetCctDimLight(uint16_t devAddr);
+
+	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 
 	/**
-	 * @brief 
-	 * 
+	 * @brief
+	 *
 	 * @param devAddr id device
 	 * @param scene id scene
 	 * @param modeRgb 0 normal scene, 1->6 id mode blink RGB light
@@ -168,14 +187,18 @@ public:
 	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
 
 	/**
-	 * @brief 
-	 * 
+	 * @brief
+	 *
 	 * @param devAddr id device
 	 * @param scene id scene
 	 * @return int 0 success, -1 error
 	 */
 	int DelSceneLights(uint16_t devAddr, uint16_t scene);
 	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
+	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
+
+	// update status lights
+	int UpdateLights(uint16_t devAddr);
 };
 
 extern BleProtocol *bleProtocol;

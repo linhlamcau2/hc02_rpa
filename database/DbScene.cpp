@@ -19,21 +19,26 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				index++; // read id
 				const string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string rule;
-				string encode = macaron::Base64::Decode(data, rule);
-				if (encode == "")
+				string decode = macaron::Base64::Decode(data, rule);
+				if (decode == "")
 				{
 					LOGV("RuleRead rule: %s", rule.c_str());
 					Json::Value ruleValue;
-					string errs;
-					stringstream s(rule);
-					Json::CharReaderBuilder b;
-					Json::parseFromStream(b, s, &ruleValue, &errs);
-					Rule *rule = gateway->AddRule(ruleValue, true, false);
-					rule->Check();
+					Json::Reader r;
+					r.parse(rule, ruleValue);
+					if (ruleValue.isObject())
+					{
+						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						rule->Check();
+					}
+					else
+					{
+						LOGW("RuleRead json format error rule: %s", rule.c_str());
+					}
 				}
 				else
 				{
-					LOGW("Decode data err: %s", encode.c_str());
+					LOGW("Decode data err: %s", decode.c_str());
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -73,5 +78,3 @@ int Db::RuleDel(int id)
 	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
 	return Sqlite_Exec(sql);
 }
-
-

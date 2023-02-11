@@ -1,5 +1,8 @@
 #include "Db.h"
 #include <Log.h>
+#ifdef ESP_PLATFORM
+#include "esp_spiffs.h"
+#endif
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
@@ -8,6 +11,57 @@ Db *database = NULL;
 
 Db::Db()
 {
+}
+
+void Db::init(void)
+{
+#ifdef ESP_PLATFORM
+	LOGI("Initializing SPIFFS");
+
+	esp_vfs_spiffs_conf_t conf = {
+			.base_path = "/spiffs",
+			.partition_label = NULL,
+			.max_files = 5,
+			.format_if_mount_failed = true};
+
+	// Use settings defined above to initialize and mount SPIFFS filesystem.
+	// Note: esp_vfs_spiffs_register is an all-in-one convenience function.
+	esp_err_t ret = esp_vfs_spiffs_register(&conf);
+
+	if (ret != ESP_OK)
+	{
+		if (ret == ESP_FAIL)
+		{
+			LOGE("Failed to mount or format filesystem");
+		}
+		else if (ret == ESP_ERR_NOT_FOUND)
+		{
+			LOGE("Failed to find SPIFFS partition");
+		}
+		else
+		{
+			LOGE("Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+		}
+		return;
+	}
+
+	size_t total = 0, used = 0;
+	ret = esp_spiffs_info(conf.partition_label, &total, &used);
+	if (ret != ESP_OK)
+	{
+		LOGE("Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+	}
+	else
+	{
+		LOGI("Partition size: total: %d, used: %d", total, used);
+	}
+
+	sqlite3_initialize();
+
+// // All done, unmount partition and disable SPIFFS
+// esp_vfs_spiffs_unregister(conf.partition_label);
+// LOGI("SPIFFS unmounted");
+#endif
 }
 
 static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -23,16 +77,16 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 
 int Db::Sqlite_Exec(string &sql)
 {
-	// LOGD("Sqlite_Exec sql: %s", sql);
+	LOGD("Sqlite_Exec sql: %s", sql.c_str());
 	int rc;
 	sqlite3 *db;
 	char *err_msg = 0;
-	mtx.lock();
+	// mtx.lock();
 	rc = sqlite3_open(DB_NAME, &db);
 	if (rc)
 	{
 		LOGE("Can't open database: %s", sqlite3_errmsg(db));
-		mtx.unlock();
+		// mtx.unlock();
 		return -1;
 	}
 	else
@@ -46,7 +100,7 @@ int Db::Sqlite_Exec(string &sql)
 		sqlite3_free(err_msg);
 	}
 	sqlite3_close(db);
-	mtx.unlock();
+	// mtx.unlock();
 	return rc;
 }
 
@@ -62,15 +116,15 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 		LOGW("Parse func NULL");
 		return 1;
 	}
-	
+
 	LOGD("ReadAll table %s", table.c_str());
 
-	mtx.lock();
+	// mtx.lock();
 	rc = sqlite3_open(DB_NAME, &db);
 	if (rc)
 	{
 		LOGE("Can't open database: %s", sqlite3_errmsg(db));
-		mtx.unlock();
+		// mtx.unlock();
 		return rc;
 	}
 	else
@@ -83,7 +137,7 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 	{
 		LOGW("SQL error: %d - %s", rc, sql.c_str());
 		sqlite3_close(db);
-		mtx.unlock();
+		// mtx.unlock();
 		return rc;
 	}
 	else
@@ -95,6 +149,6 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
-	mtx.unlock();
+	// mtx.unlock();
 	return rc;
 }

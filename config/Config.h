@@ -5,9 +5,10 @@
 
 #define STRING_VALUE_MAX_SIZE 128
 #define CONFIG_ENV "smh.@server[0]."
+#define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "localhost"
+#define HOST_DEFAULT "broker.hivemq.com"
 #define PORT_KEY "port"
 #define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"
@@ -24,12 +25,21 @@ using namespace std;
 class Config
 {
 private:
+	//server
 	string host;
 	int port;
 	string clientId;
 	string username;
 	string password;
 	int keepAlive;
+
+	//local
+	string localHost;
+	int localPort;
+	string localClientId;
+	string localUsername;
+	string localPassword;
+	int localKeepAlive;
 
 public:
 	Config();
@@ -43,6 +53,14 @@ public:
 	string GetUsername();
 	string GetPassword();
 	int GetKeepAlive();
+
+	string GetLocalHost();
+	int GetLocalPort();
+	string GetLocalClientId();
+	string GetLocalUsername();
+	string GetLocalPassword();
+	int GetLocalKeepAlive();
+
 };
 
 extern Config *config;

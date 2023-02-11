@@ -26,6 +26,10 @@ Uart::~Uart()
 	}
 }
 
+void Uart::init()
+{
+}
+
 int Uart::Open(int baudrate)
 {
 	LOGI("Open port %s baudrate: %d", port, baudrate);
@@ -167,11 +171,12 @@ static void HandleInMessage(Uart *uart)
 			memset(uart->rx_buf, 0, BUFFER_SIZE);
 		}
 		else
-			usleep(10000);
+			usleep(5000);
 	}
 }
 
-void Uart::OnMessage(unsigned char *data, int len)
+int Uart::OnMessage(unsigned char *data, int len)
 {
 	LOGE("OnMessage len: %d, data: %s", len, data);
+	return 0;
 }

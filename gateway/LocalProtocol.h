@@ -1,12 +1,17 @@
 #pragma once
 
-#include "Mqtt.h"
 #include "json.h"
 #include <map>
 
 using namespace std;
 
+#ifdef ESP_PLATFORM
+#include "MqttBroker.h"
+class LocalProtocol : public MqttBroker
+#else
+#include "Mqtt.h"
 class LocalProtocol : public Mqtt
+#endif
 {
 private:
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnLocalCallbackFunc;

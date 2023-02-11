@@ -15,6 +15,7 @@
 #include "Device.h"
 #include "Db.h"
 #include "Util.h"
+#include "Wifi.h"
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
 
@@ -25,8 +26,6 @@
 #include "ZigbeeProtocol.h"
 #define ZIGBEE_UART_PORT "/dev/ttyS0"
 #endif
-
-#define TAG "MAIN"
 
 using namespace std;
 
@@ -53,6 +52,8 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, signal_handler);
 	signal(SIGUSR2, signal_handler);
 
+	mosqpp::lib_init();
+
 	config = new Config();
 	config->ReadConfig();
 
@@ -61,17 +62,17 @@ int main(int argc, char *argv[])
 
 	database = new Db();
 
-	// bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
-	// bleProtocol->init();
-
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
 #endif
 
-	string mac = Util::GetMacAddress();
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive());
+	string mac = Wifi::GetMacAddress();
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), "127.0.0.1", 1883, "", "", 10);
 	gateway->init();
+
+	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
+	bleProtocol->init();
 
 	Device::InitDeviceModelList();
 

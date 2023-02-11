@@ -5,8 +5,10 @@
 #include <string.h> //memset
 #include <stdlib.h> //exit(0);
 #include <unistd.h>
+#include <Base64.h>
 
 #include "Util.h"
+#include "Wifi.h"
 
 #define BUFLEN 1024
 
@@ -96,51 +98,91 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	LOGD("UdpOnMessage message: %s", message.c_str());
 	Json::Value respValue;
 	Json::Value payloadJson;
-	string errs;
-	stringstream s(message);
-	Json::CharReaderBuilder b;
-	Json::parseFromStream(b, s, &payloadJson, &errs);
-	if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+	Json::Reader r;
+	r.parse(message, payloadJson);
+	if (payloadJson.isObject())
 	{
-		string method = payloadJson["CMD"].asString();
-		if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
+		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
-			OnRPCCallbackFunc onRPCCallbackFunc = onRPCCallbackFuncList[method];
-			int rs = onRPCCallbackFunc(payloadJson, respValue);
-			if (rs == 0)
+			string method = payloadJson["CMD"].asString();
+			if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
 			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
-				send(respValue.toString(), si_other, slen);
-			}
-			else if (rs == 10) // respValue as an array
-			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
-				if (respValue.isArray())
+				OnRPCCallbackFunc onRPCCallbackFunc = onRPCCallbackFuncList[method];
+				int rs = onRPCCallbackFunc(payloadJson, respValue);
+				if (rs == 0)
 				{
-					for (Json::Value::ArrayIndex i = 0; i < respValue.size(); i++)
+					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+					send(respValue.toString(), si_other, slen);
+				}
+				else if (rs == 10) // respValue as an array
+				{
+					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+					if (respValue.isArray())
 					{
-						send(respValue[i].toString(), si_other, slen);
+						for (Json::ArrayIndex i = 0; i < respValue.size(); i++)
+						{
+							send(respValue[i].toString(), si_other, slen);
+						}
 					}
 				}
-			}
-			else if (rs == 1)
-			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				else if (rs == 1)
+				{
+					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				}
+				else
+				{
+					LOGW("Call %s ERR rs: %d", method.c_str(), rs);
+				}
 			}
 			else
 			{
-				LOGW("Call %s ERR rs: %d", method.c_str(), rs);
+				LOGW("Method %s not registed", method.c_str());
 			}
 		}
 		else
 		{
-			LOGW("Method %s not registed", method.c_str());
+			LOGW("UdpOnMessage message: %s", message.c_str());
 		}
 	}
+#ifdef CONFIG_USE_OLD_APP
 	else
 	{
-		LOGW("UdpOnMessage message: %s", message.c_str());
+		string messageBase64;
+		string decode = macaron::Base64::Decode(message, messageBase64);
+		if (decode == "")
+		{
+			r.parse(messageBase64, payloadJson);
+			if (payloadJson.isObject())
+			{
+				if (payloadJson.isMember("SSID") && payloadJson["SSID"].isString() &&
+						payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
+						payloadJson.isMember("ENCRYPTION") && payloadJson["ENCRYPTION"].isString())
+				{
+					string ssid = payloadJson["SSID"].asString();
+					string password = payloadJson["PASSWORD"].asString();
+					string encryption = payloadJson["ENCRYPTION"].asString();
+					LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
+					if (Wifi::ConnectToWifi(ssid, password, encryption) == 0)
+					{
+						LOGI("ip: %s", Wifi::GetIP().c_str());
+					}
+					else
+					{
+						LOGW("Connect wifi err");
+					}
+				}
+				else
+				{
+					LOGW("UdpOnMessage message: %s", messageBase64.c_str());
+				}
+			}
+		}
+		else
+		{
+			LOGW("Base64 decode err: %s", decode.c_str());
+		}
 	}
+#endif
 }
 
 int Udp::send(string message, struct sockaddr_in *si_other, int slen)
