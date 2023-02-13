@@ -5,6 +5,8 @@
 #include "Config.h"
 #include "Log.h"
 
+#define TAG "Config"
+
 Config *config = NULL;
 
 /****************************************

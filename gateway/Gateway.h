@@ -64,6 +64,11 @@ private:
 	int OnRPCZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCZigbeeResetFactory(Json::Value &reqValue, Json::Value &respValue);
 #endif
+	int OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
+
 	int OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue);

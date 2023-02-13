@@ -27,6 +27,8 @@
 #define ZIGBEE_UART_PORT "/dev/ttyS0"
 #endif
 
+#define TAG "MAIN"
+
 using namespace std;
 
 static void signal_handler(int sig)
@@ -68,7 +70,7 @@ int main(int argc, char *argv[])
 #endif
 
 	string mac = Wifi::GetMacAddress();
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), "127.0.0.1", 1883, "", "", 10);
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), 10);
 	gateway->init();
 
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
