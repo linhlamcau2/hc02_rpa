@@ -158,6 +158,7 @@ public:
 	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t &deviceVersion);
 
 	int ResetDev(uint16_t devAddr);
+	int ResetDelAll();
 
 	int SendOnlineCheck(uint16_t devAddr);
 
