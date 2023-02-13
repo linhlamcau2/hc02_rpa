@@ -7,36 +7,46 @@ CXX ?= g++
 OBJEXT ?= .o
 BUILD_PATH = build
 
-INCLUDES = -I. -Iconfig -Igateway -Igroup -Idevice -Idevice/ble -Ilog -Ijson -Idatabase -Iprotocol -Irule -Iutil
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi
 COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-deprecated -Wno-deprecated-declarations -Wno-unused-result -flto -fPIC
 COMPFLAGS += -DVERSION=$(VERSION)
+COMPFLAGS += -DCONFIG_USE_OLD_APP
+COMPFLAGS += -DUNIX
+# COMPFLAGS += -DCONFIG_SAVE_ATTRIBUTE
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
 
-LINKEDLIBS = -lpthread -lmosquittopp -lsqlite3 -luci
+LINKEDLIBS = -lpthread -lmosquitto -lsqlite3 -luci
+
 
 ifeq ($(ZIGBEE),ON)
-	INCLUDES 	+= -Idevice/zigbee
+	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
 	COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
 
+	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/attribute/*.cpp)
 endif
 
+DEVICESRC += $(wildcard button/*.cpp)
 DEVICESRC += $(wildcard config/*.cpp)
-DEVICESRC += $(wildcard gateway/*.cpp)
-DEVICESRC += $(wildcard group/*.cpp)
+DEVICESRC += $(wildcard database/*.cpp)
 DEVICESRC += $(wildcard device/*.cpp)
 DEVICESRC += $(wildcard device/ble/*.cpp)
 DEVICESRC += $(wildcard device/ble/module/*.cpp)
 DEVICESRC += $(wildcard device/ble/element/*.cpp)
-DEVICESRC += $(wildcard database/*.cpp)
-DEVICESRC += $(wildcard protocol/*.cpp)
-DEVICESRC += $(wildcard rule/*.cpp)
+DEVICESRC += $(wildcard gateway/*.cpp)
+DEVICESRC += $(wildcard group/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)
+DEVICESRC += $(wildcard mqtt/*.cpp)
+DEVICESRC += $(wildcard protocol/ble/*.cpp)
+DEVICESRC += $(wildcard rule/*.cpp)
+DEVICESRC += $(wildcard sceneBle/*.cpp)
+DEVICESRC += $(wildcard uart/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)
+DEVICESRC += $(wildcard wifi/*.cpp)
 
 CPPSRC = $(wildcard *.cpp) $(DEVICESRC)
 CPPOBJ = $(CPPSRC:.cpp=$(OBJEXT))

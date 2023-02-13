@@ -21,14 +21,16 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string ble_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string ble_appkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string ble_devicekey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				uint16_t ble_unicast = sqlite3_column_int(stmt, index++);
 				string dormitory = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				LOGI("Gateway: id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, dormitory: %s", id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), dormitory.c_str());
+				LOGI("Gateway: id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, unicast: %d, dormitory: %s", id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), ble_unicast, dormitory.c_str());
                 
 				gateway->setId(id);
 				gateway->setBleAppkey(ble_appkey);
 				gateway->setBleDevicekey(ble_devicekey);
 				gateway->setBleNetkey(ble_netkey);
+				gateway->setBleUnicast(ble_unicast);
 				gateway->setDormitory(dormitory);
 				return 0;
 			}
@@ -83,6 +85,11 @@ int Db::GatewayUpdateAppKey(Gateway *gateway, string appkey)
 int Db::GatewayUpdateDeviceKey(Gateway *gateway, string devicekey)
 {
 	string sql = "UPDATE " TABLE_NAME " SET ble_devicekey=\"" + devicekey + "\" WHERE id=\"" + gateway->getId() + "\";";
+	return Sqlite_Exec(sql);
+}
+int Db::GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast)
+{
+	string sql = "UPDATE " TABLE_NAME " SET ble_unicast =" + to_string(unicast) + " WHERE id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 int Db::GatewayUpdateDormitory(Gateway *gateway, string dormitory)

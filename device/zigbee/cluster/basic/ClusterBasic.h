@@ -1,5 +1,5 @@
 #pragma once
-#include "../Cluster.h"
+#include "Cluster.h"
 // #include "attribute/AttributeOnoff.h"
 
 #define ATTRIBUTE_BASIC_ZCLVersion 0x0000

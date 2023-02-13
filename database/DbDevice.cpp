@@ -50,7 +50,7 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, name, mac, device_id, addr, type, firmware_version) VALUES (\"" + device->GetId() + "\",\"" + device->GetName() + "\",\"" + device->GetMac() + "\",\""+device->GetDeviceId()+"\"," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",\""+device->GetVersionStr()+"\")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, name, mac, device_id, addr, type, firmware_version) VALUES (\"" + device->GetId() + "\",\"" + device->GetName() + "\",\"" + device->GetMac() + "\",\""+device->GetDeviceId()+"\"," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",\""+device->GetVersionStr()+"\")";
 	return Sqlite_Exec(sql);
 }
 

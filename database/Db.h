@@ -7,8 +7,13 @@
 #include <Device.h>
 #include <Group.h>
 #include <Gateway.h>
+#include "SceneBle.h"
 
+#ifdef ESP_PLATFORM
+#define DB_NAME "/spiffs/smh.sqlite"
+#else
 #define DB_NAME "/smh.sqlite"
+#endif
 
 using namespace std;
 
@@ -16,7 +21,8 @@ class Db
 {
 
 private:
-	mutex mtx;
+	// TODO:
+	// mutex mtx;
 
 	int Sqlite_Exec(string &sql);
 	int ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
@@ -24,6 +30,8 @@ private:
 public:
 	Db();
 	~Db() {}
+
+	void init(void);
 
 	int DeviceRead();
 	int DeviceAdd(Device *device);
@@ -39,11 +47,11 @@ public:
 	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
 	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
 	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast);
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
-
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
@@ -56,7 +64,7 @@ public:
 	int GroupAdd(Group *group);
 	int GroupUpdate(Group *group);
 	int GroupDel(Group *group);
-	int GroupDel(int id);
+	int GroupDel(string id);
 	int GroupDelAll();
 
 	int DeviceInGroupRead();
@@ -64,11 +72,21 @@ public:
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
 	int DeviceInGroupDelAll();
 
+	// int DeviceSceneRead();
+	// int DeviceSceneAdd(string mac, string schedule);
+	// int DeviceSceneAdd(Device *device, string schedule);
+	// int DeviceSceneDel(string mac, string schedule);
+	// int DeviceSceneDel(Device *device, string schedule);
+
 	int RuleRead();
 	int RuleAdd(int id, string rule);
 	int RuleUpdate(int id, string rule);
 	int RuleDel(int id);
 
+	int SceneBleRead();
+	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
+	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
+	int SceneBleDel(SceneBle *scene);
 };
 
 extern Db *database;

@@ -15,6 +15,7 @@ protected:
 public:
 	Element(Device *device, uint32_t addr);
 
+	virtual bool InputData(uint8_t *data, int len, Json::Value &jsonValue) { return false; }
 	virtual void BuildTelemetryValue(Json::Value &jsonValue) {}
 	virtual bool Do(Json::Value &dataValue) { return false; }
 };

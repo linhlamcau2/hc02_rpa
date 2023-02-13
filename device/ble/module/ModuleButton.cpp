@@ -1,65 +1,86 @@
 #include "ModuleButton.h"
 #include <Log.h>
 #include <Util.h>
+#include "BleDefine.h"
 #include "Device.h"
+#include "BleProtocol.h"
 #include "Db.h"
 
-ModuleButton::ModuleButton(Device *device, int index) : Module(device)
+ModuleButton::ModuleButton(Device *device, uint32_t addr) : ModuleButton(device, addr, 0)
 {
-	bt = 0;
-	this->index = index;
-	buttonName = "bt" + to_string(index);
 }
 
-void ModuleButton::InitAttribute(int attributeId, double value)
+ModuleButton::ModuleButton(Device *device, uint32_t addr, int index) : Module(device, addr)
 {
-	if (attributeId == parameterToId[buttonName])
+	bt = 0;
+	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr() + index;
+}
+
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModuleButton::InitAttribute(int id, double value)
+{
+	if (this->id == id)
 		bt = value;
 }
 
 void ModuleButton::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, parameterToId[buttonName], bt);
+	database->DeviceAttributeAddOrReplace(device, id, bt);
 }
+#endif
 
-void ModuleButton::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	bt = data[0];
-	SaveAttribute();
-	BuildTelemetryValue(jsonValue);
-	CheckTrigger();
+	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00 && data[3] + 10 == id)
+	{
+		bt = data[4];
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return true;
+	}
+	return false;
 }
 
-bool ModuleButton::CheckData(Json::Value dataValue)
+bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	bool rs = false;
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember(buttonName) && dataValue[buttonName].isInt())
+		int id = dataValue["ID"].asInt();
+		if (this->id == id)
 		{
-			int bt = dataValue[buttonName].asInt();
-			rs = Util::CompareNumber(this->bt, bt, op);
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+					dataValue.isMember("OP") && dataValue["OP"].isString())
+			{
+				uint16_t value = dataValue["VALUE"].asInt();
+				string op = dataValue["OP"].asString();
+				if (this->id == id)
+					rs = Util::CompareNumber(this->bt, value, op);
+				return true;
+			}
 		}
 	}
-	return rs;
+	return false;
 }
 
+// TODO: can nhac di chuyen den Module.cpp
 void ModuleButton::CheckTrigger()
 {
 	LOGD("CheckTrigger");
+	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
-		if (CheckData(*ruleInputDevice->GetData()))
-			ruleInputDevice->Trigger(true);
+		rs = false;
+		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
 	}
 }
 
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
-	dataValue["ID"] = parameterToId[buttonName];
+	dataValue["ID"] = id;
 	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
 }

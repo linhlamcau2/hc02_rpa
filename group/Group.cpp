@@ -1,8 +1,12 @@
 #include "Group.h"
 #include <thread>
 #include <Log.h>
-#include "ZigbeeProtocol.h"
 #include "BleProtocol.h"
+#ifdef CONFIG_ENABLE_ZIGBEE
+#include "ZigbeeProtocol.h"
+#endif
+
+#define ID_START (49152)
 
 DeviceInGroup::DeviceInGroup(Device *device, int epId)
 {
@@ -34,15 +38,33 @@ string Group::GetName()
 	return name;
 }
 
+string Group::GetUUId()
+{
+	return groupUUId;
+}
+
+int Group::GetPositionDevice(Device *device)
+{
+	uint32_t deviceAddr = device->GetAddr();
+	for (uint32_t i = 0; i < deviceList.size(); i++)
+	{
+		if (deviceAddr == deviceList[i]->device->GetAddr())
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 /**
  * @brief Add device function
- * 
+ *
  * @param device ID Device
  * @param epId Element ID
  * @return true success
  * @return false fail
  */
-bool Group::AddDevice(Device *device, int epId)
+bool Group::AddDevice(Device *device, int epId, bool sendBle)
 {
 	// TODO: Check exsit
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
@@ -52,19 +74,31 @@ bool Group::AddDevice(Device *device, int epId)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id) == 0)
+		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+		if (sendBle)
 		{
-			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
+			{
+				if (deviceInGroup)
+				{
+					deviceList.push_back(deviceInGroup);
+					numberOfBleDevice++;
+				}
+				return true;
+			}
+			else
+			{
+				LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
+			}
+		}
+		else
+		{
 			if (deviceInGroup)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
 			}
 			return true;
-		}
-		else
-		{
-			LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
 		}
 	}
 
@@ -90,13 +124,19 @@ bool Group::AddDevice(Device *device, int epId)
 	return false;
 }
 
-void Group::DelDevice(Device *device, int epId)
+bool Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		// TODO: remove from group
-		numberOfBleDevice--;
-		// bleProtocol->AddGroup(id, device->GetAddr(), epId);
+		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
+		{
+			int deviceIndex = GetPositionDevice(device);
+			if (deviceIndex > -1)
+			{
+				deviceList.erase(deviceList.begin() + deviceIndex);
+			}
+			return true;
+		}
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -110,15 +150,13 @@ void Group::DelDevice(Device *device, int epId)
 	// TODO: remove from list
 	// if (device)
 	// 	deviceList.erase(remove(deviceList.begin(), deviceList.end(), device), deviceList.end());
+	return false;
 }
 
 bool Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
-
-	auto doBleBind = bind(&Group::DoBle, this, placeholders::_1);
-	thread doBleThread(doBleBind, &this->dataValue);
-	doBleThread.detach();
+	DoBle(&this->dataValue);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
@@ -139,25 +177,58 @@ void Group::DoBle(Json::Value *dataValue)
 {
 	if (numberOfBleDevice)
 	{
-		if (dataValue->isMember("method") && (*dataValue)["method"].isString())
+		bool isIdHue = false;
+		bool isIdSaturation = false;
+		bool isIdLuminance = false;
+		uint16_t valueHue, valueSaturation, valueLuminance;
+		for (Json::ArrayIndex i = 0; i < dataValue->size(); i++)
 		{
-			string method = (*dataValue)["method"].asString();
-			if (method == "TurnOn")
+			Json::Value property = dataValue[0][i];
+			if (property.isMember("ID") && property["ID"].isInt() &&
+					property.isMember("VALUE") && property["VALUE"].isInt())
 			{
-				// bleProtocol->TurnOnOff(0xC000 + id, 0);
+				int idProperty = property["ID"].asInt();
+				unsigned int value = property["VALUE"].asInt();
+				if (idProperty == 0)
+				{
+					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
+				}
+				else if (idProperty == 1)
+				{
+					bleProtocol->SetDimmingLight(id + ID_START, (value * 65535) / 100, 0, true);
+				}
+				else if (idProperty == 2)
+				{
+					bleProtocol->SetCctLight(id + ID_START, (value * 192) + 800, 0, true);
+				}
+				else if (idProperty == 3)
+				{
+					isIdHue = true;
+					valueHue = value;
+				}
+				else if (idProperty == 4)
+				{
+					isIdSaturation = true;
+					valueSaturation = value;
+				}
+				else if (idProperty == 5)
+				{
+					isIdLuminance = true;
+					valueLuminance = value;
+				}
+				else if (idProperty == 23)
+				{
+					bleProtocol->CallModeRgb(id + ID_START, value);
+				}
+				else
+				{
+					LOGW("DoTrigger id: %d don't support", id);
+				}
 			}
-			else if (method == "TurnOff")
-			{
-				// bleProtocol->TurnOnOff(0xC000 + id, 1);
-			}
-			else if (method == "Toggle")
-			{
-				// bleProtocol->TurnOnOff(0xC000 + id, 2);
-			}
-			else
-			{
-				LOGW("Ble Group not handle method %s", method.c_str());
-			}
+		}
+		if (isIdHue && isIdLuminance && isIdSaturation)
+		{
+			bleProtocol->SetHSLLight(id + ID_START, valueHue, valueSaturation, valueLuminance, 0, true);
 		}
 	}
 }

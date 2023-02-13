@@ -4,7 +4,7 @@
 #include <Util.h>
 #include <Log.h>
 
-Rule::Rule(int id, string type, unsigned char repeater)
+Rule::Rule(string id, string type, unsigned char repeater)
 {
 	this->id = id;
 	this->type = type;
@@ -16,7 +16,7 @@ Rule::Rule(int id, string type, unsigned char repeater)
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(int id, string type, unsigned char repeater, int startTime, int endTime)
+Rule::Rule(string id, string type, unsigned char repeater, int startTime, int endTime)
 {
 	this->id = id;
 	this->type = type;
@@ -44,7 +44,7 @@ Rule::~Rule()
 		timerSchedule->UnregisterTimer(timerRegisterIndex);
 }
 
-int Rule::GetId()
+string Rule::GetId()
 {
 	return id;
 }
@@ -90,7 +90,7 @@ void Rule::Check()
 	}
 	if (checkRuleInputResult)
 	{
-		LOGI("Do output rule id: %d", id);
+		LOGI("Do output rule id: %s", id.c_str());
 		RunOutput();
 		count++;
 		lastTimeActive = time(NULL);
