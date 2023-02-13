@@ -184,13 +184,13 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 {
 	int rs = 0;
 	message_rsp_list_st message_rsp_list = {
-			.status = false,
-			.opcode = opRsp,
-			.len = lenRsp,
-			.data = dataRsp,
-			.compare_data = compare_data,
-			.compare_position = compare_position,
-			.compare_len = compare_len};
+		.status = false,
+		.opcode = opRsp,
+		.len = lenRsp,
+		.data = dataRsp,
+		.compare_data = compare_data,
+		.compare_position = compare_position,
+		.compare_len = compare_len};
 	if (opRsp)
 	{
 		// TODO: add mutex
@@ -198,7 +198,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	}
 
 	message_req_st message_req = {
-			.opcode = opReq};
+		.opcode = opReq};
 	for (int i = 0; i < lenReq; i++)
 	{
 		message_req.data[i] = dataReq[i];
@@ -402,7 +402,7 @@ int BleProtocol::ResetFactory()
 {
 	LOGD("ResetFactory");
 	uint8_t d = HCI_GATEWAY_CMD_RESET;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 8000);
 	if (rs)
 	{
 		LOGE("Send reset factory error, rs: %d", rs);
@@ -422,10 +422,10 @@ string BleProtocol::uuidToStr(uuid_t *uuid)
 	char buf[100];
 	uint8_t *u8Uuid = (uint8_t *)uuid;
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
-					u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
-					u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
-					u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
+			u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
+			u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
+			u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
+			u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -434,10 +434,10 @@ string BleProtocol::arrayToString844412(uint8_t *array)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					array[0], array[1], array[2], array[3],
-					array[4], array[5], array[6], array[7],
-					array[8], array[9], array[10], array[11],
-					array[12], array[13], array[14], array[15]);
+			array[0], array[1], array[2], array[3],
+			array[4], array[5], array[6], array[7],
+			array[8], array[9], array[10], array[11],
+			array[12], array[13], array[14], array[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -824,6 +824,36 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 	reset_message.addr = devAddr;
 	reset_message.opcode = 0x4980;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, 10, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, resetHeader, 0, 6);
+	if (rs == 0)
+	{
+		return 0;
+	}
+	return -1;
+}
+
+int BleProtocol::ResetDelAll()
+{
+	LOGD("Reset all dev addr");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t data[13];
+	} reset_message_t;
+	reset_message_t reset_message = {0};
+	memset(&reset_message, 0x00, sizeof(reset_message));
+	reset_message.addr = 0xffff;
+	reset_message.data[0] = 0xe0;
+	reset_message.data[1] = 0x11;
+	reset_message.data[2] = 0x02;
+	reset_message.data[3] = 0xe1;
+	reset_message.data[4] = 0x00;
+	reset_message.data[5] = 0xff;
+	reset_message.data[6] = 0xff;
+
+	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, 21, 0, 0, 0, 1000);
 	if (rs == 0)
 	{
 		return 0;

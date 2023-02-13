@@ -98,8 +98,8 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
-	OnDeviceRPCCallbackRegister("RESET_HC", bind(&Gateway::OnRPCBleResetHC, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleReset, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("RESET_HC", bind(&Gateway::OnRPCResetFactory, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRPCCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
@@ -121,8 +121,8 @@ void Gateway::init()
 	OnLocalCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleResetFactory, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("RESET_HC", bind(&Gateway::OnRPCBleResetHC, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_BLE", bind(&Gateway::OnRPCBleReset, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_HC", bind(&Gateway::OnRPCResetFactory, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("CREATE_ROOM", bind(&Gateway::OnRPCCreateRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRPCAddDevToRoom, this, placeholders::_1, placeholders::_2));
@@ -185,9 +185,12 @@ void Gateway::ResetFactory()
 	LOGI("ResetFactory");
 	database->DeviceDelAll();
 	database->GatewayDelAll();
+	database->GatewayUpdateId(gateway, gateway->getId());
+	gateway->setBleAppkey("");
 	database->DeviceAttributeDelAll();
 	database->GroupDelAll();
 	database->DeviceInGroupDelAll();
+	bleProtocol->ResetDelAll();
 	bleProtocol->ResetFactory();
 	deviceList.clear();
 	groupList.clear();
@@ -670,7 +673,7 @@ int Gateway::OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
-int Gateway::OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
@@ -678,11 +681,14 @@ int Gateway::OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
-int Gateway::OnRPCBleResetHC(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
 	ResetFactory();
-	respValue["code"] = 0;
+	respValue["CMD"] = "RESET_HC";
+	Json::Value data;
+	data["STATUS"] = "SUCCESS";
+	respValue["DATA"] = data;
 	return 0;
 }
 
