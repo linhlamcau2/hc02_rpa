@@ -455,17 +455,17 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
 	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
 	LOGI("Scan device mac 0x%s, rssi: %i", mac.c_str(), scan_device_message->rssi);
-	if (!SelectMac(scan_device_message->mac) && isProvisioning)
+	if (isProvisioning && !SelectMac(scan_device_message->mac))
 	{
-		if (!GetNetKey() && isProvisioning)
+		if (isProvisioning && !GetNetKey())
 		{
-			if (!Provision(nextAddr) && isProvisioning)
+			if (isProvisioning && !Provision(nextAddr))
 			{
-				if (!BindingAll() && isProvisioning)
+				if (isProvisioning && !BindingAll())
 				{
-					if (!SetGwAddr(nextAddr, gateway->getBleUnicast()) && isProvisioning)
+					if (isProvisioning && !SetGwAddr(nextAddr, gateway->getBleUnicast()))
 					{
-						if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version) && isProvisioning)
+						if (isProvisioning && !GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
 						{
 							deviceType = convertDeviceType(deviceType);
 							Device *device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, arrayToString844412((uint8_t *)deviceKey), nextAddr, deviceType, version, true, true);
@@ -1337,14 +1337,17 @@ int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRg
 			uint16_t gwAddr;
 			uint16_t opcode;
 			uint8_t offset;
-			uint16_t scene;
+			uint8_t scene[2];
 		} setscene_rsp_message_t;
 		setscene_rsp_message_t *setscene_rsp_message = (setscene_rsp_message_t *)dataRsp;
-		if (setscene_rsp_message->scene == scene)
+		if ((setscene_rsp_message->scene[0] | (setscene_rsp_message->scene[1] << 8)) == scene)
 		{
 			return 0;
 		}
-		LOGW("set scene resp state not match with input control");
+		else
+		{
+			LOGW("set scene resp state not match with input control");
+		}
 	}
 	LOGW("Set scene err");
 	return -1;
@@ -1470,14 +1473,16 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 		uint8_t rev[6];
 		uint16_t addr;
 		uint16_t opcode;
+		uint16_t header;
 		uint8_t mode;
 	} modergb_message_t;
 	modergb_message_t modergb_message = {0};
 	memset(&modergb_message, 0x00, sizeof(modergb_message));
 	modergb_message.addr = devAddr;
-	modergb_message.opcode = 0x0919;
+	modergb_message.opcode = 0x5082;
+	modergb_message.header = 0x0919;
 	modergb_message.mode = modeRgb;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&modergb_message, 12, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeRgbHeader, 0, 6);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&modergb_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeRgbHeader, 0, 6);
 	if (rs == 0)
 	{
 		typedef struct
