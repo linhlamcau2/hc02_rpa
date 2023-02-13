@@ -342,7 +342,7 @@ int Gateway::UdpBroadcastThread()
 	hcBroadcastValue["DATA"] = dataValue;
 	isUdpBroadcasting = true;
 	bool ledInternet = Util::GetStatusLedInternet();
-	for (int i = 0; i < 60; i++)
+	for (int i = 0; i < 120; i++)
 	{
 		if (!isUdpBroadcasting)
 			break;
@@ -793,7 +793,6 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 					temp_sceneUnicastId = x.first + 1;
 				}
 			}
-			cout << "scene id: " << temp_sceneUnicastId << endl;
 			SceneBle *scene = new SceneBle(sceneId, temp_sceneUnicastId, sceneId);
 			if (scene)
 			{
@@ -1010,7 +1009,7 @@ int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 							else
 							{
-								LOGW("Group %s does not exsit");
+								LOGW("Group %s does not exsit", idGroup.c_str());
 							}
 
 							int modeRGB = 0;

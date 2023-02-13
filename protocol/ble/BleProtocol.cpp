@@ -193,6 +193,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 			.compare_len = compare_len};
 	if (opRsp)
 	{
+		// TODO: add mutex
 		messageRespList.push_back(&message_rsp_list);
 	}
 
