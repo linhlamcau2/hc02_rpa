@@ -863,6 +863,7 @@ int BleProtocol::ResetDelAll()
 int BleProtocol::SendOnlineCheck(uint16_t devAddr)
 {
 	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+
 	return 0;
 }
 
@@ -1576,3 +1577,59 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 	LOGW("update lights mode rgb err");
 	return -1;
 }
+
+int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type)
+{
+	LOGD("SetSceneSwitchSceneDC 0x%04x, button %d, mode %d, sceneId %d, type %d", devAddr, button, mode, sceneId, type);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t setSceneDcHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((package))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint8_t button;
+		uint8_t mode;
+		uint16_t sceneId;
+		uint8_t type;
+		uint8_t future[8];
+	} update_message_t;
+	update_message_t set_scene_dc_message = {0};
+	memset(&set_scene_dc_message, 0x00, sizeof(set_scene_dc_message));
+	set_scene_dc_message.addr = devAddr;
+	set_scene_dc_message.opcodeVendor = 0xe2;
+	set_scene_dc_message.vendorId = 0x0211;
+	set_scene_dc_message.opcodeRsp = 0x00e3;
+	set_scene_dc_message.header = 0x0102;
+	set_scene_dc_message.button = button;
+	set_scene_dc_message.mode = mode;
+	set_scene_dc_message.sceneId = sceneId;
+	set_scene_dc_message.type = type;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&set_scene_dc_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneDcHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((package))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;  
+		} update_rsp_message_t;
+		update_rsp_message_t *update_rsp_message = (update_rsp_message_t *)dataRsp;
+		if (update_rsp_message->header == 0x02)
+		{
+			return 0;
+		}
+		LOGW("update lights resp state not match with input control");
+	}
+	LOGW("update lights mode rgb err");
+	return -1;
+}
+int SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
+int DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode);
+int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);
