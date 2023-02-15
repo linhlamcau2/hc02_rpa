@@ -184,13 +184,13 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 {
 	int rs = 0;
 	message_rsp_list_st message_rsp_list = {
-		.status = false,
-		.opcode = opRsp,
-		.len = lenRsp,
-		.data = dataRsp,
-		.compare_data = compare_data,
-		.compare_position = compare_position,
-		.compare_len = compare_len};
+			.status = false,
+			.opcode = opRsp,
+			.len = lenRsp,
+			.data = dataRsp,
+			.compare_data = compare_data,
+			.compare_position = compare_position,
+			.compare_len = compare_len};
 	if (opRsp)
 	{
 		// TODO: add mutex
@@ -198,7 +198,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	}
 
 	message_req_st message_req = {
-		.opcode = opReq};
+			.opcode = opReq};
 	for (int i = 0; i < lenReq; i++)
 	{
 		message_req.data[i] = dataReq[i];
@@ -210,7 +210,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	{
 		while (!message_rsp_list.status && timeout)
 		{
-			usleep(1000);
+			usleep(10000);
 			--timeout;
 		}
 		if (message_rsp_list.status)
@@ -422,10 +422,10 @@ string BleProtocol::uuidToStr(uuid_t *uuid)
 	char buf[100];
 	uint8_t *u8Uuid = (uint8_t *)uuid;
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
-			u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
-			u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
-			u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
+					u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
+					u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
+					u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
+					u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -434,10 +434,10 @@ string BleProtocol::arrayToString844412(uint8_t *array)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			array[0], array[1], array[2], array[3],
-			array[4], array[5], array[6], array[7],
-			array[8], array[9], array[10], array[11],
-			array[12], array[13], array[14], array[15]);
+					array[0], array[1], array[2], array[3],
+					array[4], array[5], array[6], array[7],
+					array[8], array[9], array[10], array[11],
+					array[12], array[13], array[14], array[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -867,7 +867,7 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr)
 	return GetOnoffLight(devAddr);
 }
 
-int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)
+int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack, bool isGroup)
 {
 	LOGD("Set OnOff addr: 0x%04X value %d", devAddr, onoff);
 	uint8_t dataRsp[100];
@@ -892,9 +892,15 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.rev2 = 0;
 		onoff_message.transition[0] = transition & 0xFF;
 		onoff_message.transition[1] = (transition >> 8) & 0xFF;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
+		int rs = 0;
+		if (isGroup)
+			rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, NULL, 0, 7);
+		else
+			rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
 		if (rs == 0)
 		{
+			if (isGroup)
+				return 0;
 			typedef struct
 			{
 				uint16_t devAddr;
@@ -1333,6 +1339,97 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 		return 0;
 	}
 	LOGW("Del group err");
+	return -1;
+}
+
+#define GROUP_ID_START (49152)
+int BleProtocol::AddDevToRoom(uint16_t devAddr, uint16_t element, uint16_t group)
+{
+	LOGD("AddDevToRoom addr: 0x%04X  with element: 0x%04x to group: 0x%04X", devAddr, element, group);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t addDeviceToRoomHeader[] = {0xe1, 0x11, 0x02, 0x04, 0x00};
+	typedef struct __attribute__((packed))
+	{
+		uint16_t nk_idx;
+		uint16_t ak_idx;
+		uint8_t retry;
+		uint8_t rsp_max;
+		uint16_t addr;
+		uint8_t vendor_op;
+		uint16_t com_id;
+		uint8_t op_rsp;
+		uint8_t tid;
+		uint16_t header;
+		uint16_t groupId;
+		uint16_t sceneId;
+	} add_device_to_room_message_t;
+	add_device_to_room_message_t add_device_to_room_message;
+	LOGI("add_device_to_room_message size: %d", sizeof(add_device_to_room_message));
+	memset(&add_device_to_room_message, 0x00, sizeof(add_device_to_room_message));
+	add_device_to_room_message.addr = devAddr;
+	add_device_to_room_message.vendor_op = 0xe0;
+	add_device_to_room_message.com_id = 0x0211;
+	add_device_to_room_message.op_rsp = 0xe1;
+	add_device_to_room_message.header = 0x0004;
+	add_device_to_room_message.groupId = group + GROUP_ID_START;
+	add_device_to_room_message.sceneId = group + 1;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&add_device_to_room_message, sizeof(add_device_to_room_message), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, addDeviceToRoomHeader, 4, 5);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t vendor_op;
+			uint16_t com_id;
+			uint16_t header;
+			uint16_t groupId;
+			uint16_t sceneId;
+		} add_device_to_room_rsp_message_t;
+		add_device_to_room_rsp_message_t *add_device_to_room_rsp_message = (add_device_to_room_rsp_message_t *)dataRsp;
+		LOGD("group: 0x%04X, scene: 0x%04X", add_device_to_room_rsp_message->groupId, add_device_to_room_rsp_message->sceneId);
+		if (add_device_to_room_rsp_message->header == 0x0004 &&
+				add_device_to_room_rsp_message->groupId == group + GROUP_ID_START &&
+				add_device_to_room_rsp_message->sceneId == group + 1)
+		{
+			LOGD("AddDevToRoom OK");
+			return 0;
+		}
+	}
+	LOGW("AddDevToRoom err");
+	return -1;
+}
+
+int BleProtocol::DelDevToRoom(uint16_t devAddr, uint16_t element, uint16_t group)
+{
+	LOGD("Del dev addr: 0x%04X  with element: 0x%04x to group: 0x%04X", devAddr, element, group);
+	// uint8_t dataRsp[100];
+	// int lenRsp;
+	// uint8_t delGroupHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x80, 0x1f};
+	// typedef struct
+	// {
+	// 	uint8_t rev[6];
+	// 	uint16_t addr;
+	// 	uint16_t opcode;
+	// 	uint16_t element;
+	// 	uint16_t group;
+	// 	uint8_t offset[2];
+	// } delgroup_message_t;
+	// delgroup_message_t delgroup_message = {0};
+	// memset(&delgroup_message, 0x00, sizeof(delgroup_message));
+	// delgroup_message.addr = devAddr;
+	// delgroup_message.opcode = 0x1c80;
+	// delgroup_message.element = element;
+	// delgroup_message.group = group;
+	// delgroup_message.offset[0] = 0;
+	// delgroup_message.offset[1] = 0x10;
+	// int rs = SendMessage(APP_REQ, (uint8_t *)&delgroup_message, 16, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delGroupHeader, 0, 6);
+	// if (rs == 0)
+	// {
+	// 	return 0;
+	// }
+	// LOGW("Del group err");
 	return -1;
 }
 

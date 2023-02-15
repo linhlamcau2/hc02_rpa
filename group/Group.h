@@ -45,6 +45,6 @@ public:
 
 	bool Do(Json::Value &dataValue);
 	bool Do(int id, int value);
-	void DoBle(Json::Value *dataValue);
-	void DoZigbee(Json::Value *dataValue);
+	void DoBle();
+	void DoZigbee();
 };

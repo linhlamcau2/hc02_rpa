@@ -162,7 +162,7 @@ public:
 
 	int SendOnlineCheck(uint16_t devAddr);
 
-	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
+	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack, bool isGroup = false);
 	int GetOnoffLight(uint16_t devAddr);
 	int SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transition, bool ack);
 	int GetDimming(uint16_t devAddr);
@@ -176,6 +176,10 @@ public:
 	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
+
+	// room
+	int AddDevToRoom(uint16_t devAddr, uint16_t element, uint16_t group);
+	int DelDevToRoom(uint16_t devAddr, uint16_t element, uint16_t group);
 
 	/**
 	 * @brief

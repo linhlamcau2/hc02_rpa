@@ -26,9 +26,19 @@ string SceneBle::GetUUId()
 	return sceneBleUUId;
 }
 
+void SceneBle::SetUuid(string uuid)
+{
+	this->sceneBleUUId = uuid;
+}
+
 string SceneBle::GetName()
 {
 	return name;
+}
+
+void SceneBle::SetName(string name)
+{
+	this->name = name;
 }
 
 int SceneBle::GetPositionDevice(Device *device)
