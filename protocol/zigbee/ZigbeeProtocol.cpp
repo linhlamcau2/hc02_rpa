@@ -207,7 +207,7 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 		DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
 		if (deviceZigbee)
 		{
-			deviceZigbee->InputData(buff + 5, len - 5);
+			deviceZigbee->DeviceInputData(buff + 5, len - 5);
 		}
 		else
 		{

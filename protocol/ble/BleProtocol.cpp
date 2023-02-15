@@ -81,7 +81,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		if (deviceBle)
 		{
 			LOGD("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
-			deviceBle->InputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+			deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 		}
 		else
 		{
@@ -401,7 +401,7 @@ int BleProtocol::ResetFactory()
 {
 	LOGD("ResetFactory");
 	uint8_t d = HCI_GATEWAY_CMD_RESET;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 8000);
 	if (rs)
 	{
 		LOGE("Send reset factory error, rs: %d", rs);
@@ -830,6 +830,43 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 	return -1;
 }
 
+int BleProtocol::ResetDelAll()
+{
+	LOGD("Reset all dev addr");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t data[13];
+	} reset_message_t;
+	reset_message_t reset_message = {0};
+	memset(&reset_message, 0x00, sizeof(reset_message));
+	reset_message.addr = 0xffff;
+	reset_message.data[0] = 0xe0;
+	reset_message.data[1] = 0x11;
+	reset_message.data[2] = 0x02;
+	reset_message.data[3] = 0xe1;
+	reset_message.data[4] = 0x00;
+	reset_message.data[5] = 0xff;
+	reset_message.data[6] = 0xff;
+
+	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, 21, 0, 0, 0, 1000);
+	if (rs == 0)
+	{
+		return 0;
+	}
+	return -1;
+}
+
+int BleProtocol::SendOnlineCheck(uint16_t devAddr)
+{
+	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+
+	return 0;
+}
+
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)
 {
 	LOGD("Set OnOff addr: 0x%04X value %d", devAddr, onoff);
@@ -915,7 +952,7 @@ int BleProtocol::GetOnoffLight(uint16_t devAddr)
 	memset(&onoff_message, 0x00, sizeof(onoff_message));
 	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
 	onoff_message.addr = devAddr;
-	onoff_message.opcode = 0x0182;
+	onoff_message.opcode = G_ONOFF_GET;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 10, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, getOnOffHeader, 0, 6);
 	if (rs == 0)
 	{
@@ -927,7 +964,7 @@ int BleProtocol::GetOnoffLight(uint16_t devAddr)
 			uint8_t data[3];
 		} onoff_rsp_message_t;
 		onoff_rsp_message_t *onoff_rsp_message = (onoff_rsp_message_t *)dataRsp;
-		if (onoff_rsp_message->opcode == 0x0482)
+		if (onoff_rsp_message->opcode == G_ONOFF_STATUS)
 		{
 			return 0;
 		}
@@ -1540,3 +1577,58 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 	LOGW("update lights mode rgb err");
 	return -1;
 }
+int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type)
+{
+	LOGD("SetSceneSwitchSceneDC 0x%04x, button %d, mode %d, sceneId %d, type %d", devAddr, button, mode, sceneId, type);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t setSceneDcHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((package))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint8_t button;
+		uint8_t mode;
+		uint16_t sceneId;
+		uint8_t type;
+		uint8_t future[8];
+	} update_message_t;
+	update_message_t set_scene_dc_message = {0};
+	memset(&set_scene_dc_message, 0x00, sizeof(set_scene_dc_message));
+	set_scene_dc_message.addr = devAddr;
+	set_scene_dc_message.opcodeVendor = 0xe2;
+	set_scene_dc_message.vendorId = 0x0211;
+	set_scene_dc_message.opcodeRsp = 0x00e3;
+	set_scene_dc_message.header = 0x0102;
+	set_scene_dc_message.button = button;
+	set_scene_dc_message.mode = mode;
+	set_scene_dc_message.sceneId = sceneId;
+	set_scene_dc_message.type = type;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&set_scene_dc_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneDcHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((package))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;  
+		} update_rsp_message_t;
+		update_rsp_message_t *update_rsp_message = (update_rsp_message_t *)dataRsp;
+		if (update_rsp_message->header == 0x02)
+		{
+			return 0;
+		}
+		LOGW("update lights resp state not match with input control");
+	}
+	LOGW("update lights mode rgb err");
+	return -1;
+}
+int SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
+int DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode);
+int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);

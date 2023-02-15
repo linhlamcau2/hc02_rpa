@@ -40,9 +40,9 @@ void Wifi::InitWifi()
 	// esp_err_t ret = esp_wifi_get_config(WIFI_IF_STA, &wifi_config);
 	// if (ret == ESP_OK)
 	// {
-	// 	ESP_LOGI(TAG, "Wifi configuration already stored in flash partition called NVS");
-	// 	ESP_LOGI(TAG, "%s", wifi_config.sta.ssid);
-	// 	ESP_LOGI(TAG, "%s", wifi_config.sta.password);
+	// 	LOGI("Wifi configuration already stored in flash partition called NVS");
+	// 	LOGI("%s", wifi_config.sta.ssid);
+	// 	LOGI("%s", wifi_config.sta.password);
 	// 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 	// 	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
 	// 	ESP_ERROR_CHECK(esp_wifi_start());
@@ -50,7 +50,7 @@ void Wifi::InitWifi()
 	// }
 	// else
 	// {
-	// 	ESP_LOGI(TAG, "Wifi configuration not found in flash partition called NVS.");
+	// 	LOGI("Wifi configuration not found in flash partition called NVS.");
 	// }
 }
 string Wifi::GetMacAddress()

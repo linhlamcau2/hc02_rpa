@@ -9,6 +9,7 @@ DeviceBleSwitchScene6DC::DeviceBleSwitchScene6DC(string id, string name, string 
 		moduleButton[i] = new ModuleButton(this, addr, i);
 	}
 	modulePinLevel = new ModulePinLevel(this, addr);
+	powerSource = POWER_BATTERY;
 }
 
 int DeviceBleSwitchScene6DC::BuildTelemetryValue(Json::Value &pushDataValue)

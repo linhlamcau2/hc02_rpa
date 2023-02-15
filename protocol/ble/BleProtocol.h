@@ -158,6 +158,9 @@ public:
 	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t &deviceVersion);
 
 	int ResetDev(uint16_t devAddr);
+	int ResetDelAll();
+
+	int SendOnlineCheck(uint16_t devAddr);
 
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);
@@ -173,30 +176,20 @@ public:
 	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
-
-	/**
-	 * @brief
-	 *
-	 * @param devAddr id device
-	 * @param scene id scene
-	 * @param modeRgb 0 normal scene, 1->6 id mode blink RGB light
-	 * @return int 0 success, -1 error
-	 */
+	//Scene light
 	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
-
-	/**
-	 * @brief
-	 *
-	 * @param devAddr id device
-	 * @param scene id scene
-	 * @return int 0 success, -1 error
-	 */
 	int DelSceneLights(uint16_t devAddr, uint16_t scene);
 	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
 
 	// update status lights
 	int UpdateLights(uint16_t devAddr);
+
+	//remote scene
+	int SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
+	int SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
+	int DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode);
+	int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);
 };
 
 extern BleProtocol *bleProtocol;

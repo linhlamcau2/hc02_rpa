@@ -6,6 +6,7 @@ DeviceBleSensorTempHum::DeviceBleSensorTempHum(string id, string name, string ma
 {
 	moduleTempHum = new ModuleTempHum(this, addr);
 	modulePinLevel = new ModulePinLevel(this, addr);
+	powerSource = POWER_BATTERY;
 }
 
 int DeviceBleSensorTempHum::BuildTelemetryValue(Json::Value &pushDataValue)

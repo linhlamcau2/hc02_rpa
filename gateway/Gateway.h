@@ -43,6 +43,7 @@ private:
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
 
+	int CheckOnlineThread();
 	int UdpBroadcastThread();
 
 	int GatewayConnectToCloudNotice();
@@ -54,10 +55,12 @@ private:
 
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCBleResetFactory(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue);
+	
 #ifdef CONFIG_ENABLE_ZIGBEE
 	int OnRPCZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
@@ -95,13 +98,6 @@ private:
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
-
-	/**
-	 * @brief Factory reset (call when hold reset button in 5s)
-	 *
-	 */
-	void resetFactory();
-
 	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode
 	 *

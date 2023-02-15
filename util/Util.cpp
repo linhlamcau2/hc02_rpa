@@ -149,7 +149,7 @@ bool Util::CompareNumber(int a, int b, string op)
 string Util::ExecuteCMD(char const *command)
 {
 	string msg_rsp = "";
-#ifdef UNIX
+#ifndef ESP_PLATFORM
 	FILE *file;
 	char msg_line[100] = {0};
 	file = popen(command, "r");

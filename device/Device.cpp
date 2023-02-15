@@ -14,6 +14,11 @@ Device::Device(string id, string name, string mac, string device_id, uint32_t ad
 	this->type = type;
 	this->device_id = device_id;
 	this->version = version;
+	powerSource = POWER_UNKNOWN;
+
+	lastOnlineState = false;
+	lastTimeActive = 0;
+	lastTimeCheck = 0;
 }
 
 Device::~Device()
@@ -85,6 +90,16 @@ protocol_e Device::GetProtocol()
 	return protocol;
 }
 
+bool Device::isOnline()
+{
+	return lastOnlineState;
+}
+
+bool Device::isNeedCheckOnline()
+{
+	return powerSource == POWER_AC;
+}
+
 void Device::RegisterTrigger(RuleInputDevice *ruleInputDevice)
 {
 	LOGD("RegisterTrigger");
@@ -140,6 +155,12 @@ bool Device::DoJsonArray(Json::Value &dataValue)
 		Do(dataValue);
 	}
 	return true;
+}
+
+void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
+{
+	lastTimeActive = time(NULL);
+	InputData(data, len, addr);
 }
 
 int Device::PushTelemetry()
