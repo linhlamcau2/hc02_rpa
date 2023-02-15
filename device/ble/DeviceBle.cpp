@@ -4,3 +4,8 @@ DeviceBle::DeviceBle(string id, string name, string mac, string device_id, uint3
 {
 	protocol = BLE_DEVICE;
 }
+
+int DeviceBle::AddDevcieSmartHomeToRoom(Room *room)
+{
+	return 0;
+}
