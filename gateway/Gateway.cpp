@@ -138,7 +138,11 @@ void Gateway::init()
 	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
-	CloudConnect();
+	// OnLocalCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRPCStairsSwitch, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRPCAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
+
+	// CloudConnect();
 	LocalConnect();
 
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
@@ -637,12 +641,12 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	scanDeviceList.clear();
-	bleProtocol->isAdding = true;
-	bleProtocol->isProvisioning = true;
-	if (bleProtocol->StartScan())
-	{
-		bleProtocol->StopScan();
-	}
+	// bleProtocol->isAdding = true;
+	// bleProtocol->isProvisioning = true;
+	// if (bleProtocol->StartScan())
+	// {
+	// 	bleProtocol->StopScan();
+	// }
 	respValue["code"] = 0;
 	return 0;
 }
@@ -1431,6 +1435,139 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
+void Gateway::OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if(dataValue.isMember("ID") && dataValue["ID"].isString() &&
+			dataValue.isMember("DEVICE_TYPE_ID") && dataValue["DEVICE_TYPE_ID"].isInt() &&
+			dataValue.isMember("LIST_BUTTON_LINK") && dataValue["LIST_BUTTON_LINK"].isArray())
+		{
+			string temp_groupId = dataValue["ID"].asString();
+			int temp_deviceTypeId = dataValue["DEVICE_TYPE_ID"].asInt();
+	// 			if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	// {
+	// 	Json::Value dataValue = reqValue["DATA"];
+
+	// LOGD("OnRPCAddGroup %s", reqValue.toString().c_str());
+	// if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	// {
+	// 	Json::Value dataValue = reqValue["DATA"];
+	// 	if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
+	// 			dataValue.isMember("NAME") && dataValue["NAME"].isString())
+	// 	{
+	// 		string groupId = dataValue["GROUP_ID"].asString();
+	// 		string groupName = dataValue["NAME"].asString();
+	// 		int temp_groupUnicastId = 1;
+	// 		for (auto &x : groupList)
+	// 		{
+	// 			if (x.first >= temp_groupUnicastId)
+	// 			{
+	// 				temp_groupUnicastId = x.first + 1;
+	// 			}
+	// 		}
+	// 		Group *group = new Group(groupId, temp_groupUnicastId, groupName);
+	// 		if (group)
+	// 		{
+	// 			if (AddNewGroup(group, true, true))
+	// 			{
+	// 				respValue["CMD"] = "CREATE_GROUP";
+	// 				Json::Value data;
+	// 				data["GROUP_ID"] = groupId;
+	// 				if (dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+	// 				{
+	// 					Json::Value deviceList = dataValue["DEVICES"];
+	// 					for (Json::ArrayIndex i = 0; i < deviceList.size(); i++)
+	// 					{
+	// 						string devcieId = deviceList[i].asString();
+	// 						Device *device = getDeviceFromId(devcieId);
+	// 						if (device)
+	// 						{
+	// 							int tempDeviceAddr = device->GetAddr();
+	// 							if (group->AddDevice(device, tempDeviceAddr, true))
+	// 							{
+	// 								database->DeviceInGroupAdd(group, device, tempDeviceAddr);
+	// 								data["SUCCESS"].append(device->GetId());
+	// 								// respValue["code"] = 0;
+	// 								// return 0;
+	// 							}
+	// 							else
+	// 							{
+	// 								data["FAILED"].append(device->GetId());
+	// 							}
+	// 						}
+	// 					}
+	// 					// respValue["code"] = 0;
+	// 					// return 0;
+	// 					respValue["DATA"] = data;
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				delete group;
+	// 			}
+	// 		}
+	// 	}
+	// }
+			Json::Value listButton = dataValue["LIST_BUTTON_LINK"];
+			for(Json::ArrayIndex i=0; i<listButton.size(); i++)
+			{
+				Json::Value button = listButton[i];
+				if(button.isMember("DEVICE_ID") && button["DEVICE_ID"].isString() &&
+					button.isMember("BUTTON_ID") && button["BUTTON_ID"].isString())
+				{
+					string temp_deviceId = button["DEVICE_ID"].asString();
+					int temp_buttonId = button["BUTTON_ID"].asInt();
+					int temp_groupUnicastId = 1;
+					for (auto &x : groupList)
+					{
+						if (x.first >= temp_groupUnicastId)
+						{
+							temp_groupUnicastId = x.first + 1;
+						}
+					}
+					Group *group = new Group(temp_groupId, temp_groupUnicastId, temp_groupId);
+					if(group)
+					{
+						
+					}
+					else
+					{
+						delete group;
+					}
+				}
+			}
+		}
+	}
+}
+
+int Gateway::OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if(dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
+			dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
+		{
+			string temp_deviceId = dataValue["DEVICE_ID"].asString();
+			string temp_roomId = dataValue["ROOM_ID"].asString();
+			Device *device = getDeviceFromId(temp_deviceId);
+			int temp_deviceType = device->GetType();
+			Room *room = new Room(temp_roomId);
+			if (!gateway->getRoom(temp_roomId))
+			{
+				gateway->AddNewRoom(room);
+			}
+			room->AddDevice(device);
+			if(temp_deviceType == BLE_REMOTE_M3_V2 || temp_deviceType == BLE_REMOTE_M4 || temp_deviceType == BLE_SCENE_SCREEN)
+			{
+				// TODO: send msg ble
+			}
+		}
+	}
+}
+
 void Gateway::AddDeviceToScanList(Device *scanDevice)
 {
 	Json::Value jsonValue;
@@ -1531,6 +1668,16 @@ SceneBle *Gateway::getSceneBleFromId(string sceneBleUUId)
 	{
 		if (scene->GetUUId() == sceneBleUUId)
 			return scene;
+	}
+	return NULL;
+}
+
+Room *Gateway::getRoom(string roomUUId)
+{
+	for (auto &[id, room] : roomList)
+	{
+		if (id == roomUUId)
+			return room;
 	}
 	return NULL;
 }
@@ -1842,6 +1989,12 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 			sceneBleList[sceneBle->GetId()] = sceneBle;
 	}
 	return sceneBle;
+}
+
+Room *Gateway::AddNewRoom(Room *room)
+{
+	roomList[room->GetUUId()] = room;
+	return room;
 }
 
 uint16_t Gateway::getBleUnicast()

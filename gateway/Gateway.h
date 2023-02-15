@@ -13,6 +13,7 @@
 #include "DeviceBle.h"
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
+#include "../room/Room.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -38,6 +39,7 @@ private:
 	map<int, Group *> groupList;
 	map<int, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
+	map<string, Room *> roomList;
 	vector<Device *> scanDeviceList;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
@@ -88,6 +90,11 @@ private:
 	int OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
+	void OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
+
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
@@ -114,6 +121,7 @@ public:
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
 
 	SceneBle *getSceneBleFromId(string sceneBleUUId);
+	Room *getRoom(string roomUUId);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
@@ -123,6 +131,7 @@ public:
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
+	Room *AddNewRoom(Room *room);
 
 	uint16_t getBleUnicast();
 	string getBleNetkey();

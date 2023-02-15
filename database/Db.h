@@ -8,11 +8,12 @@
 #include <Group.h>
 #include <Gateway.h>
 #include "SceneBle.h"
+#include "../room/Room.h"
 
 #ifdef ESP_PLATFORM
 #define DB_NAME "/spiffs/smh.sqlite"
 #else
-#define DB_NAME "/smh.sqlite"
+#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
 #endif
 
 using namespace std;
@@ -66,7 +67,7 @@ public:
 	int GroupDel(Group *group);
 	int GroupDel(int id);
 	int GroupDelAll();
-
+	
 	int DeviceInGroupRead();
 	int DeviceInGroupAdd(Group *group, Device *device, int epId);
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
@@ -87,6 +88,11 @@ public:
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
 	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
 	int SceneBleDel(SceneBle *scene);
+
+	int RoomRead();
+	int DeviceInRoomAdd(Room *room, Device *device);
+	int DeviceInRoomDel(Room *room, Device *device);
+	int RoomDel(Room *room);
 };
 
 extern Db *database;
