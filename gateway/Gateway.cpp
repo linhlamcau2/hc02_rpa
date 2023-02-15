@@ -71,16 +71,8 @@ void Gateway::init()
 	database->DeviceInGroupRead();
 	database->RuleRead();
 	database->SceneBleRead();
-
-	cout << "scene size: " << sceneBleList.size() << endl;
-	for (const auto &[meshId, scene] : sceneBleList)
-	{
-		cout << "scene: " + scene->GetUUId() << endl;
-		for (Json::Value::ArrayIndex i = 0; i < scene->deviceList.size(); i++)
-		{
-			cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl;
-		}
-	}
+	database->RoomRead();
+	
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -1552,20 +1544,27 @@ int Gateway::OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 		{
 			string temp_deviceId = dataValue["DEVICE_ID"].asString();
 			string temp_roomId = dataValue["ROOM_ID"].asString();
+			cout << "DeviceId:" + temp_deviceId + " RoomId:" + temp_roomId << endl;
 			Device *device = getDeviceFromId(temp_deviceId);
+			cout << device->GetId()<< endl;
 			int temp_deviceType = device->GetType();
 			Room *room = new Room(temp_roomId);
 			if (!gateway->getRoom(temp_roomId))
 			{
 				gateway->AddNewRoom(room);
 			}
-			room->AddDevice(device);
-			if(temp_deviceType == BLE_REMOTE_M3_V2 || temp_deviceType == BLE_REMOTE_M4 || temp_deviceType == BLE_SCENE_SCREEN)
+			if (device)
 			{
-				// TODO: send msg ble
+				room->AddDevice(device);
+				database->DeviceInRoomAdd(room, device);
+				if(temp_deviceType == BLE_REMOTE_M3_V2 || temp_deviceType == BLE_REMOTE_M4 || temp_deviceType == BLE_SCENE_SCREEN)
+				{
+					// TODO: send msg ble
+				}
 			}
 		}
 	}
+	return 0;
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)

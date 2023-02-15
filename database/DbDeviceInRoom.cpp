@@ -21,6 +21,7 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				Room *room = gateway->getRoom(roomId);
 				Device *device = gateway->getDeviceFromId(deviceId);
+				cout << "DeviceInRoomParse: devcie: " + deviceId << endl;
 				if (!room)
 				{
 					room = new Room(roomId);
@@ -56,13 +57,13 @@ int Db::RoomRead()
 
 int Db::DeviceInRoomAdd(Room *room, Device *device)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (deviceId, roomId) VALUES (\"" + device->GetDeviceId() + "\",\"" + room->GetUUId() + "\")";
+	string sql = "INSERT INTO " TABLE_NAME " (deviceId, roomId) VALUES (\"" + device->GetId() + "\",\"" + room->GetUUId() + "\")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInRoomDel(Room *room, Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId= \"" + room->GetUUId() + "\" AND deviceId=\"" + device->GetDeviceId() + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId= \"" + room->GetUUId() + "\" AND deviceId=\"" + device->GetId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
