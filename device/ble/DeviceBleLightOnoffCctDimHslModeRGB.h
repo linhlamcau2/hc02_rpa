@@ -2,10 +2,10 @@
 
 #include "DeviceBle.h"
 #include "module/ModuleOnOff.h"
-#include "element/ElementCct.h"
 #include "module/ModuleDim.h"
 #include "module/ModuleHsl.h"
 #include "module/ModuleModeRgb.h"
+#include "element/ElementCct.h"
 
 using namespace std;
 

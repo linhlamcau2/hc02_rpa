@@ -76,6 +76,12 @@ private:
 	int OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRPCSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCResetRemote(Json::Value &reqValue, Json::Value &respValue);
+
+
 	int OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue);

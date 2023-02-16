@@ -145,6 +145,10 @@ void Gateway::init()
 	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
 
+	OnLocalCallbackRegister("SCENE_FOR_REMOTE", bind(&Gateway::OnRPCSetSceneForRemote, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_SCENE_FOR_REMOTE", bind(&Gateway::OnRPCDelSceneForRemote, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("RESET_REMOTE", bind(&Gateway::OnRPCResetRemote, this, placeholders::_1, placeholders::_2));
+
 	CloudConnect();
 	LocalConnect();
 
@@ -717,6 +721,7 @@ int Gateway::OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				bleProtocol->ResetDev(device->GetAddr());
+				database->DeviceDel(device->GetMac());
 				LOGD("remove deviceId: %s", deviceId.c_str());
 			}
 			else
@@ -1826,6 +1831,172 @@ int Gateway::OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 		}
 	}
 	// respValue["code"] = -1;
+	return 0;
+}
+
+static int GetIdButton(string button)
+{
+	string listButtonId[] = {"BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", "BUTTON_5", "BUTTON_6"};
+	for (int i = 0; i < 6; i++)
+	{
+		if (listButtonId[i].compare(button) == 0)
+		{
+			return (i+1);
+		}
+	}
+	return -1;
+}
+
+int Gateway::OnRPCSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "SCENE_FOR_REMOTE";
+		Json::Value dataJsonRsp;
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() && dataValue.isMember("BUTTON_VALUE") && dataValue["BUTTON_VALUE"].isString() && dataValue.isMember("MODE_VALUE") && dataValue["MODE_VALUE"].isInt())
+		{
+			string deviceId = dataValue["DEVICE_ID"].asString();
+			string buttonValue = dataValue["BUTTON_VALUE"].asString();
+			int buttonId = GetIdButton(buttonValue);
+			string sceneId = dataValue["SCENE_ID"].asString();
+			int modeValue = dataValue["MODE_VALUE"].asInt();
+			dataJsonRsp["DEVICE_ID"] = deviceId;
+			dataJsonRsp["BUTTON_VALUE"] = buttonValue;
+			dataJsonRsp["MODE_VALUE"] = modeValue;
+			dataJsonRsp["SCENE_ID"] = sceneId;
+			respValue["DATA"] = dataJsonRsp;
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				SceneBle *scene = getSceneBleFromId(sceneId);
+				if (scene)
+				{
+					if (device->GetType() == BLE_DC_SCENE_CONTACT)
+					{
+						if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, scene->GetId(), 0) == 0)
+						{
+							return 0;
+						}
+					}
+					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+					{
+						if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, scene->GetId(), 0) == 0)
+						{
+							return 0;
+						}
+					}
+				}
+				else
+				{
+					LOGW("Scene %s does not exsit", sceneId.c_str())
+				}
+			}
+			else
+			{
+				LOGW("Device %s does not exsit", deviceId.c_str());
+			}
+		}
+	}
+	return -1;
+}
+
+int Gateway::OnRPCDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "DELETE_SCENE_FOR_REMOTE";
+		Json::Value dataJsonRsp;
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() && dataValue.isMember("BUTTON_VALUE") && dataValue["BUTTON_VALUE"].isString() && dataValue.isMember("MODE_VALUE") && dataValue["MODE_VALUE"].isInt())
+		{
+			string deviceId = dataValue["DEVICE_ID"].asString();
+			string buttonValue = dataValue["BUTTON_VALUE"].asString();
+			int buttonId = GetIdButton(buttonValue);
+			string sceneId = dataValue["SCENE_ID"].asString();
+			int modeValue = dataValue["MODE_VALUE"].asInt();
+			dataJsonRsp["DEVICE_ID"] = deviceId;
+			dataJsonRsp["BUTTON_VALUE"] = buttonValue;
+			dataJsonRsp["MODE_VALUE"] = modeValue;
+			dataJsonRsp["SCENE_ID"] = sceneId;
+			respValue["DATA"] = dataJsonRsp;
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				if (device->GetType() == BLE_DC_SCENE_CONTACT)
+				{
+					if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue) == 0)
+					{
+						return 0;
+					}
+				}
+				else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+				{
+					if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue) == 0)
+					{
+						return 0;
+					}
+				}
+			}
+			else
+			{
+				LOGW("Device %s does not exsit", deviceId.c_str());
+			}
+		}
+	}
+	return -1;
+}
+
+int Gateway::OnRPCResetRemote(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "RESET_REMOTE";
+		Json::Value dataJsonRsp;
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString())
+		{
+			string deviceId = dataValue["DEVICE_ID"].asString();
+			dataJsonRsp["DEVICE_ID"] = deviceId;
+			respValue["DATA"] = dataJsonRsp;
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				if (device->GetType() == BLE_DC_SCENE_CONTACT)
+				{
+					for (int i = 1; i <= 6; i++)
+					{
+						if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), i, 0))
+						{
+							LOGW("del scene error button %d, mode 0", i);
+						}
+						if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), i, 1))
+						{
+							LOGW("del scene error button %d, mode 1", i);
+						}
+					}
+				}
+				else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+				{
+					for (int j = 1; j <= 6; j++)
+					{
+						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), j, 0))
+						{
+							LOGW("del scene error button %d, mode 0", j);
+						}
+						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), j, 1))
+						{
+							LOGW("del scene error button %d, mode 1", j);
+						}
+					}
+				}
+			}
+			else
+			{
+				LOGW("Device %s does not exsit", deviceId.c_str());
+			}
+		}
+	}
 	return 0;
 }
 

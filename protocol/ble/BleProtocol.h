@@ -115,6 +115,7 @@ private:
 	scan_device_message_t scanDeviceMessage;
 
 	vector<message_rsp_list_st *> messageRespList;
+	mutex mtxWaitSendUart;
 
 	// TODO: Add init state
 	uint8_t netKey[16];
@@ -190,6 +191,13 @@ public:
 	int SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
 	int DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode);
 	int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);
+
+	//PirLightSensor
+	int SetScenePirLightSensor();
+	int DelScenePirLightSensor();
+
+	//switch
+	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
 };
 
 extern BleProtocol *bleProtocol;
