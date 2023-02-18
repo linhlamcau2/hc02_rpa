@@ -33,8 +33,9 @@ namespace Util
 	string setString(const char *value);
 	string ConvertU32ToHexString(uint8_t *data, int len);
 	int ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun);
+	int ConvertWeekDayToIntCompare(int day);
 	vector<string> splitString(string str, char splitter);
-	bool CompareNumber(int a, int b, string op);
+	bool CompareNumber(int a, int b, int c, string op);
 
 	string ExecuteCMD(char const *command);
 	string GetCurrentTimeStr();

@@ -107,6 +107,36 @@ int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int
 	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
 }
 
+int Util::ConvertWeekDayToIntCompare(int day)
+{
+	int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+	switch (day)
+	{
+	case 0:
+		sun = 1;
+		break;
+	case 1:
+		mon = 1;
+		break;
+	case 2:
+		tue = 1;
+		break;
+	case 3:
+		wed = 1;
+		break;
+	case 4:
+		thu = 1;
+		break;
+	case 5:
+		fri = 1;
+		break;
+	case 6:
+		sat = 1;
+		break;
+	}
+	return ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+}
+
 vector<string> Util::splitString(string str, char splitter)
 {
 	vector<string> result;
@@ -129,7 +159,7 @@ vector<string> Util::splitString(string str, char splitter)
 	return result;
 }
 
-bool Util::CompareNumber(int a, int b, string op)
+bool Util::CompareNumber(int a, int b, int c, string op)
 {
 	if (op == "==")
 		return a == b;
@@ -143,6 +173,10 @@ bool Util::CompareNumber(int a, int b, string op)
 		return a < b;
 	else if (op == "<=")
 		return a <= b;
+	else if (op == "<>")
+		return ((a >= b) && (a <= c));
+	else if (op == "><")
+		return ((a <= b) || (a >= c));
 	return false;
 }
 

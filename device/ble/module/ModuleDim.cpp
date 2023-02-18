@@ -58,12 +58,18 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
 				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t dim = dataValue["VALUE"].asInt();
+			uint16_t dim1, dim2;
+			Json::Value listValue = dataValue["VALUE"];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+			{
+				dim1 = listValue[0].asInt();
+				dim2 = listValue[1].asInt();
+			}
 			string op = dataValue["OP"].asString();
-			rs = Util::CompareNumber(this->dim, dim, op);
+			rs = Util::CompareNumber(this->dim, dim1, dim2, op);
 			return true;
 		}
 	}

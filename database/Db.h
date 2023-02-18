@@ -79,9 +79,10 @@ public:
 	// int DeviceSceneDel(Device *device, string schedule);
 
 	int RuleRead();
-	int RuleAdd(int id, string rule);
-	int RuleUpdate(int id, string rule);
-	int RuleDel(int id);
+	int RuleAdd(string id, string rule, int inEnable, int type);
+	int RuleUpdate(string id, string rule);
+	int RuleUpdateStatus(string id, int isEnable);
+	int RuleDel(string id);
 
 	int SceneBleRead();
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);

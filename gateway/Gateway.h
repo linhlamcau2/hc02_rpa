@@ -36,7 +36,7 @@ private:
 
 	map<string, Device *> deviceList;
 	map<int, Group *> groupList;
-	map<int, Rule *> ruleList;
+	map<string, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
 	vector<Device *> scanDeviceList;
 
@@ -86,7 +86,11 @@ private:
 	int OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
+
+	//Rule
 	int OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCEditRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
@@ -118,6 +122,7 @@ public:
 	Device *getDevice(string mac);
 	Device *getDeviceFromId(string deviceId);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
+	Rule *getRuleById(string eventId);
 
 	SceneBle *getSceneBleFromId(string sceneBleUUId);
 

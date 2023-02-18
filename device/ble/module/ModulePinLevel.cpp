@@ -41,18 +41,24 @@ bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id)
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
-				uint16_t value = dataValue["VALUE"].asInt();
+				uint16_t value1, value2;
+				Json::Value listValue = dataValue["VALUE"];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					value1 = listValue[0].asInt();
+					value2 = listValue[1].asInt();
+				}
 				string op = dataValue["OP"].asString();
 				if (this->id == id)
-					rs = Util::CompareNumber(this->pin, value, op);
+					rs = Util::CompareNumber(this->pin, value1, value2, op);
 				return true;
 			}
 		}

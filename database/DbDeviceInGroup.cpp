@@ -15,8 +15,6 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				// int id = sqlite3_column_int(stmt, index++);
-				// int groupId = sqlite3_column_int(stmt, index++);
 				string deviceMac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string groupId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int epId = sqlite3_column_int(stmt, index++);

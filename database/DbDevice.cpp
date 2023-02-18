@@ -26,8 +26,8 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				uint32_t update_time = sqlite3_column_int(stmt, index++);
 				string device_id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
-				uint16_t u16version = (firmware_version[0] -48) << 8 | (firmware_version[2] -48);
-				gateway->AddNewDevice(id, name, mac,device_id, addr, type, u16version, true, false);
+				uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
+				gateway->AddNewDevice(id, name, mac, device_id, addr, type, u16version, true, false);
 			}
 			else if (s == SQLITE_DONE)
 			{
