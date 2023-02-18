@@ -1567,6 +1567,18 @@ int Gateway::OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 	return 0;
 }
 
+int Gateway::OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		string eventTriggerId = dataValue["EVENT_TRIGGER_ID"].asString();
+		string startAt = dataValue["START_AT"].asString();
+		string sceneId = dataValue["SCENE_ID"].asString();
+	}
+	return 0;
+}
+
 void Gateway::AddDeviceToScanList(Device *scanDevice)
 {
 	Json::Value jsonValue;

@@ -95,6 +95,8 @@ private:
 	int OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
+
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
