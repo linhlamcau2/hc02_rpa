@@ -1,22 +1,21 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "element/ElementOnOff.h"
-#include "element/ElementResetNode.h"
+#include "module/ModuleOnOff.h"
+#include "module/ModuleDim.h"
 #include "element/ElementCct.h"
-#include "element/ElementDim.h"
 
 using namespace std;
 
-class DeviceBleOnoffCctDim : public DeviceBle
+class DeviceBleLightOnoffCctDim : public DeviceBle
 {
 private:
-	ElementOnOff *elementOnOff;
+	ModuleOnOff *moduleOnOff;
+	ModuleDim *moduleDim;
 	ElementCct *elementCct;
-	ElementDim *elementDim;
 
 public:
-	DeviceBleOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 
 	bool CheckAddr(uint32_t addr);
 	int BuildTelemetryValue(Json::Value &pushDataValue);

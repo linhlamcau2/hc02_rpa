@@ -1,4 +1,4 @@
-#include "ElementModeRgb.h"
+#include "ModuleModeRgb.h"
 #include <Log.h>
 #include <Util.h>
 #include "BleDefine.h"
@@ -6,27 +6,27 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ElementModeRgb::ElementModeRgb(Device *device, uint32_t addr) : Element(device, addr)
+ModuleModeRgb::ModuleModeRgb(Device *device, uint32_t addr) : Module(device, addr)
 {
 	mode = 0;
 	id = BLE_ATTRIBUTE_SCENE_RGB;
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ElementModeRgb::InitAttribute(int id, double value)
+void ModuleModeRgb::InitAttribute(int id, double value)
 {
 	if (this->id == id)
 		mode = value;
 }
 
-void ElementModeRgb::SaveAttribute()
+void ModuleModeRgb::SaveAttribute()
 {
 	database->DeviceAttributeAddOrReplace(device, id, mode);
 }
 #endif
 
 // TODO: recheck
-bool ElementModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -57,7 +57,7 @@ bool ElementModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	return false;
 }
 
-bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
+bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -77,8 +77,8 @@ bool ElementModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-// TODO: can nhac di chuyen den Element.cpp
-void ElementModeRgb::CheckTrigger()
+// TODO: can nhac di chuyen den Module.cpp
+void ModuleModeRgb::CheckTrigger()
 {
 	LOGD("CheckTrigger");
 	bool rs;
@@ -90,7 +90,7 @@ void ElementModeRgb::CheckTrigger()
 	}
 }
 
-void ElementModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
+void ModuleModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = id;
@@ -98,7 +98,7 @@ void ElementModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-bool ElementModeRgb::Do(Json::Value &dataValue)
+bool ModuleModeRgb::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&

@@ -10,7 +10,8 @@ protected:
 	int id;
 
 public:
-	ModuleButton(Device *device, int index);
+	ModuleButton(Device *device, uint32_t addr);
+	ModuleButton(Device *device, uint32_t addr, int index);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

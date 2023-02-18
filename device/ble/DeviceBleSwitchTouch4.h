@@ -2,17 +2,16 @@
 
 #include "DeviceBle.h"
 #include "element/ElementButton.h"
-#include "element/ElementResetNode.h"
 
 using namespace std;
 
-class DeviceBleSwitch4 : public DeviceBle
+class DeviceBleSwitchTouch4 : public DeviceBle
 {
 private:
 	ElementButton *elementButton[4];
 
 public:
-	DeviceBleSwitch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
+	DeviceBleSwitchTouch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
 
 	bool CheckAddr(uint32_t addr);
 

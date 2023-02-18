@@ -39,12 +39,20 @@ enum
 	BLE_LED_OP_TRAN_LOA = 15001,
 	BLE_SWITCH_4 = 22004,					// 0x020204,
 	BLE_DC_SCENE_CONTACT = 23001, // 0x020301,
-	BLE_TEMP_HUM_SENSOR = 38001,	// 0x030801,
+	BLE_PM_SENSOR = 37001,
+	BLE_TEMP_HUM_SENSOR = 38001, // 0x030801,
 
 	ZIGBEE_LUMI_PLUG = 0x02000001,
 	ZIGBEE_LUMI_SENSOR_SWITCH = 0x02000002,
 	ZIGBEE_PIR_RH3040 = 0x02000102,
 	ZIGBEE_TELINK_TLSR82xx = 0x02000201
+};
+
+enum
+{
+	POWER_UNKNOWN = 0,
+	POWER_BATTERY,
+	POWER_AC,
 };
 
 class Device
@@ -62,6 +70,11 @@ protected:
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
+
+	int powerSource;
+	bool lastOnlineState;
+	time_t lastTimeActive;
+	time_t lastTimeCheck;
 
 public:
 	Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
@@ -83,11 +96,16 @@ public:
 
 	protocol_e GetProtocol();
 
+	bool isOnline();
+	bool isNeedCheckOnline();
+
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
+
+	void DeviceInputData(uint8_t *data, int len, uint32_t addr);
 
 	virtual void InitAttribute(int attributeId, double value) {}
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0) {}

@@ -1,16 +1,20 @@
 #pragma once
-#include "Element.h"
+#include "Module.h"
 
 using namespace std;
 
-class ElementModeRgb : public Element
+class ModulePmSensor : public Module
 {
 protected:
-	uint8_t mode;
-	int id;
+	uint16_t pm25;
+	uint16_t pm10;
+	uint16_t pm1_0;
+	int idPm25;
+	int idPm10;
+	int idPm1_0;
 
 public:
-	ElementModeRgb(Device *device, uint32_t addr);
+	ModulePmSensor(Device *device, uint32_t addr);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
@@ -29,12 +33,12 @@ public:
 #endif
 
 	/**
-	 * @brief Parse raw data to element parameter value
+	 * @brief Parse raw data to module parameter value
 	 *
 	 * @param data data from device driver (uart)
 	 * @param len length of data
 	 * @param jsonValue json value to put parameter after parsing
-	 * @return true if data include this element opcode
+	 * @return true if data include this module opcode
 	 * @return false
 	 */
 	bool InputData(uint8_t *data, int len, Json::Value &jsonValue);
@@ -44,30 +48,21 @@ public:
 	 *
 	 * @param dataValue json rule data input
 	 * @param rs result of checking
-	 * @return true if dataValue uses this element paramter
-	 * @return false if dataValue don't use this element paramter
+	 * @return true if dataValue uses this module paramter
+	 * @return false if dataValue don't use this module paramter
 	 */
 	bool CheckData(Json::Value &dataValue, bool &rs);
 
 	/**
-	 * @brief Check rules related with this element
+	 * @brief Check rules related with this module
 	 *
 	 */
 	void CheckTrigger();
 
 	/**
-	 * @brief Build telemetry message with this element
+	 * @brief Build telemetry message with this module
 	 *
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
-
-	/**
-	 * @brief Do an action
-	 *
-	 * @param dataValue data of action
-	 * @return true
-	 * @return false
-	 */
-	bool Do(Json::Value &dataValue);
 };
