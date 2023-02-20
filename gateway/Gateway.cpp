@@ -736,13 +736,13 @@ int Gateway::OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt())
 		{
-			int ruleId = dataValue["id"].asInt();
-			LOGI("Delete Rule id: %d", ruleId);
-			delete ruleList[ruleId];
-			ruleList.erase(ruleList.find(ruleId));
-			database->RuleDel(ruleId);
-			respValue["code"] = 0;
-			return 0;
+			// int ruleId = dataValue["id"].asInt();
+			// LOGI("Delete Rule id: %d", ruleId);
+			// delete ruleList[ruleId];
+			// ruleList.erase(ruleList.find(ruleId));
+			// database->RuleDel(ruleId);
+			// respValue["code"] = 0;
+			// return 0;
 		}
 	}
 	respValue["code"] = -1;
@@ -1575,8 +1575,41 @@ int Gateway::OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 		string eventTriggerId = dataValue["EVENT_TRIGGER_ID"].asString();
 		string startAt = dataValue["START_AT"].asString();
 		string sceneId = dataValue["SCENE_ID"].asString();
+		int repeat = Util::ConvertRepeatDayToInt(0, 0, 0, 0, 0, 0, 0);
+		bool fullDay = false;
+		Rule *rule = NULL;
+		rule = new Rule(id, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt("23:59:59"), "COUNTDOWN", true);
+		SceneBle *sceneBle = getSceneBleFromId(sceneId);
+		if (sceneBle)
+		{
+			RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+			rule->AddRuleOutput(ruleOutputSceneBle);
+		}
+		string ruleStr = dataValue.toString();
+		ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+		database->RuleAdd(rule->GetId(), ruleStr, COUNTDOWN, true);
+		rule->Check();
+		return 0;
 	}
 	return 0;
+}
+
+int Gateway::OnRPCDelCountDown(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+		{
+			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
+			ruleList.erase(ruleList.find(ruleId));
+			database->RuleDel(ruleId);
+			respValue["code"] = 0;
+			return 0;
+		}
+	}
+	respValue["code"] = -1;
+	return -1;
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)
@@ -1851,7 +1884,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				string startTime = ruleValue["START_AT"].asString();
 				string endTime = ruleValue["END_AT"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), EVENT_TRIGGER, true);
 			}
 			else
 			{
@@ -1889,7 +1922,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			string type = "or";
 			string startTime = ruleValue["START_AT"].asString();
 			string endTime = ruleValue["END_AT"].asString();
-			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), EVENT_TRIGGER, true);
 			if (!rule)
 			{
 				LOGE("New rule error");
@@ -1901,7 +1934,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			string type = "and";
 			string startTime = ruleValue["START_AT"].asString();
 			string endTime = ruleValue["END_AT"].asString();
-			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), EVENT_TRIGGER, true);
 			if (!rule)
 			{
 				LOGE("New rule error");

@@ -60,21 +60,21 @@ int Db::RuleRead()
 	return ReadAll(TABLE_NAME, NULL, RuleParse);
 }
 
-int Db::RuleAdd(int id, string rule)
+int Db::RuleAdd(string id, string rule, string type, bool enable)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, rule) VALUES (" + to_string(id) + ",\"" + macaron::Base64::Encode(rule) + "\");";
+	string sql = "INSERT INTO " TABLE_NAME " (id, rule, type, enable) VALUES ('" + id + "',\"" + macaron::Base64::Encode(rule) + "\", '"+type+"', "+to_string(enable)+");";
 	LOGW("RuleAdd: %s", sql.c_str());
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleUpdate(int id, string rule)
+int Db::RuleUpdate(string id, string rule)
 {
-	string sql = "UPDATE " TABLE_NAME " SET rule=\"" + rule + "\" WHERE id=" + to_string(id) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET rule=\"" + rule + "\" WHERE id='"+id+"';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleDel(int id)
+int Db::RuleDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE id='"+id+"';";
 	return Sqlite_Exec(sql);
 }

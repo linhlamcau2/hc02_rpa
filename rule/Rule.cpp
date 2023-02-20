@@ -16,13 +16,15 @@ Rule::Rule(string id, string type, unsigned char repeater)
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, string type, unsigned char repeater, int startTime, int endTime)
+Rule::Rule(string id, string type, unsigned char repeater, int startTime, int endTime, string cmd, bool enable)
 {
 	this->id = id;
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
+	this->cmd = cmd;
+	this->enbale = enbale;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
 	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
 	count = 0;
@@ -47,6 +49,11 @@ Rule::~Rule()
 string Rule::GetId()
 {
 	return id;
+}
+
+string Rule::GetCmd()
+{
+	return cmd;
 }
 
 void Rule::Check()
