@@ -193,8 +193,9 @@ public:
 	int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);
 
 	//PirLightSensor
-	int SetScenePirLightSensor();
-	int DelScenePirLightSensor();
+	int SetScenePirLightSensor(uint16_t devAddr,uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
+	int DelScenePirLightSensor(uint16_t devAddr, uint16_t scene);
+	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
 
 	//switch
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);

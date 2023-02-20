@@ -1684,7 +1684,7 @@ int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 		} set_scene_ac_rsp_message_t;
 		set_scene_ac_rsp_message_t *set_scene_ac_rsp_message = (set_scene_ac_rsp_message_t *)dataRsp;
 		LOGD("Header: %d, Scene: %d", set_scene_ac_rsp_message->header, sceneId);
-		if (set_scene_ac_rsp_message->header == 0x0102 && set_scene_ac_rsp_message->button == button && set_scene_ac_rsp_message->mode == mode && set_scene_ac_rsp_message->sceneId == sceneId && set_scene_ac_rsp_message->type == type)
+		if (set_scene_ac_rsp_message->header == 0x0103 && set_scene_ac_rsp_message->button == button && set_scene_ac_rsp_message->mode == mode && set_scene_ac_rsp_message->sceneId == sceneId && set_scene_ac_rsp_message->type == type)
 		{
 			return 0;
 		}
@@ -1788,13 +1788,193 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 		} del_scene_ac_rsp_message_t;
 		del_scene_ac_rsp_message_t *del_scene_ac_rsp_message = (del_scene_ac_rsp_message_t *)dataRsp;
 		LOGD("Header: %d", del_scene_ac_rsp_message->header);
-		if (del_scene_ac_rsp_message->header == 0x0102 && del_scene_ac_rsp_message->button == button && del_scene_ac_rsp_message->mode == mode)
+		if (del_scene_ac_rsp_message->header == 0x0203 && del_scene_ac_rsp_message->button == button && del_scene_ac_rsp_message->mode == mode)
 		{
 			return 0;
 		}
 		LOGW("del scene ac scene resp state not match with input control");
 	}
 	LOGW("del scene ac scene err");
+	return -1;
+}
+
+int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type)
+{
+	LOGD("SetScenePirLightSensor");
+	typedef struct
+	{
+		union
+		{
+			uint32_t data;
+			struct
+			{
+				uint32_t store : 8;			 // 8 bit not use
+				uint32_t Lux_hi : 10;		 // 10 bit lux hi
+				uint32_t Lux_low : 10;		 // 10 bit lux low
+				uint32_t Light_Conditon : 3; // 7 bit low
+				uint32_t Pir_Conditon : 1;	 // 1 bit hight
+			};
+		};
+	} RD_Sensor_data_tdef;
+
+	RD_Sensor_data_tdef data_scene_pir_light;
+	data_scene_pir_light.Pir_Conditon = (uint32_t)pir;
+	data_scene_pir_light.Light_Conditon = (uint32_t)(condition & 0x0000007);
+	data_scene_pir_light.Lux_low = (uint32_t)(lowLux);
+	data_scene_pir_light.Lux_hi = (uint32_t)(highLux);
+
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sceneLightPirHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t sceneId;
+		uint8_t infoScene[3];
+		uint8_t type;
+	} scene_light_pir_message_t;
+	scene_light_pir_message_t scene_light_pir_message = {0};
+	memset(&scene_light_pir_message, 0x00, sizeof(scene_light_pir_message));
+	scene_light_pir_message.addr = devAddr;
+	scene_light_pir_message.opcodeVendor = 0xe2;
+	scene_light_pir_message.vendorId = 0x0211;
+	scene_light_pir_message.opcodeRsp = 0x00e3;
+	scene_light_pir_message.header = 0x0145;
+	scene_light_pir_message.sceneId = scene;
+	scene_light_pir_message.infoScene[0] = (data_scene_pir_light.data >> 24) & 0xFF;
+	scene_light_pir_message.infoScene[1] = (data_scene_pir_light.data >> 16) & 0xFF;
+	scene_light_pir_message.infoScene[2] = (data_scene_pir_light.data >> 8) & 0xFF;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneLightPirHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t scene;
+		} scene_light_pir_rsp_message_t;
+		scene_light_pir_rsp_message_t *scene_light_pir_rsp_message = (scene_light_pir_rsp_message_t *)&dataRsp;
+		if (scene_light_pir_rsp_message->header == 0x0145 && scene_light_pir_rsp_message->scene == scene)
+		{
+			return 0;
+		}
+		else
+		{
+			LOGW("Scene light pir rsp not match control");
+		}
+	}
+	else
+	{
+		LOGW("Scene light pir error");
+	}
+	return -1;
+}
+
+int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
+{
+	LOGD("Del scene light pir");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sceneLightPirHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t sceneId;
+	} scene_light_pir_message_t;
+	scene_light_pir_message_t scene_light_pir_message = {0};
+	memset(&scene_light_pir_message, 0x00, sizeof(scene_light_pir_message));
+	scene_light_pir_message.addr = devAddr;
+	scene_light_pir_message.opcodeVendor = 0xe2;
+	scene_light_pir_message.vendorId = 0x0211;
+	scene_light_pir_message.opcodeRsp = 0x00e3;
+	scene_light_pir_message.header = 0x0245;
+	scene_light_pir_message.sceneId = scene;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneLightPirHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t scene;
+		} scene_light_pir_rsp_message_t;
+		scene_light_pir_rsp_message_t *scene_light_pir_rsp_message = (scene_light_pir_rsp_message_t *)&dataRsp;
+		if (scene_light_pir_rsp_message->header == 0x0245 && scene_light_pir_rsp_message->scene == scene)
+		{
+			return 0;
+		}
+		else
+		{
+			LOGW("Del Scene light pir rsp not match control");
+		}
+	}
+	else
+	{
+		LOGW("Del Scene light pir error");
+	}
+	return -1;
+}
+
+int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
+{
+	LOGD("TimeActionPirLightSensor 0x%04X", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timeActionHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t time;
+	} time_action_message_t;
+	time_action_message_t time_action_message = {0};
+	memset(&time_action_message, 0x00, sizeof(time_action_message));
+	time_action_message.addr = devAddr;
+	time_action_message.opcodeVendor = 0xe2;
+	time_action_message.vendorId = 0x0211;
+	time_action_message.opcodeRsp = 0x00e3;
+	time_action_message.header = 0x0345;
+	time_action_message.time = time;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&time_action_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeActionHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t time;
+		} time_action_rsp_message_t;
+		time_action_rsp_message_t *time_action_rsp_message = (time_action_rsp_message_t *)dataRsp;
+		if (time_action_rsp_message->header == 0x0345 && time_action_rsp_message->time == time)
+		{
+			return 0;
+		}
+		LOGW("time action pir light resp state not match with input control");
+	}
+	LOGW("time action pir light err");
 	return -1;
 }
 

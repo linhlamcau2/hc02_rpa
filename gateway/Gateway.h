@@ -81,6 +81,9 @@ private:
 	int OnRPCDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCResetRemote(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnRPCScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);

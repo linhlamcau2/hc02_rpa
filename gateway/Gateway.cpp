@@ -26,6 +26,9 @@
 #include "DeviceBleSwitchScene6DC.h"
 #include "DeviceBleSensorTempHum.h"
 #include "DeviceBleSensorPm.h"
+#include "DeviceBlePirLightSensorDC.h"
+#include "DeviceBleSmokeSensor.h"
+#include "DeviceBleDoorSensor.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -148,6 +151,10 @@ void Gateway::init()
 	OnLocalCallbackRegister("SCENE_FOR_REMOTE", bind(&Gateway::OnRPCSetSceneForRemote, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_SCENE_FOR_REMOTE", bind(&Gateway::OnRPCDelSceneForRemote, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_REMOTE", bind(&Gateway::OnRPCResetRemote, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRPCScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRPCScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRPCRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("CREATE_EVENT_TRIGGER", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_EVENT_TRIGGER", bind(&Gateway::OnRPCEditRule, this, placeholders::_1, placeholders::_2));
@@ -824,8 +831,8 @@ int Gateway::OnRPCSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValu
 			Rule *rule = getRuleById(ruleId);
 			if (rule)
 			{
-				rule->isEnable = (status)?true:false;
-				database->RuleUpdateStatus(ruleId,status);
+				rule->isEnable = (status) ? true : false;
+				database->RuleUpdateStatus(ruleId, status);
 			}
 			else
 			{
@@ -2090,6 +2097,162 @@ int Gateway::OnRPCResetRemote(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
+int Gateway::OnRPCScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCScenePirLigtSensor");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataJsonRsp;
+		dataJsonRsp["CMD"] = "SCENE_FOR_SENSOR_LIGHT_PIR";
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
+				{
+					if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString() && data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
+					{
+						string sceneId = data["SCENE_ID"].asString();
+						uint8_t pir = data["PIR_VALUE"].asInt();
+						data["EVENT_TRIGGER_ID"] = sceneId;
+						Json::Value lux = data["LUX"];
+						SceneBle *scene = getSceneBleFromId(sceneId);
+						if (scene)
+						{
+							Json::Value dataCmd;
+							dataCmd["pir"] = pir;
+							dataCmd["scene"] = scene->GetId();
+							dataCmd["lux"] = lux;
+							device->Do(dataCmd);
+						}
+						else
+						{
+							LOGW("Scene %s does not exsit", sceneId.c_str());
+						}
+					}
+					if (data.isMember("HANG_ON_TIME") && data["HANG_ON_TIME"].isInt())
+					{
+						Json::Value configTime;
+						configTime["time"] = data["HANG_ON_TIME"].asInt();
+						device->Do(configTime);
+					}
+				}
+				else
+				{
+					device->Do(data);
+				}
+			}
+			else
+			{
+				LOGW("Device %s does not exsit", deviceId.c_str());
+			}
+		}
+		dataJsonRsp["DATA"] = data;
+	}
+	return -1;
+}
+int Gateway::OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCEditScenePirLightSensor");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataJsonRsp;
+		dataJsonRsp["CMD"] = "EDIT_SCENE_FOR_SENSOR_LIGHT_PIR";
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
+				{
+					if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString() && data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
+					{
+						string sceneId = data["SCENE_ID"].asString();
+						uint8_t pir = data["PIR_VALUE"].asInt();
+						data["EVENT_TRIGGER_ID"] = sceneId;
+						Json::Value lux = data["LUX"];
+						SceneBle *scene = getSceneBleFromId(sceneId);
+						if (scene)
+						{
+							Json::Value dataCmd;
+							dataCmd["pir"] = pir;
+							dataCmd["scene"] = scene->GetId();
+							dataCmd["lux"] = lux;
+							device->Do(dataCmd);
+						}
+						else
+						{
+							LOGW("Scene %s does not exsit", sceneId.c_str());
+						}
+					}
+					if (data.isMember("HANG_ON_TIME") && data["HANG_ON_TIME"].isInt())
+					{
+						Json::Value configTime;
+						configTime["time"] = data["HANG_ON_TIME"].asInt();
+						device->Do(configTime);
+					}
+				}
+				else
+				{
+					device->Do(data);
+				}
+			}
+			else
+			{
+				LOGW("Device %s does not exsit", deviceId.c_str());
+			}
+		}
+		dataJsonRsp["DATA"] = data;
+	}
+	return -1;
+}
+int Gateway::OnRPCRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCRemoveScenePirLightSensor");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray() && reqValue.isMember("DEVICE_ID") && reqValue["DEVICE_ID"].isString())
+	{
+		respValue["CMD"] = "REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR";
+		Json::Value data = reqValue["DATA"];
+		string deviceId = reqValue["DEVICE_ID"].asString();
+		for (Json::ArrayIndex i = 0; i < data.size(); i++)
+		{
+			Json::Value dataValue = data[i];
+			if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+			{
+				string eventId = dataValue["EVENT_TRIGGER_ID"].asString();
+				Device *device = getDeviceFromId(deviceId);
+				SceneBle *scene = getSceneBleFromId(eventId);
+				if (device && scene)
+				{
+					if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
+					{
+						Json::Value delscene;
+						delscene["sceneDel"] = scene->GetId();
+						device->Do(delscene);
+					}
+					else
+					{
+						device->Do(data);
+					}
+				}
+				else
+				{
+					LOGW("Device or scene does exsit");
+				}
+			}
+		}
+		respValue["DATA"] = data;
+		return 0;
+	}
+	LOGW("OnRPCRemoveScenePirLightSensor error: %s", reqValue.toString().c_str());
+	return -1;
+}
+
 /**
  * @brief
  *
@@ -2566,6 +2729,15 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	case BLE_PM_SENSOR:
 		device = new DeviceBleSensorPm(id, name, mac, device_id, addr, version);
 		break;
+	case BLE_PIR_LIGHT_SENSOR_DC:
+		device = new DeviceBlePirLightSensorDC(id, name, mac, device_id, addr, version);
+		break;
+	case BLE_SMOKE_SENSOR:
+		device = new DeviceBleSmokeSensor(id, name, mac, device_id, addr, version);
+		break;
+	case BLE_DOOR_SENSOR:
+		device = new DeviceBleDoorSensor(id, name, mac, device_id, addr, version);
+		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
 		break;
@@ -2857,7 +3029,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(id, ruleStr, status, 1);
 			}
-			bool isEnable = (status)? true:false;
+			bool isEnable = (status) ? true : false;
 			rule->isEnable = isEnable;
 		}
 		return rule;
