@@ -60,7 +60,7 @@ private:
 	int OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue);
-	
+
 #ifdef CONFIG_ENABLE_ZIGBEE
 	int OnRPCZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
@@ -85,21 +85,31 @@ private:
 	int OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnRPCSceneScreen(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+
 	int OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
 
-	//Rule
+	// Rule
 	int OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCEditRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 
+	//HCL
+	int OnRPCCreateHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDeleteHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCSwitchStatusHCL(Json::Value &reqValue, Json::Value &respValue);
+
 	int OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	// int OnRPCAddDeviceToSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	// int OnRPCDelDeviceFromSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue);

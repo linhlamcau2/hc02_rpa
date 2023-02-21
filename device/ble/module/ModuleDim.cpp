@@ -107,7 +107,7 @@ bool ModuleDim::Do(Json::Value &dataValue)
 				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
-			int dim = (value * 65535) / 100;
+			uint16_t dim = (value * 65535) / 100;
 			bleProtocol->SetDimmingLight(addr, dim, 0, true);
 			return true;
 		}

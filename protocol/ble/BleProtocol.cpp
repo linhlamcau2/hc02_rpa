@@ -1978,6 +1978,461 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 	return -1;
 }
 
+int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type)
+{
+	LOGD("SceneForScreenTouch 0x%04X, scene %d, icon %d", devAddr, scene, icon);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t sceneId;
+		uint8_t icon;
+		uint8_t type;
+	} scene_screen_touch_message_t;
+	scene_screen_touch_message_t scene_screen_touch_message = {0};
+	memset(&scene_screen_touch_message, 0x00, sizeof(scene_screen_touch_message));
+	scene_screen_touch_message.addr = devAddr;
+	scene_screen_touch_message.opcodeVendor = 0xe2;
+	scene_screen_touch_message.vendorId = 0x0211;
+	scene_screen_touch_message.opcodeRsp = 0x00e3;
+	scene_screen_touch_message.header = 0x010a;
+	scene_screen_touch_message.sceneId = scene;
+	scene_screen_touch_message.icon = icon;
+	scene_screen_touch_message.type = type;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t scene;
+			uint8_t icon;
+		} scene_screen_touch_rsp_message_t;
+		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
+		if (scene_screen_touch_rsp_message->header == 0x010a && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
+		{
+			return 0;
+		}
+		LOGW("scene screen touch resp state not match with input control");
+	}
+	LOGW("scene screen touch err");
+	return -1;
+}
+
+int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon)
+{
+	LOGD("EditIconScreenTouch 0x%04x, scene %d, icon %d", devAddr, scene, icon);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t editIconScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t sceneId;
+		uint8_t icon;
+	} edit_icon_screen_touch_message_t;
+	edit_icon_screen_touch_message_t edit_icon_screen_touch_message = {0};
+	memset(&edit_icon_screen_touch_message, 0x00, sizeof(edit_icon_screen_touch_message));
+	edit_icon_screen_touch_message.addr = devAddr;
+	edit_icon_screen_touch_message.opcodeVendor = 0xe2;
+	edit_icon_screen_touch_message.vendorId = 0x0211;
+	edit_icon_screen_touch_message.opcodeRsp = 0x00e3;
+	edit_icon_screen_touch_message.header = 0x070a;
+	edit_icon_screen_touch_message.sceneId = scene;
+	edit_icon_screen_touch_message.icon = icon;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&edit_icon_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, editIconScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t scene;
+			uint8_t icon;
+		} scene_screen_touch_rsp_message_t;
+		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
+		if (scene_screen_touch_rsp_message->header == 0x070a && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
+		{
+			return 0;
+		}
+		LOGW("edit icon screen touch resp state not match with input control");
+	}
+	LOGW("edit icon screen touch err");
+	return -1;
+}
+
+int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
+{
+	LOGD("DelSceneScreenTouch 0x%04x, scene %d", devAddr, scene);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t delSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t sceneId;
+	} del_scene_screen_touch_message_t;
+	del_scene_screen_touch_message_t del_scene_screen_touch_message = {0};
+	memset(&del_scene_screen_touch_message, 0x00, sizeof(del_scene_screen_touch_message));
+	del_scene_screen_touch_message.addr = devAddr;
+	del_scene_screen_touch_message.opcodeVendor = 0xe2;
+	del_scene_screen_touch_message.vendorId = 0x0211;
+	del_scene_screen_touch_message.opcodeRsp = 0x00e3;
+	del_scene_screen_touch_message.header = 0x020a;
+	del_scene_screen_touch_message.sceneId = scene;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t scene;
+		} scene_screen_touch_rsp_message_t;
+		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
+		if (scene_screen_touch_rsp_message->header == 0x020a && scene_screen_touch_rsp_message->scene == scene)
+		{
+			return 0;
+		}
+		LOGW("del scene screen touch resp state not match with input control");
+	}
+	LOGW("del scene screen touch err");
+	return -1;
+}
+
+int BleProtocol::DelAllScene(uint16_t devAddr)
+{
+	LOGD("DelAllScene 0x%04x, scene %d", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t delAllSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint8_t check[6];
+	} del_allscene_screen_touch_message_t;
+	del_allscene_screen_touch_message_t del_allscene_screen_touch_message = {0};
+	memset(&del_allscene_screen_touch_message, 0x00, sizeof(del_allscene_screen_touch_message));
+	del_allscene_screen_touch_message.addr = devAddr;
+	del_allscene_screen_touch_message.opcodeVendor = 0xe2;
+	del_allscene_screen_touch_message.vendorId = 0x0211;
+	del_allscene_screen_touch_message.opcodeRsp = 0x00e3;
+	del_allscene_screen_touch_message.header = 0x0a0a;
+	for (int i = 0; i < 6; i++)
+	{
+		del_allscene_screen_touch_message.check[i] = i;
+	}
+	int rs = SendMessage(APP_REQ, (uint8_t *)&del_allscene_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delAllSceneScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+		} scene_screen_touch_rsp_message_t;
+		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
+		if (scene_screen_touch_rsp_message->header == 0x0a0a)
+		{
+			return 0;
+		}
+		LOGW("del all scene screen touch resp state not match with input control");
+	}
+	LOGW("del all scene screen touch err");
+	return -1;
+}
+
+int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t temp)
+{
+	LOGD("SendWeatherOutdoor 0x%04x, status %d, temp %d", devAddr, status, temp);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t weatherOutdoorScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t temp;
+		uint8_t status;
+	} weather_outdoor_screen_touch_message_t;
+	weather_outdoor_screen_touch_message_t weather_outdoor_screen_touch_message = {0};
+	memset(&weather_outdoor_screen_touch_message, 0x00, sizeof(weather_outdoor_screen_touch_message));
+	weather_outdoor_screen_touch_message.addr = devAddr;
+	weather_outdoor_screen_touch_message.opcodeVendor = 0xe2;
+	weather_outdoor_screen_touch_message.vendorId = 0x0211;
+	weather_outdoor_screen_touch_message.opcodeRsp = 0x00e3;
+	weather_outdoor_screen_touch_message.header = 0x050a;
+	weather_outdoor_screen_touch_message.temp = temp;
+	weather_outdoor_screen_touch_message.status = status;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_outdoor_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherOutdoorScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t temp;
+			uint8_t status;
+		} weather_outdoor_screen_touch_rsp_message_t;
+		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
+		if (weather_outdoor_screen_touch_rsp_message->header == 0x050a && weather_outdoor_screen_touch_rsp_message->temp == temp && weather_outdoor_screen_touch_rsp_message->status == status)
+		{
+			return 0;
+		}
+		LOGW("weather outdoor screen touch resp state not match with input control");
+	}
+	LOGW("weather outdoor screen touch err");
+	return -1;
+}
+
+int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum, uint16_t pm25)
+{
+	LOGD("SendWeatherIndoor 0x%04x, temp %d, hum %d", devAddr, temp, hum);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t weatherIndoorScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t temp;
+		uint16_t hum;
+		uint16_t pm25;
+	} weather_indoor_screen_touch_message_t;
+	weather_indoor_screen_touch_message_t weather_indoor_screen_touch_message = {0};
+	memset(&weather_indoor_screen_touch_message, 0x00, sizeof(weather_indoor_screen_touch_message));
+	weather_indoor_screen_touch_message.addr = devAddr;
+	weather_indoor_screen_touch_message.opcodeVendor = 0xe2;
+	weather_indoor_screen_touch_message.vendorId = 0x0211;
+	weather_indoor_screen_touch_message.opcodeRsp = 0x00e3;
+	weather_indoor_screen_touch_message.header = 0x030a;
+	weather_indoor_screen_touch_message.temp = temp;
+	weather_indoor_screen_touch_message.hum = hum;
+	weather_indoor_screen_touch_message.pm25 = pm25;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_indoor_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherIndoorScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t temp;
+			uint16_t hum;
+			uint16_t pm25;
+		} weather_outdoor_screen_touch_rsp_message_t;
+		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
+		if (weather_outdoor_screen_touch_rsp_message->header == 0x030a && weather_outdoor_screen_touch_rsp_message->temp == temp && weather_outdoor_screen_touch_rsp_message->hum == hum)
+		{
+			return 0;
+		}
+		LOGW("weather indoor screen touch resp state not match with input control");
+	}
+	LOGW("weather indoor screen touch err");
+	return -1;
+}
+
+int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day)
+{
+	LOGD("SendDate 0x%04x, years %d, month %d, date %d, day %d", devAddr, years, month, date, day);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dateScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t years;
+		uint8_t month;
+		uint8_t date;
+		uint8_t day;
+	} date_screen_touch_message_t;
+	date_screen_touch_message_t date_screen_touch_message = {0};
+	memset(&date_screen_touch_message, 0x00, sizeof(date_screen_touch_message));
+	date_screen_touch_message.addr = devAddr;
+	date_screen_touch_message.opcodeVendor = 0xe2;
+	date_screen_touch_message.vendorId = 0x0211;
+	date_screen_touch_message.opcodeRsp = 0x00e3;
+	date_screen_touch_message.header = 0x080a;
+	date_screen_touch_message.years = years;
+	date_screen_touch_message.month = month;
+	date_screen_touch_message.date = date;
+	date_screen_touch_message.day = day;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&date_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dateScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t years;
+			uint8_t month;
+			uint8_t date;
+			uint8_t day;
+		} date_screen_touch_rsp_message_t;
+		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
+		if (date_screen_touch_rsp_message->header == 0x080a && date_screen_touch_rsp_message->years == years && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
+		{
+			return 0;
+		}
+		LOGW("date screen touch resp state not match with input control");
+	}
+	LOGW("date screen touch err");
+	return -1;
+}
+int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second)
+{
+	LOGD("SendTime 0x%04x, hours %d, minute %d, second %d", devAddr, hours, minute, second);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timeScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint8_t hours;
+		uint8_t minute;
+		uint8_t second;
+	} time_screen_touch_message_t;
+	time_screen_touch_message_t time_screen_touch_message = {0};
+	memset(&time_screen_touch_message, 0x00, sizeof(time_screen_touch_message));
+	time_screen_touch_message.addr = devAddr;
+	time_screen_touch_message.opcodeVendor = 0xe2;
+	time_screen_touch_message.vendorId = 0x0211;
+	time_screen_touch_message.opcodeRsp = 0x00e3;
+	time_screen_touch_message.header = 0x090a;
+	time_screen_touch_message.hours = hours;
+	time_screen_touch_message.minute = minute;
+	time_screen_touch_message.second = second;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&time_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t hours;
+			uint8_t minute;
+			uint8_t second;
+		} date_screen_touch_rsp_message_t;
+		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
+		if (date_screen_touch_rsp_message->header == 0x090a && date_screen_touch_rsp_message->hours == hours && date_screen_touch_rsp_message->minute == minute && date_screen_touch_rsp_message->second == second)
+		{
+			return 0;
+		}
+		LOGW("time screen touch resp state not match with input control");
+	}
+	LOGW("time screen touch err");
+	return -1;
+}
+int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
+{
+	LOGD("SetGroup 0x%04x, group %d", devAddr, group);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t groupScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t group;
+	} group_screen_touch_message_t;
+	group_screen_touch_message_t group_screen_touch_message = {0};
+	memset(&group_screen_touch_message, 0x00, sizeof(group_screen_touch_message));
+	group_screen_touch_message.addr = devAddr;
+	group_screen_touch_message.opcodeVendor = 0xe2;
+	group_screen_touch_message.vendorId = 0x0211;
+	group_screen_touch_message.opcodeRsp = 0x00e3;
+	group_screen_touch_message.header = 0x0b0a;
+	group_screen_touch_message.group = group;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&group_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, groupScreenTouchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t group;
+		} group_screen_touch_rsp_message_t;
+		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
+		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == group)
+		{
+			return 0;
+		}
+		LOGW("group screen touch resp state not match with input control");
+	}
+	LOGW("group screen touch err");
+	return -1;
+}
+
 int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff)
 {
 	LOGD("ControlRgbSwitch 0x%04X, button %d, r %d, g %d, b %d, dimon %d, dimOff %d", devAddr, button, r, g, b, dimOn, dimOff);
@@ -2033,4 +2488,154 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 	}
 	LOGW("control rgb switch err");
 	return -1;
+}
+
+int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value)
+{
+	LOGD("ControlRelayOfSwitch 0x%04X, relayid %d, value %d", devAddr, relay, value);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t controlRelaySwitchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint8_t relay;
+		uint8_t value;
+	} control_relay_switch_message_t;
+	control_relay_switch_message_t control_relay_switch_message = {0};
+	memset(&control_relay_switch_message, 0x00, sizeof(control_relay_switch_message));
+	control_relay_switch_message.addr = devAddr;
+	control_relay_switch_message.opcodeVendor = 0xe2;
+	control_relay_switch_message.vendorId = 0x0211;
+	control_relay_switch_message.opcodeRsp = 0x00e3;
+	control_relay_switch_message.header = 0x000b;
+	control_relay_switch_message.relay = relay;
+	control_relay_switch_message.value = value;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlRelaySwitchHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t relay;
+			uint8_t value;
+		} control_relay_switch_rsp_message_t;
+		control_relay_switch_rsp_message_t *control_relay_switch_rsp_message = (control_relay_switch_rsp_message_t *)dataRsp;
+		if (control_relay_switch_rsp_message->header == 0x000b && control_relay_switch_rsp_message->relay == relay && control_relay_switch_rsp_message->value == value)
+		{
+			return 0;
+		}
+		LOGW("control relay switch resp state not match with input control");
+	}
+	LOGW("control relay switch err");
+	return -1;	
+}
+
+int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
+{
+	LOGD("SetIdCombine 0x%04x, id %d", devAddr, id);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t setIdCombineHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint16_t id;
+	} set_id_combine_message_t;
+	set_id_combine_message_t set_id_combine_message = {0};
+	memset(&set_id_combine_message, 0x00, sizeof(set_id_combine_message));
+	set_id_combine_message.addr = devAddr;
+	set_id_combine_message.opcodeVendor = 0xe2;
+	set_id_combine_message.vendorId = 0x0211;
+	set_id_combine_message.opcodeRsp = 0x00e3;
+	set_id_combine_message.header = 0x060b;
+	set_id_combine_message.id = id;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&set_id_combine_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setIdCombineHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t id;
+		} set_id_combine_rsp_message_t;
+		set_id_combine_rsp_message_t *set_id_combine_rsp_message = (set_id_combine_rsp_message_t *)dataRsp;
+		if (set_id_combine_rsp_message->header == 0x060b && set_id_combine_rsp_message->id == id )
+		{
+			return 0;
+		}
+		LOGW("set id combine resp state not match with input control");
+	}
+	LOGW("set id combine err");
+	return -1;	
+}
+
+int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
+{
+	LOGD("SetTimer 0x%04x, timer %d, status %d", devAddr, timer, status);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		uint8_t rev[6];
+		uint16_t addr;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint16_t opcodeRsp;
+		uint16_t header;
+		uint8_t status;
+		uint8_t timer[4];
+	} timer_message_t;
+	timer_message_t timer_message = {0};
+	memset(&timer_message, 0x00, sizeof(timer_message));
+	timer_message.addr = devAddr;
+	timer_message.opcodeVendor = 0xe2;
+	timer_message.vendorId = 0x0211;
+	timer_message.opcodeRsp = 0x00e3;
+	timer_message.header = 0x070b;
+	timer_message.status = status;
+	timer_message.timer[0] = (timer >> 24) & 0xFF;
+	timer_message.timer[1] = (timer >> 16) & 0xFF;
+	timer_message.timer[2] = (timer >> 8) & 0xFF;
+	timer_message.timer[3] = (timer) & 0xFF;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000,timerHeader, 0, 7);
+	if (rs == 0)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t status;
+			uint8_t timer[4];
+		} timer_rsp_message_t;
+		timer_rsp_message_t *timer_rsp_message = (timer_rsp_message_t *)dataRsp;
+		if (timer_rsp_message->header == 0x070b && timer_rsp_message->status == status)
+		{
+			return 0;
+		}
+		LOGW("timer resp state not match with input control");
+	}
+	LOGW("timer switch err");
+	return -1;		
 }

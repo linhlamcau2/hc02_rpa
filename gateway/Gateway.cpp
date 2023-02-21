@@ -22,7 +22,7 @@
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "DeviceBleLightOnoffCctDimHslModeRGB.h"
-#include "DeviceBleSwitchTouch4.h"
+#include "DeviceBleSwitchTouchRgb4.h"
 #include "DeviceBleSwitchScene6DC.h"
 #include "DeviceBleSensorTempHum.h"
 #include "DeviceBleSensorPm.h"
@@ -156,10 +156,17 @@ void Gateway::init()
 	OnLocalCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRPCScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRPCRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 
+	OnLocalCallbackRegister("SCENE_FOR_SCREEN", bind(&Gateway::OnRPCSceneScreen, this, placeholders::_1, placeholders::_2));
+
 	OnLocalCallbackRegister("CREATE_EVENT_TRIGGER", bind(&Gateway::OnRPCAddRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_EVENT_TRIGGER", bind(&Gateway::OnRPCEditRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EVENT_TRIGGER_STATUS", bind(&Gateway::OnRPCSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_EVENT_TRIGGER", bind(&Gateway::OnRPCDeleteRule, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("CREATE_HCL", bind(&Gateway::OnRPCCreateHCL, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_HCL", bind(&Gateway::OnRPCEditHCL, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("HCL_RULE_STATUS", bind(&Gateway::OnRPCSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
+
 
 	CloudConnect();
 	LocalConnect();
@@ -871,6 +878,119 @@ int Gateway::OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 	}
 	return -1;
 }
+
+int Gateway::OnRPCCreateHCL(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		respValue["CMD"] = "EVENT_TRIGGER";
+		Json::Value dataJsonRsp;
+		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
+			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
+			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
+			data.isMember("STATUS") && data["STATUS"].isInt() &&
+			data.isMember("STATES") && data["STATES"].isArray())
+		{
+			string evevtId = data["EVENT_TRIGGER_ID"].asString();
+			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
+			string groupId = data["GROUP_ID"].asString();
+			Json::Value eachDay = data["EVENT_TRIGGER_ID"];
+			int status = data["STATUS"].asInt();
+			Json::Value states = data["STATES"];
+			if (states.isMember("TIME") && states["TIME"].isString() && states.isMember("PROPERTIES") && states["PROPERTIES"].isArray())
+			{
+				string time = states["TIME"].asString();
+				Json::Value properties = states["PROPERTIES"];
+				Json::Value dataAddRule;
+				dataAddRule["EVENT_TRIGGER_ID"] = evevtId;
+				dataAddRule["START_AT"] = time;
+				dataAddRule["EACH_DAY"] = eachDay;
+				dataAddRule["LOGICAL_OPERATOR_ID"] = 0;
+				dataAddRule["STATUS"] = status;
+				Json::Value outputGroup;
+				outputGroup["GROUP_ID"] = groupId;
+				outputGroup["PROPERTIES"] = properties;
+				dataAddRule["OUTPUT_GROUPS"] = outputGroup;
+				Rule *rule = AddRule(dataAddRule, true, true);
+				if (rule)
+				{
+					dataJsonRsp["STATUS"] = "SUCCESS";
+				}
+				else
+				{
+					dataJsonRsp["STATUS"] = "FAILED";
+				}
+			}
+		}
+		else
+		{
+			LOGW("Error adding rule");
+		}
+		respValue["DATA"] = dataJsonRsp;
+		return 0;
+	}
+	return -1;
+}
+
+
+int Gateway::OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		respValue["CMD"] = "EDIT_EVENT_TRIGGER";
+		Json::Value dataJsonRsp;
+		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
+			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
+			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
+			data.isMember("STATUS") && data["STATUS"].isInt() &&
+			data.isMember("STATES") && data["STATES"].isArray())
+		{
+			string evevtId = data["EVENT_TRIGGER_ID"].asString();
+			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
+			string groupId = data["GROUP_ID"].asString();
+			Json::Value eachDay = data["EVENT_TRIGGER_ID"];
+			int status = data["STATUS"].asInt();
+			Json::Value states = data["STATES"];
+			if (states.isMember("TIME") && states["TIME"].isString() && states.isMember("PROPERTIES") && states["PROPERTIES"].isArray())
+			{
+				string time = states["TIME"].asString();
+				Json::Value properties = states["PROPERTIES"];
+				Json::Value dataAddRule;
+				dataAddRule["EVENT_TRIGGER_ID"] = evevtId;
+				dataAddRule["START_AT"] = time;
+				dataAddRule["EACH_DAY"] = eachDay;
+				dataAddRule["LOGICAL_OPERATOR_ID"] = 0;
+				dataAddRule["STATUS"] = status;
+				Json::Value outputGroup;
+				outputGroup["GROUP_ID"] = groupId;
+				outputGroup["PROPERTIES"] = properties;
+				dataAddRule["OUTPUT_GROUPS"] = outputGroup;
+				Rule *rule = getRuleById(evevtId);
+				if (rule)
+				{
+					rule->DelAllRuleInput();
+					rule->DelAllRuleOutput();
+					rule = AddRule(dataAddRule,true, true);
+					dataJsonRsp["STATUS"] = "SUCCESS";
+				}
+				else
+				{
+					dataJsonRsp["STATUS"] = "FAILED";
+				}
+			}
+		}
+		else
+		{
+			LOGW("Error adding rule");
+		}
+		respValue["DATA"] = dataJsonRsp;
+		return 0;
+	}
+	return -1;
+}
+
 
 int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 {
@@ -2140,7 +2260,7 @@ int Gateway::OnRPCScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 						device->Do(configTime);
 					}
 				}
-				else
+				else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
 				{
 					device->Do(data);
 				}
@@ -2168,16 +2288,16 @@ int Gateway::OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
+				if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString() && data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
 				{
-					if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString() && data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
+					string sceneId = data["SCENE_ID"].asString();
+					uint8_t pir = data["PIR_VALUE"].asInt();
+					data["EVENT_TRIGGER_ID"] = sceneId;
+					Json::Value lux = data["LUX"];
+					SceneBle *scene = getSceneBleFromId(sceneId);
+					if (scene)
 					{
-						string sceneId = data["SCENE_ID"].asString();
-						uint8_t pir = data["PIR_VALUE"].asInt();
-						data["EVENT_TRIGGER_ID"] = sceneId;
-						Json::Value lux = data["LUX"];
-						SceneBle *scene = getSceneBleFromId(sceneId);
-						if (scene)
+						if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
 						{
 							Json::Value dataCmd;
 							dataCmd["pir"] = pir;
@@ -2185,21 +2305,15 @@ int Gateway::OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 							dataCmd["lux"] = lux;
 							device->Do(dataCmd);
 						}
-						else
+						else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
 						{
-							LOGW("Scene %s does not exsit", sceneId.c_str());
+							bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, lux[0].asInt(), lux[1].asInt(), scene->GetId(), 1);
 						}
 					}
-					if (data.isMember("HANG_ON_TIME") && data["HANG_ON_TIME"].isInt())
+					else
 					{
-						Json::Value configTime;
-						configTime["time"] = data["HANG_ON_TIME"].asInt();
-						device->Do(configTime);
+						LOGW("Scene %s does not exsit", sceneId.c_str());
 					}
-				}
-				else
-				{
-					device->Do(data);
 				}
 			}
 			else
@@ -2253,6 +2367,329 @@ int Gateway::OnRPCRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 	return -1;
 }
 
+int Gateway::OnRPCSceneScreen(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "SCENE_FOR_SCREEN";
+		Json::Value data = reqValue["DATA"];
+		Json::Value dataJson;
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("SCENE_ID") && data["SCENE"].isArray())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			dataJson["DEVICE_ID"] = deviceId;
+			Json::Value scenes = data["SCENE"];
+			Device *device = getDeviceFromId(deviceId);
+			if (device && device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+			{
+				string status = "SUCCESS";
+				for (Json::ArrayIndex i = 0; i < scenes.size(); i++)
+				{
+					Json::Value scene = scenes[i];
+					if (scene.isMember("SCENE_ID") && scene["SCENE_ID"].isString() && scene.isMember("SCENE_NAME") && scene["SCENE_NAME"].isString() && scene.isMember("SCENE_ICON") && scene["SCENE_ICON"].isInt())
+					{
+						string sceneId = scene["SCENE_ID"].asString();
+						string sceneName = scene["SCENE_NAME"].asString();
+						int sceneIcon = scene["SCENE_ICON"].asInt();
+						SceneBle *scene = getSceneBleFromId(sceneId);
+						if (scene)
+						{
+							if (bleProtocol->SceneForScreenTouch(device->GetAddr(), scene->GetId(), sceneIcon, 1) != 0)
+							{
+								status = "FAILED";
+							}
+						}
+						else
+						{
+							LOGW("Scene %s not found", sceneId.c_str());
+						}
+					}
+				}
+				dataJson["STATUS"] = status;
+			}
+			else
+			{
+				LOGW("Device %s is not supported", deviceId.c_str());
+			}
+		}
+		respValue["DATA"] = dataJson;
+		return 0;
+	}
+	LOGW("OnRPCRemoveScenePirLightSensor error: %s", reqValue.toString().c_str());
+	return -1;
+}
+
+/*
+{
+	"CMD" : "STAIRS_SWITCH",
+	"DATA":
+	{
+		"DEVICE_ID" : "aaaaaaa-6f18-43c0-ae46-69c32998f653",
+		"LIST_BUTTON_LINK" : [
+			1,
+			2,
+			3,
+			4
+		]
+	}
+}
+
+{
+  "CMD": "STAIRS_SWITCH",
+  "DATA": {
+	"DEVICE_ID": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
+	"SUCCESS": [
+	  1,
+	  2
+	],
+	"FAILED": [
+	  3,
+	  4
+	]
+  }
+}
+*/
+int Gateway::OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "STAIRS_SWITCH";
+		Json::Value dataJsonRsp;
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("LIST_BUTTON_LINK") && data["LIST_BUTTON_LINK"].isArray())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				for (Json::ArrayIndex i = 0; i < data["LIST_BUTTON_LINK"].size(); i++)
+				{
+					int button = data["LIST_BUTTON_LINK"][i].asInt();
+					string groupRandom = Util::genRandRQI(16);
+					int temp_groupUnicastId = 1;
+					for (auto &x : groupList)
+					{
+						if (x.first >= temp_groupUnicastId)
+						{
+							temp_groupUnicastId = x.first + 1;
+						}
+					}
+					Group *group = new Group(groupRandom, temp_groupUnicastId, groupRandom);
+					if (group)
+					{
+						if (AddNewGroup(group, true, true))
+						{
+							if (group->AddDevice(device, device->GetAddr() + button, true))
+							{
+								database->DeviceInGroupAdd(group, device, device->GetAddr() + (button - 1));
+								dataJsonRsp["SUCCESS"].append(button);
+							}
+							else
+							{
+								dataJsonRsp["FAILED"].append(button);
+							}
+						}
+						else
+						{
+							delete group;
+						}
+					}
+				}
+			}
+			else
+			{
+				LOGW("Device %s not found", deviceId.c_str());
+			}
+		}
+		respValue["DATA"] = dataJsonRsp;
+	}
+	return 0;
+}
+
+/**
+ *
+{
+  "CMD": "EDIT_STAIRS_SWITCH",
+  "DATA": {
+	"DEVICE_ID": "aaaaaaa-6f18-43c0-ae46-69c32998f653",
+	"ADD_BUTTON": [
+	  1,
+	  2
+	],
+	"REMOVE_BUTTON": [
+	  3,
+	  4
+	]
+  }
+}
+
+{
+  "CMD": "EDIT_STAIRS_SWITCH",
+  "DATA": {
+	"DEVICE_ID": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
+	"SUCCESS": [
+	  1,
+	  2
+	],
+	"FAILED": [
+	  3,
+	  4
+	]
+  }
+}
+*/
+int Gateway::OnRPCEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value &data = reqValue["DATA"];
+		respValue["CMD"] = "EDIT_STAIRS_SWITCH";
+		Json::Value dataJsonRsp;
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("ADD_BUTTON") && data["ADD_BUTTON"].isArray() && data.isMember("REMOVE_BUTTON") && data["REMOVE_BUTTON"].isArray())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			uint16_t groupMesh;
+			Device *device = getDeviceFromId(deviceId);
+			Group *group = NULL;
+			if (device)
+			{
+				for (int i = 0; i < groupList.size(); i++)
+				{
+					for (int j = 0; j < groupList[i]->deviceList.size(); j++)
+					{
+						if (groupList[i]->deviceList[j]->device->GetId() == deviceId)
+						{
+							group = groupList[i];
+							groupMesh = groupList[i]->GetId();
+							break;
+						}
+					}
+				}
+				Json::Value buttonsAdd = data["ADD_BUTTON"];
+				for (int n = 0; n < buttonsAdd.size(); n++)
+				{
+					if (buttonsAdd[n].isInt())
+					{
+						int button = buttonsAdd[n].asInt();
+						if (group->AddDevice(device, device->GetAddr() + button, true))
+						{
+							database->DeviceInGroupAdd(group, device, device->GetAddr() + (button - 1));
+							dataJsonRsp["SUCCESS"].append(button);
+						}
+						else
+						{
+							dataJsonRsp["FAILED"].append(button);
+						}
+					}
+				}
+				Json::Value buttonsRemove = data["REMOVE_BUTTON"];
+				for (int m = 0; m < buttonsRemove.size(); m++)
+				{
+					if (buttonsRemove[m].isInt())
+					{
+						int buttonRv = buttonsRemove[m].asInt();
+						if (group->DelDevice(device, device->GetAddr() + buttonRv))
+						{
+							database->DeviceInGroupDel(group, device, device->GetAddr() + (buttonRv - 1));
+							dataJsonRsp["SUCCESS"].append(buttonRv);
+						}
+						else
+						{
+							dataJsonRsp["FAILED"].append(buttonRv);
+						}
+					}
+				}
+			}
+			else
+			{
+				LOGW("Device %s not found", deviceId.c_str());
+			}
+		}
+		respValue["DATA"] = dataJsonRsp;
+	}
+	return 0;
+}
+
+/**
+{
+  "CMD": "DELETE_STAIRS_SWITCH",
+  "DATA": {
+	"DEVICE_ID": "aaaaaaa-6f18-43c0-ae46-69c32998f653"
+  }
+}
+
+{
+  "CMD": "DELETE_STAIRS_SWITCH",
+  "DATA": {
+	"DEVICE_ID": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
+	"STATUS": "SUCCESS"
+  }
+}
+
+*/
+int Gateway::OnRPCDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value &data = reqValue["DATA"];
+		respValue["CMD"] = "DELETE_STAIRS_SWITCH";
+		Json::Value dataJsonRsp;
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			dataJsonRsp["DEVICE_ID"] = deviceId;
+			Device *device = getDeviceFromId(deviceId);
+			uint16_t groupMesh;
+			Group *group = NULL;
+			for (int i = 0; i < groupList.size(); i++)
+			{
+				for (int j = 0; j < groupList[i]->deviceList.size(); j++)
+				{
+					if (groupList[i]->deviceList[j]->device->GetId() == deviceId)
+					{
+						group = groupList[i];
+						groupMesh = groupList[i]->GetId();
+						break;
+					}
+				}
+			}
+			if (device)
+			{
+				int numberButtons = 0;
+				uint16_t type = device->GetType();
+				switch (type)
+				{
+				case BLE_SWITCH_RGB_1:
+					numberButtons = 1;
+					break;
+				case BLE_SWITCH_RGB_2:
+					numberButtons = 2;
+					break;
+				case BLE_SWITCH_RGB_3:
+					numberButtons = 3;
+					break;
+				case BLE_SWITCH_RGB_4:
+					numberButtons = 4;
+					break;
+				}
+				for (int i = 0; i < numberButtons; i++)
+				{
+					if (group->DelDevice(device, device->GetAddr() - i))
+					{
+						database->DeviceInGroupDel(group, device, device->GetAddr() - i);
+					}
+				}
+			}
+			else
+			{
+				LOGW("Device %s not found", deviceId.c_str());
+			}
+		}
+		dataJsonRsp["STATUS"] = "SUCCESS";
+		respValue["DATA"] = dataJsonRsp;
+	}
+	return 0;
+}
 /**
  * @brief
  *
@@ -2717,8 +3154,8 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	case BLE_LED_DAY_RGB:
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
 		break;
-	case BLE_SWITCH_4:
-		device = new DeviceBleSwitchTouch4(id, name, mac, device_id, addr, version);
+	case BLE_SWITCH_RGB_4:
+		device = new DeviceBleSwitchTouchRgb4(id, name, mac, device_id, addr, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 		device = new DeviceBleSwitchScene6DC(id, name, mac, device_id, addr, version);

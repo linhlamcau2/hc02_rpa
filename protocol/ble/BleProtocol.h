@@ -177,7 +177,7 @@ public:
 	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
-	//Scene light
+	// Scene light
 	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
 	int DelSceneLights(uint16_t devAddr, uint16_t scene);
 	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
@@ -186,19 +186,33 @@ public:
 	// update status lights
 	int UpdateLights(uint16_t devAddr);
 
-	//remote scene
+	// remote scene
 	int SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
 	int SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
 	int DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode);
 	int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);
 
-	//PirLightSensor
-	int SetScenePirLightSensor(uint16_t devAddr,uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
+	// PirLightSensor
+	int SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
 	int DelScenePirLightSensor(uint16_t devAddr, uint16_t scene);
 	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
 
-	//switch
+	// switch
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
+	int ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value);
+	int SetIdCombine(uint16_t devAddr, uint16_t id);
+	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
+
+	//screen touch
+	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);
+	int EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon);
+	int DelSceneScreenTouch(uint16_t devAddr, uint16_t scene);
+	int DelAllScene(uint16_t devAddr);
+	int SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t temp);
+	int SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum, uint16_t pm25);
+	int SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day);
+	int SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second);
+	int SetGroup(uint16_t devAddr, uint16_t group);
 };
 
 extern BleProtocol *bleProtocol;

@@ -85,10 +85,16 @@ void ModuleTimeActionPir::BuildTelemetryValue(Json::Value &jsonValue)
 
 bool ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
-	if (dataValue.isMember("time") && dataValue["time"].isInt())
-	if (bleProtocol->TimeActionPirLightSensor(addr,dataValue["time"].asInt()) == 0)
+	if (dataValue.isObject() &&
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
-		return true;
+		int id = dataValue["ID"].asInt();
+		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			bleProtocol->TimeActionPirLightSensor(addr,value);
+			return true;
+		}
 	}
 	return false;
 }

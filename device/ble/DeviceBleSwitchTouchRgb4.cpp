@@ -1,7 +1,7 @@
-#include "DeviceBleSwitchTouch4.h"
+#include "DeviceBleSwitchTouchRgb4.h"
 #include <Log.h>
 
-DeviceBleSwitchTouch4::DeviceBleSwitchTouch4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
+DeviceBleSwitchTouchRgb4::DeviceBleSwitchTouchRgb4(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, BLE_SWITCH_4, version)
 {
 	for (int i = 0; i < 4; i++)
@@ -11,12 +11,12 @@ DeviceBleSwitchTouch4::DeviceBleSwitchTouch4(string id, string name, string mac,
 	powerSource = POWER_AC;
 }
 
-bool DeviceBleSwitchTouch4::CheckAddr(uint32_t addr)
+bool DeviceBleSwitchTouchRgb4::CheckAddr(uint32_t addr)
 {
 	return this->addr <= addr && this->addr + 4 > addr;
 }
 
-int DeviceBleSwitchTouch4::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleSwitchTouchRgb4::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -26,7 +26,7 @@ int DeviceBleSwitchTouch4::BuildTelemetryValue(Json::Value &pushDataValue)
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void DeviceBleSwitchTouch4::InitAttribute(int attributeId, double value)
+void DeviceBleSwitchTouchRgb4::InitAttribute(int attributeId, double value)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -35,7 +35,7 @@ void DeviceBleSwitchTouch4::InitAttribute(int attributeId, double value)
 }
 #endif
 
-void DeviceBleSwitchTouch4::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleSwitchTouchRgb4::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	if (!CheckAddr(addr))
 		return;
@@ -47,7 +47,7 @@ void DeviceBleSwitchTouch4::InputData(uint8_t *data, int len, uint32_t addr)
 	PushTelemetry(values);
 }
 
-bool DeviceBleSwitchTouch4::CheckData(Json::Value &dataValue, bool &rs)
+bool DeviceBleSwitchTouchRgb4::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	for (int i = 0; i < 4; i++)
@@ -60,7 +60,7 @@ bool DeviceBleSwitchTouch4::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-bool DeviceBleSwitchTouch4::Do(Json::Value &dataValue)
+bool DeviceBleSwitchTouchRgb4::Do(Json::Value &dataValue)
 {
 	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject())
