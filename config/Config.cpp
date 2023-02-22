@@ -1,24 +1,63 @@
 #include <string>
 #include <iostream>
 #include <endian.h>
+
+#ifndef ANDROID
+#include <uci.h>
+#endif
+
 #include "Config.h"
 #include "Log.h"
 
 #define TAG "Config"
 
-Config *config = NULL;
+							 Config *config = NULL;
 
 /****************************************
  *                  API                 *
  ***************************************/
 static bool get_str_config_entry(char *name, char *value)
 {
+#ifndef ANDROID
+	struct uci_context *ctx;
+	struct uci_ptr ptr;
+	char path[STRING_VALUE_MAX_SIZE];
+	ctx = uci_alloc_context();
+	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
+	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
+	{
+		//		uci_perror (ctx, "uci_lookup_ptr Error");
+		uci_free_context(ctx);
+		return false;
+	}
+	snprintf(value, STRING_VALUE_MAX_SIZE, "%s", ptr.o->v.string);
+	uci_free_context(ctx);
+	return true;
+#else
 	return false;
+#endif
 }
 
 static bool get_int_config_entry(char *name, int *value)
 {
+#ifndef ANDROID
+	struct uci_context *ctx;
+	struct uci_ptr ptr;
+	char path[STRING_VALUE_MAX_SIZE];
+	ctx = uci_alloc_context();
+	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
+	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
+	{
+		//		uci_perror (ctx, "uci_lookup_ptr Error");
+		uci_free_context(ctx);
+		return false;
+	}
+	*value = atoi(ptr.o->v.string);
+	uci_free_context(ctx);
+	return true;
+#else
 	return false;
+#endif
 }
 
 Config::Config()
@@ -30,7 +69,7 @@ void Config::ReadConfig()
 	char str_temp[STRING_VALUE_MAX_SIZE];
 	int int_temp = 0;
 
-	//server
+	// server
 	if (get_str_config_entry((char *)CONFIG_ENV HOST_KEY, str_temp))
 		host = string(str_temp);
 	else
@@ -61,10 +100,10 @@ void Config::ReadConfig()
 	else
 		keepAlive = KEEP_ALIVE_DEFAULT;
 
-	//local
+	// local
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL HOST_KEY, str_temp))
-		localHost= string(str_temp);
+		localHost = string(str_temp);
 	else
 		localHost = HOST_DEFAULT;
 
@@ -117,7 +156,7 @@ void Config::Print()
 	LOGI("Local keepAlive: %d", localKeepAlive);
 }
 
-//Get info server
+// Get info server
 string Config::GetHost()
 {
 	return host;
@@ -148,7 +187,7 @@ int Config::GetKeepAlive()
 	return keepAlive;
 }
 
-//Get info local
+// Get info local
 string Config::GetLocalHost()
 {
 	return localHost;

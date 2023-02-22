@@ -1,5 +1,5 @@
 #include "Mqtt.h"
-
+#include "mosquitto.h"
 #include <iostream>
 #include <unistd.h>
 #include <thread>
@@ -276,7 +276,7 @@ void Mqtt::on_connect(int rc)
 
 void Mqtt::on_disconnect(int rc)
 {
-	LOGW("Disconnected with code %d", rc);
+	LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
 	connected = false;
 	makeThreadConnectedCallback(false);
 }
@@ -395,7 +395,8 @@ void Mqtt::makeThreadOnMessageCallback(string topic, string payload)
 
 void Mqtt::makeThreadConnectedCallback(bool isConnected, bool isReconnect)
 {
-	try
+	//OnConnect(isConnected, isReconnect);
+	/*try
 	{
 		auto onConnectedFunc = bind(&Mqtt::OnConnect, this, placeholders::_1, placeholders::_2);
 		thread myThread1(onConnectedFunc, isConnected, isReconnect);
@@ -406,7 +407,7 @@ void Mqtt::makeThreadConnectedCallback(bool isConnected, bool isReconnect)
 	catch (...)
 	{
 		LOGE("onConnectedCallbackFunc error");
-	}
+	}*/
 }
 
 void Mqtt::addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)

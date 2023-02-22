@@ -4,6 +4,7 @@
 #include <map>
 #include <functional>
 #include <json.h>
+#include <thread>
 #include "CloudProtocol.h"
 #include "LocalProtocol.h"
 #include "Udp.h"

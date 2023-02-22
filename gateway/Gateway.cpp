@@ -188,7 +188,7 @@ void Gateway::ResetFactory()
 	ruleList.clear();
 	sceneBleList.clear();
 	scanDeviceList.clear();
-
+	
 	database->DeviceDelAll();
 	database->GatewayDelAll();
 	database->GatewayUpdateId(gateway, gateway->getId());
