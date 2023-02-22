@@ -68,7 +68,7 @@ int Db::GatewayUpdate(Gateway *gateway)
 
 int Db::GatewayUpdateId(Gateway *gateway, string id)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\""+id+"\");";
+	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\"" + id + "\");";
 	return Sqlite_Exec(sql);
 }
 

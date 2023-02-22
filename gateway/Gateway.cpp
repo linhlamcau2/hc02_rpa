@@ -12,6 +12,7 @@
 #include "Util.h"
 #include "Wifi.h"
 #include "Base64.h"
+#include "Config.h"
 
 #include "RuleInputTimer.h"
 #include "RuleOutputGroup.h"
@@ -167,6 +168,7 @@ void Gateway::init()
 	OnLocalCallbackRegister("EDIT_HCL", bind(&Gateway::OnRPCEditHCL, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HCL_RULE_STATUS", bind(&Gateway::OnRPCSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
 
+	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRPCSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
 
 	CloudConnect();
 	LocalConnect();
@@ -933,7 +935,6 @@ int Gateway::OnRPCCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 	return -1;
 }
 
-
 int Gateway::OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
@@ -972,7 +973,7 @@ int Gateway::OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue)
 				{
 					rule->DelAllRuleInput();
 					rule->DelAllRuleOutput();
-					rule = AddRule(dataAddRule,true, true);
+					rule = AddRule(dataAddRule, true, true);
 					dataJsonRsp["STATUS"] = "SUCCESS";
 				}
 				else
@@ -990,7 +991,6 @@ int Gateway::OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue)
 	}
 	return -1;
 }
-
 
 int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 {
@@ -2915,6 +2915,58 @@ int Gateway::OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 		}
 	}
 	return 0;
+}
+
+int Gateway::OnRPCSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
+{
+
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
+		Json::Value dataJsonRsp;
+		int status = 0;
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("PASSWD") && dataValue["PASSWD"].isString())
+		{
+			string password = dataValue["PASSWD"].asString();
+			if (config->GetPassword() == "")
+			{
+				string user = "hc-" + mac;
+				if (config->SetClientId(user))
+				{
+					if (config->SetUsername(user))
+					{
+						if (config->SetPassword(password))
+						{
+							status = 1;
+						}
+						else
+						{
+							status = 0;
+						}
+					}
+					else
+					{
+						status = 0;
+					}
+				}
+				else
+				{
+					status = 0;
+				}
+				dataJsonRsp["STATUS"] = status;
+				respValue["DATA"] = dataJsonRsp;
+				return -10;
+			}
+			else
+			{
+				dataJsonRsp["STATUS"] = 0;
+				respValue["DATA"] = dataJsonRsp;
+				return 0;
+			}
+		}
+	}
+	return -1;
 }
 
 int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)

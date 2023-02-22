@@ -62,7 +62,7 @@ int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 
 int Db::DeviceInGroupDel(Group *group, Device *device, int epId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetUUId() + "\" AND mac=\"" + device->GetMac() + "\" AND epId = "+to_string(epId)+";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetUUId() + "\" AND mac=\"" + device->GetMac() + "\" AND epId = " + to_string(epId) + ";";
 	return Sqlite_Exec(sql);
 }
 

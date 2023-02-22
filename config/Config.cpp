@@ -48,85 +48,85 @@ static bool get_int_config_entry(char *name, int *value)
 	return true;
 }
 
-// static bool set_str_config_entry(char *name, char *section_name, const char *value)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	char path[STRING_VALUE_MAX_SIZE];
-// 	ctx = uci_alloc_context();
-// 	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-// 	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s == NULL)
-// 	{
-// 		if (uci_add_section(ctx, ptr.p, section_name, &ptr.s) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to add new section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	ptr.option = section_name;
-// 	ptr.value = value;
-// 	if (uci_set(ctx, &ptr) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to set new option");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
+static bool set_str_config_entry(char *name, char *section_name, const char *value)
+{
+	struct uci_context *ctx;
+	struct uci_ptr ptr;
+	char path[STRING_VALUE_MAX_SIZE];
+	ctx = uci_alloc_context();
+	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
+	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK))
+	{
+		uci_perror(ctx, "uci_lookup_ptr Error");
+		uci_free_context(ctx);
+		return false;
+	}
+	if (ptr.s == NULL)
+	{
+		if (uci_add_section(ctx, ptr.p, section_name, &ptr.s) != UCI_OK)
+		{
+			uci_perror(ctx, "UCI Error to add new section");
+			uci_free_context(ctx);
+			return false;
+		}
+	}
+	ptr.option = section_name;
+	ptr.value = value;
+	if (uci_set(ctx, &ptr) != UCI_OK)
+	{
+		uci_perror(ctx, "UCI Error to set new option");
+		uci_free_context(ctx);
+		return false;
+	}
+	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
+	{
+		uci_perror(ctx, "UCI Error to commit changes");
+		uci_free_context(ctx);
+		return false;
+	}
+	uci_free_context(ctx);
+	return true;
+}
 
-// static bool set_int_config_entry(char *section, char *name, int value)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	char strValue[20];
-// 	ctx = uci_alloc_context();
-// 	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s == NULL)
-// 	{
-// 		if (uci_add_section(ctx, ptr.p, "device", &ptr.s) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to add new section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	snprintf(strValue, 20, "%d", value);
-// 	ptr.option = name;
-// 	ptr.value = strValue;
-// 	if (uci_set(ctx, &ptr) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to set new option");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
+static bool set_int_config_entry(char *section, char *name, int value)
+{
+	struct uci_context *ctx;
+	struct uci_ptr ptr;
+	char strValue[20];
+	ctx = uci_alloc_context();
+	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
+	{
+		uci_perror(ctx, "uci_lookup_ptr Error");
+		uci_free_context(ctx);
+		return false;
+	}
+	if (ptr.s == NULL)
+	{
+		if (uci_add_section(ctx, ptr.p, "device", &ptr.s) != UCI_OK)
+		{
+			uci_perror(ctx, "UCI Error to add new section");
+			uci_free_context(ctx);
+			return false;
+		}
+	}
+	snprintf(strValue, 20, "%d", value);
+	ptr.option = name;
+	ptr.value = strValue;
+	if (uci_set(ctx, &ptr) != UCI_OK)
+	{
+		uci_perror(ctx, "UCI Error to set new option");
+		uci_free_context(ctx);
+		return false;
+	}
+	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
+	{
+		uci_perror(ctx, "UCI Error to commit changes");
+		uci_free_context(ctx);
+		return false;
+	}
+	uci_free_context(ctx);
+	return true;
+}
 
 // static bool delete_section(char *section)
 // {
@@ -167,7 +167,7 @@ void Config::ReadConfig()
 	char str_temp[STRING_VALUE_MAX_SIZE];
 	int int_temp = 0;
 
-	//server
+	// server
 	if (get_str_config_entry((char *)CONFIG_ENV HOST_KEY, str_temp))
 		host = string(str_temp);
 	else
@@ -198,10 +198,10 @@ void Config::ReadConfig()
 	else
 		keepAlive = KEEP_ALIVE_DEFAULT;
 
-	//local
+	// local
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL HOST_KEY, str_temp))
-		localHost= string(str_temp);
+		localHost = string(str_temp);
 	else
 		localHost = HOST_DEFAULT;
 
@@ -254,7 +254,7 @@ void Config::Print()
 	LOGI("Local keepAlive: %d", localKeepAlive);
 }
 
-//Get info server
+// Get info server
 string Config::GetHost()
 {
 	return host;
@@ -285,7 +285,7 @@ int Config::GetKeepAlive()
 	return keepAlive;
 }
 
-//Get info local
+// Get info local
 string Config::GetLocalHost()
 {
 	return localHost;
@@ -314,4 +314,48 @@ string Config::GetLocalPassword()
 int Config::GetLocalKeepAlive()
 {
 	return localKeepAlive;
+}
+
+bool Config::SetHost(string host)
+{
+	if (set_str_config_entry((char *)CONFIG_ENV HOST_KEY, HOST_KEY, host.c_str()))
+	{
+		return true;
+	}
+	return false;
+}
+bool Config::SetPort(int port)
+{
+	if (set_int_config_entry((char *)CONFIG_ENV PORT_KEY, PORT_KEY, port))
+	{
+		return true;
+	}
+	return false;
+}
+bool Config::SetClientId(string clientId)
+{
+	if (set_str_config_entry((char *)CONFIG_ENV CLIENT_ID_KEY, CLIENT_ID_KEY, clientId.c_str()))
+	{
+		return true;
+	}
+	return false;
+}
+bool Config::SetUsername(string username)
+{
+	if (set_str_config_entry((char *)CONFIG_ENV USERNAME_KEY, USERNAME_KEY, username.c_str()))
+	{
+		return true;
+	}
+	return false;
+}
+bool Config::SetPassword(string password)
+{
+	if (set_str_config_entry((char *)CONFIG_ENV PASSWORD_KEY, PASSWORD_KEY, password.c_str()))
+	{
+		return true;
+	}
+	return false;
+}
+bool Config::SetKeepAlive(int keepAlive)
+{
 }
