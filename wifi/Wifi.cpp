@@ -16,43 +16,8 @@
 
 void Wifi::init()
 {
-	// ESP_ERROR_CHECK(esp_netif_init());
-	// ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-	// sta = esp_netif_create_default_wifi_sta();
-	// ap = esp_netif_create_default_wifi_ap();
-
-	// wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	// ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-	// ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
-	// ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, NULL));
-
-	// esp_netif_ip_info_t ipInfo;
-	// IP4_ADDR(&ipInfo.ip, 10, 10, 10, 1);
-	// IP4_ADDR(&ipInfo.gw, 10, 10, 10, 1);
-	// IP4_ADDR(&ipInfo.netmask, 255, 255, 255, 0);
-	// esp_netif_dhcps_stop(ap);
-	// esp_netif_set_ip_info(ap, &ipInfo);
-	// esp_netif_dhcps_start(ap);
-
-	// wifi_config_t wifi_config;
-	// esp_err_t ret = esp_wifi_get_config(WIFI_IF_STA, &wifi_config);
-	// if (ret == ESP_OK)
-	// {
-	// 	LOGI("Wifi configuration already stored in flash partition called NVS");
-	// 	LOGI("%s", wifi_config.sta.ssid);
-	// 	LOGI("%s", wifi_config.sta.password);
-	// 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-	// 	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-	// 	ESP_ERROR_CHECK(esp_wifi_start());
-	// 	wifiMode = WIFI_MODE_STA;
-	// }
-	// else
-	// {
-	// 	LOGI("Wifi configuration not found in flash partition called NVS.");
-	// }
 }
+
 string Wifi::GetMacAddress()
 {
 	LOGD("GetMacAddress");
@@ -99,14 +64,16 @@ string Wifi::GetIP()
 // trim from start
 static inline std::string &ltrim(std::string &s)
 {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) {return !std::isspace(c);}));
+	// s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 	return s;
 }
 
 // trim from end
 static inline std::string &rtrim(std::string &s)
 {
-	s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) {return !std::isspace(c);}).base(), s.end());
+	// s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
 	return s;
 }
 

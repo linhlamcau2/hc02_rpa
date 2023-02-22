@@ -75,12 +75,12 @@ int Mqtt::Connect()
 		result = connect_async(host.c_str(), port, keepalive);
 		if (result != MOSQ_ERR_SUCCESS)
 		{
-			LOGW("connect_async failed code %d, err %s", result, strerror(result));
+			LOGW("connect_async failed code %d, err %s", result, mosqpp::strerror(result));
 		}
 	}
 	else
 	{
-		LOGE("loop_start failed code %d, err %s", result, strerror(result));
+		LOGE("loop_start failed code %d, err %s", result, mosqpp::strerror(result));
 	}
 	return result;
 }
@@ -278,7 +278,6 @@ void Mqtt::on_disconnect(int rc)
 {
 	LOGW("Disconnected with code %d", rc);
 	connected = false;
-	LOGI("Connected with code %d", rc);
 	makeThreadConnectedCallback(false);
 }
 

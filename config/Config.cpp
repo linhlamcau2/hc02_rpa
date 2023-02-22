@@ -1,7 +1,6 @@
 #include <string>
 #include <iostream>
 #include <endian.h>
-#include <uci.h>
 #include "Config.h"
 #include "Log.h"
 
@@ -14,149 +13,13 @@ Config *config = NULL;
  ***************************************/
 static bool get_str_config_entry(char *name, char *value)
 {
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
-	{
-		//		uci_perror (ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
-		return false;
-	}
-	snprintf(value, STRING_VALUE_MAX_SIZE, "%s", ptr.o->v.string);
-	uci_free_context(ctx);
-	return true;
+	return false;
 }
 
 static bool get_int_config_entry(char *name, int *value)
 {
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
-	{
-		//		uci_perror (ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
-		return false;
-	}
-	*value = atoi(ptr.o->v.string);
-	uci_free_context(ctx);
-	return true;
+	return false;
 }
-
-// static bool set_str_config_entry(char *name, char *section_name, const char *value)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	char path[STRING_VALUE_MAX_SIZE];
-// 	ctx = uci_alloc_context();
-// 	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-// 	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s == NULL)
-// 	{
-// 		if (uci_add_section(ctx, ptr.p, section_name, &ptr.s) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to add new section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	ptr.option = section_name;
-// 	ptr.value = value;
-// 	if (uci_set(ctx, &ptr) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to set new option");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
-
-// static bool set_int_config_entry(char *section, char *name, int value)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	char strValue[20];
-// 	ctx = uci_alloc_context();
-// 	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s == NULL)
-// 	{
-// 		if (uci_add_section(ctx, ptr.p, "device", &ptr.s) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to add new section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	snprintf(strValue, 20, "%d", value);
-// 	ptr.option = name;
-// 	ptr.value = strValue;
-// 	if (uci_set(ctx, &ptr) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to set new option");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
-
-// static bool delete_section(char *section)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	ctx = uci_alloc_context();
-// 	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s != NULL)
-// 	{
-// 		if (uci_delete(ctx, &ptr) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to delete section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
 
 Config::Config()
 {

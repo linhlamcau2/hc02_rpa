@@ -14,7 +14,7 @@ COMPFLAGS += -DCONFIG_USE_OLD_APP
 # COMPFLAGS += -DCONFIG_SAVE_ATTRIBUTE
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
 
-LINKEDLIBS = -lpthread -lmosquitto -lsqlite3 -luci
+LINKEDLIBS = -lpthread -lmosquitto -lsqlite3
 
 
 ifeq ($(ZIGBEE),ON)
