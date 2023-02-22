@@ -11,6 +11,8 @@
 
 #ifdef ESP_PLATFORM
 #define DB_NAME "/spiffs/smh.sqlite"
+#elif defined(ANDROID)
+#define DB_NAME "smh.sqlite"
 #else
 #define DB_NAME "/smh.sqlite"
 #endif

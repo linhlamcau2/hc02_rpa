@@ -276,7 +276,7 @@ void Mqtt::on_connect(int rc)
 
 void Mqtt::on_disconnect(int rc)
 {
-	LOGW("Disconnected with code %d", rc);
+	LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
 	connected = false;
 	makeThreadConnectedCallback(false);
 }

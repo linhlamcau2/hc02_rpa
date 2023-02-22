@@ -183,6 +183,12 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
+	deviceList.clear();
+	groupList.clear();
+	ruleList.clear();
+	sceneBleList.clear();
+	scanDeviceList.clear();
+	
 	database->DeviceDelAll();
 	database->GatewayDelAll();
 	database->GatewayUpdateId(gateway, gateway->getId());
@@ -192,11 +198,6 @@ void Gateway::ResetFactory()
 	database->DeviceInGroupDelAll();
 	bleProtocol->ResetDelAll();
 	bleProtocol->ResetFactory();
-	deviceList.clear();
-	groupList.clear();
-	ruleList.clear();
-	sceneBleList.clear();
-	scanDeviceList.clear();
 }
 
 int Gateway::CheckOnlineThread()

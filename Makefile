@@ -7,18 +7,18 @@ CXX ?= g++
 OBJEXT ?= .o
 BUILD_PATH = build
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
-COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-deprecated -Wno-deprecated-declarations -Wno-unused-result -flto -fPIC
-COMPFLAGS += -DVERSION=$(VERSION)
-COMPFLAGS += -DCONFIG_USE_OLD_APP
-# COMPFLAGS += -DCONFIG_SAVE_ATTRIBUTE
-LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
+CFLAGS ?= -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ffunction-sections -fdata-sections
+CXXFLAGS ?= -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
+LDFLAGS ?= -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-LINKEDLIBS = -lpthread -lmosquitto -lsqlite3
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
+DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
+# DEFINES += -DCONFIG_SAVE_ATTRIBUTE
+LINKEDLIBS = -lmosquitto -lsqlite3 -pthread
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
-	COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
+	# COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
 
 	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)
@@ -58,15 +58,15 @@ all: $(APP)
 .PHONY: all $(APP) clean
 
 $(APP): $(BUILTOBJ)
-	$(CXX) $(LINKFLAGS) -o $@ $(BUILTOBJ) $(LINKEDLIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(BUILTOBJ) $(LINKEDLIBS)
 	
 $(BUILD_PATH)/%.o: %.cpp
-	mkdir -p $(@D)
-	$(CXX) $(COMPFLAGS) $(INCLUDES) -c $< -o $@
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
 
 $(BUILD_PATH)/%.o: %.c
-	mkdir -p $(@D)
-	$(CC) $(COMPFLAGS) $(INCLUDES) -c $< -o $@
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
 	
 install: $(APP)
 	install -d $(DESTDIR)$(PREFIX)/bin/
