@@ -1567,7 +1567,7 @@ int Gateway::OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 	return 0;
 }
 
-int Gateway::OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue, bool addGateway, bool addDatabase)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
@@ -1586,8 +1586,12 @@ int Gateway::OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 			rule->AddRuleOutput(ruleOutputSceneBle);
 		}
 		string ruleStr = dataValue.toString();
-		ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-		database->RuleAdd(rule->GetId(), ruleStr, COUNTDOWN, true);
+		ruleList.erase(id);
+		ruleList[rule->GetId()] = rule;
+		if (addDatabase)
+		{
+			database->RuleAdd(rule->GetId(), ruleStr, COUNTDOWN, true);
+		}
 		rule->Check();
 		return 0;
 	}
@@ -1996,13 +2000,16 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			}
 		}
 		// LOGI("Add Rule %s", rule->GetId().c_str());
-		// if (addGateway)
-		// 	ruleList[rule->GetId()] = rule;
+		if (addGateway)
+		{
+			ruleList.erase(id);
+			ruleList[rule->GetId()] = rule;
+		}
 		if (addDatabase)
 		{
 			string ruleStr = ruleValue.toString();
-			ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-			// database->RuleAdd(rule->GetId(), ruleStr);
+			// ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+			database->RuleAdd(rule->GetId(), ruleStr, EVENT_TRIGGER, true);
 		}
 		rule->Check();
 		return rule;

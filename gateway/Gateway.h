@@ -95,7 +95,7 @@ private:
 	int OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue, bool addGateway, bool addDatabase);
 	int OnRPCDelCountDown(Json::Value &reqValue, Json::Value &respValue);
 
 public:

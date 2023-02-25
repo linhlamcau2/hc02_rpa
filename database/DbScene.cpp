@@ -16,8 +16,10 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				index++; // read id
+				const string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				const string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				const string type = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				bool enable = sqlite3_column_blob(stmt, index++);
 				string rule;
 				string decode = macaron::Base64::Decode(data, rule);
 				if (decode == "")
@@ -28,7 +30,15 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 					r.parse(rule, ruleValue);
 					if (ruleValue.isObject())
 					{
-						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						Rule *rule = NULL;
+						if (type.compare(COUNTDOWN)==0)
+						{
+							rule = gateway->AddRule(ruleValue, true, false);
+						}
+						else if (type.compare(EVENT_TRIGGER)==0)
+						{
+							rule = gateway->AddRule(ruleValue, true, false);
+						}
 						rule->Check();
 					}
 					else
@@ -62,7 +72,7 @@ int Db::RuleRead()
 
 int Db::RuleAdd(string id, string rule, string type, bool enable)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, rule, type, enable) VALUES ('" + id + "',\"" + macaron::Base64::Encode(rule) + "\", '"+type+"', "+to_string(enable)+");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, rule, type, enable) VALUES ('" + id + "',\"" + macaron::Base64::Encode(rule) + "\", '"+type+"', "+to_string(enable)+");";
 	LOGW("RuleAdd: %s", sql.c_str());
 	return Sqlite_Exec(sql);
 }
