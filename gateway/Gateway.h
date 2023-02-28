@@ -13,6 +13,7 @@
 #include "DeviceBle.h"
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
+#include "../room/Room.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -38,6 +39,7 @@ private:
 	map<int, Group *> groupList;
 	map<string, Rule *> ruleList;
 	map<int, SceneBle *> sceneBleList;
+	map<string, Room *> roomList;
 	vector<Device *> scanDeviceList;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
@@ -53,6 +55,7 @@ private:
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
+    int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue);
@@ -70,6 +73,7 @@ private:
 	int OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCCheckRoom(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue);
@@ -120,6 +124,12 @@ private:
 
 	int OnRPCSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCDelCountDown(Json::Value &reqValue, Json::Value &respValue);
+
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
@@ -140,6 +150,7 @@ public:
 	Rule *getRuleById(string eventId);
 
 	SceneBle *getSceneBleFromId(string sceneBleUUId);
+	Room *getRoomFromId(string roomUUId);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
@@ -149,6 +160,7 @@ public:
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
+	Room *AddNewRoom(Room *room);
 
 	uint16_t getBleUnicast();
 	string getBleNetkey();

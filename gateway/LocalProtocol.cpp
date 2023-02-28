@@ -67,6 +67,21 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 				exit(1);
 			}
+			else if (rs = 2)
+			{
+				if (listMsgPush.size() > 0)
+				{
+					for (int i = 0; i < listMsgPush.size(); i++)
+					{
+						Publish(HC_RESPONSE_TOPIC, listMsgPush[i]);
+					}
+					listMsgPush.clear();
+				}
+				else
+				{
+					LOGW("List msg push empty");
+				}
+			}
 			else
 			{
 				LOGW("Call %s ERR rs: %d", method.c_str(), rs);

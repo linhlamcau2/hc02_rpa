@@ -47,7 +47,56 @@ int Util::GetCurrentTimer()
 {
 	time_t t = time(NULL);
 	struct tm lt = *localtime(&t);
-	return lt.tm_hour * 60 + lt.tm_min;
+	return lt.tm_hour * 3600 + lt.tm_min * 60 + lt.tm_sec;
+}
+
+int Util::GetYearsCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_year + 1900;
+}
+
+int Util::GetMonthsCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_mon + 1;
+}
+
+int Util::GetDateCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_mday;
+}
+
+int Util::GetDaysCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_wday + 1;
+}
+
+int Util::GetHoursCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_hour;
+}
+
+int Util::GetMinutesCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_min;
+}
+
+int Util::GetSecondsCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_sec;
 }
 
 double Util::millis()
@@ -68,8 +117,9 @@ int Util::ConvertStrTimeToInt(string time)
 {
 	int hour;
 	int minute;
-	if (sscanf(time.c_str(), "%d:%d", &hour, &minute) == 2)
-		return hour * 60 + minute;
+	int second;
+	if (sscanf(time.c_str(), "%d:%d:%d", &hour, &minute, &second) == 3)
+		return hour * 3600 + minute * 60 + second;
 	return -1;
 }
 

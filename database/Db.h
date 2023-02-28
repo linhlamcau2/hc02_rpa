@@ -8,6 +8,7 @@
 #include <Group.h>
 #include <Gateway.h>
 #include "SceneBle.h"
+#include "room/Room.h"
 
 #ifdef ESP_PLATFORM
 #define DB_NAME "/spiffs/smh.sqlite"
@@ -88,6 +89,29 @@ public:
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
 	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
 	int SceneBleDel(SceneBle *scene);
+
+    	int RoomRead();
+	int RoomAdd(Room *room);
+	int RoomUpdate(Room *room, int id);
+	int RoomDel(Room *room);
+	int RoomDelAll();
+
+	int DeviceInRoomRead();
+	int DeviceInRoomAdd(Room *room, Device *device);
+	int DeviceInRoomDel(Room *room, Device *device);
+	int DeviceInRoomDel(Room *room);
+
+	int DataRoomRead();
+	int DataRoomAdd(string id, string data);
+	int DataRoomUpdate(string id, string data);
+	int DataRoomDel(string id, string data);
+	int DataRoomDelAll();
+
+	int DeviceChildRead();
+	int DeviceChildAdd(string deviceId, int element);
+	int DeviceChildUpdate(string deviceId, int element);
+	int DeviceChildDel(string deviceId);
+	int DeviceChildDelAll();
 };
 
 extern Db *database;

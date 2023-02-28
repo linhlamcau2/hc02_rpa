@@ -18,6 +18,14 @@ namespace Util
 	 */
 	int GetCurrentTimer();
 
+	int GetYearsCurrent();
+	int GetMonthsCurrent();
+	int GetDateCurrent();
+	int GetDaysCurrent();
+	int GetHoursCurrent();
+	int GetMinutesCurrent();
+	int GetSecondsCurrent();
+
 	/**
 	 * @brief Get the Current Time in milli seconds object
 	 *

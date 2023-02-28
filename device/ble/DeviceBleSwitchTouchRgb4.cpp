@@ -7,6 +7,7 @@ DeviceBleSwitchTouchRgb4::DeviceBleSwitchTouchRgb4(string id, string name, strin
 	for (int i = 0; i < 4; i++)
 	{
 		elementButton[i] = new ElementButton(this, addr + i);
+		elementRgb[i] = new ElementRgb(this, addr + i);
 	}
 	powerSource = POWER_AC;
 }
@@ -21,6 +22,7 @@ int DeviceBleSwitchTouchRgb4::BuildTelemetryValue(Json::Value &pushDataValue)
 	for (int i = 0; i < 4; i++)
 	{
 		elementButton[i]->BuildTelemetryValue(pushDataValue);
+		elementRgb[i]->BuildTelemetryValue(pushDataValue);
 	}
 	return 0;
 }
@@ -31,6 +33,7 @@ void DeviceBleSwitchTouchRgb4::InitAttribute(int attributeId, double value)
 	for (int i = 0; i < 4; i++)
 	{
 		elementButton[i]->InitAttribute(attributeId, value);
+		elementRgb[i]->InitAttribute(attributeId, value);
 	}
 }
 #endif
@@ -42,7 +45,10 @@ void DeviceBleSwitchTouchRgb4::InputData(uint8_t *data, int len, uint32_t addr)
 	values = Json::Value::null;
 	if (!elementButton[addr - this->addr]->InputData(data, len, values))
 	{
-		return;
+		if (!elementRgb[addr - this->addr] -> InputData(data, len, values))
+		{
+			return;
+		}
 	}
 	PushTelemetry(values);
 }
@@ -68,6 +74,14 @@ bool DeviceBleSwitchTouchRgb4::Do(Json::Value &dataValue)
 		for (int j = 0; j < 4; j++)
 		{
 			if (elementButton[j]->Do(dataValue))
+				return true;
+		}
+	}
+	else if (dataValue.isArray())
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (elementRgb[j]->Do(dataValue))
 				return true;
 		}
 	}

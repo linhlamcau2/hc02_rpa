@@ -30,6 +30,7 @@
 #include "DeviceBlePirLightSensorDC.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
+#include "DeviceBleScreenTouch.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -73,18 +74,15 @@ void Gateway::init()
 	database->DeviceAttributeRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
-	database->SceneBleRead();
 	database->RuleRead();
-
-	// cout << "scene size: " << sceneBleList.size() << endl;
-	// for (const auto &[meshId, scene] : sceneBleList)
-	// {
-	// 	cout << "scene: " + scene->GetUUId() << endl;
-	// 	for (Json::Value::ArrayIndex i = 0; i < scene->deviceList.size(); i++)
-	// 	{
-	// 		cout << "Device: " + scene->deviceList[i]->device->GetId() + scene->deviceList[i]->data.toString() << endl;
-	// 	}
-	// }
+	database->SceneBleRead();
+	database->RoomRead();
+	database->DataRoomRead();
+	database->DeviceInRoomRead();
+	for (auto it = roomList.begin(); it != roomList.end(); it++)
+	{
+		cout << "***" << it->first.c_str() << endl;
+	}
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -98,6 +96,7 @@ void Gateway::init()
 	UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 
+	OnDeviceRPCCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRPCHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
@@ -131,6 +130,7 @@ void Gateway::init()
 	OnLocalCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRPCAddDevToRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("REMOVE_DEVICE_FROM_ROOM", bind(&Gateway::OnRPCRemoveDevFromRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_ROOM", bind(&Gateway::OnRPCDeleteRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("CHECK_ROOM", bind(&Gateway::OnRPCCheckRoom, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRPCAddGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRPCDelGroup, this, placeholders::_1, placeholders::_2));
@@ -164,11 +164,16 @@ void Gateway::init()
 	OnLocalCallbackRegister("EVENT_TRIGGER_STATUS", bind(&Gateway::OnRPCSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_EVENT_TRIGGER", bind(&Gateway::OnRPCDeleteRule, this, placeholders::_1, placeholders::_2));
 
+	OnLocalCallbackRegister("COUNTDOWN", bind(&Gateway::OnRPCCreateCountDown, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_COUNTDOWN", bind(&Gateway::OnRPCDelCountDown, this, placeholders::_1, placeholders::_2));
+
 	OnLocalCallbackRegister("CREATE_HCL", bind(&Gateway::OnRPCCreateHCL, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_HCL", bind(&Gateway::OnRPCEditHCL, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HCL_RULE_STATUS", bind(&Gateway::OnRPCSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRPCSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRPCAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
 
 	CloudConnect();
 	LocalConnect();
@@ -415,6 +420,11 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		{
 			return -1;
 		}
+		// string macGw;
+		// for (int i = 0; i < 5; i++)
+		// {
+		// 	macGw = mac.erase(mac.find(':'), 1);
+		// }
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
 		respValue["HOSTNAME"] = "RD_HC_" + mac.substr(mac.size() - 4, 4);
@@ -676,6 +686,12 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	return 1;
 }
 
+int Gateway::OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpHcConnectCloud");
+	return 1;
+}
+
 int Gateway::OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	scanDeviceList.clear();
@@ -762,7 +778,7 @@ int Gateway::OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCAddRule");
 	respValue["CMD"] = "CREATE_EVENT_TRIGGER";
-	Json::Value dataJsonRsp;
+	Json::Value dataJsonRsp = Json::objectValue;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value dataValue = reqValue["DATA"];
@@ -791,7 +807,7 @@ int Gateway::OnRPCEditRule(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "EDIT_EVENT_TRIGGER";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
@@ -829,7 +845,7 @@ int Gateway::OnRPCSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValu
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "EVENT_TRIGGER_STATUS";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("STATUS_ID") && dataValue["STATUS_ID"].isInt() && dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
@@ -864,7 +880,7 @@ int Gateway::OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "DELETE_EVENT_TRIGGER";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
@@ -887,7 +903,7 @@ int Gateway::OnRPCCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value data = reqValue["DATA"];
 		respValue["CMD"] = "EVENT_TRIGGER";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
 			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
 			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
@@ -941,7 +957,7 @@ int Gateway::OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value data = reqValue["DATA"];
 		respValue["CMD"] = "EDIT_EVENT_TRIGGER";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
 			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
 			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
@@ -998,7 +1014,7 @@ int Gateway::OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "CREATE_SCENE";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["FAILED"] = Json::arrayValue;
 
 		Json::Value dataValue = reqValue["DATA"];
@@ -1081,7 +1097,7 @@ int Gateway::OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() && dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			respValue["CMD"] = "EDIT_SCENE";
-			Json::Value dataJsonRsp;
+			Json::Value dataJsonRsp = Json::objectValue;
 			dataJsonRsp["FAILED"] = Json::arrayValue;
 			string sceneId = dataValue["SCENE_ID"].asString();
 			dataJsonRsp["SCENE_ID"] = sceneId;
@@ -1148,7 +1164,7 @@ int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "DELETE_SCENE";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["FAILED"] = Json::arrayValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
@@ -1192,6 +1208,9 @@ int Gateway::OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCCreateRoom %s", reqValue.toString().c_str());
+	bool isRoom = false;
+	string roomId = "";
+	int roomUnicast = 0;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -1219,6 +1238,12 @@ int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						{
 							temp_groupUnicastId = x.first + 1;
 						}
+					}
+					if (!isRoom)
+					{
+						isRoom = true;
+						roomId = groupId;
+						roomUnicast = temp_groupUnicastId;
 					}
 					Group *newGroup = new Group(groupId, temp_groupUnicastId, groupName);
 					if (newGroup)
@@ -1354,6 +1379,20 @@ int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			respValue["DATA"] = jsonDataRsp;
+			if (roomId != "")
+			{
+				Room *room = getRoomFromId(roomId);
+				if (!room)
+				{
+					room = new Room(roomId, roomUnicast);
+					room = gateway->AddNewRoom(room);
+					database->RoomAdd(room);
+				}
+				room->DataConfigAdd(respValue.toString());
+				string ruleStr = respValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->DataRoomAdd(roomId, respValue.toString());
+			}
 		}
 		else
 		{
@@ -1368,6 +1407,10 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRPCAddDevToRoom %s", reqValue.toString().c_str());
 	vector<string> listDevAddGroup;
 	map<string, vector<string>> listGroupDevAddRoom;
+
+	bool isRoom = false;
+	string roomId = "";
+	int roomUnicast = 0;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -1376,7 +1419,7 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["CMD"] = "ADD_DEVICE_TO_ROOM";
 			Json::Value groupJsonRsp;
 			Json::Value sceneJsonRsp;
-			Json::Value dataJsonRsp;
+			Json::Value dataJsonRsp = Json::objectValue;
 			groupJsonRsp["FAILED"] = Json::arrayValue;
 			sceneJsonRsp["FAILED"] = Json::arrayValue;
 
@@ -1392,6 +1435,12 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 					Group *groupOfGw = gateway->getGroupFromId(groupId);
 					if (groupOfGw)
 					{
+						if (!isRoom)
+						{
+							isRoom = true;
+							roomId = groupId;
+							roomUnicast = groupOfGw->GetId();
+						}
 						for (Json::ArrayIndex j = 0; j < devicesInGroupAddRoom.size(); j++)
 						{
 							string deviceIdGroup = devicesInGroupAddRoom[j].asString();
@@ -1561,6 +1610,20 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			respValue["DATA"] = dataJsonRsp;
+			if (roomId != "" && roomUnicast != 0)
+			{
+				Room *room = getRoomFromId(roomId);
+				if (!room)
+				{
+					room = new Room(roomId, roomUnicast);
+					room = gateway->AddNewRoom(room);
+					database->RoomAdd(room);
+				}
+				room->DataConfigAdd(respValue.toString());
+				string ruleStr = respValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->DataRoomAdd(roomId, respValue.toString());
+			}
 		}
 		else
 		{
@@ -1573,6 +1636,10 @@ int Gateway::OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCRemoveDevFromRoom: %s", reqValue.toString().c_str());
+	bool isRoom = false;
+	string roomId = "";
+	int roomUnicast = 0;
+
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -1581,7 +1648,7 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 			respValue["CMD"] = "REMOVE_DEVICE_FROM_ROOM";
 			Json::Value groupsDelRoom = data["GROUPS"];
 			Json::Value scenesDelRoom = data["SCENES"];
-			Json::Value dataJsonRsp;
+			Json::Value dataJsonRsp = Json::objectValue;
 			Json::Value groupJsonRsp;
 			Json::Value sceneJsonRsp;
 			groupJsonRsp["FAILED"] = Json::arrayValue;
@@ -1597,6 +1664,12 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 					Group *groupOfGw = getGroupFromId(groupId);
 					if (groupOfGw)
 					{
+						if (!isRoom)
+						{
+							isRoom = true;
+							roomId = groupId;
+							roomUnicast = groupOfGw->GetId();
+						}
 						if (groupDelRoom.isMember("DEVICES") && groupDelRoom["DEVICES"].isArray())
 						{
 							Json::Value devicesDelGroup = groupDelRoom["DEVICES"];
@@ -1686,6 +1759,20 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 				sceneJsonRsp["FAILED"] = Json::arrayValue;
 			}
 			respValue["DATA"] = dataJsonRsp;
+			if (roomId != "" && roomUnicast != 0)
+			{
+				Room *room = getRoomFromId(roomId);
+				if (!room)
+				{
+					room = new Room(roomId, roomUnicast);
+					room = gateway->AddNewRoom(room);
+					database->RoomAdd(room);
+				}
+				room->DataConfigAdd(respValue.toString());
+				string ruleStr = respValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->DataRoomAdd(roomId, respValue.toString());
+			}
 		}
 		else
 		{
@@ -1699,6 +1786,10 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCDeleteRoom: %s", reqValue.toString().c_str());
+
+	bool isRoom = false;
+	string roomId = "";
+	int roomUnicast = 0;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -1707,7 +1798,7 @@ int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["CMD"] = "DELETE_ROOM";
 			Json::Value groupsDelRoom = data["GROUPS"];
 			Json::Value scenesDelRoom = data["SCENES"];
-			Json::Value dataJsonRsp;
+			Json::Value dataJsonRsp = Json::objectValue;
 			Json::Value groupJsonRsp;
 			Json::Value sceneJsonRsp;
 			groupJsonRsp["FAILED"] = Json::arrayValue;
@@ -1723,6 +1814,12 @@ int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				Group *groupOfGw = getGroupFromId(groupId);
 				if (groupOfGw)
 				{
+					if (!isRoom)
+					{
+						isRoom = true;
+						roomId = groupId;
+						roomUnicast = groupOfGw->GetId();
+					}
 					hasDeviceDelGroupFailed = false;
 					for (int j = 0; j < groupOfGw->deviceList.size(); j++)
 					{
@@ -1787,11 +1884,48 @@ int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				sceneJsonRsp["FAILED"] = Json::arrayValue;
 			}
 			respValue["DATA"] = dataJsonRsp;
+			if (roomId != "" && roomUnicast != 0)
+			{
+				Room *room = getRoomFromId(roomId);
+				if (!room)
+				{
+					room = new Room(roomId, roomUnicast);
+					room = gateway->AddNewRoom(room);
+					database->RoomAdd(room);
+				}
+				room->DataConfigAdd(respValue.toString());
+				string ruleStr = respValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->DataRoomAdd(roomId, respValue.toString());
+			}
 		}
 	}
 	else
 	{
 		LOGW("OnRPCDeleteRoom msg error");
+	}
+	return 0;
+}
+
+int Gateway::OnRPCCheckRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Check room")
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("ROOM_ID") && data["ROOM_ID"].isString())
+		{
+			string roomId = data["ROOM_ID"].asString();
+			if (roomId != "")
+			{
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					listMsgPush = room->dataConfig;
+					return 2;
+				}
+			}
+		}
 	}
 	return 0;
 }
@@ -2069,7 +2203,7 @@ int Gateway::OnRPCSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "SCENE_FOR_REMOTE";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() && dataValue.isMember("BUTTON_VALUE") && dataValue["BUTTON_VALUE"].isString() && dataValue.isMember("MODE_VALUE") && dataValue["MODE_VALUE"].isInt())
 		{
@@ -2123,7 +2257,7 @@ int Gateway::OnRPCDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "DELETE_SCENE_FOR_REMOTE";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() && dataValue.isMember("BUTTON_VALUE") && dataValue["BUTTON_VALUE"].isString() && dataValue.isMember("MODE_VALUE") && dataValue["MODE_VALUE"].isInt())
 		{
@@ -2169,7 +2303,7 @@ int Gateway::OnRPCResetRemote(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "RESET_REMOTE";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString())
 		{
@@ -2222,7 +2356,7 @@ int Gateway::OnRPCScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 	LOGD("OnRPCScenePirLigtSensor");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["CMD"] = "SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
 		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
@@ -2279,7 +2413,7 @@ int Gateway::OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 	LOGD("OnRPCEditScenePirLightSensor");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["CMD"] = "EDIT_SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
 		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
@@ -2373,35 +2507,62 @@ int Gateway::OnRPCSceneScreen(Json::Value &reqValue, Json::Value &respValue)
 	{
 		respValue["CMD"] = "SCENE_FOR_SCREEN";
 		Json::Value data = reqValue["DATA"];
-		Json::Value dataJson;
-		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("SCENE_ID") && data["SCENE"].isArray())
+		Json::Value dataJson = Json::objectValue;
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
 		{
 			string deviceId = data["DEVICE_ID"].asString();
 			dataJson["DEVICE_ID"] = deviceId;
-			Json::Value scenes = data["SCENE"];
 			Device *device = getDeviceFromId(deviceId);
+			string status = "SUCCESS";
 			if (device && device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
 			{
-				string status = "SUCCESS";
-				for (Json::ArrayIndex i = 0; i < scenes.size(); i++)
+				if (data.isMember("SCENES") && data["SCENES"].isArray())
 				{
-					Json::Value scene = scenes[i];
-					if (scene.isMember("SCENE_ID") && scene["SCENE_ID"].isString() && scene.isMember("SCENE_NAME") && scene["SCENE_NAME"].isString() && scene.isMember("SCENE_ICON") && scene["SCENE_ICON"].isInt())
+					Json::Value scenes = data["SCENES"];
+					for (Json::ArrayIndex i = 0; i < scenes.size(); i++)
 					{
-						string sceneId = scene["SCENE_ID"].asString();
-						string sceneName = scene["SCENE_NAME"].asString();
-						int sceneIcon = scene["SCENE_ICON"].asInt();
-						SceneBle *scene = getSceneBleFromId(sceneId);
-						if (scene)
+						Json::Value scene = scenes[i];
+						if (scene.isMember("SCENE_ID") && scene["SCENE_ID"].isString() && scene.isMember("SCENE_NAME") && scene["SCENE_NAME"].isString() && scene.isMember("SCENE_ICON") && scene["SCENE_ICON"].isInt())
 						{
-							if (bleProtocol->SceneForScreenTouch(device->GetAddr(), scene->GetId(), sceneIcon, 1) != 0)
+							string sceneId = scene["SCENE_ID"].asString();
+							string sceneName = scene["SCENE_NAME"].asString();
+							int sceneIcon = scene["SCENE_ICON"].asInt();
+							SceneBle *scene = getSceneBleFromId(sceneId);
+							if (scene)
 							{
-								status = "FAILED";
+								if (bleProtocol->SceneForScreenTouch(device->GetAddr(), scene->GetId(), sceneIcon, 1) != 0)
+								{
+									status = "FAILED";
+								}
+							}
+							else
+							{
+								LOGW("Scene %s not found", sceneId.c_str());
 							}
 						}
-						else
+					}
+				}
+
+				if (data.isMember("DEL_SCENES") && data["DEL_SCENES"].isArray())
+				{
+					Json::Value delScene = data["DEL_SCENES"];
+					for (Json::ArrayIndex j = 0; j < delScene.size(); j++)
+					{
+						if (delScene[j].isString())
 						{
-							LOGW("Scene %s not found", sceneId.c_str());
+							string sceneId = delScene[j].asString();
+							SceneBle *sceneDel = getSceneBleFromId(sceneId);
+							if (sceneDel)
+							{
+								if (bleProtocol->DelSceneScreenTouch(device->GetAddr(), sceneDel->GetId()) != 0)
+								{
+									status = "FAILED";
+								}
+							}
+							else
+							{
+								LOGW("Scene del %s not found", sceneId.c_str());
+							}
 						}
 					}
 				}
@@ -2454,7 +2615,7 @@ int Gateway::OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "STAIRS_SWITCH";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value data = reqValue["DATA"];
 		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("LIST_BUTTON_LINK") && data["LIST_BUTTON_LINK"].isArray())
 		{
@@ -2544,7 +2705,7 @@ int Gateway::OnRPCEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue
 	{
 		Json::Value &data = reqValue["DATA"];
 		respValue["CMD"] = "EDIT_STAIRS_SWITCH";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("ADD_BUTTON") && data["ADD_BUTTON"].isArray() && data.isMember("REMOVE_BUTTON") && data["REMOVE_BUTTON"].isArray())
 		{
 			string deviceId = data["DEVICE_ID"].asString();
@@ -2633,7 +2794,7 @@ int Gateway::OnRPCDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value &data = reqValue["DATA"];
 		respValue["CMD"] = "DELETE_STAIRS_SWITCH";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
 		{
 			string deviceId = data["DEVICE_ID"].asString();
@@ -2821,7 +2982,34 @@ int Gateway::OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				if (properties.isArray())
-					device->DoJsonArray(properties);
+				{
+					int hsl = 0;
+					int rgbDimOnOff = 0;
+					for (Json::ArrayIndex i = 0; i < properties.size(); i++)
+					{
+						Json::Value property = properties[i];
+						if (property.isObject() &&
+							property.isMember("ID") && property["ID"].isInt())
+						{
+							if (property["ID"].asInt() == BLE_ATTRIBUTE_HUE || property["ID"].asInt() == BLE_ATTRIBUTE_SATURATION || property["ID"].asInt() == BLE_ATTRIBUTE_LUMINANCE)
+							{
+								hsl++;
+							}
+							else if (property["ID"].asInt() == BLE_ATTRIBUTE_R || property["ID"].asInt() == BLE_ATTRIBUTE_B || property["ID"].asInt() == BLE_ATTRIBUTE_G || property["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF || property["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
+							{
+								rgbDimOnOff++;
+							}
+						}
+					}
+					if (hsl == 3 || rgbDimOnOff == 5)
+					{
+						device->Do(properties);
+					}
+					else
+					{
+						device->DoJsonArray(properties);
+					}
+				}
 			}
 			else
 			{
@@ -2923,7 +3111,7 @@ int Gateway::OnRPCSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
-		Json::Value dataJsonRsp;
+		Json::Value dataJsonRsp = Json::objectValue;
 		int status = 0;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("PASSWD") && dataValue["PASSWD"].isString())
@@ -3057,6 +3245,169 @@ int Gateway::OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
+int Gateway::OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
+			dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
+		{
+			int deviceType;
+			string deviceId = dataValue["DEVICE_ID"].asString();
+			string roomId = dataValue["ROOM_ID"].asString();
+			DeviceBle *device = (DeviceBle *)gateway->getDeviceFromId(deviceId);
+			Group *group = getGroupFromId(roomId);
+			if (group)
+			{
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					if (device)
+					{
+						deviceType = device->GetType();
+						if (deviceType == BLE_REMOTE_M3_V2 || deviceType == BLE_REMOTE_M4 || deviceType == BLE_AC_SCENE_SCREEN_TOUCH)
+						{
+							if (room->AddDevice(device, true))
+							{
+								database->DeviceInRoomAdd(room, device);
+							}
+						}
+						else
+						{
+							LOGW("Device type does not support add room");
+						}
+					}
+					else
+					{
+						LOGW("Device %s is does not exist", deviceId.c_str());
+					}
+				}
+				else
+				{
+					room = new Room(roomId, group->GetId());
+					if (room)
+					{
+						Room *roomAddGw = AddNewRoom(room);
+						if (roomAddGw)
+						{
+							if (device)
+							{
+								deviceType = device->GetType();
+								if (deviceType == BLE_REMOTE_M3_V2 || deviceType == BLE_REMOTE_M4 || deviceType == BLE_AC_SCENE_SCREEN_TOUCH)
+								{
+									if (roomAddGw->AddDevice(device, true))
+									{
+										database->DeviceInRoomAdd(roomAddGw, device);
+									}
+								}
+								else
+								{
+									LOGW("Device type does not support add room");
+								}
+							}
+							else
+							{
+								LOGW("Device %s is does not exist", deviceId.c_str());
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				LOGW("room %s does not exist", roomId.c_str());
+			}
+		}
+	}
+	return 0;
+}
+
+int Gateway::OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "COUNTDOWN";
+		Json::Value dataValue = reqValue["DATA"];
+		respValue["DATA"] = dataValue;
+		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString() && dataValue.isMember("START_AT") && dataValue["START_AT"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
+		{
+			string eventTriggerId = dataValue["EVENT_TRIGGER_ID"].asString();
+			string startAt = dataValue["START_AT"].asString();
+			string sceneId = dataValue["SCENE_ID"].asString();
+			SceneBle *scene = getSceneBleFromId(sceneId);
+			Rule *rule = getRuleById(eventTriggerId);
+			if (rule)
+			{
+				rule->DelAllRuleInput();
+				rule->DelAllRuleOutput();
+			}
+			if (scene)
+			{
+				int day = Util::GetDaysCurrent();
+				int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+				switch (day)
+				{
+				case 2:
+					mon = 1;
+					break;
+				case 3:
+					tue = 1;
+					break;
+				case 4:
+					wed = 1;
+					break;
+				case 5:
+					thu = 1;
+					break;
+				case 6:
+					fri = 1;
+					break;
+				case 7:
+					sat = 1;
+					break;
+				case 8:
+					sun = 1;
+					break;
+				}
+				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+				rule = new Rule(eventTriggerId, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
+				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
+				rule->AddRuleOutput(ruleOutputSceneBle);
+				ruleList[eventTriggerId] = rule;
+			}
+			else
+			{
+				LOGW("Scene %s not found", sceneId.c_str());
+			}
+			return 0;
+		}
+		else
+		{
+			LOGW("CountDown failed");
+		}
+	}
+	return -1;
+}
+
+int Gateway::OnRPCDelCountDown(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "DELETE_COUNTDOWN";
+		Json::Value dataValue = reqValue["DATA"];
+		respValue["DATA"] = dataValue;
+		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+		{
+			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
+			ruleList.erase(ruleList.find(ruleId));
+			return 0;
+		}
+		return 0;
+	}
+	return -1;
+}
+
 void Gateway::AddDeviceToScanList(Device *scanDevice)
 {
 	Json::Value jsonValue;
@@ -3173,6 +3524,16 @@ SceneBle *Gateway::getSceneBleFromId(string sceneBleUUId)
 	return NULL;
 }
 
+Room *Gateway::getRoomFromId(string roomUUId)
+{
+	for (auto &[id, room] : roomList)
+	{
+		if (id == roomUUId)
+			return room;
+	}
+	return NULL;
+}
+
 Device *Gateway::AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
@@ -3226,6 +3587,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 		break;
 	case BLE_DOOR_SENSOR:
 		device = new DeviceBleDoorSensor(id, name, mac, device_id, addr, version);
+		break;
+	case BLE_AC_SCENE_SCREEN_TOUCH:
+		device = new DeviceBleScreenTouch(id, name, mac, device_id, addr, version);
 		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
@@ -3549,6 +3913,15 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 			sceneBleList[sceneBle->GetId()] = sceneBle;
 	}
 	return sceneBle;
+}
+
+Room *Gateway::AddNewRoom(Room *room)
+{
+	if (room)
+	{
+		roomList[room->GetUUId()] = room;
+	}
+	return room;
 }
 
 uint16_t Gateway::getBleUnicast()
