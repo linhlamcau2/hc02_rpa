@@ -12,7 +12,7 @@
 #define PORT_KEY "port"
 #define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT "broker_online"
+#define CLIENT_ID_DEFAULT ""
 #define USERNAME_KEY "username"
 #define USERNAME_DEFAULT ""
 #define PASSWORD_KEY "password"

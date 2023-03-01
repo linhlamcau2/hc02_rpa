@@ -194,7 +194,6 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		.compare_len = compare_len};
 	if (opRsp)
 	{
-		// TODO: add mutex
 		messageRespList.push_back(&message_rsp_list);
 	}
 
@@ -211,7 +210,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	{
 		while (!message_rsp_list.status && timeout)
 		{
-			usleep(10000);
+			usleep(1000);
 			--timeout;
 		}
 		if (message_rsp_list.status)
@@ -895,8 +894,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.rev2 = 0;
 		onoff_message.transition[0] = transition & 0xFF;
 		onoff_message.transition[1] = (transition >> 8) & 0xFF;
-		int rs = 0;
-		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
 		if (rs == 0)
 		{
 			typedef struct

@@ -173,26 +173,25 @@ bool Group::Do(int id, int value)
 	return true;
 }
 
-void Group::DoBle()
+void Group::DoBle(Json::Value *dataValue)
 {
-	// if (numberOfBleDevice)
+	if (numberOfBleDevice)
 	{
 		bool isIdHue = false;
 		bool isIdSaturation = false;
 		bool isIdLuminance = false;
 		uint16_t valueHue, valueSaturation, valueLuminance;
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		for (Json::ArrayIndex i = 0; i < dataValue->size(); i++)
 		{
-			Json::Value property = dataValue[i];
+			Json::Value property = dataValue[0][i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
 					property.isMember("VALUE") && property["VALUE"].isInt())
 			{
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();
-				LOGD("id: %d, value: %d", idProperty, value);
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true, true);
+					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
 				}
 				else if (idProperty == 1)
 				{
@@ -225,10 +224,6 @@ void Group::DoBle()
 				{
 					LOGW("DoTrigger id: %d don't support", id);
 				}
-			}
-			else
-			{
-				LOGW("data format err: %s", property.toString().c_str());
 			}
 		}
 		if (isIdHue && isIdLuminance && isIdSaturation)

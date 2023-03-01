@@ -11,7 +11,7 @@
 
 #define TAG "Config"
 
-							 Config *config = NULL;
+Config *config = NULL;
 
 /****************************************
  *                  API                 *

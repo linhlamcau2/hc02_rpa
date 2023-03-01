@@ -64,6 +64,10 @@ int main(int argc, char *argv[])
 
 	database = new Db();
 
+#ifdef CONFIG_ENABLE_ZIGBEE
+	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
+	zigbeeProtocol->init();
+#endif
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), 10);
@@ -71,11 +75,6 @@ int main(int argc, char *argv[])
 
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
-	zigbeeProtocol->init();
-#endif
 
 	Device::InitDeviceModelList();
 
