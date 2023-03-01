@@ -61,16 +61,22 @@ bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t mode = dataValue["VALUE"].asInt();
+			uint16_t mode1, mode2;
+			Json::Value listValue = dataValue["VALUE"];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+			{
+				mode1 = listValue[0].asInt();
+				mode2 = listValue[1].asInt();
+			}
 			string op = dataValue["OP"].asString();
-			rs = Util::CompareNumber(this->mode, mode, op);
+			rs = Util::CompareNumber(this->mode, mode1, mode2, op);
 			return true;
 		}
 	}
@@ -102,11 +108,11 @@ bool ModuleModeRgb::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			bleProtocol->CallModeRgb(addr, value);

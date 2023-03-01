@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), "localhost", 1883, "", "", 10);
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), 10);
 	gateway->init();
 
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);

@@ -25,7 +25,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string dormitory = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				LOGI("Gateway: id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, unicast: %d, dormitory: %s", id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), ble_unicast, dormitory.c_str());
-                
+
 				gateway->setId(id);
 				gateway->setBleAppkey(ble_appkey);
 				gateway->setBleDevicekey(ble_devicekey);
@@ -68,7 +68,7 @@ int Db::GatewayUpdate(Gateway *gateway)
 
 int Db::GatewayUpdateId(Gateway *gateway, string id)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\""+id+"\");";
+	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\"" + id + "\");";
 	return Sqlite_Exec(sql);
 }
 

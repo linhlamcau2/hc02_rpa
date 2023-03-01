@@ -16,16 +16,19 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				index++; // read id
-				const string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string rule;
-				string decode = macaron::Base64::Decode(data, rule);
-				if (decode == "")
+				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				int status = sqlite3_column_int(stmt, index++);
+				int type = sqlite3_column_int(stmt, index++);
+				string ruledata ;
+				LOGW("Rule raw: %s", data.c_str());
+				string decode = macaron::Base64::Decode(data, ruledata);
+				if ((decode == "") && status)
 				{
-					LOGV("RuleRead rule: %s", rule.c_str());
+					LOGV("RuleRead rule: %s", ruledata.c_str());
 					Json::Value ruleValue;
 					Json::Reader r;
-					r.parse(rule, ruleValue);
+					r.parse(ruledata, ruleValue);
 					if (ruleValue.isObject())
 					{
 						Rule *rule = gateway->AddRule(ruleValue, true, false);
@@ -33,7 +36,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 					}
 					else
 					{
-						LOGW("RuleRead json format error rule: %s", rule.c_str());
+						LOGW("RuleRead json format error rule: %s", ruledata.c_str());
 					}
 				}
 				else
@@ -60,21 +63,24 @@ int Db::RuleRead()
 	return ReadAll(TABLE_NAME, NULL, RuleParse);
 }
 
-int Db::RuleAdd(int id, string rule)
+int Db::RuleAdd(string id, string rule, int isEnable, int type)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id, rule) VALUES (" + to_string(id) + ",\"" + macaron::Base64::Encode(rule) + "\");";
-	LOGW("RuleAdd: %s", sql.c_str());
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, rule, isEnable, type) VALUES (\"" + id + "\",\"" + macaron::Base64::Encode(rule) + "\"," + to_string(isEnable) + "," + to_string(type) + ");";
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleUpdate(int id, string rule)
+int Db::RuleUpdate(string id, string rule)
 {
-	string sql = "UPDATE " TABLE_NAME " SET rule=\"" + rule + "\" WHERE id=" + to_string(id) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET rule=\"" + rule + "\" WHERE id=\"" + id + "\";";
 	return Sqlite_Exec(sql);
 }
-
-int Db::RuleDel(int id)
+int Db::RuleUpdateStatus(string id, int isEnable)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=" + to_string(id) + ";";
+	string spl = "UPDATE " TABLE_NAME "SET isEnable="+to_string(isEnable)+" WHERE id=\"" + id + "\";";
+}
+
+int Db::RuleDel(string id)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE id=\"" + id + "\";";
 	return Sqlite_Exec(sql);
 }

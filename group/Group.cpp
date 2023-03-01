@@ -83,8 +83,8 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 				{
 					deviceList.push_back(deviceInGroup);
 					numberOfBleDevice++;
+					return true;
 				}
-				return true;
 			}
 			else
 			{
@@ -97,8 +97,8 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
+				return true;
 			}
-			return true;
 		}
 	}
 
@@ -155,10 +155,8 @@ bool Group::DelDevice(Device *device, int epId)
 
 bool Group::Do(Json::Value &dataValue)
 {
-
-	LOGD("Do group id: 0x%04X", id);
 	this->dataValue = dataValue;
-	DoBle();
+	DoBle(&this->dataValue);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
