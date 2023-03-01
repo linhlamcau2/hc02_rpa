@@ -156,7 +156,7 @@ bool Group::DelDevice(Device *device, int epId)
 bool Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
-	DoBle(&this->dataValue);
+	DoBle();
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
@@ -192,7 +192,7 @@ void Group::DoBle()
 				LOGD("id: %d, value: %d", idProperty, value);
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true, true);
+					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
 				}
 				else if (idProperty == 1)
 				{

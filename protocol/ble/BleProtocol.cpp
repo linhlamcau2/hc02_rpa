@@ -2131,7 +2131,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 
 int BleProtocol::DelAllScene(uint16_t devAddr)
 {
-	LOGD("DelAllScene 0x%04x, scene %d", devAddr);
+	LOGD("DelAllScene 0x%04x", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t delAllSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
