@@ -194,6 +194,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		.compare_len = compare_len};
 	if (opRsp)
 	{
+		// TODO: add mutex
 		messageRespList.push_back(&message_rsp_list);
 	}
 
@@ -210,7 +211,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	{
 		while (!message_rsp_list.status && timeout)
 		{
-			usleep(1000);
+			usleep(10000);
 			--timeout;
 		}
 		if (message_rsp_list.status)
@@ -894,7 +895,8 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.rev2 = 0;
 		onoff_message.transition[0] = transition & 0xFF;
 		onoff_message.transition[1] = (transition >> 8) & 0xFF;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
+		int rs = 0;
+		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, 14, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
 		if (rs == 0)
 		{
 			typedef struct
@@ -2129,7 +2131,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 
 int BleProtocol::DelAllScene(uint16_t devAddr)
 {
-	LOGD("DelAllScene 0x%04x, scene %d", devAddr);
+	LOGD("DelAllScene 0x%04x", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t delAllSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -2305,7 +2307,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 	date_screen_touch_message.vendorId = 0x0211;
 	date_screen_touch_message.opcodeRsp = 0x00e3;
 	date_screen_touch_message.header = 0x080a;
-	date_screen_touch_message.years = __bswap_16(years);
+	date_screen_touch_message.years = bswap_16(years);
 	date_screen_touch_message.month = month;
 	date_screen_touch_message.date = date;
 	date_screen_touch_message.day = day;
@@ -2325,7 +2327,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 			uint8_t day;
 		} date_screen_touch_rsp_message_t;
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
-		if (date_screen_touch_rsp_message->header == 0x080a && date_screen_touch_rsp_message->years == __bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
+		if (date_screen_touch_rsp_message->header == 0x080a && date_screen_touch_rsp_message->years == bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
 		{
 			return 0;
 		}
@@ -2409,7 +2411,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 	group_screen_touch_message.vendorId = 0x0211;
 	group_screen_touch_message.opcodeRsp = 0x00e3;
 	group_screen_touch_message.header = 0x0b0a;
-	group_screen_touch_message.group = __bswap_16(group);
+	group_screen_touch_message.group = bswap_16(group);
 	int rs = SendMessage(APP_REQ, (uint8_t *)&group_screen_touch_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, groupScreenTouchHeader, 0, 7);
 	if (rs == 0)
 	{
@@ -2423,7 +2425,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 			uint16_t group;
 		} group_screen_touch_rsp_message_t;
 		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
-		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == __bswap_16(group))
+		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(group))
 		{
 			return 0;
 		}

@@ -76,7 +76,8 @@ int Db::RuleUpdate(string id, string rule)
 }
 int Db::RuleUpdateStatus(string id, int isEnable)
 {
-	string spl = "UPDATE " TABLE_NAME "SET isEnable="+to_string(isEnable)+" WHERE id=\"" + id + "\";";
+	string sql = "UPDATE " TABLE_NAME "SET isEnable="+to_string(isEnable)+" WHERE id=\"" + id + "\";";
+	return Sqlite_Exec(sql);
 }
 
 int Db::RuleDel(string id)

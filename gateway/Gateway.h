@@ -134,6 +134,13 @@ private:
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
+
+	/**
+	 * @brief Factory reset (call when hold reset button in 5s)
+	 *
+	 */
+	void ResetFactory();
+
 	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode
 	 *

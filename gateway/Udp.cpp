@@ -46,7 +46,7 @@ static int UdpHandleMessage(Udp *udp)
 	si_me.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	// bind socket to port
-	if (bind(udp->fd, (struct sockaddr *)&si_me, sizeof(si_me)) == -1)
+	if (::bind(udp->fd, (struct sockaddr *)&si_me, sizeof(si_me)) == -1)
 	{
 		LOGE("UDP die");
 		exit(1);

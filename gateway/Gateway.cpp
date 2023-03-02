@@ -210,9 +210,14 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 	LOGI("OnLocalConnect: %d", isConnected);
 }
 
-int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
+void Gateway::ResetFactory()
 {
-	LOGI("resetFactory");
+	LOGI("ResetFactory");
+	deviceList.clear();
+	groupList.clear();
+	ruleList.clear();
+	sceneBleList.clear();
+	scanDeviceList.clear();
 
 	database->DeviceDelAll();
 	database->GatewayDelAll();
@@ -223,12 +228,6 @@ int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	database->DeviceInGroupDelAll();
 	bleProtocol->ResetDelAll();
 	bleProtocol->ResetFactory();
-
-	respValue["CMD"] = "RESET_HC";
-	Json::Value data;
-	data["STATUS"] = "SUCCESS";
-	respValue["DATA"] = data;
-	return 0;
 }
 
 int Gateway::CheckOnlineThread()
@@ -377,7 +376,7 @@ int Gateway::UdpBroadcastThread()
 	hcBroadcastValue["DATA"] = dataValue;
 	isUdpBroadcasting = true;
 	bool ledInternet = Util::GetStatusLedInternet();
-	for (int i = 0; i < 60; i++)
+	for (int i = 0; i < 120; i++)
 	{
 		if (!isUdpBroadcasting)
 			break;
@@ -721,6 +720,17 @@ int Gateway::OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue)
 	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
 	respValue["code"] = 0;
+	return 0;
+}
+
+int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGW("Reset ble");
+	ResetFactory();
+	respValue["CMD"] = "RESET_HC";
+	Json::Value data;
+	data["STATUS"] = "SUCCESS";
+	respValue["DATA"] = data;
 	return 0;
 }
 
@@ -1333,7 +1343,7 @@ int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 							else
 							{
-								LOGW("Group %s does not exsit");
+								LOGW("Group %s does not exsit", idGroup.c_str());
 							}
 
 							int modeRGB = 0;
@@ -1788,6 +1798,7 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCDeleteRoom: %s", reqValue.toString().c_str());
+
 	bool isRoom = false;
 	string roomId = "";
 	int roomUnicast = 0;
