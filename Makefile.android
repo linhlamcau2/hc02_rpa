@@ -13,7 +13,7 @@ LDFLAGS ?= -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 LDFLAGS += -static-libstdc++
 
 INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
-DEFINES = -DANDROID=1 -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
+DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
 # DEFINES += -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread
 
@@ -36,6 +36,7 @@ DEVICESRC += $(wildcard device/ble/*.cpp)
 DEVICESRC += $(wildcard device/ble/module/*.cpp)
 DEVICESRC += $(wildcard device/ble/element/*.cpp)
 DEVICESRC += $(wildcard gateway/*.cpp)
+DEVICESRC += $(wildcard room/*.cpp)
 DEVICESRC += $(wildcard group/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)

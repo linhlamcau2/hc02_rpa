@@ -2,7 +2,7 @@
 #include <iostream>
 #include <endian.h>
 
-#ifndef ANDROID
+#ifndef __ANDROID__
 #include <uci.h>
 #endif
 
@@ -11,14 +11,14 @@
 
 #define TAG "Config"
 
-							 Config *config = NULL;
+Config *config = NULL;
 
 /****************************************
  *                  API                 *
  ***************************************/
 static bool get_str_config_entry(char *name, char *value)
 {
-#ifndef ANDROID
+#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char path[STRING_VALUE_MAX_SIZE];
@@ -40,7 +40,7 @@ static bool get_str_config_entry(char *name, char *value)
 
 static bool get_int_config_entry(char *name, int *value)
 {
-#ifndef ANDROID
+#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char path[STRING_VALUE_MAX_SIZE];
@@ -62,6 +62,7 @@ static bool get_int_config_entry(char *name, int *value)
 
 static bool set_str_config_entry(char *name, char *section_name, const char *value)
 {
+#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char path[STRING_VALUE_MAX_SIZE];
@@ -98,10 +99,14 @@ static bool set_str_config_entry(char *name, char *section_name, const char *val
 	}
 	uci_free_context(ctx);
 	return true;
+#else
+	return false;
+#endif
 }
 
 static bool set_int_config_entry(char *section, char *name, int value)
 {
+#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char strValue[20];
@@ -138,6 +143,9 @@ static bool set_int_config_entry(char *section, char *name, int value)
 	}
 	uci_free_context(ctx);
 	return true;
+#else
+	return false;
+#endif
 }
 
 // static bool delete_section(char *section)
@@ -336,6 +344,7 @@ bool Config::SetHost(string host)
 	}
 	return false;
 }
+
 bool Config::SetPort(int port)
 {
 	if (set_int_config_entry((char *)CONFIG_ENV PORT_KEY, PORT_KEY, port))
@@ -344,6 +353,7 @@ bool Config::SetPort(int port)
 	}
 	return false;
 }
+
 bool Config::SetClientId(string clientId)
 {
 	if (set_str_config_entry((char *)CONFIG_ENV CLIENT_ID_KEY, CLIENT_ID_KEY, clientId.c_str()))
@@ -352,6 +362,7 @@ bool Config::SetClientId(string clientId)
 	}
 	return false;
 }
+
 bool Config::SetUsername(string username)
 {
 	if (set_str_config_entry((char *)CONFIG_ENV USERNAME_KEY, USERNAME_KEY, username.c_str()))
@@ -360,6 +371,7 @@ bool Config::SetUsername(string username)
 	}
 	return false;
 }
+
 bool Config::SetPassword(string password)
 {
 	if (set_str_config_entry((char *)CONFIG_ENV PASSWORD_KEY, PASSWORD_KEY, password.c_str()))
@@ -368,6 +380,8 @@ bool Config::SetPassword(string password)
 	}
 	return false;
 }
+
 bool Config::SetKeepAlive(int keepAlive)
 {
+	return true;
 }

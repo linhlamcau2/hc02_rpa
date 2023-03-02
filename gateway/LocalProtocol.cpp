@@ -67,7 +67,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 				exit(1);
 			}
-			else if (rs = 2)
+			else if (rs == 2)
 			{
 				if (listMsgPush.size() > 0)
 				{
