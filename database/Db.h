@@ -8,7 +8,7 @@
 #include <Group.h>
 #include <Gateway.h>
 #include "SceneBle.h"
-#include "room/Room.h"
+#include "Room.h"
 
 #ifdef ESP_PLATFORM
 #define DB_NAME "/spiffs/smh.sqlite"

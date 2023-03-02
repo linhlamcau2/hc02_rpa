@@ -14,7 +14,7 @@
 #include "DeviceBle.h"
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
-#include "../room/Room.h"
+#include "Room.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
