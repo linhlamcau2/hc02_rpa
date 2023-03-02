@@ -14,7 +14,7 @@ COMPFLAGS += -DVERSION=$(VERSION)
 # COMPFLAGS += -DCONFIG_SAVE_ATTRIBUTE
 LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
 
-LINKEDLIBS = -lpthread -lmosquitto -lsqlite3 -luci
+LINKEDLIBS = -lpthread -lmosquitto -lsqlite3 -luci -lcurl
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
@@ -46,6 +46,7 @@ DEVICESRC += $(wildcard sceneBle/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)
 DEVICESRC += $(wildcard wifi/*.cpp)
+DEVICESRC += $(wildcard http/*.cpp)
 
 CPPSRC = $(wildcard *.cpp) $(DEVICESRC)
 CPPOBJ = $(CPPSRC:.cpp=$(OBJEXT))

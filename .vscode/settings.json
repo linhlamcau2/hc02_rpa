@@ -14,6 +14,12 @@
         "string": "cpp",
         "ostream": "cpp",
         "*.tcc": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "vector": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "ratio": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp"
     }
 }
