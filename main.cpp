@@ -18,6 +18,7 @@
 #include "Wifi.h"
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
+#include "http/Http.h"
 
 #include "BleProtocol.h"
 #define BLE_UART_PORT "/dev/ttyS1"
