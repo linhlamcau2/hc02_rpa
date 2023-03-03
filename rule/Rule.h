@@ -43,9 +43,12 @@ public:
 	Rule(string id, string type, unsigned char repeater, int startTime, int endTime);
 	~Rule();
 
+	bool isEnable;
 	string GetId();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
+	void DelAllRuleInput();
+	void DelAllRuleOutput();
 	void Check();
 	void RunOutput();
 };

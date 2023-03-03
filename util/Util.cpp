@@ -47,7 +47,56 @@ int Util::GetCurrentTimer()
 {
 	time_t t = time(NULL);
 	struct tm lt = *localtime(&t);
-	return lt.tm_hour * 60 + lt.tm_min;
+	return lt.tm_hour * 3600 + lt.tm_min * 60 + lt.tm_sec;
+}
+
+int Util::GetYearsCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_year + 1900;
+}
+
+int Util::GetMonthsCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_mon + 1;
+}
+
+int Util::GetDateCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_mday;
+}
+
+int Util::GetDaysCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_wday + 1;
+}
+
+int Util::GetHoursCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_hour;
+}
+
+int Util::GetMinutesCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_min;
+}
+
+int Util::GetSecondsCurrent()
+{
+	time_t t = time(NULL);
+	struct tm lt = *localtime(&t);
+	return lt.tm_sec;
 }
 
 double Util::millis()
@@ -68,8 +117,9 @@ int Util::ConvertStrTimeToInt(string time)
 {
 	int hour;
 	int minute;
-	if (sscanf(time.c_str(), "%d:%d", &hour, &minute) == 2)
-		return hour * 60 + minute;
+	int second;
+	if (sscanf(time.c_str(), "%d:%d:%d", &hour, &minute, &second) == 3)
+		return hour * 3600 + minute * 60 + second;
 	return -1;
 }
 
@@ -107,6 +157,36 @@ int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int
 	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
 }
 
+int Util::ConvertWeekDayToIntCompare(int day)
+{
+	int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+	switch (day)
+	{
+	case 0:
+		sun = 1;
+		break;
+	case 1:
+		mon = 1;
+		break;
+	case 2:
+		tue = 1;
+		break;
+	case 3:
+		wed = 1;
+		break;
+	case 4:
+		thu = 1;
+		break;
+	case 5:
+		fri = 1;
+		break;
+	case 6:
+		sat = 1;
+		break;
+	}
+	return ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+}
+
 vector<string> Util::splitString(string str, char splitter)
 {
 	vector<string> result;
@@ -129,7 +209,7 @@ vector<string> Util::splitString(string str, char splitter)
 	return result;
 }
 
-bool Util::CompareNumber(int a, int b, string op)
+bool Util::CompareNumber(int a, int b, int c, string op)
 {
 	if (op == "==")
 		return a == b;
@@ -143,6 +223,10 @@ bool Util::CompareNumber(int a, int b, string op)
 		return a < b;
 	else if (op == "<=")
 		return a <= b;
+	else if (op == "<>")
+		return ((a >= b) && (a <= c));
+	else if (op == "><")
+		return ((a <= b) || (a >= c));
 	return false;
 }
 
@@ -181,6 +265,7 @@ static bool ledBle = false;
 void Util::LedInternet(bool value)
 {
 	ledInternet = value;
+#ifndef ANDROID
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
@@ -189,11 +274,13 @@ void Util::LedInternet(bool value)
 	{
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
 	}
+#endif
 }
 
 void Util::LedService(bool value)
 {
 	ledService = value;
+#ifndef ANDROID
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
@@ -202,11 +289,13 @@ void Util::LedService(bool value)
 	{
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
 	}
+#endif
 }
 
 void Util::LedZigbee(bool value)
 {
 	ledZigbee = value;
+#ifndef ANDROID
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
@@ -215,11 +304,13 @@ void Util::LedZigbee(bool value)
 	{
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
+#endif
 }
 
 void Util::LedBle(bool value)
 {
 	ledBle = value;
+#ifndef ANDROID
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
@@ -228,10 +319,12 @@ void Util::LedBle(bool value)
 	{
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
 	}
+#endif
 }
 
 void Util::LedAll(bool value)
 {
+#ifndef ANDROID
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
@@ -246,6 +339,7 @@ void Util::LedAll(bool value)
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
 		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
+#endif
 }
 
 void Util::LedRestoreLastValue()

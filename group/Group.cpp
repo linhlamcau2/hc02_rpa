@@ -82,7 +82,6 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 				if (deviceInGroup)
 				{
 					deviceList.push_back(deviceInGroup);
-					LOGE("push list dev of gateway");
 					numberOfBleDevice++;
 					return true;
 				}

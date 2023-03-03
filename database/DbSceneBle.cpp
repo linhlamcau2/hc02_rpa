@@ -27,7 +27,6 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				{
 					SceneBle *scene = gateway->getSceneBleFromId(sceneId);
 					Device *device = gateway->getDevice(deviceId);
-					cout << "sceneId: " + sceneId + "---data: " + propertiesData << endl;
 					if (scene)
 					{
 						scene->AddDevice(device, payloadJson, 0, true);

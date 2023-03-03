@@ -61,7 +61,7 @@ static void run(TimerSchedule *timerSchedule)
 		currentTimer = Util::GetCurrentTimer();
 		if (currentTimer != oldTimer)
 		{
-			LOGD("h:m: %d-%d", currentTimer, currentTimer);
+			// LOGD("h:m: %d-%d", currentTimer, currentTimer);
 			timerSchedule->mtx.lock();
 			for (auto &timer : timerSchedule->timerList)
 			{

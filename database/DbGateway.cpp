@@ -24,14 +24,16 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				uint16_t ble_unicast = sqlite3_column_int(stmt, index++);
 				string dormitory = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				LOGI("Gateway: id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, unicast: %d, dormitory: %s", id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), ble_unicast, dormitory.c_str());
-                
+				string refresh = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGI("Gateway: id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, unicast: %d, dormitory: %s, refresh: %s", id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), ble_unicast, dormitory.c_str(), refresh.c_str());
+
 				gateway->setId(id);
 				gateway->setBleAppkey(ble_appkey);
 				gateway->setBleDevicekey(ble_devicekey);
 				gateway->setBleNetkey(ble_netkey);
 				gateway->setBleUnicast(ble_unicast);
 				gateway->setDormitory(dormitory);
+				gateway->setRefreshToken(refresh);
 				return 0;
 			}
 			else if (s == SQLITE_DONE)
@@ -68,7 +70,7 @@ int Db::GatewayUpdate(Gateway *gateway)
 
 int Db::GatewayUpdateId(Gateway *gateway, string id)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\""+id+"\");";
+	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\"" + id + "\");";
 	return Sqlite_Exec(sql);
 }
 
@@ -95,6 +97,11 @@ int Db::GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast)
 int Db::GatewayUpdateDormitory(Gateway *gateway, string dormitory)
 {
 	string sql = "UPDATE " TABLE_NAME " SET dormitory=\"" + dormitory + "\" WHERE id=\"" + gateway->getId() + "\";";
+	return Sqlite_Exec(sql);
+}
+int Db::GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken)
+{
+	string sql = "UPDATE " TABLE_NAME " SET refresh_token=\"" + refreshToken + "\" WHERE id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 

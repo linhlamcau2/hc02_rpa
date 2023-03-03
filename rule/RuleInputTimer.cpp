@@ -21,7 +21,7 @@ RuleInputTimer::~RuleInputTimer()
 bool RuleInputTimer::Check()
 {
 	int currentWeekDay = Util::GetCurrentWeekDay();
-	LOGI("currentWeekDay: %d", currentWeekDay);
-	LOGI("repeat: 0x%02X", repeat);
+	LOGI("currentWeekDay : %d", currentWeekDay);
+	LOGI("repeat : 0x%02X", repeat);
 	return ((1 << currentWeekDay) & repeat) && timer == Util::GetCurrentTimer();
 }

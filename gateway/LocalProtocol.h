@@ -35,4 +35,6 @@ public:
 
 	int PublishToLocalMessage(string payload);
 	int PublishToLocalMessage(Json::Value payloadJson);
+
+    vector <string> listMsgPush;
 };

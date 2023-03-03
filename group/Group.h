@@ -12,7 +12,6 @@ class DeviceInGroup
 public:
 	Device *device;
 	int epId;
-
 	DeviceInGroup(Device *device, int epId);
 };
 
@@ -27,7 +26,7 @@ private:
 	int numberOfZigbeeDevice;
 
 	Json::Value dataValue;
-	
+
 public:
 	vector<DeviceInGroup *> deviceList;
 
@@ -39,7 +38,7 @@ public:
 	string GetName();
 	string GetUUId();
 	int GetPositionDevice(Device *device);
-	
+
 	bool AddDevice(Device *device, int epId, bool sendBle);
 	bool DelDevice(Device *device, int epId);
 
