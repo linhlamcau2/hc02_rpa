@@ -1,7 +1,7 @@
 #include "DeviceBlePirLightSensorAC.h"
-#include "protocol/ble/BleProtocol.h"
+#include "BleProtocol.h"
 #include <Log.h>
-#include <util/Util.h>
+#include <Util.h>
 
 DeviceBlePirLightSensorAC::DeviceBlePirLightSensorAC(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
     : DeviceBle(id, name, mac, device_id, addr, BLE_PIR_LIGHT_SENSOR_AC, version)

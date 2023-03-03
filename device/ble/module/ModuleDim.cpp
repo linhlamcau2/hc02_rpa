@@ -61,7 +61,8 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
 				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t dim1, dim2;
+			// TODO: bug
+			uint16_t dim1 = 0, dim2 = 0;
 			Json::Value listValue = dataValue["VALUE"];
 			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{

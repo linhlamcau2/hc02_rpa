@@ -41,6 +41,10 @@ BleProtocol::~BleProtocol()
 
 void BleProtocol::init()
 {
+	if (pthread_mutex_init(&mutex, NULL) != 0)
+	{
+		LOGE("Failed to initialize the mutex");
+	}
 	Uart::init();
 	usleep(100000); // wait uart rx thread start
 	addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
@@ -182,50 +186,54 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 
 int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data, int compare_position, int compare_len)
 {
-	mtxWaitSendUart.lock();
+	// mtxWaitSendUart.lock();
 	int rs = 0;
-	message_rsp_list_st message_rsp_list = {
-		.status = false,
-		.opcode = opRsp,
-		.len = lenRsp,
-		.data = dataRsp,
-		.compare_data = compare_data,
-		.compare_position = compare_position,
-		.compare_len = compare_len};
-	if (opRsp)
+	if (pthread_mutex_lock(&mutex) == 0)
 	{
-		// TODO: add mutex
-		messageRespList.push_back(&message_rsp_list);
-	}
-
-	message_req_st message_req = {
-		.opcode = opReq};
-	for (int i = 0; i < lenReq; i++)
-	{
-		message_req.data[i] = dataReq[i];
-	}
-
-	Write((uint8_t *)&message_req, lenReq + 2);
-
-	if (opRsp)
-	{
-		while (!message_rsp_list.status && timeout)
+		message_rsp_list_st message_rsp_list = {
+				.status = false,
+				.opcode = opRsp,
+				.len = lenRsp,
+				.data = dataRsp,
+				.compare_data = compare_data,
+				.compare_position = compare_position,
+				.compare_len = compare_len};
+		if (opRsp)
 		{
-			usleep(10000);
-			--timeout;
+			// TODO: add mutex
+			messageRespList.push_back(&message_rsp_list);
 		}
-		if (message_rsp_list.status)
+
+		message_req_st message_req = {
+				.opcode = opReq};
+		for (int i = 0; i < lenReq; i++)
 		{
+			message_req.data[i] = dataReq[i];
+		}
+
+		Write((uint8_t *)&message_req, lenReq + 2);
+
+		if (opRsp)
+		{
+			while (!message_rsp_list.status && timeout)
+			{
+				usleep(1000);
+				--timeout;
+			}
+			if (message_rsp_list.status)
+			{
+			}
+			else
+				rs = -1;
+			messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
 		}
 		else
-			rs = -1;
-		messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
+		{
+			usleep(1000 * timeout);
+		}
+		// mtxWaitSendUart.unlock();
+		pthread_mutex_unlock(&mutex);
 	}
-	else
-	{
-		usleep(1000 * timeout);
-	}
-	mtxWaitSendUart.unlock();
 	return rs;
 	// return Write(dataReq, lenReq);
 }
@@ -424,10 +432,10 @@ string BleProtocol::uuidToStr(uuid_t *uuid)
 	char buf[100];
 	uint8_t *u8Uuid = (uint8_t *)uuid;
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
-			u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
-			u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
-			u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
+					u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
+					u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
+					u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
+					u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -436,10 +444,10 @@ string BleProtocol::arrayToString844412(uint8_t *array)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			array[0], array[1], array[2], array[3],
-			array[4], array[5], array[6], array[7],
-			array[8], array[9], array[10], array[11],
-			array[12], array[13], array[14], array[15]);
+					array[0], array[1], array[2], array[3],
+					array[4], array[5], array[6], array[7],
+					array[8], array[9], array[10], array[11],
+					array[12], array[13], array[14], array[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -1808,9 +1816,9 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 			uint32_t data;
 			struct
 			{
-				uint32_t store : 8;			 // 8 bit not use
-				uint32_t Lux_hi : 10;		 // 10 bit lux hi
-				uint32_t Lux_low : 10;		 // 10 bit lux low
+				uint32_t store : 8;					 // 8 bit not use
+				uint32_t Lux_hi : 10;				 // 10 bit lux hi
+				uint32_t Lux_low : 10;			 // 10 bit lux low
 				uint32_t Light_Conditon : 3; // 7 bit low
 				uint32_t Pir_Conditon : 1;	 // 1 bit hight
 			};
@@ -2537,7 +2545,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t v
 		LOGW("control relay switch resp state not match with input control");
 	}
 	LOGW("control relay switch err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
@@ -2577,14 +2585,14 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 			uint16_t id;
 		} set_id_combine_rsp_message_t;
 		set_id_combine_rsp_message_t *set_id_combine_rsp_message = (set_id_combine_rsp_message_t *)dataRsp;
-		if (set_id_combine_rsp_message->header == 0x060b && set_id_combine_rsp_message->id == id )
+		if (set_id_combine_rsp_message->header == 0x060b && set_id_combine_rsp_message->id == id)
 		{
 			return 0;
 		}
 		LOGW("set id combine resp state not match with input control");
 	}
 	LOGW("set id combine err");
-	return -1;	
+	return -1;
 }
 
 int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
@@ -2615,8 +2623,8 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	timer_message.timer[0] = (timer >> 24) & 0xFF;
 	timer_message.timer[1] = (timer >> 16) & 0xFF;
 	timer_message.timer[2] = (timer >> 8) & 0xFF;
-	timer_message.timer[3] = (timer) & 0xFF;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000,timerHeader, 0, 7);
+	timer_message.timer[3] = (timer)&0xFF;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
 	if (rs == 0)
 	{
 		typedef struct __attribute__((packed))
@@ -2637,5 +2645,5 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 		LOGW("timer resp state not match with input control");
 	}
 	LOGW("timer switch err");
-	return -1;		
+	return -1;
 }

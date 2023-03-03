@@ -115,7 +115,8 @@ private:
 	scan_device_message_t scanDeviceMessage;
 
 	vector<message_rsp_list_st *> messageRespList;
-	mutex mtxWaitSendUart;
+	// mutex mtxWaitSendUart;
+	pthread_mutex_t mutex;
 
 	// TODO: Add init state
 	uint8_t netKey[16];

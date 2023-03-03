@@ -45,15 +45,16 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
-				uint16_t bt, mode;
+				// TODO: bug
+				uint16_t bt = 0, mode = 0;
 				Json::Value listValue = dataValue["VALUE"];
 				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{

@@ -24,8 +24,7 @@ class Db
 {
 
 private:
-	// TODO:
-	// mutex mtx;
+	pthread_mutex_t mutex;
 
 	int Sqlite_Exec(string &sql);
 	int ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));

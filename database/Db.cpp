@@ -15,6 +15,10 @@ Db::Db()
 
 void Db::init(void)
 {
+	if (pthread_mutex_init(&mutex, NULL) != 0)
+	{
+		LOGE("Failed to initialize the mutex");
+	}
 #ifdef ESP_PLATFORM
 	LOGI("Initializing SPIFFS");
 
@@ -78,35 +82,37 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 int Db::Sqlite_Exec(string &sql)
 {
 	LOGD("Sqlite_Exec sql: %s", sql.c_str());
-	int rc;
+	int rc = SQLITE_ERROR;
 	sqlite3 *db;
 	char *err_msg = 0;
-	// mtx.lock();
-	rc = sqlite3_open(DB_NAME, &db);
-	if (rc)
+	if (pthread_mutex_lock(&mutex) == 0)
 	{
-		LOGE("Can't open database: %s", sqlite3_errmsg(db));
-		// mtx.unlock();
-		return -1;
+		rc = sqlite3_open(DB_NAME, &db);
+		if (rc)
+		{
+			LOGE("Can't open database: %s", sqlite3_errmsg(db));
+			pthread_mutex_unlock(&mutex);
+			return -1;
+		}
+		else
+		{
+			// LOGD("Opened database successfully");
+		}
+		rc = sqlite3_exec(db, sql.c_str(), sqlite_callback, NULL, &err_msg);
+		if (rc != SQLITE_OK)
+		{
+			LOGE("Error executing sql statement :%s", err_msg);
+			sqlite3_free(err_msg);
+		}
+		sqlite3_close(db);
+		pthread_mutex_unlock(&mutex);
 	}
-	else
-	{
-		// LOGD("Opened database successfully");
-	}
-	rc = sqlite3_exec(db, sql.c_str(), sqlite_callback, NULL, &err_msg);
-	if (rc != SQLITE_OK)
-	{
-		LOGE("Error executing sql statement :%s", err_msg);
-		sqlite3_free(err_msg);
-	}
-	sqlite3_close(db);
-	// mtx.unlock();
 	return rc;
 }
 
 int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *))
 {
-	int rc;
+	int rc = SQLITE_ERROR;
 	sqlite3 *db;
 	sqlite3_stmt *stmt;
 	string sql = "SELECT * FROM " + table + ";";
@@ -119,36 +125,38 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 
 	LOGD("ReadAll table %s", table.c_str());
 
-	// mtx.lock();
-	rc = sqlite3_open(DB_NAME, &db);
-	if (rc)
+	if (pthread_mutex_lock(&mutex) == 0)
 	{
-		LOGE("Can't open database: %s", sqlite3_errmsg(db));
-		// mtx.unlock();
-		return rc;
-	}
-	else
-	{
-		LOGD("Opened database successfully");
-	}
+		rc = sqlite3_open(DB_NAME, &db);
+		if (rc)
+		{
+			LOGE("Can't open database: %s", sqlite3_errmsg(db));
+			pthread_mutex_unlock(&mutex);
+			return rc;
+		}
+		else
+		{
+			LOGD("Opened database successfully");
+		}
 
-	rc = sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, NULL);
-	if (rc != SQLITE_OK)
-	{
-		LOGW("SQL error: %d - %s", rc, sql.c_str());
+		rc = sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, NULL);
+		if (rc != SQLITE_OK)
+		{
+			LOGW("SQL error: %d - %s", rc, sql.c_str());
+			sqlite3_close(db);
+			pthread_mutex_unlock(&mutex);
+			return rc;
+		}
+		else
+		{
+			LOGD("sqlite3_prepare_v2 successfully");
+		}
+
+		Parse(stmt, listPtr);
+
+		sqlite3_finalize(stmt);
 		sqlite3_close(db);
-		// mtx.unlock();
-		return rc;
+		pthread_mutex_unlock(&mutex);
 	}
-	else
-	{
-		LOGD("sqlite3_prepare_v2 successfully");
-	}
-
-	Parse(stmt, listPtr);
-
-	sqlite3_finalize(stmt);
-	sqlite3_close(db);
-	// mtx.unlock();
 	return rc;
 }

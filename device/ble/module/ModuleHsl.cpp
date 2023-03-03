@@ -70,15 +70,16 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idS == id || this->idL == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
-				uint16_t value1, value2;
+				// TODO: bug
+				uint16_t value1 = 0, value2 = 0;
 				Json::Value listValue = dataValue["VALUE"];
 				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{
@@ -131,7 +132,7 @@ bool ModuleHsl::Do(Json::Value &dataValue)
 	if (dataValue.isArray())
 	{
 		bool isH = false, isS = false, isL = false;
-		uint16_t h,s,l;
+		uint16_t h, s, l;
 		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
 			Json::Value data = dataValue[i];
@@ -150,7 +151,7 @@ bool ModuleHsl::Do(Json::Value &dataValue)
 				else if (data["ID"].asInt() == BLE_ATTRIBUTE_LUMINANCE)
 				{
 					isL = true;
-                    l = data["VALUE"].asInt();
+					l = data["VALUE"].asInt();
 				}
 			}
 		}
