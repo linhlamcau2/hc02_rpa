@@ -7,10 +7,7 @@ HTTPRequest::HTTPRequest(string method, string url, string body)
 	this->method = method;
 	this->url = url;
 	this->body = body;
-	CURL *curl;
-	CURLcode res;
-	this->res = res;
-	this->curl = curl_easy_init();
+	curl = NULL;
 }
 
 size_t WriteCallback(char *contents, size_t size, size_t nmemb, void *userp)
@@ -21,7 +18,6 @@ size_t WriteCallback(char *contents, size_t size, size_t nmemb, void *userp)
 
 string HTTPRequest::GetToken(string refreshToken, string dormitory)
 {
-	CURL *curl;
 	CURLcode res;
 	curl = curl_easy_init();
 	string readBuffer;
@@ -44,8 +40,9 @@ string HTTPRequest::GetToken(string refreshToken, string dormitory)
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 		res = curl_easy_perform(curl);
+		curl_easy_cleanup(curl);
+		curl = NULL;
 	}
-	curl_easy_cleanup(curl);
 	LOGD("readBuffer: %s", readBuffer.c_str());
 	Json::Value payloadJson;
 	Json::Reader r;
@@ -62,26 +59,31 @@ string HTTPRequest::GetToken(string refreshToken, string dormitory)
 string HTTPRequest::UploadFile(string refreshToken, string dormitory, string pathFile)
 {
 	string readBuffer = "";
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-	struct curl_slist *headres = NULL;
-	string cookie = "Cookie: Token=" + GetToken(refreshToken, dormitory);
-	headres = curl_slist_append(headres, cookie.c_str());
-	headres = curl_slist_append(headres, ("X-DormitoryId: " + dormitory).c_str());
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headres);
-	curl_mime *mime;
-	curl_mimepart *part;
-	mime = curl_mime_init(curl);
-	part = curl_mime_addpart(mime);
-	curl_mime_name(part, "");
-	curl_mime_filedata(part, pathFile.c_str());
-	curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-	res = curl_easy_perform(curl);
-	curl_mime_free(mime);
-	curl_easy_cleanup(curl);
+	curl = curl_easy_init();
+	if (curl)
+	{
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+		struct curl_slist *headres = NULL;
+		string cookie = "Cookie: Token=" + GetToken(refreshToken, dormitory);
+		headres = curl_slist_append(headres, cookie.c_str());
+		headres = curl_slist_append(headres, ("X-DormitoryId: " + dormitory).c_str());
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headres);
+		curl_mime *mime;
+		curl_mimepart *part;
+		mime = curl_mime_init(curl);
+		part = curl_mime_addpart(mime);
+		curl_mime_name(part, "");
+		curl_mime_filedata(part, pathFile.c_str());
+		curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+		res = curl_easy_perform(curl);
+		curl_mime_free(mime);
+		curl_easy_cleanup(curl);
+		curl = NULL;
+	}
 	return readBuffer;
 }
