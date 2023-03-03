@@ -7,9 +7,9 @@ CXX ?= g++
 OBJEXT ?= .o
 BUILD_PATH = build
 
-CFLAGS ?= -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ffunction-sections -fdata-sections
-CXXFLAGS ?= -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
-LDFLAGS ?= -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
+CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ffunction-sections -fdata-sections
+CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
+LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
 INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
 DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
