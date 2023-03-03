@@ -836,8 +836,6 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 int BleProtocol::ResetDelAll()
 {
 	LOGD("Reset all dev addr");
-	uint8_t dataRsp[100];
-	int lenRsp;
 	typedef struct
 	{
 		uint8_t rev[6];

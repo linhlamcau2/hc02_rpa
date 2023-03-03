@@ -14,6 +14,7 @@
 #include "Ota.h"
 #include "Base64.h"
 #include "Config.h"
+#include "Http.h"
 
 #include "RuleInputTimer.h"
 #include "RuleOutputGroup.h"
@@ -56,6 +57,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->mac = mac;
 	this->id = "";
 	this->dormitoryId = "";
+	this->refresh_token = "";
 	this->ble_unicast = 0;
 	this->ble_appkey = "";
 	this->ble_appkey = "";
@@ -98,6 +100,7 @@ void Gateway::init()
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRPCCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRPCHcConnectCloud, this, placeholders::_1, placeholders::_2));
+	OnDeviceRPCCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRPCHcBackup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("RESET_NODE", bind(&Gateway::OnRPCBleDelDevice, this, placeholders::_1, placeholders::_2));
@@ -120,6 +123,9 @@ void Gateway::init()
 	OnDeviceRPCCallbackRegister("SCENE", bind(&Gateway::OnRPCControlSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRPCUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	OnDeviceRPCCallbackRegister("SSHRemote", bind(&Gateway::OnRPCSSHRemote, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRPCHcConnectCloud, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRPCHcBackup, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SCAN", bind(&Gateway::OnRPCBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRPCBleStopScan, this, placeholders::_1, placeholders::_2));
@@ -690,6 +696,38 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcConnectCloud");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+        if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
+		{
+			string dormitoryId = data["DORMITORY_ID"].asString();
+			string refreshToken = data["REFRESH_TOKEN"].asString();
+			gateway->setDormitory(dormitoryId);
+			gateway->setRefreshToken(refreshToken);
+			database->GatewayUpdateDormitory(gateway, dormitoryId);
+			database->GatewayUpdateRefreshToken(gateway, refreshToken);
+		}
+	}
+	else
+	{
+		LOGW("OnUdpHcConnectCloud %s error", reqValue.toString().c_str());
+	}
+	return 1;
+}
+
+int Gateway::OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCHcBackup");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		HTTPRequest *httpRequest = new HTTPRequest("POST",string (BASE_URL_DEV) + string (RENEW_TOKEN),"");
+		string rs = httpRequest->UploadFile(gateway->refresh_token, gateway->dormitoryId, "/smh.sqlite");
+	}
+	else
+	{
+		LOGW("OnRPCHcBackup %s error", reqValue.toString().c_str());
+	}
 	return 1;
 }
 
@@ -1798,7 +1836,6 @@ int Gateway::OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 int Gateway::OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCDeleteRoom: %s", reqValue.toString().c_str());
-
 	bool isRoom = false;
 	string roomId = "";
 	int roomUnicast = 0;
@@ -3998,6 +4035,10 @@ string Gateway::getName()
 {
 	return "";
 }
+string Gateway::getRefreshToken()
+{
+	return refresh_token;
+}
 
 void Gateway::setBleUnicast(uint16_t unicast)
 {
@@ -4018,6 +4059,10 @@ void Gateway::setBleDevicekey(string devicekey)
 void Gateway::setDormitory(string dormitory)
 {
 	this->dormitoryId = dormitory;
+}
+void Gateway::setRefreshToken(string refresh_token)
+{
+	this->refresh_token = refresh_token;
 }
 void Gateway::setId(string id)
 {

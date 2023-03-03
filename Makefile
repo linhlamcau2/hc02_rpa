@@ -11,10 +11,10 @@ CFLAGS ?= -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -f
 CXXFLAGS ?= -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
 LDFLAGS ?= -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
 DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
 # DEFINES += -DCONFIG_SAVE_ATTRIBUTE
-LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci
+LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
@@ -40,6 +40,7 @@ DEVICESRC += $(wildcard group/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)
 DEVICESRC += $(wildcard mqtt/*.cpp)
+DEVICESRC += $(wildcard http/*.cpp)
 DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard sceneBle/*.cpp)

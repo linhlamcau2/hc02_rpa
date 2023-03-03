@@ -31,6 +31,7 @@ private:
 	string ble_netkey;
 	string ble_appkey;
 	string ble_devicekey;
+	string refresh_token;
 	uint16_t ble_unicast;
 	string version;
 	thread *udpBroadcastThread;
@@ -56,7 +57,8 @@ private:
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
-    int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue);
@@ -178,6 +180,7 @@ public:
 	string getId();
 	string getVersion();
 	string getName();
+	string getRefreshToken();
 
 	void setBleUnicast(uint16_t unicast);
 	void setBleNetkey(string netkey);
@@ -187,6 +190,7 @@ public:
 	void setId(string id);
 	void setVersion(string version);
 	void setName(string name);
+	void setRefreshToken(string refresh_token);
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 };

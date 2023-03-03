@@ -71,7 +71,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 			{
 				if (listMsgPush.size() > 0)
 				{
-					for (int i = 0; i < listMsgPush.size(); i++)
+					for (uint32_t i = 0; i < listMsgPush.size(); i++)
 					{
 						Publish(HC_RESPONSE_TOPIC, listMsgPush[i]);
 					}

@@ -52,6 +52,7 @@ public:
 	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
 	int GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast);
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
+	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
