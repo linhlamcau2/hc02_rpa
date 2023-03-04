@@ -13,7 +13,9 @@
 #include "Wifi.h"
 #include "Ota.h"
 #include "Base64.h"
+#ifndef ESP_PLATFORM
 #include "Config.h"
+#endif
 #include "Http.h"
 
 #include "RuleInputTimer.h"
