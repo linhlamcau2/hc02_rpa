@@ -74,6 +74,7 @@ public:
 	int Subscribe(string topic, int maxTime = 5, int duration = 5);
 	int Unsubscribe(string topic, int maxTime = 5, int duration = 5);
 	int Publish(string topic, string payload, int maxTime = 5, int duration = 5);
+	int Publish(string topic, char *payload, int payloadLen);
 	bool isConnected();
 	int removeObjectFromVector(vector<MQTTPubSub *> *mqttPubSubs, MQTTPubSub *mqttPubSub);
 

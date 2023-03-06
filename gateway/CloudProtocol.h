@@ -34,6 +34,7 @@ public:
 	int OnlineHC(string deviceName);
 
 	int CloudPublish(string topic, string payload);
+	int CloudPublish(string topic, char *payload, int payloadLen);
 
 	int PublishToDeviceTelemetry(string payload);
 	int PublishToDeviceAttributes(string payload);

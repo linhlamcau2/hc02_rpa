@@ -115,6 +115,11 @@ int CloudProtocol::CloudPublish(string topic, string payload)
 	return Publish(topic, payload);
 }
 
+int CloudProtocol::CloudPublish(string topic, char *payload, int payloadLen)
+{
+	return Publish(topic, payload, payloadLen);
+}
+
 int CloudProtocol::PublishToDeviceTelemetry(string payload)
 {
 	return Publish(pubTopic, payload);

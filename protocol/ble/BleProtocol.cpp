@@ -240,6 +240,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 
 int BleProtocol::GetAppKey()
 {
+	LOGD("GetAppKey");
 	string appkeyStr = gateway->getBleAppKey();
 	if (appkeyStr.compare("") == 0)
 	{
@@ -262,12 +263,11 @@ int BleProtocol::GetAppKey()
 		appkeyStr.erase(appkeyStr.begin() + 20, appkeyStr.begin() + 21);
 		char *ak = new char[appkeyStr.length() + 1];
 		strcpy(ak, appkeyStr.c_str());
-		uint8_t temp[17] = {0};
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf((char *)ak + i * 2, "%2x", (unsigned int *)&temp[i]);
-			appKey[i] = temp[i];
+			sscanf((char *)ak + i * 2, "%2x", (unsigned int *)&appKey[i]);
 		}
+		free(ak);
 	}
 	return 0;
 }

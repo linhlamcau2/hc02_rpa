@@ -241,6 +241,11 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 	return MQTT_ERR_TIMEOUT;
 }
 
+int Mqtt::Publish(string topic, char *payload, int payloadLen)
+{
+	return publish(NULL, topic.c_str(), payloadLen, payload);
+}
+
 bool Mqtt::isConnected()
 {
 	return connected;
