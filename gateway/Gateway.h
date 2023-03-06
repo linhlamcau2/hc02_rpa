@@ -137,6 +137,8 @@ public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
 
+	string getMac() {return mac;}
+
 	/**
 	 * @brief Factory reset (call when hold reset button in 5s)
 	 *

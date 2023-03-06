@@ -28,6 +28,16 @@ void CloudProtocol::init()
 	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
 }
 
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
+{
+	addActionCallback(actionCallbackFuncType1, topic);
+}
+
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic)
+{
+	addActionCallback(actionCallbackFuncType2, topic);
+}
+
 int CloudProtocol::CloudConnect()
 {
 	return Connect();

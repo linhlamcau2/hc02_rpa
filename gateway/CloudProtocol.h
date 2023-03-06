@@ -22,6 +22,8 @@ public:
 	virtual ~CloudProtocol();
 
 	void init();
+	void cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
+	void cloudAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);
 
 	int CloudConnect();
 	void OnConnect(bool isConnected, bool isReconnect);
