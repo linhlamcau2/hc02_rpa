@@ -89,7 +89,7 @@ bool FileTransfer::UploadChunk(string sessionId, File *file)
 	if (file->IsOpen())
 	{
 		char *fileContent = (char *)malloc(BIN_PACKAGE_SIZE);
-		if (file_content)
+		if (fileContent)
 		{
 			uint32_t size = file->Read(file->chunkIndex * BIN_PACKAGE_SIZE, fileContent, BIN_PACKAGE_SIZE);
 			file->Close();
