@@ -39,6 +39,11 @@ void File::Open(ios_base::openmode mode)
 	file.open(filePath.c_str(), mode);
 }
 
+void File::Close()
+{
+	file.close();
+}
+
 void File::OpenToRead()
 {
 	Open(ios::in | ios::binary);
@@ -47,4 +52,21 @@ void File::OpenToRead()
 void File::OpenToWrite()
 {
 	Open(ios::app | ios::out | ios::binary);
+}
+
+bool File::IsOpen()
+{
+	return file.is_open();
+}
+
+int File::Read(uint32_t position, char *buff, uint32_t size)
+{
+	uint32_t rs = size;
+	file.seekg(chunkIndex * BIN_PACKAGE_SIZE, std::ios::beg);
+	file.read(buff, size);
+	if (file.eof())
+	{
+		rs = fileSize - position;
+	}
+	return rs;
 }

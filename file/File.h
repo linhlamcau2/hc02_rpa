@@ -3,8 +3,12 @@
 #include <string>
 #include <fstream>
 
-#ifndef BIN_PACKAGE_SIZE
-#define BIN_PACKAGE_SIZE 4096
+#ifndef BIN_PACKAGE_SIZE //size of package can send in a second
+#ifdef ESP_PLATFORM
+#define BIN_PACKAGE_SIZE (4 * 1024)
+#else
+#define BIN_PACKAGE_SIZE (512 * 1024)
+#endif
 #endif
 
 using namespace std;
@@ -30,6 +34,10 @@ public:
 	bool HaveInfo();
 
 	void Open(ios_base::openmode mode);
+	void Close();
 	void OpenToRead();
 	void OpenToWrite();
+	bool IsOpen();
+
+	int Read(uint32_t position, char *buff, uint32_t size);
 };

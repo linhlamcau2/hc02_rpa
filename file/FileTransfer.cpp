@@ -1,5 +1,4 @@
 #include "FileTransfer.h"
-#include <fstream>
 #include <unistd.h>
 #include "Gateway.h"
 #include "Log.h"
@@ -50,7 +49,7 @@ bool FileTransfer::uploadFile(string path, string name)
 		int timeout = file.chunkCount;
 		while (file.chunkIndex < file.chunkCount && timeout--)
 		{
-			usleep(10000);
+			sleep(1);
 		}
 		files.erase(sessionId);
 	}
@@ -84,26 +83,24 @@ void FileTransfer::OnFWMessage(string &topic, char *payload, int payloadlen)
 
 bool FileTransfer::UploadChunk(string sessionId, File *file)
 {
-	ifstream uploadFile;
 	string filePath = file->path + "/" + file->name;
 	LOGD("UploadChunk: %d, path: %s", file->chunkIndex * BIN_PACKAGE_SIZE, filePath.c_str());
-	uploadFile.open(filePath.c_str(), ios::in | ios::binary);
-	if (uploadFile.is_open())
+	file->OpenToRead();
+	if (file->IsOpen())
 	{
-		uploadFile.seekg(file->chunkIndex * BIN_PACKAGE_SIZE, std::ios::beg);
-
-		// Đọc nội dung file
-		char file_content[BIN_PACKAGE_SIZE];
-		int size = BIN_PACKAGE_SIZE;
-		uploadFile.read(file_content, BIN_PACKAGE_SIZE);
-		if (uploadFile.eof())
+		char *fileContent = (char *)malloc(BIN_PACKAGE_SIZE);
+		if (file_content)
 		{
-			size = file->fileSize - file->chunkIndex * BIN_PACKAGE_SIZE;
+			uint32_t size = file->Read(file->chunkIndex * BIN_PACKAGE_SIZE, fileContent, BIN_PACKAGE_SIZE);
+			file->Close();
+			gateway->CloudPublish(pubFwTopic + sessionId + "/" + to_string(file->chunkIndex), fileContent, size);
+			free(fileContent);
+			return true;
 		}
-		uploadFile.close();
-
-		gateway->CloudPublish(pubFwTopic + sessionId + "/" + to_string(file->chunkIndex), file_content, size);
-		return true;
+		else
+		{
+			LOGW("malloc err");
+		}
 	}
 	return false;
 }
