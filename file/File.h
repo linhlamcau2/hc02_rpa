@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "json.h"
+#include <fstream>
 
 #ifndef BIN_PACKAGE_SIZE
 #define BIN_PACKAGE_SIZE 4096
@@ -12,34 +12,24 @@ using namespace std;
 class File
 {
 private:
-	volatile bool isBusy;
+public:
 	string name;
 	string path;
 	string sumAlg;
 	string sum;
 	streamsize fileSize;
+
 	volatile int chunkIndex;
 	int chunkCount;
 
-	string subFwTopic;
-	string pubFwTopic;
+	fstream file;
+	bool haveInfo;
 
-	void OnFWMessage(string &topic, char *payload, int payloadlen);
+	File(string path, string name);
 
-	bool UploadChunk();
+	bool HaveInfo();
 
-	int OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRPCDownloadFileResp(Json::Value &reqValue, Json::Value &respValue);
-
-public:
-	File();
-
-	void init();
-
-	bool uploadFile(string path, string name);
-	bool downloadFile(string path, string name);
+	void Open(ios_base::openmode mode);
+	void OpenToRead();
+	void OpenToWrite();
 };
-
-extern File *file;

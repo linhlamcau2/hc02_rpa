@@ -18,7 +18,7 @@
 #include "Wifi.h"
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
-#include "File.h"
+#include "FileTransfer.h"
 
 #include "BleProtocol.h"
 #define BLE_UART_PORT "/dev/ttyS1"
@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, signal_handler);
 	signal(SIGUSR2, signal_handler);
 
+	srand(time(0));
+
 	mosqpp::lib_init();
 
 	config = new Config();
@@ -66,7 +68,7 @@ int main(int argc, char *argv[])
 	database = new Db();
 	database->init();
 
-	file = new File();
+	fileTransfer = new FileTransfer();
 
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
@@ -87,9 +89,16 @@ int main(int argc, char *argv[])
 
 	Util::LedService(true);
 
-	file->init();
+	fileTransfer->init();
 	sleep(2);
-	file->uploadFile(".", "smh.sqlite");
+
+	fileTransfer->uploadFile(".", "smh.sqlite");
+	fileTransfer->uploadFile(".", "readme.txt");
+
+	// thread sendFile1(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot1.rar"));
+	// sendFile1.detach();
+	// thread sendFile2(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot2.rar"));
+	// sendFile2.detach();
 
 	while (1)
 	{
