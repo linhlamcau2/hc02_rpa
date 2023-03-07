@@ -17,7 +17,7 @@ void File::init()
 	LOGD("init");
 	subFwTopic = "/v1/server/hc/" + gateway->getMac() + "/bin/+";
 	pubFwTopic = "/v1/hc/" + gateway->getMac() + "/bin/";
-	gateway->cloudAddActionCallback(bind(&File::OnFWMessage, this, placeholders::_1, placeholders::_2), subFwTopic);
+	gateway->cloudAddActionCallback(bind(&File::OnFWMessage, this, placeholders::_1, placeholders::_2, placeholders::_3), subFwTopic);
 
 	gateway->OnDeviceRPCCallbackRegister("UploadFileResp", bind(&File::OnRPCUploadFileResp, this, placeholders::_1, placeholders::_2));
 	gateway->OnDeviceRPCCallbackRegister("UploadBinaryResp", bind(&File::OnRPCUploadBinaryResp, this, placeholders::_1, placeholders::_2));
@@ -27,6 +27,8 @@ void File::init()
 bool File::uploadFile(string path, string name)
 {
 	LOGD("uploadFile");
+	this->path = path;
+	this->name = name;
 	isBusy = true;
 	string filePath = path + "/" + name;
 	chunkIndex = 0;
@@ -60,7 +62,7 @@ bool File::uploadFile(string path, string name)
 		gateway->PublishToDeviceTelemetry(jsonValue);
 
 		int timeout = chunkCount;
-		while (chunkIndex <= chunkCount && timeout--)
+		while (chunkIndex < chunkCount && timeout--)
 		{
 			usleep(10000);
 		}
@@ -69,7 +71,7 @@ bool File::uploadFile(string path, string name)
 	{
 		LOGW("Open file %s error", filePath.c_str());
 	}
-	if (chunkIndex <= chunkCount)
+	if (chunkIndex < chunkCount)
 	{
 		LOGW("upload file timeout");
 	}
@@ -90,15 +92,15 @@ bool File::downloadFile(string path, string name)
 	return 0;
 }
 
-void File::OnFWMessage(string &topic, string &payload)
+void File::OnFWMessage(string &topic, char *payload, int payloadlen)
 {
 }
 
 bool File::UploadChunk()
 {
-	LOGD("UploadChunk")
 	ifstream uploadFile;
 	string filePath = path + "/" + name;
+	LOGD("UploadChunk: %d, path: %s", chunkIndex * BIN_PACKAGE_SIZE, filePath.c_str());
 	uploadFile.open(filePath.c_str(), ios::in | ios::binary);
 	if (uploadFile.is_open())
 	{
@@ -106,10 +108,15 @@ bool File::UploadChunk()
 
 		// Đọc nội dung file
 		char file_content[BIN_PACKAGE_SIZE];
+		int size = BIN_PACKAGE_SIZE;
 		uploadFile.read(file_content, BIN_PACKAGE_SIZE);
+		if (uploadFile.eof())
+		{
+			size = fileSize - chunkIndex * BIN_PACKAGE_SIZE;
+		}
 		uploadFile.close();
 
-		gateway->CloudPublish(pubFwTopic + to_string(chunkIndex), file_content, BIN_PACKAGE_SIZE);
+		gateway->CloudPublish(pubFwTopic + to_string(chunkIndex), file_content, size);
 		return true;
 	}
 	return false;
@@ -162,13 +169,13 @@ int File::OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (chunk == chunkIndex)
 				{
+					++chunkIndex;
 					if (chunkIndex == chunkCount)
 					{
 						LOGD("Upload done");
 					}
 					else
 					{
-						++chunkIndex;
 						UploadChunk();
 					}
 				}

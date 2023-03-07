@@ -24,7 +24,7 @@ private:
 	string subFwTopic;
 	string pubFwTopic;
 
-	void OnFWMessage(string &topic, string &payload);
+	void OnFWMessage(string &topic, char *payload, int payloadlen);
 
 	bool UploadChunk();
 

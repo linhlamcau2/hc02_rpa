@@ -38,6 +38,16 @@ void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType2 actionCallbac
 	addActionCallback(actionCallbackFuncType2, topic);
 }
 
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic)
+{
+	addActionCallback(actionCallbackFuncType3, topic);
+}
+
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic)
+{
+	addActionCallback(actionCallbackFuncType4, topic);
+}
+
 int CloudProtocol::CloudConnect()
 {
 	return Connect();

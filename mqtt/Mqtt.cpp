@@ -1,6 +1,7 @@
 #include "Mqtt.h"
 #include "mosquitto.h"
 #include <iostream>
+#include <cstring>
 #include <unistd.h>
 #include <thread>
 #include <Log.h>
@@ -324,12 +325,14 @@ void Mqtt::on_unsubscribe(int mid)
 
 void Mqtt::on_message(const struct mosquitto_message *message)
 {
-	string topic = string(message->topic);
-	string payload = string((char *)message->payload);
 	try
 	{
-		auto onMessageFunc = bind(&Mqtt::OnMessage, this, placeholders::_1, placeholders::_2);
-		thread myThread(onMessageFunc, topic, payload);
+		string topic = string(message->topic);
+		// TODO: check free payload
+		char *payload = (char *)malloc(message->payloadlen);
+		memcpy(payload, message->payload, message->payloadlen);
+		auto onMessageFunc = bind(&Mqtt::OnMessage, this, placeholders::_1, placeholders::_2, placeholders::_3);
+		thread myThread(onMessageFunc, topic, payload, message->payloadlen);
 		myThread.detach();
 	}
 	catch (...)
@@ -338,7 +341,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 	}
 }
 
-void Mqtt::OnMessage(string topic, string payload)
+void Mqtt::OnMessage(string topic, char *payload, int payloadlen)
 {
 	// LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	ActionCallback *actionCallback;
@@ -347,13 +350,24 @@ void Mqtt::OnMessage(string topic, string payload)
 	{
 		if (actionCallback->getType() == 1)
 		{
-			actionCallback->actionCallbackFuncType1(topic, payload);
+			string payloadStr = string(payload, payloadlen);
+			actionCallback->actionCallbackFuncType1(topic, payloadStr);
 		}
 		else if (actionCallback->getType() == 2)
 		{
-			actionCallback->actionCallbackFuncType2(topic, payload);
+			actionCallback->actionCallbackFuncType2(topic, payload, payloadlen);
+		}
+		else if (actionCallback->getType() == 3)
+		{
+			string payloadStr = string(payload, payloadlen);
+			actionCallback->actionCallbackFuncType3(topic, payloadStr);
+		}
+		else if (actionCallback->getType() == 4)
+		{
+			actionCallback->actionCallbackFuncType4(topic, payload, payloadlen);
 		}
 	}
+	free(payload);
 }
 
 void Mqtt::addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -368,6 +382,24 @@ void Mqtt::addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, st
 void Mqtt::addActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic)
 {
 	ActionCallback actionCallback(actionCallbackFuncType2, topic);
+	actionCallbacks.push_back(actionCallback);
+	if (connected)
+		Subscribe(topic);
+	topicList.push_back(topic);
+}
+
+void Mqtt::addActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic)
+{
+	ActionCallback actionCallback(actionCallbackFuncType3, topic);
+	actionCallbacks.push_back(actionCallback);
+	if (connected)
+		Subscribe(topic);
+	topicList.push_back(topic);
+}
+
+void Mqtt::addActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic)
+{
+	ActionCallback actionCallback(actionCallbackFuncType4, topic);
 	actionCallbacks.push_back(actionCallback);
 	if (connected)
 		Subscribe(topic);
