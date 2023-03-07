@@ -13,7 +13,10 @@ class File
 {
 private:
 	volatile bool isBusy;
-	string filePath;
+	string name;
+	string path;
+	string sumAlg;
+	string sum;
 	streamsize fileSize;
 	volatile int chunkIndex;
 	int chunkCount;
@@ -26,6 +29,8 @@ private:
 	bool UploadChunk();
 
 	int OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue);
+
 	int OnRPCDownloadFileResp(Json::Value &reqValue, Json::Value &respValue);
 
 public:

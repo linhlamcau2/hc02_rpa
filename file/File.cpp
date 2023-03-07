@@ -20,14 +20,15 @@ void File::init()
 	gateway->cloudAddActionCallback(bind(&File::OnFWMessage, this, placeholders::_1, placeholders::_2), subFwTopic);
 
 	gateway->OnDeviceRPCCallbackRegister("UploadFileResp", bind(&File::OnRPCUploadFileResp, this, placeholders::_1, placeholders::_2));
-	gateway->OnDeviceRPCCallbackRegister("UploadFileResp", bind(&File::OnRPCDownloadFileResp, this, placeholders::_1, placeholders::_2));
+	gateway->OnDeviceRPCCallbackRegister("UploadBinaryResp", bind(&File::OnRPCUploadBinaryResp, this, placeholders::_1, placeholders::_2));
+	gateway->OnDeviceRPCCallbackRegister("DownloadFileResp", bind(&File::OnRPCDownloadFileResp, this, placeholders::_1, placeholders::_2));
 }
 
 bool File::uploadFile(string path, string name)
 {
 	LOGD("uploadFile");
 	isBusy = true;
-	filePath = path + "/" + name;
+	string filePath = path + "/" + name;
 	chunkIndex = 0;
 	LOGD("uploadFile filePath: %s", filePath.c_str());
 
@@ -76,7 +77,6 @@ bool File::uploadFile(string path, string name)
 	{
 		LOGI("upload file done");
 	}
-
 	isBusy = false;
 	return 0;
 }
@@ -84,7 +84,7 @@ bool File::uploadFile(string path, string name)
 bool File::downloadFile(string path, string name)
 {
 	isBusy = true;
-	filePath = path + "/" + name;
+	string filePath = path + "/" + name;
 
 	isBusy = false;
 	return 0;
@@ -96,7 +96,9 @@ void File::OnFWMessage(string &topic, string &payload)
 
 bool File::UploadChunk()
 {
+	LOGD("UploadChunk")
 	ifstream uploadFile;
+	string filePath = path + "/" + name;
 	uploadFile.open(filePath.c_str(), ios::in | ios::binary);
 	if (uploadFile.is_open())
 	{
@@ -116,6 +118,38 @@ bool File::UploadChunk()
 int File::OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRPCUploadFileResp");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("code") && data["code"].isInt() &&
+				data.isMember("state") && data["state"].isInt())
+		{
+			int code = data["code"].asInt();
+			int state = data["state"].asInt();
+			if (code == 0)
+			{
+				if (state == 0) // start
+				{
+					chunkIndex = 0;
+					UploadChunk();
+				}
+				else if (state == 1) // done
+				{
+					chunkIndex = chunkCount + 1;
+				}
+			}
+			else
+			{
+				LOGW("OnRPCUploadFileResp err: %d", code);
+			}
+		}
+	}
+	return 1;
+}
+
+int File::OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCUploadBinaryResp");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -145,7 +179,7 @@ int File::OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return 0;
+	return 1;
 }
 
 int File::OnRPCDownloadFileResp(Json::Value &reqValue, Json::Value &respValue)

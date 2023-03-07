@@ -207,8 +207,6 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 				device->PushAttributes();
 			}
 		}
-
-		file->uploadFile(".", "smh.sqlite");
 	}
 	else
 	{

@@ -117,6 +117,7 @@ int CloudProtocol::CloudPublish(string topic, string payload)
 
 int CloudProtocol::CloudPublish(string topic, char *payload, int payloadLen)
 {
+	LOGD("CloudPublish binary topic: %s", topic.c_str());
 	return Publish(topic, payload, payloadLen);
 }
 

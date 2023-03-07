@@ -66,6 +66,8 @@ int main(int argc, char *argv[])
 	database = new Db();
 	database->init();
 
+	file = new File();
+
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac,
@@ -85,8 +87,9 @@ int main(int argc, char *argv[])
 
 	Util::LedService(true);
 
-	file = new File();
 	file->init();
+	sleep(2);
+	file->uploadFile(".", "smh.sqlite");
 
 	while (1)
 	{
