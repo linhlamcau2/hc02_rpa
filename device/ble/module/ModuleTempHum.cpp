@@ -1,6 +1,6 @@
 #include "ModuleTempHum.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
@@ -61,19 +61,26 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
 				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
-				uint16_t value1, value2;
+				uint16_t value1 = 0, value2 = 0;
 				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
 				string op = dataValue["OP"].asString();
-				if (this->idTemp == id)
-					rs = Util::CompareNumber(this->temp/10, value1, value2, op);
-				else if (this->idHum == id)
-					rs = Util::CompareNumber(this->hum/10, value1, value2, op);
-				return true;
+				if (listValue.size() > 0)
+				{
+					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+					{
+						value1 = listValue[0].asInt();
+						value2 = listValue[1].asInt();
+					}
+					else if (listValue.size() == 1 && listValue[0].isInt())
+					{
+						value1 = listValue[0].asInt();
+					}
+					if (this->idTemp == id)
+						rs = Util::CompareNumber(this->temp / 10, value1, value2, op);
+					else if (this->idHum == id)
+						rs = Util::CompareNumber(this->hum / 10, value1, value2, op);
+					return true;
+				}
 			}
 		}
 	}

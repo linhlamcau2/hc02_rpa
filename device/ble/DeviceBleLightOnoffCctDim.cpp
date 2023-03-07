@@ -1,5 +1,5 @@
 #include "DeviceBleLightOnoffCctDim.h"
-#include <Log.h>
+#include "Log.h"
 
 DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, device_id, addr, type, version)

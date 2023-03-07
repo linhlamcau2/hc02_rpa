@@ -1,7 +1,7 @@
 #include "RuleInputTimer.h"
 #include "Util.h"
 #include "TimerSchedule.h"
-#include <Log.h>
+#include "Log.h"
 
 RuleInputTimer::RuleInputTimer(Rule *rule, int timer, int repeat)
 {

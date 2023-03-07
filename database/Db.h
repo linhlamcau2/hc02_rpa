@@ -4,16 +4,16 @@
 #include <sqlite3.h>
 #include <vector>
 #include <mutex>
-#include <Device.h>
-#include <Group.h>
-#include <Gateway.h>
+#include "Device.h"
+#include "Group.h"
+#include "Gateway.h"
 #include "SceneBle.h"
-#include "room/Room.h"
+#include "Room.h"
 
 #ifdef ESP_PLATFORM
 #define DB_NAME "/spiffs/smh.sqlite"
-#elif defined(ANDROID)
-#define DB_NAME "smh.sqlite"
+#elif defined(__ANDROID__)
+#define DB_NAME "/etc/smh/smh.sqlite"
 #else
 #define DB_NAME "/smh.sqlite"
 #endif

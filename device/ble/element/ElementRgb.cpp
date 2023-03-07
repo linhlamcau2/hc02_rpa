@@ -1,6 +1,6 @@
 #include "ElementRgb.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
@@ -89,39 +89,46 @@ bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ElementRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->idR == id || this->idG == id || this->idB == id || this->idDimOn == id || this->idDimOff == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
-			{
-				uint16_t value1, value2;
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
-				string op = dataValue["OP"].asString();
-				if (this->idR == id)
-					rs = Util::CompareNumber(this->r, value1, value2, op);
-				else if (this->idG == id)
-					rs = Util::CompareNumber(this->g, value1, value2, op);
-				else if (this->idB == id)
-					rs = Util::CompareNumber(this->b, value1, value2, op);
-                else if (this->idDimOn == id)
-                    rs = Util::CompareNumber(this->dimOn, value1, value2, op);
-                else if (this->idDimOff == id)
-                    rs = Util::CompareNumber(this->dimOff, value1, value2, op);
-				return true;
-			}
-		}
-	}
-	return false;
+    LOGD("CheckData data: %s", dataValue.toString().c_str());
+    if (dataValue.isObject() &&
+        dataValue.isMember("ID") && dataValue["ID"].isInt())
+    {
+        int id = dataValue["ID"].asInt();
+        if (this->idR == id || this->idG == id || this->idB == id || this->idDimOn == id || this->idDimOff == id)
+        {
+            if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+                dataValue.isMember("OP") && dataValue["OP"].isString())
+            {
+                uint16_t value1 = 0, value2 = 0;
+                string op = dataValue["OP"].asString();
+                Json::Value listValue = dataValue["VALUE"];
+                if (listValue.size() > 0)
+                {
+                    if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+                    {
+                        value1 = listValue[0].asInt();
+                        value2 = listValue[1].asInt();
+                    }
+                    else if (listValue.size() == 1 && listValue[0].isInt())
+                    {
+                        value1 = listValue[0].asInt();
+                    }
+                    if (this->idR == id)
+                        rs = Util::CompareNumber(this->r, value1, value2, op);
+                    else if (this->idG == id)
+                        rs = Util::CompareNumber(this->g, value1, value2, op);
+                    else if (this->idB == id)
+                        rs = Util::CompareNumber(this->b, value1, value2, op);
+                    else if (this->idDimOn == id)
+                        rs = Util::CompareNumber(this->dimOn, value1, value2, op);
+                    else if (this->idDimOff == id)
+                        rs = Util::CompareNumber(this->dimOff, value1, value2, op);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 // TODO: can nhac di chuyen den Element.cpp
@@ -202,7 +209,7 @@ bool ElementRgb::Do(Json::Value &dataValue)
         if (isDimOn && isDimOff && isR && isB && isG)
         {
             bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
-        } 
-    }    
+        }
+    }
     return false;
 }

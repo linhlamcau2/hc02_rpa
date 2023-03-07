@@ -14,7 +14,7 @@
 #include "DeviceBle.h"
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
-#include "../room/Room.h"
+#include "Room.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -57,7 +57,7 @@ private:
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
-    int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
@@ -136,6 +136,13 @@ private:
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
+
+	/**
+	 * @brief Factory reset (call when hold reset button in 5s)
+	 *
+	 */
+	void ResetFactory();
+
 	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode
 	 *
@@ -174,6 +181,7 @@ public:
 	string getVersion();
 	string getName();
 	string getRefreshToken();
+	string getMac();
 
 	void setBleUnicast(uint16_t unicast);
 	void setBleNetkey(string netkey);

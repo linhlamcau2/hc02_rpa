@@ -1,7 +1,7 @@
 #include "TimerSchedule.h"
-#include <Log.h>
+#include "Util.h"
+#include "Log.h"
 #include <unistd.h>
-#include <Util.h>
 
 static void run(TimerSchedule *timerSchedule);
 

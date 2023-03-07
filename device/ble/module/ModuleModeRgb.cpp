@@ -1,6 +1,6 @@
 #include "ModuleModeRgb.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
@@ -68,16 +68,23 @@ bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
 			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t mode1, mode2;
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-			{
-				mode1 = listValue[0].asInt();
-				mode2 = listValue[1].asInt();
-			}
+			uint16_t mode1 = 0, mode2 = 0;
 			string op = dataValue["OP"].asString();
-			rs = Util::CompareNumber(this->mode, mode1, mode2, op);
-			return true;
+			Json::Value listValue = dataValue["VALUE"];
+			if (listValue.size() > 0)
+			{
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					mode1 = listValue[0].asInt();
+					mode2 = listValue[1].asInt();
+				}
+				else if (listValue.size() == 1 && listValue[0].isInt())
+				{
+					mode1 = listValue[0].asInt();
+				}
+				rs = Util::CompareNumber(this->mode, mode1, mode2, op);
+				return true;
+			}
 		}
 	}
 	return false;

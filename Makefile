@@ -7,19 +7,18 @@ CXX ?= g++
 OBJEXT ?= .o
 BUILD_PATH = build
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Ijson -Ilog -Imqtt -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota -Iroom -Ihttp
-COMPFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-deprecated -Wno-deprecated-declarations -Wno-unused-result -flto -fPIC
-COMPFLAGS += -DVERSION=$(VERSION)
-COMPFLAGS += -DCONFIG_USE_OLD_APP
-# COMPFLAGS += -DCONFIG_SAVE_ATTRIBUTE
-LINKFLAGS =  -Wall -std=c++17 -Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto
+CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ffunction-sections -fdata-sections
+CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
+LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-LINKEDLIBS = -lpthread -lmosquitto -lsqlite3 -luci -lcurl
-
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Iota
+DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
+# DEFINES += -DCONFIG_SAVE_ATTRIBUTE
+LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
-	COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
+	# COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
 
 	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)
@@ -38,10 +37,10 @@ DEVICESRC += $(wildcard device/ble/element/*.cpp)
 DEVICESRC += $(wildcard gateway/*.cpp)
 DEVICESRC += $(wildcard room/*.cpp)
 DEVICESRC += $(wildcard group/*.cpp)
-DEVICESRC += $(wildcard http/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)
 DEVICESRC += $(wildcard mqtt/*.cpp)
+DEVICESRC += $(wildcard http/*.cpp)
 DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard sceneBle/*.cpp)
@@ -61,15 +60,15 @@ all: $(APP)
 .PHONY: all $(APP) clean
 
 $(APP): $(BUILTOBJ)
-	$(CXX) $(LINKFLAGS) -o $@ $(BUILTOBJ) $(LINKEDLIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(BUILTOBJ) $(LINKEDLIBS)
 	
 $(BUILD_PATH)/%.o: %.cpp
-	mkdir -p $(@D)
-	$(CXX) $(COMPFLAGS) $(INCLUDES) -c $< -o $@
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
 
 $(BUILD_PATH)/%.o: %.c
-	mkdir -p $(@D)
-	$(CC) $(COMPFLAGS) $(INCLUDES) -c $< -o $@
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
 	
 install: $(APP)
 	install -d $(DESTDIR)$(PREFIX)/bin/

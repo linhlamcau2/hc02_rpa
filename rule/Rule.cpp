@@ -1,8 +1,8 @@
 #include "Rule.h"
 #include <functional>
 #include "TimerSchedule.h"
-#include <Util.h>
-#include <Log.h>
+#include "Util.h"
+#include "Log.h"
 
 Rule::Rule(string id, string type, unsigned char repeater)
 {

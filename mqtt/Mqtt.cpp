@@ -1,9 +1,10 @@
 #include "Mqtt.h"
+#include "mosquitto.h"
 #include <iostream>
 #include <unistd.h>
 #include <thread>
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 
 #define TAG "Mqtt"
 
@@ -74,12 +75,12 @@ int Mqtt::Connect()
 		result = connect_async(host.c_str(), port, keepalive);
 		if (result != MOSQ_ERR_SUCCESS)
 		{
-			LOGW("connect_async failed code %d, err %s", result, strerror(result));
+			LOGW("connect_async failed code %d, err %s", result, mosqpp::strerror(result));
 		}
 	}
 	else
 	{
-		LOGE("loop_start failed code %d, err %s", result, strerror(result));
+		LOGE("loop_start failed code %d, err %s", result, mosqpp::strerror(result));
 	}
 	return result;
 }
@@ -275,9 +276,8 @@ void Mqtt::on_connect(int rc)
 
 void Mqtt::on_disconnect(int rc)
 {
-	LOGW("Disconnected with code %d", rc);
+	LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
 	connected = false;
-	LOGI("Connected with code %d", rc);
 	makeThreadConnectedCallback(false);
 }
 
@@ -395,7 +395,8 @@ void Mqtt::makeThreadOnMessageCallback(string topic, string payload)
 
 void Mqtt::makeThreadConnectedCallback(bool isConnected, bool isReconnect)
 {
-	try
+	//OnConnect(isConnected, isReconnect);
+	/*try
 	{
 		auto onConnectedFunc = bind(&Mqtt::OnConnect, this, placeholders::_1, placeholders::_2);
 		thread myThread1(onConnectedFunc, isConnected, isReconnect);
@@ -406,7 +407,7 @@ void Mqtt::makeThreadConnectedCallback(bool isConnected, bool isReconnect)
 	catch (...)
 	{
 		LOGE("onConnectedCallbackFunc error");
-	}
+	}*/
 }
 
 void Mqtt::addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)

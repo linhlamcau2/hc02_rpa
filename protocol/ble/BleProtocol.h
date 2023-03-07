@@ -3,7 +3,7 @@
 #include <string>
 #include <stdint.h>
 #include <vector>
-#include <Uart.h>
+#include "Uart.h"
 #include <atomic>
 #include <functional>
 
@@ -110,6 +110,15 @@ private:
 		uint8_t dc[2];
 	} scan_device_message_t;
 
+	typedef struct __attribute__((packed))
+	{
+		uint8_t netKey[16];
+		uint16_t key_index;
+		uint8_t flag;
+		uint8_t iv_index[4];
+		uint8_t unicast_address[2];
+	} pro_net_info_t;
+
 	typedef function<void(scan_device_message_t *scan_device_message)> AddDeviceFunc;
 	AddDeviceFunc addDeviceFunc;
 	scan_device_message_t scanDeviceMessage;
@@ -118,6 +127,7 @@ private:
 	mutex mtxWaitSendUart;
 
 	// TODO: Add init state
+	pro_net_info_t *pro_net_info;
 	uint8_t netKey[16];
 	uint8_t appKey[16];
 	uint8_t gwKey[16];
@@ -203,7 +213,7 @@ public:
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
 
-	//screen touch
+	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);
 	int EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon);
 	int DelSceneScreenTouch(uint16_t devAddr, uint16_t scene);
@@ -213,6 +223,16 @@ public:
 	int SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day);
 	int SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second);
 	int SetGroup(uint16_t devAddr, uint16_t group);
+
+	// Backup
+	int GetInfogw();
+	int GetInfoMesh();
+	int UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev);
+	int UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev);
+	int UpdateNetKey(uint16_t gwAddr, uint8_t *netKey, uint32_t indexId);
+	int UpdateDevKey(uint16_t gwAddr, uint8_t *devKey);
+	int UpdateAppKey(uint8_t *appKey);
+	int UpdateMaxAddr(uint16_t addr);
 };
 
 extern BleProtocol *bleProtocol;

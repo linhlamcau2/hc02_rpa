@@ -1,5 +1,5 @@
 #include "Gateway.h"
-#include <Log.h>
+#include "Log.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <algorithm>
@@ -82,10 +82,6 @@ void Gateway::init()
 	database->RoomRead();
 	database->DataRoomRead();
 	database->DeviceInRoomRead();
-	for (auto it = roomList.begin(); it != roomList.end(); it++)
-	{
-		cout << "***" << it->first.c_str() << endl;
-	}
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -216,9 +212,14 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 	LOGI("OnLocalConnect: %d", isConnected);
 }
 
-int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
+void Gateway::ResetFactory()
 {
-	LOGI("resetFactory");
+	LOGI("ResetFactory");
+	deviceList.clear();
+	groupList.clear();
+	ruleList.clear();
+	sceneBleList.clear();
+	scanDeviceList.clear();
 
 	database->DeviceDelAll();
 	database->GatewayDelAll();
@@ -229,12 +230,6 @@ int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	database->DeviceInGroupDelAll();
 	bleProtocol->ResetDelAll();
 	bleProtocol->ResetFactory();
-
-	respValue["CMD"] = "RESET_HC";
-	Json::Value data;
-	data["STATUS"] = "SUCCESS";
-	respValue["DATA"] = data;
-	return 0;
 }
 
 int Gateway::CheckOnlineThread()
@@ -383,7 +378,7 @@ int Gateway::UdpBroadcastThread()
 	hcBroadcastValue["DATA"] = dataValue;
 	isUdpBroadcasting = true;
 	bool ledInternet = Util::GetStatusLedInternet();
-	for (int i = 0; i < 60; i++)
+	for (int i = 0; i < 120; i++)
 	{
 		if (!isUdpBroadcasting)
 			break;
@@ -700,7 +695,7 @@ int Gateway::OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
-        if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
+		if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
 		{
 			string dormitoryId = data["DORMITORY_ID"].asString();
 			string refreshToken = data["REFRESH_TOKEN"].asString();
@@ -722,8 +717,68 @@ int Gateway::OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRPCHcBackup");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
-		HTTPRequest *httpRequest = new HTTPRequest("POST",string (BASE_URL_DEV) + string (RENEW_TOKEN),"");
-		string rs = httpRequest->UploadFile(gateway->refresh_token, gateway->dormitoryId, "/smh.sqlite");
+		Json::Value data = reqValue["DATA"];
+		string idHc;
+		if (data.isMember("HC_ID") && data["HC_ID"].isString())
+		{
+			idHc = data["HC_ID"].asString();
+		}
+
+		respValue["CMD"] = "HC_BACKUP_DATA";
+		Json::Value dataJsonRsp;
+		dataJsonRsp["HC_ID"] = idHc;
+		uint8_t status = 0;
+
+		HTTPRequest *httpRequest = new HTTPRequest();
+		httpRequest->setUrl(string(BASE_URL_DEV) + string(RENEW_TOKEN));
+		httpRequest->setMethod("POST");
+		if (gateway->getDormitory() == "" || gateway->getRefreshToken() == "")
+		{
+			LOGW("Gateway does not have info dormitory,refresh token");
+		}
+		string token = httpRequest->GetToken(gateway->getRefreshToken(), gateway->getDormitory());
+		if (token != "")
+		{
+			httpRequest->setToken(token);
+
+			httpRequest->setUrl(string(BASE_URL_DEV) + string(HC_BACKUP_FILE_URL));
+			httpRequest->setMethod("POST");
+			string resultUpload = httpRequest->UploadFile(gateway->getRefreshToken(), gateway->getDormitory(), DB_NAME);
+			LOGD("%s",resultUpload.c_str());
+			if (resultUpload != "")
+			{
+				Json::Value payloadJson;
+				Json::Reader r;
+				r.parse(resultUpload, payloadJson);
+				if (payloadJson.isObject() && payloadJson.isMember("url"))
+				{
+					string urlUploadFile = payloadJson["url"].asString().c_str();
+					LOGD("url %s", urlUploadFile.c_str());
+					if (httpRequest->CreateBackup(gateway->getRefreshToken(), gateway->getDormitory(), gateway->getMac(), gateway->getVersion(), "", urlUploadFile, idHc))
+					{
+						status = 1;
+					}
+				}
+				else
+				{
+					LOGW("url does not available");
+					status = 0;
+				}
+			}
+			else
+			{
+				LOGW("upload file failed");
+				status = 0;
+			}
+		}
+		else
+		{
+			LOGW("Get token failed");
+			status = 0;
+		}
+		dataJsonRsp["STATUS"] = status;
+		respValue["DATA"] = dataJsonRsp;
+		return 0;
 	}
 	else
 	{
@@ -762,7 +817,18 @@ int Gateway::OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue)
 	return 0;
 }
 
-// int Gateway::OnRPCBleAddDevice(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGW("Reset ble");
+	ResetFactory();
+	respValue["CMD"] = "RESET_HC";
+	Json::Value data;
+	data["STATUS"] = "SUCCESS";
+	respValue["DATA"] = data;
+	return 0;
+}
+
+// int Gateway:: (Json::Value &reqValue, Json::Value &respValue)
 // {
 // 	if (reqValue.isMember("params") && reqValue["params"].isObject())
 // 	{
@@ -1371,7 +1437,7 @@ int Gateway::OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 							else
 							{
-								LOGW("Group %s does not exsit");
+								LOGW("Group %s does not exsit", idGroup.c_str());
 							}
 
 							int modeRGB = 0;
@@ -3457,8 +3523,8 @@ int Gateway::OnRPCUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		{
 			Json::Value dataValue = datasValue[0];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
-					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
-					dataValue.isMember("URL") && dataValue["URL"].isString())
+				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+				dataValue.isMember("URL") && dataValue["URL"].isString())
 			{
 				string name = dataValue["NAME"].asString();
 				string sum = dataValue["CHECK_SUM"].asString();
@@ -3819,11 +3885,21 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 						string devId = devInput["DEVICE_ID"].asString();
 						Json::Value devAttribute = devInput["DEVICE_ATTRIBUTE"];
 						Json::Value datasDevInput;
-						if (devAttribute.isMember("ID") && devAttribute["ID"].isInt() && devAttribute.isMember("VALUE") && devAttribute["VALUE"].isArray())
+						if (devAttribute.isMember("ID") && devAttribute["ID"].isInt() && devAttribute.isMember("VALUE"))
 						{
 							int id = devAttribute["ID"].asInt();
-							Json::Value values = devAttribute["VALUE"];
-							string op = "<>";
+							string op = "";
+							Json::Value values = Json::arrayValue;
+							if (devAttribute["VALUE"].isArray())
+							{
+								values = devAttribute["VALUE"];
+								op = "<>";
+							}
+							else if (devAttribute["VALUE"].isInt())
+							{
+								values.append(devAttribute["VALUE"].asInt());
+								op = "=";
+							}
 							datasDevInput["ID"] = id;
 							datasDevInput["VALUE"] = values;
 							datasDevInput["OP"] = op;
@@ -4028,6 +4104,11 @@ string Gateway::getName()
 string Gateway::getRefreshToken()
 {
 	return refresh_token;
+}
+
+string Gateway::getMac()
+{
+	return mac;
 }
 
 void Gateway::setBleUnicast(uint16_t unicast)

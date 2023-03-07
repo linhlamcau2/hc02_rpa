@@ -1,8 +1,8 @@
 #include "CloudProtocol.h"
-#include <string.h>
-#include <Log.h>
+#include "Log.h"
 #include "Util.h"
 #include "Wifi.h"
+#include <string.h>
 
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
