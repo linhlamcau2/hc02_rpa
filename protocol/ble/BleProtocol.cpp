@@ -2637,6 +2637,7 @@ int BleProtocol::GetInfogw()
 	uint8_t d[2] = {0x16, 0x00};
 	return SendMessage(SYSTEM_REQ, d, 2, 0, 0, 0, 1000);
 }
+
 int BleProtocol::GetInfoMesh()
 {
 	LOGD("GetInfoMesh");
@@ -2645,6 +2646,7 @@ int BleProtocol::GetInfoMesh()
 	int lenRsp;
 	return SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
 }
+
 int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev)
 {
 	LOGD("UpdateDeviceKeyDev");
@@ -2670,6 +2672,7 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev)
 	}
 	return 0;
 }
+
 int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev)
 {
 	LOGD("UpdateDeviceKeyGateway");
@@ -2695,6 +2698,7 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev)
 	}
 	return 0;
 }
+
 int BleProtocol::UpdateNetKey(uint16_t gwAddr, uint8_t *netKey, uint32_t indexId)
 {
 	LOGD("UpdateNetKey");
@@ -2720,6 +2724,7 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, uint8_t *netKey, uint32_t indexId
 	database->GatewayUpdateUnicast(gateway, adrGw);
 	return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, 26, HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 }
+
 int BleProtocol::UpdateDevKey(uint16_t gwAddr, uint8_t *devKey)
 {
 	LOGD("SetGwKey");
@@ -2742,6 +2747,7 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, uint8_t *devKey)
 	}
 	return 0;
 }
+
 int BleProtocol::UpdateAppKey(uint8_t *appKey)
 {
 	LOGD("UpdateAppKey");
@@ -2760,8 +2766,10 @@ int BleProtocol::UpdateAppKey(uint8_t *appKey)
 	{
 		binding_all_message.appKey[i] = appKey[i];
 	}
-	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, 20, HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
+	SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, 20, HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
+	return 0;
 }
+
 int BleProtocol::UpdateMaxAddr(uint16_t addr)
 {
 	LOGD("UpdateMaxAddr");
@@ -2778,5 +2786,6 @@ int BleProtocol::UpdateMaxAddr(uint16_t addr)
 	provision_message.data = pro_net_info;
 	provision_message.data->unicast_address[0] = addr & 0xFF;
 	provision_message.data->unicast_address[1] = (addr >> 8) & 0xFF;
-	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, 26, HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
+	SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, 26, HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
+	return 0;
 }

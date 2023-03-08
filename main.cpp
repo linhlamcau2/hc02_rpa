@@ -7,7 +7,7 @@
 #include <vector>
 #include <algorithm>
 
-#include <Log.h>
+#include "Log.h"
 #include <json.h>
 #include <signal.h>
 #include "Config.h"
@@ -18,6 +18,7 @@
 #include "Wifi.h"
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
+#include "FileTransfer.h"
 
 #include "BleProtocol.h"
 #define BLE_UART_PORT "/dev/ttyS1"
@@ -54,6 +55,8 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, signal_handler);
 	signal(SIGUSR2, signal_handler);
 
+	srand(time(0));
+
 	mosqpp::lib_init();
 
 	config = new Config();
@@ -63,22 +66,39 @@ int main(int argc, char *argv[])
 	timerSchedule->init();
 
 	database = new Db();
+	database->init();
 
-#ifdef CONFIG_ENABLE_ZIGBEE
-	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
-	zigbeeProtocol->init();
-#endif
+	fileTransfer = new FileTransfer();
+
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), 10);
+	gateway = new Gateway(mac,
+												config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
+												config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
+#ifdef CONFIG_ENABLE_ZIGBEE
+	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
+	zigbeeProtocol->init();
+#endif
+
 	Device::InitDeviceModelList();
 
 	Util::LedService(true);
+
+	fileTransfer->init();
+	sleep(2);
+
+	fileTransfer->uploadFile(".", "smh.sqlite");
+	fileTransfer->uploadFile(".", "readme.txt");
+
+	// thread sendFile1(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot1.rar"));
+	// sendFile1.detach();
+	// thread sendFile2(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot2.rar"));
+	// sendFile2.detach();
 
 	while (1)
 	{

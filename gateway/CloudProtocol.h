@@ -22,6 +22,10 @@ public:
 	virtual ~CloudProtocol();
 
 	void init();
+	void cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
+	void cloudAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);
+	void cloudAddActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic);
+	void cloudAddActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic);
 
 	int CloudConnect();
 	void OnConnect(bool isConnected, bool isReconnect);
@@ -32,6 +36,7 @@ public:
 	int OnlineHC(string deviceName);
 
 	int CloudPublish(string topic, string payload);
+	int CloudPublish(string topic, char *payload, int payloadLen);
 
 	int PublishToDeviceTelemetry(string payload);
 	int PublishToDeviceAttributes(string payload);

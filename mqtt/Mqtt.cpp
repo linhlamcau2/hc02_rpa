@@ -1,10 +1,11 @@
 #include "Mqtt.h"
 #include "mosquitto.h"
 #include <iostream>
+#include <cstring>
 #include <unistd.h>
 #include <thread>
 #include "Log.h"
-#include "Util.h"
+#include <Util.h>
 
 #define TAG "Mqtt"
 
@@ -22,8 +23,6 @@ Mqtt::Mqtt(string host, int port, string client_id, string username, string pass
 	this->willset_payload = willset_payload;
 	connected = false;
 	reconnected = false;
-	onMessageCallbackFunc = bind(&Mqtt::OnMessageTemp, this, placeholders::_1, placeholders::_2);
-	onConnectedCallbackFunc = bind(&Mqtt::OnConnectedTemp, this, placeholders::_1, placeholders::_2);
 }
 
 Mqtt::~Mqtt()
@@ -243,6 +242,11 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 	return MQTT_ERR_TIMEOUT;
 }
 
+int Mqtt::Publish(string topic, char *payload, int payloadLen)
+{
+	return publish(NULL, topic.c_str(), payloadLen, payload);
+}
+
 bool Mqtt::isConnected()
 {
 	return connected;
@@ -251,26 +255,19 @@ bool Mqtt::isConnected()
 void Mqtt::on_connect(int rc)
 {
 	connected = true;
-	if (reconnected)
-	{
-		LOGI("Reconnected with code %d", rc);
-		makeThreadConnectedCallback(true, true);
-	}
-	else
-	{
-		reconnected = true;
-		LOGI("Connected with code %d", rc);
-		makeThreadConnectedCallback(true, false);
-	}
+	reconnected = true;
 	try
 	{
+		auto onMessageFunc = bind(&Mqtt::OnConnect, this, placeholders::_1, placeholders::_2);
+		thread myThread(onMessageFunc, true, reconnected);
+		myThread.detach();
 		auto subscribeListFunc = bind(&Mqtt::SubscribeList, this);
 		thread subscribeListThread(subscribeListFunc);
 		subscribeListThread.detach();
 	}
 	catch (...)
 	{
-		LOGE("SubscribeList error");
+		LOGE("onMessageCallbackFunc error");
 	}
 }
 
@@ -278,7 +275,16 @@ void Mqtt::on_disconnect(int rc)
 {
 	LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
 	connected = false;
-	makeThreadConnectedCallback(false);
+	try
+	{
+		auto onMessageFunc = bind(&Mqtt::OnConnect, this, placeholders::_1, placeholders::_2);
+		thread myThread(onMessageFunc, false, reconnected);
+		myThread.detach();
+	}
+	catch (...)
+	{
+		LOGE("onMessageCallbackFunc error");
+	}
 }
 
 void Mqtt::on_publish(int mid)
@@ -319,73 +325,15 @@ void Mqtt::on_unsubscribe(int mid)
 
 void Mqtt::on_message(const struct mosquitto_message *message)
 {
-	string topic = string(message->topic);
-	string payload = string((char *)message->payload);
-	// LOGD("on_message topic: %s, payload: %s", topic.c_str(), payload.c_str());
-	makeThreadOnMessageCallback(topic, payload);
-
-	// ActionCallback *actionCallback;
-	// int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
-	// if (getCallback == 1)
-	// {
-	// 	if (actionCallback->getType() == 1)
-	// 	{
-	// 		thread myThread2(actionCallback->actionCallbackFuncType1, topic, payload);
-	// 		myThread2.detach();
-	// 		// actionCallback->actionCallbackFuncType1(topic, payload);
-	// 	}
-	// 	else if (actionCallback->getType() == 2)
-	// 	{
-	// 		thread myThread2(actionCallback->actionCallbackFuncType2, topic, payload);
-	// 		myThread2.detach();
-	// 		// actionCallback->actionCallbackFuncType2(topic, payload);
-	// 	}
-	// }
-}
-
-void Mqtt::OnMessageTemp(string topic, string payload)
-{
-	// LOGD("OnMessageTemp topic: %s, payload: %s", topic.c_str(), payload.c_str());
-	ActionCallback *actionCallback;
-	int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
-	if (getCallback == 1)
-	{
-		if (actionCallback->getType() == 1)
-		{
-			actionCallback->actionCallbackFuncType1(topic, payload);
-		}
-		else if (actionCallback->getType() == 2)
-		{
-			actionCallback->actionCallbackFuncType2(topic, payload);
-		}
-	}
-}
-
-// void Mqtt::SetOnMessageCallback(OnMessageCallbackFunc onMessageCallbackFunc)
-// {
-// 	this->onMessageCallbackFunc = onMessageCallbackFunc;
-// }
-
-void Mqtt::OnConnectedTemp(bool isConnected, bool isReconnect)
-{
-	LOGD("OnConnected not set");
-}
-
-void Mqtt::SetOnConnectedCallback(OnConnectedCallbackFunc onConnectedCallbackFunc)
-{
-	this->onConnectedCallbackFunc = onConnectedCallbackFunc;
-}
-
-void Mqtt::makeThreadOnMessageCallback(string topic, string payload)
-{
-	LOGD("makeThreadOnMessageCallback topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	try
 	{
-		auto onMessageFunc = bind(&Mqtt::OnMessage, this, placeholders::_1, placeholders::_2);
-		thread myThread1(onMessageFunc, topic, payload);
-		myThread1.detach();
-		thread myThread2(onMessageCallbackFunc, topic, payload);
-		myThread2.detach();
+		string topic = string(message->topic);
+		// TODO: check free payload
+		char *payload = (char *)malloc(message->payloadlen);
+		memcpy(payload, message->payload, message->payloadlen);
+		auto onMessageFunc = bind(&Mqtt::OnMessage, this, placeholders::_1, placeholders::_2, placeholders::_3);
+		thread myThread(onMessageFunc, topic, payload, message->payloadlen);
+		myThread.detach();
 	}
 	catch (...)
 	{
@@ -393,21 +341,33 @@ void Mqtt::makeThreadOnMessageCallback(string topic, string payload)
 	}
 }
 
-void Mqtt::makeThreadConnectedCallback(bool isConnected, bool isReconnect)
+void Mqtt::OnMessage(string topic, char *payload, int payloadlen)
 {
-	//OnConnect(isConnected, isReconnect);
-	/*try
+	// LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload.c_str());
+	ActionCallback *actionCallback;
+	int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
+	if (getCallback == 1)
 	{
-		auto onConnectedFunc = bind(&Mqtt::OnConnect, this, placeholders::_1, placeholders::_2);
-		thread myThread1(onConnectedFunc, isConnected, isReconnect);
-		myThread1.detach();
-		thread myThread2(onConnectedCallbackFunc, isConnected, isReconnect);
-		myThread2.detach();
+		if (actionCallback->getType() == 1)
+		{
+			string payloadStr = string(payload, payloadlen);
+			actionCallback->actionCallbackFuncType1(topic, payloadStr);
+		}
+		else if (actionCallback->getType() == 2)
+		{
+			actionCallback->actionCallbackFuncType2(topic, payload, payloadlen);
+		}
+		else if (actionCallback->getType() == 3)
+		{
+			string payloadStr = string(payload, payloadlen);
+			actionCallback->actionCallbackFuncType3(topic, payloadStr);
+		}
+		else if (actionCallback->getType() == 4)
+		{
+			actionCallback->actionCallbackFuncType4(topic, payload, payloadlen);
+		}
 	}
-	catch (...)
-	{
-		LOGE("onConnectedCallbackFunc error");
-	}*/
+	free(payload);
 }
 
 void Mqtt::addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -422,6 +382,24 @@ void Mqtt::addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, st
 void Mqtt::addActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic)
 {
 	ActionCallback actionCallback(actionCallbackFuncType2, topic);
+	actionCallbacks.push_back(actionCallback);
+	if (connected)
+		Subscribe(topic);
+	topicList.push_back(topic);
+}
+
+void Mqtt::addActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic)
+{
+	ActionCallback actionCallback(actionCallbackFuncType3, topic);
+	actionCallbacks.push_back(actionCallback);
+	if (connected)
+		Subscribe(topic);
+	topicList.push_back(topic);
+}
+
+void Mqtt::addActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic)
+{
+	ActionCallback actionCallback(actionCallbackFuncType4, topic);
 	actionCallbacks.push_back(actionCallback);
 	if (connected)
 		Subscribe(topic);

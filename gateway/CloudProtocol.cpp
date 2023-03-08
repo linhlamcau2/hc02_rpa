@@ -28,6 +28,26 @@ void CloudProtocol::init()
 	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
 }
 
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
+{
+	addActionCallback(actionCallbackFuncType1, topic);
+}
+
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic)
+{
+	addActionCallback(actionCallbackFuncType2, topic);
+}
+
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic)
+{
+	addActionCallback(actionCallbackFuncType3, topic);
+}
+
+void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic)
+{
+	addActionCallback(actionCallbackFuncType4, topic);
+}
+
 int CloudProtocol::CloudConnect()
 {
 	return Connect();
@@ -103,6 +123,12 @@ int CloudProtocol::OnlineHC(string deviceName)
 int CloudProtocol::CloudPublish(string topic, string payload)
 {
 	return Publish(topic, payload);
+}
+
+int CloudProtocol::CloudPublish(string topic, char *payload, int payloadLen)
+{
+	LOGD("CloudPublish binary topic: %s", topic.c_str());
+	return Publish(topic, payload, payloadLen);
 }
 
 int CloudProtocol::PublishToDeviceTelemetry(string payload)
