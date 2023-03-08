@@ -1,5 +1,5 @@
 #include "DeviceZigbeeTelinkOnoff.h"
-#include <Log.h>
+#include "Log.h"
 #include "ZigbeeProtocol.h"
 
 DeviceZigbeeTelinkOnoff::DeviceZigbeeTelinkOnoff(string id, string name, string mac, uint32_t addr)

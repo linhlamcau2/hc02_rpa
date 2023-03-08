@@ -1,8 +1,8 @@
 #include "Device.h"
 #include "Gateway.h"
+#include "Log.h"
 #include <thread>
 #include <functional>
-#include <Log.h>
 #include <unistd.h>
 
 Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)

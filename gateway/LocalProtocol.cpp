@@ -1,6 +1,6 @@
 #include "LocalProtocol.h"
 #include <string.h>
-#include <Log.h>
+#include "Log.h"
 #include "Util.h"
 
 #define HC_CONTROL_TOPIC "HC.CONTROL"

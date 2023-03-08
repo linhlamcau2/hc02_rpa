@@ -4,7 +4,7 @@
 #include <vector>
 #include <json.h>
 #include <byteswap.h>
-#include <RuleInputDevice.h>
+#include "RuleInputDevice.h"
 
 using namespace std;
 

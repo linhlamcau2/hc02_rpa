@@ -181,6 +181,7 @@ public:
 	string getVersion();
 	string getName();
 	string getRefreshToken();
+	string getMac();
 
 	void setBleUnicast(uint16_t unicast);
 	void setBleNetkey(string netkey);

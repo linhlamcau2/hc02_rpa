@@ -1,6 +1,6 @@
 #include "ModulePmSensor.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
@@ -68,22 +68,29 @@ bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
 					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
-				// TODO: bug
 				uint16_t value1 = 0, value2 = 0;
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
 				string op = dataValue["OP"].asString();
-				if (this->idPm25 == id)
-					rs = Util::CompareNumber(this->pm25, value1, value2, op);
-				else if (this->idPm10 == id)
-					rs = Util::CompareNumber(this->pm10, value1, value2, op);
-				else if (this->idPm1_0 == id)
-					rs = Util::CompareNumber(this->pm1_0, value1, value2, op);
-				return true;
+				Json::Value listValue = dataValue["VALUE"];
+				if (listValue.size() > 0)
+				{
+					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+					{
+						value1 = listValue[0].asInt();
+						value2 = listValue[1].asInt();
+					}
+					else if (listValue.size() == 1 && listValue[0].isInt())
+					{
+						value1 = listValue[0].asInt();
+					}
+
+					if (this->idPm25 == id)
+						rs = Util::CompareNumber(this->pm25, value1, value2, op);
+					else if (this->idPm10 == id)
+						rs = Util::CompareNumber(this->pm10, value1, value2, op);
+					else if (this->idPm1_0 == id)
+						rs = Util::CompareNumber(this->pm1_0, value1, value2, op);
+					return true;
+				}
 			}
 		}
 	}

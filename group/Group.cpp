@@ -1,6 +1,6 @@
 #include "Group.h"
 #include <thread>
-#include <Log.h>
+#include "Log.h"
 #include "BleProtocol.h"
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
