@@ -253,6 +253,11 @@ int Gateway::CheckOnlineThread()
 	datasValue.append(dataValue);
 	onlineValue["CMD"] = "DEVICE";
 	onlineValue["DATA"] = datasValue;
+	
+	while (!bleProtocol)
+	{
+		sleep(1);
+	}
 
 	while (1)
 	{
@@ -746,7 +751,7 @@ int Gateway::OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue)
 			httpRequest->setUrl(string(BASE_URL_DEV) + string(HC_BACKUP_FILE_URL));
 			httpRequest->setMethod("POST");
 			string resultUpload = httpRequest->UploadFile(gateway->getRefreshToken(), gateway->getDormitory(), DB_NAME);
-			LOGD("%s",resultUpload.c_str());
+			LOGD("%s", resultUpload.c_str());
 			if (resultUpload != "")
 			{
 				Json::Value payloadJson;
@@ -3527,8 +3532,8 @@ int Gateway::OnRPCUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		{
 			Json::Value dataValue = datasValue[0];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
-				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
-				dataValue.isMember("URL") && dataValue["URL"].isString())
+					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+					dataValue.isMember("URL") && dataValue["URL"].isString())
 			{
 				string name = dataValue["NAME"].asString();
 				string sum = dataValue["CHECK_SUM"].asString();

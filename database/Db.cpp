@@ -158,5 +158,8 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 		sqlite3_close(db);
 		pthread_mutex_unlock(&mutex);
 	}
+#ifdef ESP_PLATFORM
+	usleep(1000);
+#endif
 	return rc;
 }

@@ -43,13 +43,17 @@ void Timer::run()
 TimerSchedule::TimerSchedule()
 {
 	index = 0;
+	runThread = NULL;
 }
 
 void TimerSchedule::init()
 {
 	LOGI("Start Timer init");
-	runThread = new thread(run, this);
-	runThread->detach();
+	if (!runThread)
+	{
+		runThread = new thread(run, this);
+		runThread->detach();
+	}
 }
 
 static void run(TimerSchedule *timerSchedule)
