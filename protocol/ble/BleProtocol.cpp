@@ -262,11 +262,9 @@ int BleProtocol::GetAppKey()
 		appkeyStr.erase(appkeyStr.begin() + 20, appkeyStr.begin() + 21);
 		char *ak = new char[appkeyStr.length() + 1];
 		strcpy(ak, appkeyStr.c_str());
-		uint8_t temp[17] = {0};
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf((char *)ak + i * 2, "%2x", (unsigned int *)&temp[i]);
-			appKey[i] = temp[i];
+			sscanf((char *)ak + i * 2, "%2x", (uint32_t *)&appkeyStr[i]);
 		}
 		delete ak;
 	}

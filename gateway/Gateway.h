@@ -20,6 +20,13 @@
 #include "DeviceZigbee.h"
 #endif
 
+#ifndef VERSION
+#define VERSION 0.0.1
+#endif
+
+#define STR_(x) #x
+#define STR(x) STR_(x)
+
 using namespace std;
 
 class Gateway : public CloudProtocol, public LocalProtocol, public Udp
@@ -52,11 +59,15 @@ private:
 
 	int GatewayConnectToCloudNotice();
 
+	// Udp message handle
+	void initUdpMessage();
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 
+	// Mqtt message handle
+	void initMqttMessage();
 	int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
@@ -108,7 +119,7 @@ private:
 	int OnRPCSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 
-	//HCL
+	// HCL
 	int OnRPCCreateHCL(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCDeleteHCL(Json::Value &reqValue, Json::Value &respValue);
 	int OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue);
