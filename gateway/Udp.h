@@ -11,8 +11,8 @@ using namespace std;
 class Udp
 {
 private:
-	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRPCCallbackFunc;
-	map<string, OnRPCCallbackFunc> onRPCCallbackFuncList;
+	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
+	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
 
 public:
 	int fd;
@@ -25,7 +25,7 @@ public:
 	void init();
 	void stop();
 
-	int UdpCmdCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc);
+	int UdpCmdCallbackRegister(string method, OnRpcCallbackFunc onRpcCallbackFunc);
 	void UdpOnMessage(string message, struct sockaddr_in *si_other, int slen);
 	int send(string message, struct sockaddr_in *si_other, int slen);
 };

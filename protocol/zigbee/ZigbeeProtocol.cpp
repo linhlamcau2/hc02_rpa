@@ -5,7 +5,7 @@
 #include <thread>
 #include <functional>
 #include <byteswap.h>
-#include <Log.h>
+#include "Log.h"
 #include <Util.h>
 #include <string.h>
 #include <algorithm>

@@ -12,23 +12,27 @@ class DeviceInSceneBle
 {
 public:
 	Device *device;
-    Json::Value data;
+	Json::Value data;
 	DeviceInSceneBle(Device *device, Json::Value data);
 };
 
 class SceneBle
 {
-    private:
-        int id;
-        string name;
-        string sceneBleUUId;
-    public:
-        vector<DeviceInSceneBle *> deviceList;
-        SceneBle(string sceneBleUUId, int id, string name);
-        int GetId();
-        string GetUUId();
-        int GetPositionDevice(Device *device);
-        bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
-        bool DelDevice(Device *device);
-        void Do(int id);
+private:
+	int id;
+	string name;
+	string sceneBleUUId;
+
+public:
+	vector<DeviceInSceneBle *> deviceList;
+	SceneBle(string sceneBleUUId, int id, string name);
+	int GetId();
+	string GetUUId();
+	void SetUuid(string uuid);
+	string GetName();
+	void SetName(string name);
+	int GetPositionDevice(Device *device);
+	bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
+	bool DelDevice(Device *device);
+	void Do(int id);
 };

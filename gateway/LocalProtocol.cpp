@@ -1,10 +1,12 @@
 #include "LocalProtocol.h"
 #include <string.h>
-#include <Log.h>
+#include "Log.h"
 #include "Util.h"
 
 #define HC_CONTROL_TOPIC "HC.CONTROL"
 #define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
+#define HC_CONTROL_TOPIC_V2 "HC.CONTROL.V2"
+#define HC_RESPONSE_TOPIC_V2 "HC.CONTROL.RESPONSE.V2"
 
 #ifdef ESP_PLATFORM
 LocalProtocol::LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : MqttBroker()
@@ -26,6 +28,7 @@ void LocalProtocol::init()
 	Mqtt::init();
 #endif
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
+	addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC_V2);
 }
 
 int LocalProtocol::LocalConnect()
@@ -47,28 +50,115 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Util::LedServiceLock();
 	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
-		string method = payloadJson["CMD"].asString();
-		if (onLocalCallbackFuncList.find(method) != onLocalCallbackFuncList.end())
+		string cmd = payloadJson["CMD"].asString();
+		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
 		{
-			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[method];
+			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
 			int rs = onLocalCallbackFunc(payloadJson, respValue);
 			if (rs == 0)
 			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 			}
 			else if (rs == 1)
 			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+			}
+			else if (rs == -10)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				Publish(HC_RESPONSE_TOPIC, respValue.toString());
+				exit(1);
+			}
+			else if (rs == 2)
+			{
+				if (listMsgPush.size() > 0)
+				{
+					for (uint32_t i = 0; i < listMsgPush.size(); i++)
+					{
+						Publish(HC_RESPONSE_TOPIC, listMsgPush[i]);
+					}
+					listMsgPush.clear();
+				}
+				else
+				{
+					LOGW("List msg push empty");
+				}
 			}
 			else
 			{
-				LOGW("Call %s ERR rs: %d", method.c_str(), rs);
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
 		}
 		else
 		{
-			LOGW("Method %s not registed", method.c_str());
+			LOGW("Method %s not registed", cmd.c_str());
+			LOGW("OnLocalMessage payload: %s", payload.c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnLocalMessage topic: %s", topic.c_str());
+		LOGW("OnLocalMessage payload: %s", payload.c_str());
+	}
+	Util::LedServiceUnlock();
+}
+
+void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
+{
+	Json::Value respValue;
+	Json::Value payloadJson;
+	Json::Reader r;
+	r.parse(payload, payloadJson);
+	Util::LedServiceLock();
+	if (payloadJson.isObject() &&
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (onLocalCallbackFuncListV2.find(cmd) != onLocalCallbackFuncListV2.end())
+		{
+			OnLocalCallbackFuncV2 onLocalCallbackFuncV2 = onLocalCallbackFuncListV2[cmd];
+			int rs = onLocalCallbackFuncV2(payloadJson, respValue, rqi);
+			if (rs == 0)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				Publish(HC_RESPONSE_TOPIC_V2, respValue.toString());
+			}
+			else if (rs == 1)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+			}
+			else if (rs == -10)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				Publish(HC_RESPONSE_TOPIC_V2, respValue.toString());
+				exit(1);
+			}
+			else if (rs == 2)
+			{
+				if (listMsgPush.size() > 0)
+				{
+					for (uint32_t i = 0; i < listMsgPush.size(); i++)
+					{
+						Publish(HC_RESPONSE_TOPIC_V2, listMsgPush[i]);
+					}
+					listMsgPush.clear();
+				}
+				else
+				{
+					LOGW("List msg push empty");
+				}
+			}
+			else
+			{
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
+			}
+		}
+		else
+		{
+			LOGW("Method %s not registed", cmd.c_str());
 			LOGW("OnLocalMessage payload: %s", payload.c_str());
 		}
 	}
@@ -85,10 +175,17 @@ int LocalProtocol::LocalPublish(string topic, string payload)
 	return Publish(topic, payload);
 }
 
-int LocalProtocol::OnLocalCallbackRegister(string method, OnLocalCallbackFunc onLocalCallbackFunc)
+int LocalProtocol::OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
 {
-	LOGI("OnLocalCallbackRegister method: %s", method.c_str());
-	onLocalCallbackFuncList[method] = onLocalCallbackFunc;
+	LOGI("OnLocalCallbackRegister cmd: %s", cmd.c_str());
+	onLocalCallbackFuncList[cmd] = onLocalCallbackFunc;
+	return 0;
+}
+
+int LocalProtocol::OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFuncV2 onLocalCallbackFuncV2)
+{
+	LOGI("OnLocalCallbackRegister cmd: %s", cmd.c_str());
+	onLocalCallbackFuncListV2[cmd] = onLocalCallbackFuncV2;
 	return 0;
 }
 

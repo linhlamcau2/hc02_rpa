@@ -1,7 +1,7 @@
 #include "TimerSchedule.h"
-#include <Log.h>
+#include "Util.h"
+#include "Log.h"
 #include <unistd.h>
-#include <Util.h>
 
 static void run(TimerSchedule *timerSchedule);
 
@@ -43,13 +43,17 @@ void Timer::run()
 TimerSchedule::TimerSchedule()
 {
 	index = 0;
+	runThread = NULL;
 }
 
 void TimerSchedule::init()
 {
 	LOGI("Start Timer init");
-	runThread = new thread(run, this);
-	runThread->detach();
+	if (!runThread)
+	{
+		runThread = new thread(run, this);
+		runThread->detach();
+	}
 }
 
 static void run(TimerSchedule *timerSchedule)
@@ -61,7 +65,7 @@ static void run(TimerSchedule *timerSchedule)
 		currentTimer = Util::GetCurrentTimer();
 		if (currentTimer != oldTimer)
 		{
-			LOGD("h:m: %d-%d", currentTimer, currentTimer);
+			// LOGD("h:m: %d-%d", currentTimer, currentTimer);
 			timerSchedule->mtx.lock();
 			for (auto &timer : timerSchedule->timerList)
 			{

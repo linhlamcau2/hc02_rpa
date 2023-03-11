@@ -1,5 +1,5 @@
 #include "AttributeOnoff.h"
-#include <Log.h>
+#include "Log.h"
 #include "Util.h"
 #include "zigbee/cluster/Cluster.h"
 #include "Device.h"
@@ -49,7 +49,7 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 		if (dataValue.isMember("onoff") && dataValue["onoff"].isInt())
 		{
 			int onoff = dataValue["onoff"].asInt();
-			rs = Util::CompareNumber(this->onoff, onoff, op);
+			rs = Util::CompareNumber(this->onoff, onoff, 0, op);
 			return true;
 		}
 	}

@@ -25,7 +25,7 @@ using namespace std;
 class Config
 {
 private:
-	//server
+	// server
 	string host;
 	int port;
 	string clientId;
@@ -33,7 +33,7 @@ private:
 	string password;
 	int keepAlive;
 
-	//local
+	// local
 	string localHost;
 	int localPort;
 	string localClientId;
@@ -43,7 +43,7 @@ private:
 
 public:
 	Config();
-	
+
 	void ReadConfig();
 	void Print();
 
@@ -61,6 +61,19 @@ public:
 	string GetLocalPassword();
 	int GetLocalKeepAlive();
 
+	bool SetHost(string host);
+	bool SetPort(int port);
+	bool SetClientId(string clientId);
+	bool SetUsername(string username);
+	bool SetPassword(string password);
+	bool SetKeepAlive(int keepAlive);
+
+	bool SetLocalHost(string localHost);
+	bool SetLocalPort(int localPort);
+	bool SetLocalClientId(string localClientId);
+	bool SetLocalUsername(string localUsername);
+	bool SetLocalPassword(string localPassword);
+	bool SetLocalKeepAlive(int keepAlive);
 };
 
 extern Config *config;

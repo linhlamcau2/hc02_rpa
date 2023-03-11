@@ -48,10 +48,13 @@ public:
 	Rule(string id, string type, unsigned char repeater, int startTime, int endTime, string cmd, bool enable);
 	~Rule();
 
+	bool isEnable;
 	string GetId();
 	string GetCmd();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
+	void DelAllRuleInput();
+	void DelAllRuleOutput();
 	void Check();
 	void RunOutput();
 };

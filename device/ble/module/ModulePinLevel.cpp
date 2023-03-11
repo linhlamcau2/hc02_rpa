@@ -1,6 +1,6 @@
 #include "ModulePinLevel.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
@@ -46,14 +46,27 @@ bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)
 		int id = dataValue["ID"].asInt();
 		if (this->id == id)
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
 					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
-				uint16_t value = dataValue["VALUE"].asInt();
+				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
-				if (this->id == id)
-					rs = Util::CompareNumber(this->pin, value, op);
-				return true;
+				Json::Value listValue = dataValue["VALUE"];
+				if (listValue.size() > 0)
+				{
+					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+					{
+						value1 = listValue[0].asInt();
+						value2 = listValue[1].asInt();
+					}
+					else if (listValue.size() == 1 && listValue[0].isInt())
+					{
+						value1 = listValue[0].asInt();
+					}
+					if (this->id == id)
+						rs = Util::CompareNumber(this->pin, value1, value2, op);
+					return true;
+				}
 			}
 		}
 	}

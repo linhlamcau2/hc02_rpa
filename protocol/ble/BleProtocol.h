@@ -3,7 +3,7 @@
 #include <string>
 #include <stdint.h>
 #include <vector>
-#include <Uart.h>
+#include "Uart.h"
 #include <atomic>
 #include <functional>
 
@@ -110,13 +110,25 @@ private:
 		uint8_t dc[2];
 	} scan_device_message_t;
 
+	typedef struct __attribute__((packed))
+	{
+		uint8_t netKey[16];
+		uint16_t key_index;
+		uint8_t flag;
+		uint8_t iv_index[4];
+		uint8_t unicast_address[2];
+	} pro_net_info_t;
+
 	typedef function<void(scan_device_message_t *scan_device_message)> AddDeviceFunc;
 	AddDeviceFunc addDeviceFunc;
 	scan_device_message_t scanDeviceMessage;
 
 	vector<message_rsp_list_st *> messageRespList;
+	// mutex mtxWaitSendUart;
+	pthread_mutex_t mutex;
 
 	// TODO: Add init state
+	pro_net_info_t *pro_net_info;
 	uint8_t netKey[16];
 	uint8_t appKey[16];
 	uint8_t gwKey[16];
@@ -158,6 +170,7 @@ public:
 	int GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceType, uint16_t &deviceVersion);
 
 	int ResetDev(uint16_t devAddr);
+	int ResetDelAll();
 
 	int SendOnlineCheck(uint16_t devAddr);
 
@@ -175,30 +188,52 @@ public:
 	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
-
-	/**
-	 * @brief
-	 *
-	 * @param devAddr id device
-	 * @param scene id scene
-	 * @param modeRgb 0 normal scene, 1->6 id mode blink RGB light
-	 * @return int 0 success, -1 error
-	 */
+	// Scene light
 	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
-
-	/**
-	 * @brief
-	 *
-	 * @param devAddr id device
-	 * @param scene id scene
-	 * @return int 0 success, -1 error
-	 */
 	int DelSceneLights(uint16_t devAddr, uint16_t scene);
 	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
 
 	// update status lights
 	int UpdateLights(uint16_t devAddr);
+
+	// remote scene
+	int SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
+	int SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
+	int DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode);
+	int DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode);
+
+	// PirLightSensor
+	int SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
+	int DelScenePirLightSensor(uint16_t devAddr, uint16_t scene);
+	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
+
+	// switch
+	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
+	int ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value);
+	int SetIdCombine(uint16_t devAddr, uint16_t id);
+	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
+
+	// screen touch
+	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);
+	int EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon);
+	int DelSceneScreenTouch(uint16_t devAddr, uint16_t scene);
+	int DelAllScene(uint16_t devAddr);
+	int SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t temp);
+	int SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum, uint16_t pm25);
+	int SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day);
+	int SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second);
+	int SetGroup(uint16_t devAddr, uint16_t group);
+
+	// Backup
+	int GetInfogw();
+	int GetInfoMesh();
+	int UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev);
+	int UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev);
+	int UpdateNetKey(uint16_t gwAddr, uint8_t *netKey, uint32_t indexId);
+	int UpdateDevKey(uint16_t gwAddr, uint8_t *devKey);
+	int UpdateAppKey(uint8_t *appKey);
+	int UpdateMaxAddr(uint16_t addr);
 };
 
 extern BleProtocol *bleProtocol;

@@ -5,7 +5,7 @@
 #include <string.h> //memset
 #include <stdlib.h> //exit(0);
 #include <unistd.h>
-#include <Base64.h>
+#include "Base64.h"
 
 #include "Util.h"
 #include "Wifi.h"
@@ -46,7 +46,7 @@ static int UdpHandleMessage(Udp *udp)
 	si_me.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	// bind socket to port
-	if (bind(udp->fd, (struct sockaddr *)&si_me, sizeof(si_me)) == -1)
+	if (::bind(udp->fd, (struct sockaddr *)&si_me, sizeof(si_me)) == -1)
 	{
 		LOGE("UDP die");
 		exit(1);
@@ -86,10 +86,10 @@ void Udp::stop()
 	isRunning = false;
 }
 
-int Udp::UdpCmdCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc)
+int Udp::UdpCmdCallbackRegister(string method, OnRpcCallbackFunc onRpcCallbackFunc)
 {
 	LOGI("UdpCmdCallbackRegister method: %s", method.c_str());
-	onRPCCallbackFuncList[method] = onRPCCallbackFunc;
+	onRpcCallbackFuncList[method] = onRpcCallbackFunc;
 	return 0;
 }
 
@@ -105,10 +105,10 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
 			string method = payloadJson["CMD"].asString();
-			if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
+			if (onRpcCallbackFuncList.find(method) != onRpcCallbackFuncList.end())
 			{
-				OnRPCCallbackFunc onRPCCallbackFunc = onRPCCallbackFuncList[method];
-				int rs = onRPCCallbackFunc(payloadJson, respValue);
+				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[method];
+				int rs = onRpcCallbackFunc(payloadJson, respValue);
 				if (rs == 0)
 				{
 					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
@@ -122,6 +122,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 						for (Json::ArrayIndex i = 0; i < respValue.size(); i++)
 						{
 							send(respValue[i].toString(), si_other, slen);
+							usleep(10000);
 						}
 					}
 				}

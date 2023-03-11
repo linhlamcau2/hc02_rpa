@@ -14,6 +14,20 @@ ActionCallback::ActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, 
 	this->actionCallbackFuncType2 = actionCallbackFuncType2;
 }
 
+ActionCallback::ActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic)
+{
+	this->type = 3;
+	this->topic = topic;
+	this->actionCallbackFuncType3 = actionCallbackFuncType3;
+}
+
+ActionCallback::ActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic)
+{
+	this->type = 4;
+	this->topic = topic;
+	this->actionCallbackFuncType4 = actionCallbackFuncType4;
+}
+
 int ActionCallback::getType()
 {
 	return type;

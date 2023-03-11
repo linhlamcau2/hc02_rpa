@@ -26,6 +26,21 @@ string SceneBle::GetUUId()
 	return sceneBleUUId;
 }
 
+void SceneBle::SetUuid(string uuid)
+{
+	this->sceneBleUUId = uuid;
+}
+
+string SceneBle::GetName()
+{
+	return name;
+}
+
+void SceneBle::SetName(string name)
+{
+	this->name = name;
+}
+
 int SceneBle::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();
@@ -43,7 +58,7 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 {
 	if (addOnlyDB == false)
 	{
-		if (bleProtocol->SetSceneLights(device->GetAddr(), id, modeRGB))
+		if (bleProtocol->SetSceneLights(device->GetAddr(), id, modeRGB) == 0)
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			deviceList.push_back(deviceInSceneBle);
@@ -61,7 +76,7 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 
 bool SceneBle::DelDevice(Device *device)
 {
-	if (bleProtocol->DelSceneLights(device->GetAddr(), id))
+	if (bleProtocol->DelSceneLights(device->GetAddr(), id) == 0)
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)
@@ -75,5 +90,5 @@ bool SceneBle::DelDevice(Device *device)
 
 void SceneBle::Do(int id)
 {
-	bleProtocol->CallScene(0xff, id, 10, true, 1);
+	bleProtocol->CallScene(0xffff, id, 10, true, 1);
 }

@@ -1,6 +1,6 @@
 #include "ModuleDim.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
@@ -54,17 +54,30 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
-			uint16_t dim = dataValue["VALUE"].asInt();
+			uint16_t dim1 = 0, dim2 = 0;
 			string op = dataValue["OP"].asString();
-			rs = Util::CompareNumber(this->dim, dim, op);
-			return true;
+			Json::Value listValue = dataValue["VALUE"];
+			if (listValue.size() > 0)
+			{
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					dim1 = listValue[0].asInt();
+					dim2 = listValue[1].asInt();
+				}
+				else if (listValue.size() == 1 && listValue[0].isInt())
+				{
+					dim1 = listValue[0].asInt();
+				}
+				rs = Util::CompareNumber(this->dim, dim1, dim2, op);
+				return true;
+			}
 		}
 	}
 	return false;
@@ -94,14 +107,14 @@ bool ModuleDim::Do(Json::Value &dataValue)
 {
 	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
-			int dim = (value * 65535) / 100;
+			uint16_t dim = (value * 65535) / 100;
 			bleProtocol->SetDimmingLight(addr, dim, 0, true);
 			return true;
 		}

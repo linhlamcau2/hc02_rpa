@@ -1,6 +1,6 @@
 #include "Group.h"
 #include <thread>
-#include <Log.h>
+#include "Log.h"
 #include "BleProtocol.h"
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -83,8 +83,8 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 				{
 					deviceList.push_back(deviceInGroup);
 					numberOfBleDevice++;
+					return true;
 				}
-				return true;
 			}
 			else
 			{
@@ -97,8 +97,8 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
+				return true;
 			}
-			return true;
 		}
 	}
 
@@ -126,20 +126,14 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 
 bool Group::DelDevice(Device *device, int epId)
 {
-	LOGE("TPP1");
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		LOGE("TPP2");
 		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
 		{
-			LOGE("TPP3");
 			int deviceIndex = GetPositionDevice(device);
-			LOGE("TPP4");
 			if (deviceIndex > -1)
 			{
-				LOGE("TPP5");
 				deviceList.erase(deviceList.begin() + deviceIndex);
-				LOGE("TPP6");
 			}
 			return true;
 		}
@@ -162,10 +156,7 @@ bool Group::DelDevice(Device *device, int epId)
 bool Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
-
-	auto doBleBind = bind(&Group::DoBle, this, placeholders::_1);
-	thread doBleThread(doBleBind, &this->dataValue);
-	doBleThread.detach();
+	DoBle();
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
@@ -182,22 +173,23 @@ bool Group::Do(int id, int value)
 	return true;
 }
 
-void Group::DoBle(Json::Value *dataValue)
+void Group::DoBle()
 {
-	if (numberOfBleDevice)
+	// if (numberOfBleDevice)
 	{
 		bool isIdHue = false;
 		bool isIdSaturation = false;
 		bool isIdLuminance = false;
 		uint16_t valueHue, valueSaturation, valueLuminance;
-		for (Json::ArrayIndex i = 0; i < dataValue->size(); i++)
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
-			Json::Value property = dataValue[0][i];
+			Json::Value property = dataValue[i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
 					property.isMember("VALUE") && property["VALUE"].isInt())
 			{
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();
+				LOGD("id: %d, value: %d", idProperty, value);
 				if (idProperty == 0)
 				{
 					bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
@@ -233,6 +225,10 @@ void Group::DoBle(Json::Value *dataValue)
 				{
 					LOGW("DoTrigger id: %d don't support", id);
 				}
+			}
+			else
+			{
+				LOGW("data format err: %s", property.toString().c_str());
 			}
 		}
 		if (isIdHue && isIdLuminance && isIdSaturation)

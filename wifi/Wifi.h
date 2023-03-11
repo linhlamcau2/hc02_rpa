@@ -15,7 +15,7 @@ namespace Wifi
 // 	wifi_mode_t wifiMode;
 
 // public:
-	void InitWifi();
+	void init();
 	void ScanWifi(Json::Value &jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);
 	int SetModeApWifi();

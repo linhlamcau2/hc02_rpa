@@ -1,6 +1,6 @@
 #include "Db.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 
 #define TABLE_NAME "[DeviceInRoom]"
 
@@ -15,16 +15,14 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				// int id = sqlite3_column_int(stmt, index++);
-				// int groupId = sqlite3_column_int(stmt, index++);
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				Room *room = gateway->getRoom(roomId);
+				int id = sqlite3_column_int(stmt, index++);
+				Room *room = gateway->getRoomFromId(roomId);
 				Device *device = gateway->getDeviceFromId(deviceId);
-				cout << "DeviceInRoomParse: devcie: " + deviceId << endl;
 				if (!room)
 				{
-					room = new Room(roomId);
+					room = new Room(roomId, id);
 					room = gateway->AddNewRoom(room);
 				}
 				if (!device)
@@ -33,7 +31,7 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				}
 				if (room && device)
 				{
-					room->AddDevice(device);
+					room->AddDevice(device, false);
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -50,14 +48,14 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 	return 0;
 }
 
-int Db::RoomRead()
+int Db::DeviceInRoomRead()
 {
 	return ReadAll(TABLE_NAME, NULL, DeviceInRoomParse);
 }
 
 int Db::DeviceInRoomAdd(Room *room, Device *device)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (deviceId, roomId) VALUES (\"" + device->GetId() + "\",\"" + room->GetUUId() + "\")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (deviceId, roomId, id) VALUES (\"" + device->GetId() + "\",\"" + room->GetUUId() + "\", " + to_string(room->GetId()) + ");";
 	return Sqlite_Exec(sql);
 }
 
@@ -67,7 +65,8 @@ int Db::DeviceInRoomDel(Room *room, Device *device)
 	return Sqlite_Exec(sql);
 }
 
-int Db::RoomDel(Room *room)
+int Db::DeviceInRoomDel(Room *room)
 {
-	return 0;
+	string sql = "DELETE FROM " TABLE_NAME " ; ";
+	return Sqlite_Exec(sql);
 }

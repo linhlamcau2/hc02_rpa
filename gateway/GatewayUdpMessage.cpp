@@ -1,0 +1,260 @@
+#include "Gateway.h"
+#include "Log.h"
+#include "Wifi.h"
+#include "Util.h"
+#include "Db.h"
+
+void Gateway::initUdpMessage()
+{
+	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
+}
+
+int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpScanHc");
+	if (reqValue.isMember("DORMITORY_ID") && reqValue["DORMITORY_ID"].isString())
+	{
+		string dormitoryId = reqValue["DORMITORY_ID"].asString();
+		if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
+		{
+			return -1;
+		}
+		// string macGw;
+		// for (int i = 0; i < 5; i++)
+		// {
+		// 	macGw = mac.erase(mac.find(':'), 1);
+		// }
+		respValue["CMD"] = "HC_RESPONSE";
+		respValue["IP"] = Wifi::GetIP();
+		respValue["HOSTNAME"] = "RD_HC_" + mac.substr(mac.size() - 4, 4);
+		respValue["MAC"] = mac;
+		respValue["TLS"] = false;
+		respValue["MQTT_PORT"] = 1883;
+		respValue["VERSION"] = STR(VERSION);
+		return 0;
+	}
+	else
+	{
+		LOGW("OnUdpScanHc payload: %s error", reqValue.toString().c_str());
+	}
+	return -1;
+}
+
+int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpHcScanWifi");
+#ifdef CONFIG_USE_OLD_APP
+	Json::Value wifiList;
+	Json::Value wifi;
+	Json::Value wifiResp;
+	gateway->StopUdpBroadcast();
+	Wifi::ScanWifi(wifiList);
+	if (wifiList.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < wifiList.size(); i++)
+		{
+			wifi = wifiList[i];
+			wifiResp["CMD"] = "HC_RESPONE";
+			wifiResp["SSID"] = wifi["SSID"];
+			wifiResp["QUALITY"] = 55;
+			wifiResp["MAC"] = wifi["MAC"];
+			wifiResp["ENCRYPTION"] = wifi["ENCRYPTION"];
+			respValue.append(wifiResp);
+		}
+	}
+	return 10; // respValue as an array
+#else
+	string rqi = "";
+	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
+	{
+		rqi = reqValue["REQUEST_ID"].asString();
+	}
+	if (reqValue.isMember("FROM") && reqValue.isMember("TO"))
+	{
+		Json::Value from;
+		Json::Value to;
+		from = reqValue["FROM"];
+		to = reqValue["TO"];
+		if (from.isMember("TYPE") && from["TYPE"].isInt() && to.isMember("TYPE") && to["TYPE"].isInt())
+		{
+			if (from["TYPE"].asInt() == 0 && to["TYPE"].asInt() == 2)
+			{
+				Json::Value fromRsp;
+				Json::Value toRsp;
+				Json::Value dataRsp;
+				StopUdpBroadcast();
+				respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
+				respValue["REQUEST_ID"] = rqi;
+				respValue["TIME"] = Util::GetCurrentTimeStr();
+				respValue["CONNECTION_TYPE"] = 0;
+				fromRsp["TYPE"] = 2;
+				respValue["FROM"] = fromRsp;
+				toRsp["TYPE"] = 0;
+				respValue["TO"] = toRsp;
+				Wifi::ScanWifi(dataRsp);
+				respValue["DATA"] = dataRsp;
+				return 0;
+			}
+			else
+			{
+				LOGW("OnUdpHcScanWifi payload: %s error direction", reqValue.toString().c_str());
+			}
+		}
+		else
+		{
+			LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+	}
+
+	return -1;
+#endif
+}
+
+int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpHcSetup");
+	string rqi = "";
+	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
+	{
+		rqi = reqValue["REQUEST_ID"].asString();
+	}
+	if (reqValue.isMember("FROM") && reqValue.isMember("TO") && reqValue.isMember("DATA"))
+	{
+		Json::Value from = reqValue["FROM"];
+		Json::Value to = reqValue["TO"];
+		Json::Value data = reqValue["DATA"];
+
+		string timeValue = Util::GetCurrentTimeStr();
+		respValue["CMD"] = "SETUP_HC_RESPONSE";
+		respValue["REQUEST_ID"] = rqi;
+		respValue["TIME"] = timeValue;
+		respValue["CONNECTION_TYPE"] = 0;
+
+		Json::Value toRsp;
+		Json::Value fromRsp;
+		Json::Value dataRsp;
+
+		toRsp["TYPE"] = 0;
+		if (from.isMember("OS") && from["OS"].isString())
+		{
+			toRsp["OS"] = from["OS"].asString();
+		}
+		if (from.isMember("OS_VERSION") && from["OS_VERSION"].isString())
+		{
+			toRsp["OS_VERSION"] = from["OS_VERSION"].asString();
+		}
+		if (from.isMember("APP_BUILD") && from["APP_BUILD"].isString())
+		{
+			toRsp["APP_BUILD"] = from["APP_BUILD"].asString();
+		}
+		if (from.isMember("APP_VERSION") && from["APP_VERSION"].isString())
+		{
+			toRsp["APP_VERSION"] = from["APP_VERSION"].asString();
+		}
+		respValue["TO"] = toRsp;
+
+		fromRsp["TYPE"] = 2;
+		fromRsp["MAC"] = mac;
+		fromRsp["VERSION"] = STR(VERSION);
+
+		if (from.isMember("TYPE") && from["TYPE"].isInt() && to.isMember("TYPE") && to["TYPE"].isInt())
+		{
+			if ((from["TYPE"].asInt() == 0) && to["TYPE"].asInt())
+			{
+				if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString())
+				{
+					dormitoryId = data["DORMITORY_ID"].asString();
+					database->GatewayUpdateDormitory(gateway, dormitoryId);
+#ifndef ESP_PLATFORM
+					if (Wifi::GetIP().compare("10.10.10.1") != 0)
+					{
+						LOGI("Hc have IP: %s", Wifi::GetIP().c_str());
+						dataRsp["STATUS"] = "SUCCESS";
+						respValue["DATA"] = dataRsp;
+						fromRsp["IP"] = Wifi::GetIP();
+						fromRsp["DORMITORY_ID"] = dormitoryId;
+						respValue["FROM"] = fromRsp;
+						GatewayConnectToCloudNotice();
+						return 0;
+					}
+					else
+					{
+#endif
+						if (data.isMember("WIFI"))
+						{
+							Json::Value wifi = data["WIFI"];
+							if (wifi.isMember("SSID") && wifi["SSID"].isString() &&
+									wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
+									wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
+							{
+								string ssid = wifi["SSID"].asString();
+								string password = wifi["PASSWORD"].asString();
+								string encryption = wifi["ENCRYPTION"].asString();
+								LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
+
+								if (Wifi::ConnectToWifi(ssid, password, encryption) == 0)
+								{
+									dataRsp["STATUS"] = "SUCCESS";
+									respValue["DATA"] = dataRsp;
+									fromRsp["IP"] = Wifi::GetIP();
+									fromRsp["DORMITORY_ID"] = dormitoryId;
+									respValue["FROM"] = fromRsp;
+								}
+								else
+								{
+									dataRsp["STATUS"] = "FAILED";
+									respValue["DATA"] = dataRsp;
+									fromRsp["IP"] = Wifi::GetIP();
+									fromRsp["DORMITORY_ID"] = dormitoryId;
+									respValue["FROM"] = fromRsp;
+								}
+								GatewayConnectToCloudNotice();
+								return 0;
+							}
+							else
+							{
+								LOGW("OnUdpHcSetup don't have wifi data");
+							}
+						}
+#ifndef ESP_PLATFORM
+						else
+						{
+							LOGW("OnUdpHcSetup don't have wifi object");
+						}
+					}
+#endif
+				}
+				else
+				{
+					LOGW("OnUdpHcSetup don't have dormitory");
+				}
+			}
+			else
+			{
+				LOGW("OnUdpHcSetup error data from - to");
+			}
+		}
+		else
+		{
+			LOGW("OnUdpHcSetup don't have from or to");
+		}
+	}
+	else
+	{
+		LOGW("OnUdpHcSetup payload: %s error", reqValue.toString().c_str());
+	}
+	return -1;
+}
+
+int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpHcConnectCloud");
+	return 1;
+}

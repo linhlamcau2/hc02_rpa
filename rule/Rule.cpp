@@ -1,8 +1,8 @@
 #include "Rule.h"
 #include <functional>
 #include "TimerSchedule.h"
-#include <Util.h>
-#include <Log.h>
+#include "Util.h"
+#include "Log.h"
 
 Rule::Rule(string id, string type, unsigned char repeater)
 {
@@ -58,49 +58,52 @@ string Rule::GetCmd()
 
 void Rule::Check()
 {
-	bool checkRuleInputResult = false;
-	int currentTimer = Util::GetCurrentTimer();
-	int currentWeekDay = Util::GetCurrentWeekDay();
-	LOGI("currentWeekDay: %d", currentWeekDay);
-	LOGI("repeater: 0x%02X", repeater);
-	if ((1 << currentWeekDay) & repeater)
-	{
-		LOGI("Check repeater day OK");
-		if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (endTime <= startTime && currentTimer <= endTime) || (endTime <= startTime && startTime <= currentTimer))
+	if (isEnable){
+		bool checkRuleInputResult = false;
+		int currentTimer = Util::GetCurrentTimer();
+		int currentWeekDay = Util::GetCurrentWeekDay();
+		LOGI("currentWeekDay : %d", currentWeekDay);
+		LOGI("currenWeekDay convert: %d", Util::ConvertWeekDayToIntCompare(currentWeekDay));
+		LOGI("repeater : 0x%02X", repeater);
+		if (Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater)
 		{
-			LOGI("Check time OK");
-			if (type == "or")
+			LOGI("Check repeater day OK");
+			if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (endTime <= startTime && currentTimer <= endTime) || (endTime <= startTime && startTime <= currentTimer))
 			{
-				checkRuleInputResult = false;
-				for (auto &ruleInput : ruleInputList)
+				LOGI("Check time OK");
+				if (type == "or")
 				{
-					if (ruleInput->Check())
+					checkRuleInputResult = false;
+					for (auto &ruleInput : ruleInputList)
 					{
-						checkRuleInputResult = true;
-						break;
+						if (ruleInput->Check())
+						{
+							checkRuleInputResult = true;
+							break;
+						}
 					}
 				}
-			}
-			else if (type == "and")
-			{
-				checkRuleInputResult = true;
-				for (auto &ruleInput : ruleInputList)
+				else if (type == "and")
 				{
-					if (ruleInput->Check() == false)
+					checkRuleInputResult = true;
+					for (auto &ruleInput : ruleInputList)
 					{
-						checkRuleInputResult = false;
-						break;
+						if (ruleInput->Check() == false)
+						{
+							checkRuleInputResult = false;
+							break;
+						}
 					}
 				}
 			}
 		}
-	}
-	if (checkRuleInputResult)
-	{
-		LOGI("Do output rule id: %s", id.c_str());
-		RunOutput();
-		count++;
-		lastTimeActive = time(NULL);
+		if (checkRuleInputResult)
+		{
+			LOGI("Do output rule id: %s", id.c_str());
+			RunOutput();
+			count++;
+			lastTimeActive = time(NULL);
+		}
 	}
 }
 
@@ -120,4 +123,13 @@ void Rule::AddRuleInput(RuleInput *ruleInput)
 void Rule::AddRuleOutput(RuleOutput *ruleOutput)
 {
 	ruleOutputList.push_back(ruleOutput);
+}
+
+void Rule::DelAllRuleInput()
+{
+	ruleInputList.clear();
+}
+void Rule::DelAllRuleOutput()
+{
+	ruleOutputList.clear();
 }

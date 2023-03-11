@@ -1,6 +1,6 @@
 #include "Db.h"
-#include <Log.h>
-#include <Util.h>
+#include "Log.h"
+#include "Util.h"
 
 #define TABLE_NAME "[DeviceInGroup]"
 
@@ -15,8 +15,6 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				// int id = sqlite3_column_int(stmt, index++);
-				// int groupId = sqlite3_column_int(stmt, index++);
 				string deviceMac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string groupId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int epId = sqlite3_column_int(stmt, index++);
@@ -58,13 +56,13 @@ int Db::DeviceInGroupRead()
 // TODO: add epId to db
 int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (groupId, mac, epId) VALUES (\"" + group->GetUUId() + "\",\"" + device->GetMac() + "\", "+to_string(epId)+");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (groupId, mac, epId) VALUES (\"" + group->GetUUId() + "\",\"" + device->GetMac() + "\"," + to_string(epId) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInGroupDel(Group *group, Device *device, int epId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetUUId() + "\" AND epId="+to_string(epId)+";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetUUId() + "\" AND mac=\"" + device->GetMac() + "\" AND epId = " + to_string(epId) + ";";
 	return Sqlite_Exec(sql);
 }
 
