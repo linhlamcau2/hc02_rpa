@@ -36,19 +36,20 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue, stri
 			}
 			else
 			{
+				LOGW("Device id %s not found", deviceId.c_str());
 				respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
 			}
 		}
 		else
 		{
 			respValue["data"]["code"] = CODE_FORMAT_ERROR;
-			LOGW("OnControlDevice %s error", reqValue.toString().c_str());
+			LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 		}
 	}
 	else
 	{
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
-		LOGW("OnControlDevice %s error", reqValue.toString().c_str());
+		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlDevRsp";
 	respValue["rqi"] = rqi;
