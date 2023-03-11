@@ -8,6 +8,8 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 {
 	subTopic = "/v1/server/hc/" + mac + "/json";
 	pubTopic = "/v1/hc/" + mac + "/server/json";
+	subTopicV2 = "/v2/server/hc/" + mac + "/json";
+	pubTopicV2 = "/v2/hc/" + mac + "/server/json";
 
 	Json::Value jsonValue;
 	Json::Value datanValue;
@@ -25,7 +27,8 @@ CloudProtocol::~CloudProtocol()
 void CloudProtocol::init()
 {
 	Mqtt::init();
-	addActionCallback(bind(&CloudProtocol::OnDeviceRPC, this, placeholders::_1, placeholders::_2), subTopic);
+	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopic);
+	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subTopicV2);
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -58,7 +61,7 @@ void CloudProtocol::OnConnect(bool isConnected, bool isReconnect)
 	OnCloudConnect(isConnected, isReconnect);
 }
 
-void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
+void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
@@ -68,44 +71,98 @@ void CloudProtocol::OnDeviceRPC(string &topic, string &payload)
 	Util::LedServiceLock();
 	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
-		string method = payloadJson["CMD"].asString();
-		if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
+		string cmd = payloadJson["CMD"].asString();
+		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
 		{
-			OnRPCCallbackFunc onRPCCallbackFunc = onRPCCallbackFuncList[method];
-			int rs = onRPCCallbackFunc(payloadJson, respValue);
+			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
+			int rs = onRpcCallbackFunc(payloadJson, respValue);
 			if (rs == 0)
 			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(pubTopic, respValue.toString());
 			}
 			else if (rs == 1)
 			{
-				LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 			}
 			else
 			{
-				LOGW("Call %s ERR rs: %d", method.c_str(), rs);
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
 		}
 		else
 		{
-			LOGW("Method %s not registed", method.c_str());
-			LOGW("OnDeviceRPC payload: %s", payload.c_str());
+			LOGW("Method %s not registed", cmd.c_str());
+			LOGW("OnDeviceRpc payload: %s", payload.c_str());
 		}
 	}
 	else
 	{
-		LOGW("OnDeviceRPC topic: %s", topic.c_str());
-		LOGW("OnDeviceRPC payload: %s", payload.c_str());
+		LOGW("OnDeviceRpc topic: %s", topic.c_str());
+		LOGW("OnDeviceRpc payload: %s", payload.c_str());
 	}
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
 }
 
-int CloudProtocol::OnDeviceRPCCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc)
+void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 {
-	LOGI("OnDeviceRPCCallbackRegister method: %s", method.c_str());
-	onRPCCallbackFuncList[method] = onRPCCallbackFunc;
+	Json::Value respValue;
+	Json::Value payloadJson;
+	Json::Reader r;
+	r.parse(payload, payloadJson);
+	Util::LedInternet(false);
+	Util::LedServiceLock();
+	if (payloadJson.isObject() &&
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (onRpcCallbackFuncListV2.find(cmd) != onRpcCallbackFuncListV2.end())
+		{
+			OnRpcCallbackFuncV2 onRpcV2CallbackFunc = onRpcCallbackFuncListV2[cmd];
+			int rs = onRpcV2CallbackFunc(payloadJson, respValue, rqi);
+			if (rs == 0)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				Publish(pubTopic, respValue.toString());
+			}
+			else if (rs == 1)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+			}
+			else
+			{
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
+			}
+		}
+		else
+		{
+			LOGW("Cmd %s not registed", cmd.c_str());
+			LOGW("OnDeviceRpc payload: %s", payload.c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnDeviceRpc topic: %s", topic.c_str());
+		LOGW("OnDeviceRpc payload: %s", payload.c_str());
+	}
+	Util::LedInternet(true);
+	Util::LedServiceUnlock();
+}
+
+int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
+{
+	LOGI("OnDeviceRpcCallbackRegister cmd: %s", cmd.c_str());
+	onRpcCallbackFuncList[cmd] = onRpcCallbackFunc;
+	return 0;
+}
+
+int CloudProtocol::OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFuncV2 onRpcCallbackFuncV2)
+{
+	LOGI("OnDeviceRpcCallbackRegisterV2 cmd: %s", cmd.c_str());
+	onRpcCallbackFuncListV2[cmd] = onRpcCallbackFuncV2;
 	return 0;
 }
 

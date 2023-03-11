@@ -15,6 +15,7 @@
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
 #include "Room.h"
+#include "ErrorCode.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -68,81 +69,85 @@ private:
 
 	// Mqtt message handle
 	void initMqttMessage();
-	int OnRPCHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCHcBackup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCBleStartScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCBleStopScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCBleReset(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCResetFactory(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue);
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-	int OnRPCZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCZigbeeResetFactory(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcZigbeeResetFactory(Json::Value &reqValue, Json::Value &respValue);
 #endif
-	int OnRPCCreateRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCCheckRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCAddGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCUpdateGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDelGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcUpdateGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDelGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCResetRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCSceneScreen(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCAddDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
 
 	// Rule
-	int OnRPCAddRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCEditRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDeleteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 
 	// HCL
-	int OnRPCCreateHCL(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDeleteHCL(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCEditHCL(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCSwitchStatusHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDeleteHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSwitchStatusHCL(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCControlDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCControlGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCSSHRemote(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCUpdateFirmware(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCDelCountDown(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue);
+
+	// Mqtt V2 message handle
+	void initMqttMessageV2();
+	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue, string rqi);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);

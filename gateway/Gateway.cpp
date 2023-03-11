@@ -68,6 +68,7 @@ void Gateway::init()
 
 	initUdpMessage();
 	initMqttMessage();
+	initMqttMessageV2();
 
 	LOGI("DeviceRead");
 	database->GatewayRead();

@@ -18,9 +18,9 @@ void FileTransfer::init()
 	pubFwTopic = "/v1/hc/" + gateway->getMac() + "/bin/";
 	gateway->cloudAddActionCallback(bind(&FileTransfer::OnFWMessage, this, placeholders::_1, placeholders::_2, placeholders::_3), subFwTopic);
 
-	gateway->OnDeviceRPCCallbackRegister("UploadFileResp", bind(&FileTransfer::OnRPCUploadFileResp, this, placeholders::_1, placeholders::_2));
-	gateway->OnDeviceRPCCallbackRegister("UploadBinaryResp", bind(&FileTransfer::OnRPCUploadBinaryResp, this, placeholders::_1, placeholders::_2));
-	gateway->OnDeviceRPCCallbackRegister("DownloadFileResp", bind(&FileTransfer::OnRPCDownloadFileResp, this, placeholders::_1, placeholders::_2));
+	gateway->OnDeviceRpcCallbackRegister("UploadFileResp", bind(&FileTransfer::OnRpcUploadFileResp, this, placeholders::_1, placeholders::_2));
+	gateway->OnDeviceRpcCallbackRegister("UploadBinaryResp", bind(&FileTransfer::OnRpcUploadBinaryResp, this, placeholders::_1, placeholders::_2));
+	gateway->OnDeviceRpcCallbackRegister("DownloadFileResp", bind(&FileTransfer::OnRpcDownloadFileResp, this, placeholders::_1, placeholders::_2));
 }
 
 bool FileTransfer::uploadFile(string path, string name)
@@ -105,9 +105,9 @@ bool FileTransfer::UploadChunk(string sessionId, File *file)
 	return false;
 }
 
-int FileTransfer::OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respValue)
+int FileTransfer::OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRPCUploadFileResp");
+	LOGD("OnRpcUploadFileResp");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -134,21 +134,21 @@ int FileTransfer::OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respVa
 				}
 				else
 				{
-					LOGW("OnRPCUploadFileResp err: %d", code);
+					LOGW("OnRpcUploadFileResp err: %d", code);
 				}
 			}
 			else
 			{
-				LOGW("OnRPCUploadFileResp session not found: %s", sessionId.c_str());
+				LOGW("OnRpcUploadFileResp session not found: %s", sessionId.c_str());
 			}
 		}
 	}
 	return 1;
 }
 
-int FileTransfer::OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue)
+int FileTransfer::OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRPCUploadBinaryResp");
+	LOGD("OnRpcUploadBinaryResp");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -179,7 +179,7 @@ int FileTransfer::OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &resp
 				}
 				else
 				{
-					LOGW("OnRPCUploadFileResp err: %d", code);
+					LOGW("OnRpcUploadFileResp err: %d", code);
 				}
 			}
 		}
@@ -187,9 +187,9 @@ int FileTransfer::OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &resp
 	return 1;
 }
 
-int FileTransfer::OnRPCDownloadFileResp(Json::Value &reqValue, Json::Value &respValue)
+int FileTransfer::OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRPCDownloadFileResp");
+	LOGD("OnRpcDownloadFileResp");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 	}

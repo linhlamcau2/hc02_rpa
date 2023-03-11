@@ -86,10 +86,10 @@ void Udp::stop()
 	isRunning = false;
 }
 
-int Udp::UdpCmdCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc)
+int Udp::UdpCmdCallbackRegister(string method, OnRpcCallbackFunc onRpcCallbackFunc)
 {
 	LOGI("UdpCmdCallbackRegister method: %s", method.c_str());
-	onRPCCallbackFuncList[method] = onRPCCallbackFunc;
+	onRpcCallbackFuncList[method] = onRpcCallbackFunc;
 	return 0;
 }
 
@@ -105,10 +105,10 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
 			string method = payloadJson["CMD"].asString();
-			if (onRPCCallbackFuncList.find(method) != onRPCCallbackFuncList.end())
+			if (onRpcCallbackFuncList.find(method) != onRpcCallbackFuncList.end())
 			{
-				OnRPCCallbackFunc onRPCCallbackFunc = onRPCCallbackFuncList[method];
-				int rs = onRPCCallbackFunc(payloadJson, respValue);
+				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[method];
+				int rs = onRpcCallbackFunc(payloadJson, respValue);
 				if (rs == 0)
 				{
 					LOGD("Call %s OK, rs: %d", method.c_str(), rs);

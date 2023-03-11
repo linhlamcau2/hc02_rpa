@@ -19,10 +19,10 @@ private:
 
 	bool UploadChunk(string sessionId, File *file);
 
-	int OnRPCUploadFileResp(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRPCDownloadFileResp(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	FileTransfer();

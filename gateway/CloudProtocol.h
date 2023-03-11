@@ -11,11 +11,16 @@ class CloudProtocol : public Mqtt
 private:
 	string subTopic;
 	string pubTopic;
-	
-	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRPCCallbackFunc;
-	map<string, OnRPCCallbackFunc> onRPCCallbackFuncList;
+	string subTopicV2;
+	string pubTopicV2;
 
-	void OnDeviceRPC(string &topic, string &payload);
+	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
+	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
+	typedef function<int(Json::Value &reqValue, Json::Value &respValue, string &rqi)> OnRpcCallbackFuncV2;
+	map<string, OnRpcCallbackFuncV2> onRpcCallbackFuncListV2;
+
+	void OnDeviceRpc(string &topic, string &payload);
+	void OnDeviceRpcV2(string &topic, string &payload);
 
 public:
 	CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
@@ -31,7 +36,8 @@ public:
 	void OnConnect(bool isConnected, bool isReconnect);
 	virtual void OnCloudConnect(bool isConnected, bool isReconnect) {}
 
-	int OnDeviceRPCCallbackRegister(string method, OnRPCCallbackFunc onRPCCallbackFunc);
+	int OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc);
+	int OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFuncV2 onRpcCallbackFuncV2);
 
 	int OnlineHC(string deviceName);
 
