@@ -6,6 +6,46 @@
 #include <byteswap.h>
 #include "RuleInputDevice.h"
 
+#define KEY_ATTRIBUTE_ONOFF "onoff"
+#define KEY_ATTRIBUTE_DIM "dim"
+#define KEY_ATTRIBUTE_CCT "cct"
+#define KEY_ATTRIBUTE_HUE "h"
+#define KEY_ATTRIBUTE_SATURATION "s"
+#define KEY_ATTRIBUTE_LUMINANCE "l"
+#define KEY_ATTRIBUTE_SONG "song"
+#define KEY_ATTRIBUTE_BLINK_MODE "blm"
+#define KEY_ATTRIBUTE_BATTERY "bat"
+#define KEY_ATTRIBUTE_LUX "lux"
+#define KEY_ATTRIBUTE_PIR "pir"
+#define KEY_ATTRIBUTE_BUTTON "bt"
+#define KEY_ATTRIBUTE_ACTIME "actime"
+#define KEY_ATTRIBUTE_PM2_5 "pm2.5"
+#define KEY_ATTRIBUTE_PM10 "pm10"
+#define KEY_ATTRIBUTE_PM1_0 "pm1.0"
+#define KEY_ATTRIBUTE_TEMP "temp"
+#define KEY_ATTRIBUTE_HUMIDITY "hum"
+#define KEY_ATTRIBUTE_MODE_RGB "sceneRGB"
+#define KEY_ATTRIBUTE_HANGON "hangon"
+#define KEY_ATTRIBUTE_COUNTDOWN "countdown"
+#define KEY_ATTRIBUTE_AIR_CONDITIONER_WIND "airConditionerWind"
+#define KEY_ATTRIBUTE_AIR_CONDITIONER_MODE "airConditionerMode"
+#define KEY_ATTRIBUTE_AIR_CONDITIONER_TEMP "airConditionerTemp"
+#define KEY_ATTRIBUTE_CURTAIN_OPEN "curtainOpen"
+#define KEY_ATTRIBUTE_CURTAIN_CLOSE "curtainClose"
+#define KEY_ATTRIBUTE_CURTAIN_PAUSE "curtainPause"
+#define KEY_ATTRIBUTE_CURTAIN_OPENED "curtainOpened"
+#define KEY_ATTRIBUTE_SMOKE "smoke"
+#define KEY_ATTRIBUTE_DOOR "door"
+#define KEY_ATTRIBUTE_SMOKE_PIN "smokePin"
+#define KEY_ATTRIBUTE_DKTX_SCENE "remoteScene"
+#define KEY_ATTRIBUTE_ONLINE_OFFLINE "status"
+#define KEY_ATTRIBUTE_MOTOR "motor"
+#define KEY_ATTRIBUTE_R "r"
+#define KEY_ATTRIBUTE_G "g"
+#define KEY_ATTRIBUTE_B "b"
+#define KEY_ATTRIBUTE_DIM_ON "dimOn"
+#define KEY_ATTRIBUTE_DIM_OFF "dimOff"
+
 using namespace std;
 
 typedef enum
@@ -57,7 +97,7 @@ enum
 	BLE_AC_SCENE_SCREEN_TOUCH = 23003,
 	BLE_REMOTE_M3_V2 = 23004,
 	BLE_REMOTE_M4 = 23005,
-	
+
 	BLE_PM_SENSOR = 37001,
 	BLE_TEMP_HUM_SENSOR = 38001, // 0x030801,
 	BLE_PIR_LIGHT_SENSOR_DC = 32001,

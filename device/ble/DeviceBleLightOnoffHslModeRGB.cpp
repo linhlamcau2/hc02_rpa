@@ -55,18 +55,27 @@ bool DeviceBleLightOnoffHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
 	return true;
 }
 
-bool DeviceBleLightOnoffHslModeRGB::Do(Json::Value &dataValue)
+bool DeviceBleLightOnoffHslModeRGB::DoJsonArray(Json::Value &dataValue)
 {
-	if (!moduleOnOff->Do(dataValue))
+	if (dataValue.isArray())
 	{
-		if (!moduleHsl->Do(dataValue))
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
-			if (!moduleModeRgb->Do(dataValue))
+			if (!moduleOnOff->Do(dataValue[i]))
 			{
-				return false;
+				moduleModeRgb->Do(dataValue[i]);
 			}
 		}
 	}
+	moduleHsl->DoJsonArray(dataValue);
+	return true;
+}
+
+bool DeviceBleLightOnoffHslModeRGB::DoV2(Json::Value &dataValue)
+{
+	moduleOnOff->DoV2(dataValue);
+	moduleHsl->DoV2(dataValue);
+	moduleModeRgb->DoV2(dataValue);
 	return true;
 }
 

@@ -113,7 +113,7 @@ void ModuleModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 
 bool ModuleModeRgb::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -125,6 +125,19 @@ bool ModuleModeRgb::Do(Json::Value &dataValue)
 			bleProtocol->CallModeRgb(addr, value);
 			return true;
 		}
+	}
+	return false;
+}
+
+bool ModuleModeRgb::DoV2(Json::Value &dataValue)
+{
+	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+	{
+		int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+		bleProtocol->CallModeRgb(addr, value);
+		return true;
 	}
 	return false;
 }

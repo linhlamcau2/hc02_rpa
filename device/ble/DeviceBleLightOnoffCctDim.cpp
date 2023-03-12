@@ -69,3 +69,11 @@ bool DeviceBleLightOnoffCctDim::Do(Json::Value &dataValue)
 	}
 	return true;
 }
+
+bool DeviceBleLightOnoffCctDim::DoV2(Json::Value &dataValue)
+{
+	moduleOnOff->DoV2(dataValue);
+	moduleDim->DoV2(dataValue);
+	elementCct->DoV2(dataValue);
+	return true;
+}

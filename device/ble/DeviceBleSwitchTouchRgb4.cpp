@@ -45,7 +45,7 @@ void DeviceBleSwitchTouchRgb4::InputData(uint8_t *data, int len, uint32_t addr)
 	values = Json::Value::null;
 	if (!elementButton[addr - this->addr]->InputData(data, len, values))
 	{
-		if (!elementRgb[addr - this->addr] -> InputData(data, len, values))
+		if (!elementRgb[addr - this->addr]->InputData(data, len, values))
 		{
 			return;
 		}
@@ -66,9 +66,10 @@ bool DeviceBleSwitchTouchRgb4::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-bool DeviceBleSwitchTouchRgb4::Do(Json::Value &dataValue)
+// TODO: viet anh recheck DoJsonArray
+bool DeviceBleSwitchTouchRgb4::DoJsonArray(Json::Value &dataValue)
 {
-	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject())
 	{
 		for (int j = 0; j < 4; j++)
@@ -81,9 +82,19 @@ bool DeviceBleSwitchTouchRgb4::Do(Json::Value &dataValue)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			if (elementRgb[j]->Do(dataValue))
+			if (elementRgb[j]->DoJsonArray(dataValue))
 				return true;
 		}
 	}
 	return false;
+}
+
+bool DeviceBleSwitchTouchRgb4::DoV2(Json::Value &dataValue)
+{
+	for (int j = 0; j < 4; j++)
+	{
+		elementButton[j]->DoV2(dataValue);
+		elementRgb[j]->DoV2(dataValue);
+	}
+	return true;
 }

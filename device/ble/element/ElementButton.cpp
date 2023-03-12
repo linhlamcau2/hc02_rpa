@@ -10,6 +10,7 @@ ElementButton::ElementButton(Device *device, uint32_t addr) : Element(device, ad
 {
 	bt = 0;
 	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr();
+	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr());
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -106,7 +107,7 @@ void ElementButton::BuildTelemetryValue(Json::Value &jsonValue)
 
 bool ElementButton::Do(Json::Value &dataValue)
 {
-	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	// LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
@@ -116,6 +117,19 @@ bool ElementButton::Do(Json::Value &dataValue)
 			bleProtocol->SetOnOffLight(addr, value, 0, true);
 			return true;
 		}
+	}
+	return false;
+}
+
+bool ElementButton::DoV2(Json::Value &dataValue)
+{
+	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
+	{
+		int value = dataValue[key].asInt();
+		bleProtocol->SetOnOffLight(addr, value, 0, true);
+		return true;
 	}
 	return false;
 }

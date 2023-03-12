@@ -23,9 +23,3 @@ void DeviceBleSensorPm::InputData(uint8_t *data, int len, uint32_t addr)
 	}
 	PushTelemetry(values);
 }
-
-bool DeviceBleSensorPm::Do(Json::Value &dataValue)
-{
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	return false;
-}

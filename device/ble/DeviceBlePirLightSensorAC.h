@@ -11,15 +11,16 @@ using namespace std;
 class DeviceBlePirLightSensorAC : public DeviceBle
 {
 private:
-    ModulePirSensor *modulePirSensor;
-    ModuleLightSensor *moduleLightSensor;
-    ModulePinLevel *modulePinLevel;
-    ModuleTimeActionPir *moduleTimeActionPir;
+	ModulePirSensor *modulePirSensor;
+	ModuleLightSensor *moduleLightSensor;
+	ModulePinLevel *modulePinLevel;
+	ModuleTimeActionPir *moduleTimeActionPir;
 
 public:
-    DeviceBlePirLightSensorAC(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
+	DeviceBlePirLightSensorAC(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
 
-    int BuildTelemetryValue(Json::Value &pushDataValue);
-    void InputData(uint8_t *data, int len, uint32_t addr = 0);
-    bool Do(Json::Value &dataValue);
+	int BuildTelemetryValue(Json::Value &pushDataValue);
+	void InputData(uint8_t *data, int len, uint32_t addr = 0);
+	bool Do(Json::Value &dataValue);
+	bool DoV2(Json::Value &dataValue);
 };

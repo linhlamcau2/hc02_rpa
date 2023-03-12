@@ -55,12 +55,12 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t cct1 = 0, cct2 = 0;
 			string op = dataValue["OP"].asString();
@@ -107,20 +107,36 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 
 bool ElementCct::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t cct = (value * 192) + 800;
-			LOGD("DoTrigger cct: %d", cct);
+			LOGD("Do cct: %d", cct);
 			bleProtocol->SetCctLight(addr, cct, 0, true);
 			return true;
 		}
+	}
+	return false;
+}
+
+bool ElementCct::DoV2(Json::Value &dataValue)
+{
+	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+	{
+		int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		// TODO: check way to use cct value
+		uint16_t cct = (value * 192) + 800;
+		LOGD("DoV2 cct: %d", cct);
+		bleProtocol->SetCctLight(addr, cct, 0, true);
+		return true;
 	}
 	return false;
 }

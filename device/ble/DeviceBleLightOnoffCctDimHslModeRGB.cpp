@@ -73,22 +73,33 @@ bool DeviceBleLightOnoffCctDimHslModeRGB::CheckData(Json::Value &dataValue, bool
 
 bool DeviceBleLightOnoffCctDimHslModeRGB::Do(Json::Value &dataValue)
 {
-	if (!moduleOnOff->Do(dataValue))
+	if (dataValue.isArray())
 	{
-		if (!moduleDim->Do(dataValue))
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
-			if (!moduleHsl->Do(dataValue))
+			if (!moduleOnOff->Do(dataValue))
 			{
-				if (!moduleModeRgb->Do(dataValue))
+				if (!moduleDim->Do(dataValue))
 				{
-					if (!elementCct->Do(dataValue))
+					if (!moduleModeRgb->Do(dataValue))
 					{
-						return false;
+						elementCct->Do(dataValue);
 					}
 				}
 			}
 		}
 	}
+	moduleHsl->DoJsonArray(dataValue);
+	return true;
+}
+
+bool DeviceBleLightOnoffCctDimHslModeRGB::DoV2(Json::Value &dataValue)
+{
+	moduleOnOff->DoV2(dataValue);
+	moduleDim->DoV2(dataValue);
+	moduleHsl->DoV2(dataValue);
+	moduleModeRgb->DoV2(dataValue);
+	elementCct->DoV2(dataValue);
 	return true;
 }
 

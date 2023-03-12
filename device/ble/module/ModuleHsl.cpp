@@ -132,9 +132,9 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-bool ModuleHsl::Do(Json::Value &dataValue)
+bool ModuleHsl::DoJsonArray(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
 	if (dataValue.isArray())
 	{
 		bool isH = false, isS = false, isL = false;
@@ -185,5 +185,22 @@ bool ModuleHsl::Do(Json::Value &dataValue)
 	// 		}
 	// 	}
 	// }
+	return false;
+}
+
+bool ModuleHsl::DoV2(Json::Value &dataValue)
+{
+	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+	{
+		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+		bleProtocol->SetHSLLight(addr, h, s, l, 0, true);
+		return true;
+	}
 	return false;
 }

@@ -49,15 +49,3 @@ void DeviceBleSwitchScene6DC::InputData(uint8_t *data, int len, uint32_t addr)
 		return;
 	}
 }
-
-bool DeviceBleSwitchScene6DC::Do(Json::Value &dataValue)
-{
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
-	return false;
-}
-
-bool DeviceBleSwitchScene6DC::Do(int id, int value)
-{
-	LOGD("DoTrigger id: %d, value: %d", id, value);
-	return false;
-}

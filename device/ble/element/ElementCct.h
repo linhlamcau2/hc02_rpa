@@ -8,6 +8,7 @@ class ElementCct : public Element
 protected:
 	uint16_t cct;
 	int id;
+	string key;
 
 public:
 	ElementCct(Device *device, uint32_t addr);
@@ -70,4 +71,13 @@ public:
 	 * @return false
 	 */
 	bool Do(Json::Value &dataValue);
+
+	/**
+	 * @brief Do an action use message format version 2
+	 *
+	 * @param dataValue data of action
+	 * @return true
+	 * @return false
+	 */
+	bool DoV2(Json::Value &dataValue);
 };

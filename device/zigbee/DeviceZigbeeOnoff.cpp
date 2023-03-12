@@ -48,7 +48,7 @@ bool DeviceZigbeeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 
 bool DeviceZigbeeOnoff::Do(Json::Value &dataValue)
 {
-	LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isMember("method") && dataValue["method"].isString())
 	{
 		string method = dataValue["method"].asString();

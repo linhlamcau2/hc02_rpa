@@ -8,6 +8,7 @@ class ModuleButton : public Module
 protected:
 	uint8_t bt;
 	int id;
+	string key;
 
 public:
 	ModuleButton(Device *device, uint32_t addr);
@@ -62,4 +63,22 @@ public:
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
+
+	/**
+	 * @brief Do an action
+	 *
+	 * @param dataValue data of action
+	 * @return true
+	 * @return false
+	 */
+	bool Do(Json::Value &dataValue);
+
+	/**
+	 * @brief Do an action use message format version 2
+	 *
+	 * @param dataValue data of action
+	 * @return true
+	 * @return false
+	 */
+	bool DoV2(Json::Value &dataValue);
 };
