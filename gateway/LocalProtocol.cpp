@@ -119,11 +119,12 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 		string rqi = payloadJson["rqi"].asString();
 		if (onLocalCallbackFuncListV2.find(cmd) != onLocalCallbackFuncListV2.end())
 		{
-			OnLocalCallbackFuncV2 onLocalCallbackFuncV2 = onLocalCallbackFuncListV2[cmd];
-			int rs = onLocalCallbackFuncV2(payloadJson, respValue, rqi);
+			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncListV2[cmd];
+			int rs = onLocalCallbackFunc(payloadJson, respValue);
 			if (rs == 0)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
 				Publish(HC_RESPONSE_TOPIC_V2, respValue.toString());
 			}
 			else if (rs == 1)
@@ -182,10 +183,10 @@ int LocalProtocol::OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLoc
 	return 0;
 }
 
-int LocalProtocol::OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFuncV2 onLocalCallbackFuncV2)
+int LocalProtocol::OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
 {
-	LOGI("OnLocalCallbackRegister cmd: %s", cmd.c_str());
-	onLocalCallbackFuncListV2[cmd] = onLocalCallbackFuncV2;
+	LOGI("OnLocalCallbackRegisterV2 cmd: %s", cmd.c_str());
+	onLocalCallbackFuncListV2[cmd] = onLocalCallbackFunc;
 	return 0;
 }
 

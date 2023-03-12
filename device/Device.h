@@ -136,7 +136,9 @@ public:
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 	virtual void CheckTrigger();
 	virtual bool Do(Json::Value &dataValue) { return false; }
+	virtual bool DoV2(Json::Value &dataValue) { return false; }
 	virtual bool DoJsonArray(Json::Value &dataValue);
+	virtual bool DoJsonArrayV2(Json::Value &dataValue);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value jsonValue);

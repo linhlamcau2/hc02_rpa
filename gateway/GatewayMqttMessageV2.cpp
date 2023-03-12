@@ -12,12 +12,12 @@
 
 void Gateway::initMqttMessageV2()
 {
-	OnDeviceRpcCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2, placeholders::_3));
+	OnDeviceRpcCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2, placeholders::_3));
+	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 }
 
-int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue, string rqi)
+int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlDevice");
 	if (reqValue.isMember("data") && reqValue["data"].isObject())
@@ -31,7 +31,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue, stri
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				bool rs = device->Do(devData);
+				bool rs = device->DoV2(devData);
 				respValue["data"]["code"] = rs;
 			}
 			else
@@ -52,6 +52,5 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue, stri
 		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlDevRsp";
-	respValue["rqi"] = rqi;
 	return 0;
 }

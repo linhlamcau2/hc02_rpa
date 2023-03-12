@@ -147,7 +147,7 @@ private:
 
 	// Mqtt V2 message handle
 	void initMqttMessageV2();
-	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue, string rqi);
+	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);

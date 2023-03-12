@@ -157,6 +157,22 @@ bool Device::DoJsonArray(Json::Value &dataValue)
 	return true;
 }
 
+bool Device::DoJsonArrayV2(Json::Value &dataValue)
+{
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			DoV2(dataValue[i]);
+		}
+	}
+	else
+	{
+		DoV2(dataValue);
+	}
+	return true;
+}
+
 void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
 {
 	lastTimeActive = time(NULL);

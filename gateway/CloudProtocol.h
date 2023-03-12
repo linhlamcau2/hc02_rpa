@@ -16,8 +16,7 @@ private:
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
-	typedef function<int(Json::Value &reqValue, Json::Value &respValue, string &rqi)> OnRpcCallbackFuncV2;
-	map<string, OnRpcCallbackFuncV2> onRpcCallbackFuncListV2;
+	map<string, OnRpcCallbackFunc> onRpcCallbackFuncListV2;
 
 	void OnDeviceRpc(string &topic, string &payload);
 	void OnDeviceRpcV2(string &topic, string &payload);
@@ -37,7 +36,7 @@ public:
 	virtual void OnCloudConnect(bool isConnected, bool isReconnect) {}
 
 	int OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc);
-	int OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFuncV2 onRpcCallbackFuncV2);
+	int OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFunc onRpcCallbackFunc);
 
 	int OnlineHC(string deviceName);
 
