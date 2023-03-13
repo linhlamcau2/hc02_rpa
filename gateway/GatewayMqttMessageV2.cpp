@@ -24,6 +24,8 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
@@ -38,6 +40,8 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -685,7 +689,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 			}
 			else
 			{
-				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+				respValue["data"]["code"] = CODE_NOT_FOUND_SCENE;
 			}
 		}
 		else
@@ -698,6 +702,67 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
 	respValue["cmd"] = "delSceneRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnCallScene(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString())
+		{
+			string sceneId = data["id"].asString();
+			SceneBle *scene = getSceneBleFromId(sceneId);
+			if (scene)
+			{
+				scene->Do();
+				respValue["data"]["code"] = CODE_OK;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_NOT_FOUND_SCENE;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "callSceneRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		Rule *rule = AddRuleV2(data);
+		if (rule)
+		{
+			LOGI("Add Rule %s", rule->GetId().c_str());
+			ruleList[rule->GetId()] = rule;
+			string ruleStr = data.toString();
+			ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+			database->RuleAdd(rule->GetId(), ruleStr, true, 1);
+			rule->Check();
+			respValue["data"]["code"] = CODE_OK;
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "createRuleRsp";
 	return CODE_OK;
 }
 

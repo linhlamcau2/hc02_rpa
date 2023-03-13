@@ -163,6 +163,10 @@ private:
 	int OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
+	// thieu scene controller
+	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
+
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 
@@ -199,12 +203,6 @@ public:
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
 #endif
 
-	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
-	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
-	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
-	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
-	Room *AddNewRoom(Room *room);
-
 	uint16_t getBleUnicast();
 	string getBleNetkey();
 	string getBleAppKey();
@@ -229,6 +227,13 @@ public:
 	void PushRelayState(uint8_t relay);
 
 	void AddAllDeviceStatusV2(Json::Value &reqValue);
+
+	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
+	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
+	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
+	Rule *AddRuleV2(Json::Value &ruleValue);
+	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
+	Room *AddNewRoom(Room *room);
 };
 
 extern Gateway *gateway;
