@@ -157,6 +157,12 @@ private:
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 

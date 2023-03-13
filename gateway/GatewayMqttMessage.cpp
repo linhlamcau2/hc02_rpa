@@ -707,7 +707,9 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 						dataJsonRsp["FAILED"].append(scene->deviceList[i]->device->GetId());
 					}
 				}
-				delete sceneBleList[scene->GetId()];
+				sceneBleList.erase(scene->GetId());
+				database->SceneBleDel(scene);
+				delete scene;
 			}
 			else
 			{
@@ -1572,8 +1574,9 @@ int Gateway::OnRpcDelGroup(Json::Value &reqValue, Json::Value &respValue)
 				if (!hasDeviceDelGroupFailed)
 				{
 					database->GroupDel(group);
+					groupList.erase(group->GetId());
+					delete group;
 				}
-
 				// respValue["code"] = 0;
 				// return 0;
 			}

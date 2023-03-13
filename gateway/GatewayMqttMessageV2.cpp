@@ -15,9 +15,15 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
@@ -26,6 +32,12 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -63,7 +75,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlDevRsp";
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -128,7 +140,7 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlAllDevRsp";
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -166,7 +178,7 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnControlGroup %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlGroupRsp";
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
@@ -202,7 +214,7 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnControlScene %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlSceneRsp";
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
@@ -227,7 +239,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "startScanBleRsp";
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
@@ -237,7 +249,7 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 	bleProtocol->isProvisioning = false;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "stopScanBleRsp";
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -291,7 +303,402 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
 	respValue["cmd"] = "delDevRsp";
-	return 0;
+	return CODE_OK;
+}
+
+int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString() &&
+				data.isMember("name") && data["name"].isString() &&
+				data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string groupId = data["id"].asString();
+			string groupName = data["name"].asString();
+			Json::Value devices = reqValue["devices"];
+			int groupAddr = 1;
+			for (auto &x : groupList)
+			{
+				if (x.first >= groupAddr)
+				{
+					groupAddr = x.first + 1;
+				}
+			}
+			Group *group = new Group(groupId, groupAddr, groupName);
+			if (group)
+			{
+				if (AddNewGroup(group, true, true))
+				{
+					for (auto &deviceValue : devices)
+					{
+						if (deviceValue.isString())
+						{
+							string deviceId = deviceValue.asString();
+							Device *device = getDeviceFromId(deviceId);
+							if (device)
+							{
+								int deviceAddr = device->GetAddr();
+								if (group->AddDevice(device, deviceAddr, true))
+								{
+									database->DeviceInGroupAdd(group, device, deviceAddr);
+									successList.append(deviceId);
+								}
+								else
+								{
+									LOGD("add group deviceId %s error", deviceId.c_str());
+									failedList.append(deviceId);
+								}
+							}
+							else
+							{
+								LOGD("deviceId %s dose not exist", deviceId.c_str());
+								failedList.append(deviceId);
+							}
+						}
+					}
+					respValue["data"]["code"] = CODE_OK;
+					respValue["data"]["addr"] = groupAddr;
+					respValue["data"]["success"] = successList;
+					respValue["data"]["failed"] = failedList;
+				}
+				else
+				{
+					respValue["data"]["code"] = CODE_DATABASE_ERROR;
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "createGroupRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString() &&
+				data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string groupId = data["id"].asString();
+			Json::Value devices = reqValue["devices"];
+			Group *group = getGroupFromId(groupId);
+			if (group)
+			{
+				for (auto &deviceValue : devices)
+				{
+					if (deviceValue.isString())
+					{
+						string deviceId = deviceValue.asString();
+						Device *device = getDeviceFromId(deviceId);
+						if (device)
+						{
+							int deviceAddr = device->GetAddr();
+							if (group->AddDevice(device, deviceAddr, true))
+							{
+								database->DeviceInGroupAdd(group, device, deviceAddr);
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("add to group deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
+						}
+						else
+						{
+							LOGD("deviceId %s dose not exist", deviceId.c_str());
+							failedList.append(deviceId);
+						}
+					}
+				}
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "addDevToGroupRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString() &&
+				data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string groupId = data["id"].asString();
+			Json::Value devices = reqValue["devices"];
+			Group *group = getGroupFromId(groupId);
+			if (group)
+			{
+				for (auto &deviceValue : devices)
+				{
+					if (deviceValue.isString())
+					{
+						string deviceId = deviceValue.asString();
+						Device *device = getDeviceFromId(deviceId);
+						if (device)
+						{
+							int deviceAddr = device->GetAddr();
+							if (group->DelDevice(device, deviceAddr))
+							{
+								database->DeviceInGroupDel(group, device, deviceAddr);
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("delete from group deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
+						}
+						else
+						{
+							LOGD("deviceId %s dose not exist", deviceId.c_str());
+							failedList.append(deviceId);
+						}
+					}
+				}
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delDevFromGroupRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string groupId = data["id"].asString();
+			Group *group = getGroupFromId(groupId);
+			if (group)
+			{
+				for (auto &deviceInGroup : group->deviceList)
+				{
+					if (group->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()))
+					{
+						database->DeviceInGroupDel(group, deviceInGroup->device, deviceInGroup->device->GetAddr());
+						successList.append(deviceInGroup->device->GetId());
+					}
+					else
+					{
+						failedList.append(deviceInGroup->device->GetId());
+					}
+				}
+				database->GroupDel(group);
+				groupList.erase(group->GetId());
+				delete group;
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delGroupRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString() &&
+				data.isMember("name") && data["name"].isString() &&
+				data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string sceneId = data["id"].asString();
+			string sceneName = data["name"].asString();
+			int sceneAddr = 1;
+			for (auto &x : sceneBleList)
+			{
+				if (x.first >= sceneAddr)
+				{
+					sceneAddr = x.first + 1;
+				}
+			}
+			SceneBle *scene = new SceneBle(sceneId, sceneAddr, sceneName);
+			if (scene)
+			{
+				if (AddNewSceneBle(scene, true, true))
+				{
+					Json::Value groupList = data["devices"];
+					for (auto &groupValue : groupList)
+					{
+						if (groupValue.isObject() &&
+								groupValue.isMember("id") && groupValue["id"].isArray() &&
+								groupValue.isMember("data") && groupValue["data"].isObject())
+						{
+							Json::Value deviceList = groupValue["id"];
+							Json::Value deviceProperties = groupValue["data"];
+							for (auto &deviceValue : deviceList)
+							{
+								if (deviceValue.isString())
+								{
+									string devcieId = deviceValue.asString();
+									Device *device = getDeviceFromId(devcieId);
+									if (device)
+									{
+										if (scene->AddDeviceV2(device, deviceProperties, false))
+										{
+											database->DeviceInSceneBleAdd(scene, device, deviceProperties);
+											successList.append(device->GetId());
+										}
+										else
+										{
+											failedList.append(device->GetId());
+										}
+									}
+								}
+							}
+						}
+					}
+					respValue["data"]["code"] = CODE_OK;
+					respValue["data"]["addr"] = sceneAddr;
+					respValue["data"]["success"] = successList;
+					respValue["data"]["failed"] = failedList;
+				}
+				else
+				{
+					respValue["data"]["code"] = CODE_DATABASE_ERROR;
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "createSceneRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string sceneId = data["id"].asString();
+			SceneBle *scene = getSceneBleFromId(sceneId);
+			if (scene)
+			{
+				for (auto &deviceInScene : scene->deviceList)
+				{
+					if (scene->DelDevice(deviceInScene->device))
+					{
+						database->DeviceInSceneBleDel(scene, deviceInScene->device, deviceInScene->device->GetAddr());
+						successList.append(deviceInScene->device->GetId());
+					}
+					else
+					{
+						failedList.append(deviceInScene->device->GetId());
+					}
+				}
+				sceneBleList.erase(scene->GetId());
+				database->SceneBleDel(scene);
+				delete scene;
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delSceneRsp";
+	return CODE_OK;
 }
 
 int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
@@ -300,5 +707,5 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 	ResetFactory();
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
-	return 0;
+	return CODE_OK;
 }
