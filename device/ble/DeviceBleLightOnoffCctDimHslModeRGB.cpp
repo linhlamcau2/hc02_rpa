@@ -9,112 +9,11 @@ DeviceBleLightOnoffCctDimHslModeRGB::DeviceBleLightOnoffCctDimHslModeRGB(string 
 	moduleModeRgb = new ModuleModeRgb(this, addr);
 	moduleHsl = new ModuleHsl(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
+	modules.push_back(moduleOnOff);
+	modules.push_back(moduleDim);
+	modules.push_back(moduleModeRgb);
+	modules.push_back(moduleHsl);
+	elements.push_back(elementCct);
+	countElement = 2;
 	powerSource = POWER_AC;
-}
-
-bool DeviceBleLightOnoffCctDimHslModeRGB::CheckAddr(uint32_t addr)
-{
-	return ((this->addr <= addr) && (this->addr + 1 >= addr));
-}
-
-int DeviceBleLightOnoffCctDimHslModeRGB::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	moduleOnOff->BuildTelemetryValue(pushDataValue);
-	moduleDim->BuildTelemetryValue(pushDataValue);
-	moduleHsl->BuildTelemetryValue(pushDataValue);
-	moduleModeRgb->BuildTelemetryValue(pushDataValue);
-	elementCct->BuildTelemetryValue(pushDataValue);
-	return 0;
-}
-
-int DeviceBleLightOnoffCctDimHslModeRGB::BuildTelemetryValueV2(Json::Value &pushDataValue)
-{
-	moduleOnOff->BuildTelemetryValueV2(pushDataValue);
-	moduleDim->BuildTelemetryValueV2(pushDataValue);
-	moduleHsl->BuildTelemetryValueV2(pushDataValue);
-	moduleModeRgb->BuildTelemetryValueV2(pushDataValue);
-	elementCct->BuildTelemetryValueV2(pushDataValue);
-	return 0;
-}
-
-void DeviceBleLightOnoffCctDimHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	if (!moduleOnOff->InputData(data, len, values))
-	{
-		if (!moduleDim->InputData(data, len, values))
-		{
-			if (!moduleHsl->InputData(data, len, values))
-			{
-				if (!moduleModeRgb->InputData(data, len, values))
-				{
-					if (!elementCct->InputData(data, len, values))
-					{
-						return;
-					}
-				}
-			}
-		}
-	}
-	PushTelemetry(values);
-}
-
-bool DeviceBleLightOnoffCctDimHslModeRGB::CheckData(Json::Value &dataValue, bool &rs)
-{
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (!moduleOnOff->CheckData(dataValue, rs))
-	{
-		if (!moduleDim->CheckData(dataValue, rs))
-		{
-			if (!moduleHsl->CheckData(dataValue, rs))
-			{
-				if (!moduleModeRgb->CheckData(dataValue, rs))
-				{
-					if (!elementCct->CheckData(dataValue, rs))
-					{
-						return false;
-					}
-				}
-			}
-		}
-	}
-	return true;
-}
-
-bool DeviceBleLightOnoffCctDimHslModeRGB::Do(Json::Value &dataValue)
-{
-	if (dataValue.isArray())
-	{
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
-		{
-			if (!moduleOnOff->Do(dataValue))
-			{
-				if (!moduleDim->Do(dataValue))
-				{
-					if (!moduleModeRgb->Do(dataValue))
-					{
-						elementCct->Do(dataValue);
-					}
-				}
-			}
-		}
-	}
-	moduleHsl->DoJsonArray(dataValue);
-	return true;
-}
-
-bool DeviceBleLightOnoffCctDimHslModeRGB::DoV2(Json::Value &dataValue)
-{
-	moduleOnOff->DoV2(dataValue);
-	moduleDim->DoV2(dataValue);
-	moduleHsl->DoV2(dataValue);
-	moduleModeRgb->DoV2(dataValue);
-	elementCct->DoV2(dataValue);
-	return true;
-}
-
-bool DeviceBleLightOnoffCctDimHslModeRGB::AddGroup(uint16_t idGroup, uint16_t epId)
-{
-	LOGD("AddGroup id: %d epId: %d", idGroup, epId);
-	return 0;
 }

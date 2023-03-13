@@ -15,11 +15,17 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -208,4 +214,91 @@ int Gateway::OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue
 	respValue["data"]["device"] = deviceData;
 	respValue["cmd"] = "requestDevStt";
 	return CODE_OK;
+}
+
+int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	scanDeviceList.clear();
+	bleProtocol->isAdding = true;
+	bleProtocol->isProvisioning = true;
+	if (bleProtocol->StartScan())
+	{
+		bleProtocol->StopScan();
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "startScanBleRsp";
+	return 0;
+}
+
+int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
+{
+	bleProtocol->StopScan();
+	bleProtocol->isAdding = false;
+	bleProtocol->isProvisioning = false;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "stopScanBleRsp";
+	return 0;
+}
+
+int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			Json::Value devices = reqValue["devices"];
+			for (auto &deviceValue : devices)
+			{
+				if (deviceValue.isString())
+				{
+					string deviceId = deviceValue.asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
+					{
+						if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+						{
+							database->DeviceDel(device->GetMac());
+							LOGD("remove deviceId: %s", deviceId.c_str());
+							successList.append(deviceId);
+						}
+						else
+						{
+							LOGD("delete deviceId %s error", deviceId.c_str());
+							failedList.append(deviceId);
+						}
+					}
+					else
+					{
+						LOGD("deviceId %s dose not exist", deviceId.c_str());
+						failedList.append(deviceId);
+					}
+				}
+			}
+			respValue["data"]["code"] = CODE_OK;
+			respValue["data"]["success"] = successList;
+			respValue["data"]["failed"] = failedList;
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delDevRsp";
+	return 0;
+}
+
+int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGW("OnResetFactory");
+	ResetFactory();
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "resetHcRsp";
+	return 0;
 }

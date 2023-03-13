@@ -6,6 +6,8 @@
 #include <byteswap.h>
 #include "ErrorCode.h"
 #include "RuleInputDevice.h"
+#include "module/Module.h"
+#include "element/Element.h"
 
 #define KEY_ATTRIBUTE_ONOFF "onoff"
 #define KEY_ATTRIBUTE_DIM "dim"
@@ -132,6 +134,11 @@ protected:
 	int rssi;
 	protocol_e protocol;
 	string device_id;
+	int countElement;
+	Json::Value values; // telemetry data
+
+	vector<Module *> modules;
+	vector<Element *> elements;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -149,7 +156,6 @@ public:
 	string GetName();
 	string GetMac();
 	uint32_t GetAddr();
-	virtual bool CheckAddr(uint32_t addr);
 	void SetAddr(uint32_t addr);
 	uint32_t GetType();
 	uint16_t GetVersion();
@@ -158,6 +164,7 @@ public:
 	int GetRSSI();
 
 	void SetRSSI(int rssi);
+	virtual bool CheckAddr(uint32_t addr);
 
 	protocol_e GetProtocol();
 
@@ -167,18 +174,18 @@ public:
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
-	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
-	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
+	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
+	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue);
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
 
 	void DeviceInputData(uint8_t *data, int len, uint32_t addr);
 
 	virtual void InitAttribute(int attributeId, double value) {}
-	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0) {}
-	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
+	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
+	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 	virtual void CheckTrigger();
-	virtual bool Do(Json::Value &dataValue) { return false; }
-	virtual bool DoV2(Json::Value &dataValue) { return false; }
+	virtual bool Do(Json::Value &dataValue);
+	virtual bool DoV2(Json::Value &dataValue);
 	virtual bool DoJsonArray(Json::Value &dataValue);
 	virtual bool DoJsonArrayV2(Json::Value &dataValue);
 

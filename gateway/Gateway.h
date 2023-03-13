@@ -147,11 +147,18 @@ private:
 
 	// Mqtt V2 message handle
 	void initMqttMessageV2();
+	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	// Bản tin cấu hình
+	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue);
+	// Cấu hình HC
+	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);

@@ -10,59 +10,9 @@ DeviceBlePirLightSensorAC::DeviceBlePirLightSensorAC(string id, string name, str
 	moduleLightSensor = new ModuleLightSensor(this, addr);
 	modulePinLevel = new ModulePinLevel(this, addr);
 	moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
-	powerSource = POWER_BATTERY;
-}
-
-int DeviceBlePirLightSensorAC::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	modulePirSensor->BuildTelemetryValue(pushDataValue);
-	modulePinLevel->BuildTelemetryValue(pushDataValue);
-	moduleLightSensor->BuildTelemetryValue(pushDataValue);
-	moduleTimeActionPir->BuildTelemetryValue(pushDataValue);
-	return 0;
-}
-
-int DeviceBlePirLightSensorAC::BuildTelemetryValueV2(Json::Value &pushDataValue)
-{
-	modulePirSensor->BuildTelemetryValueV2(pushDataValue);
-	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
-	moduleLightSensor->BuildTelemetryValueV2(pushDataValue);
-	moduleTimeActionPir->BuildTelemetryValueV2(pushDataValue);
-	return 0;
-}
-
-void DeviceBlePirLightSensorAC::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	if (modulePirSensor->InputData(data, len, values))
-	{
-		PushTelemetry(values);
-	}
-	if (moduleLightSensor->InputData(data, len, values))
-	{
-		PushTelemetry(values);
-	}
-	if (modulePinLevel->InputData(data, len, values))
-	{
-		PushTelemetry(values);
-	}
-	if (moduleTimeActionPir->InputData(data, len, values))
-	{
-		PushTelemetry(values);
-	}
-}
-
-bool DeviceBlePirLightSensorAC::Do(Json::Value &dataValue)
-{
-	if (!moduleTimeActionPir->Do(dataValue))
-	{
-		return false;
-	}
-	return true;
-}
-
-bool DeviceBlePirLightSensorAC::DoV2(Json::Value &dataValue)
-{
-	moduleTimeActionPir->DoV2(dataValue);
-	return true;
+	modules.push_back(modulePirSensor);
+	modules.push_back(moduleLightSensor);
+	modules.push_back(modulePinLevel);
+	modules.push_back(moduleTimeActionPir);
+	powerSource = POWER_AC;
 }
