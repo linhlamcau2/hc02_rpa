@@ -6,7 +6,6 @@
 #include "BleProtocol.h"
 #include "BleDefine.h"
 #include "Http.h"
-#include "Config.h"
 #include "Base64.h"
 #include <fstream>
 

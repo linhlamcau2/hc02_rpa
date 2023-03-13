@@ -1,4 +1,5 @@
 #include "Gateway.h"
+#include <fstream>
 #include "Log.h"
 #include "Db.h"
 #include "Util.h"
@@ -8,7 +9,6 @@
 #include "Http.h"
 #include "Config.h"
 #include "Base64.h"
-#include <fstream>
 
 void Gateway::initMqttMessage()
 {
@@ -2592,8 +2592,6 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 {
-// TODO: add for esp platform
-#ifndef ESP_PLATFORM
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
@@ -2640,7 +2638,6 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-#endif
 	return -1;
 }
 
