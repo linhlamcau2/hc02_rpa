@@ -128,7 +128,7 @@ private:
 	pthread_mutex_t mutex;
 
 	// TODO: Add init state
-	pro_net_info_t *pro_net_info;
+	pro_net_info_t pro_net_info;
 	uint8_t netKey[16];
 	uint8_t appKey[16];
 	uint8_t gwKey[16];
@@ -228,11 +228,11 @@ public:
 	// Backup
 	int GetInfogw();
 	int GetInfoMesh();
-	int UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev);
-	int UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev);
-	int UpdateNetKey(uint16_t gwAddr, uint8_t *netKey, uint32_t indexId);
-	int UpdateDevKey(uint16_t gwAddr, uint8_t *devKey);
-	int UpdateAppKey(uint8_t *appKey);
+	int UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev);
+	int UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev);
+	int UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId);
+	int UpdateDevKey(uint16_t gwAddr, string devKey);
+	int UpdateAppKey(string appKey);
 	int UpdateMaxAddr(uint16_t addr);
 };
 
