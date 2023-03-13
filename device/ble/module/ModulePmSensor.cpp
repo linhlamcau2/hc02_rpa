@@ -122,3 +122,10 @@ void ModulePmSensor::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = pm1_0;
 	jsonValue.append(dataValue);
 }
+
+void ModulePmSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_PM2_5] = pm25;
+	jsonValue[KEY_ATTRIBUTE_PM10] = pm10;
+	jsonValue[KEY_ATTRIBUTE_PM1_0] = pm1_0;
+}

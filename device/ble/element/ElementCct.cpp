@@ -105,6 +105,11 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_CCT] = cct;
+}
+
 bool ElementCct::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());

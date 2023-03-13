@@ -26,12 +26,19 @@ public:
 	 */
 	virtual bool InputData(uint8_t *data, int len, Json::Value &jsonValue) { return false; }
 
-	/**
-	 * @brief Build telemetry message with this module
-	 *
-	 * @param jsonValue
-	 */
-	virtual void BuildTelemetryValue(Json::Value &jsonValue) {}
+	// /**
+	//  * @brief Build telemetry message with this module
+	//  *
+	//  * @param jsonValue
+	//  */
+	// virtual void BuildTelemetryValue(Json::Value &jsonValue) {}
+
+	// /**
+	//  * @brief Build telemetry message with this module use message format version 2
+	//  *
+	//  * @param jsonValue
+	//  */
+	// virtual void BuildTelemetryValueV2(Json::Value &jsonValue) {}
 
 	// /**
 	//  * @brief Do an action

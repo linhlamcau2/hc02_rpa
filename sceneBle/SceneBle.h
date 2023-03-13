@@ -34,5 +34,5 @@ public:
 	int GetPositionDevice(Device *device);
 	bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
 	bool DelDevice(Device *device);
-	void Do(int id);
+	bool Do();
 };

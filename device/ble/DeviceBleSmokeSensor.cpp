@@ -13,6 +13,12 @@ int DeviceBleSmokeSensor::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBleSmokeSensor::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	moduleSmoke->BuildTelemetryValueV2(pushDataValue);
+	return 0;
+}
+
 void DeviceBleSmokeSensor::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;

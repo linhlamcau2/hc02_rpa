@@ -962,3 +962,13 @@ void Gateway::setVersion(string version)
 void Gateway::setName(string name)
 {
 }
+
+void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
+{
+	for (const auto &[id, device] : deviceList)
+	{
+		Json::Value deviceValue;
+		device->BuildTelemetryValueV2(dataValue);
+		dataValue.append(deviceValue);
+	}
+}

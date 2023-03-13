@@ -2579,7 +2579,7 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			SceneBle *scene = getSceneBleFromId(sceneId);
 			if (scene)
 			{
-				scene->Do(scene->GetId());
+				scene->Do();
 			}
 			else
 			{

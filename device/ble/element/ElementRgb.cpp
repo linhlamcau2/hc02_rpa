@@ -164,6 +164,15 @@ void ElementRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ElementRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[BLE_ATTRIBUTE_R] = r;
+	jsonValue[BLE_ATTRIBUTE_G] = g;
+	jsonValue[BLE_ATTRIBUTE_B] = b;
+	jsonValue[KEY_ATTRIBUTE_DIM_ON] = dimOn;
+	jsonValue[KEY_ATTRIBUTE_DIM_OFF] = dimOff;
+}
+
 // TODO: viet anh recheck DoJsonArray
 bool ElementRgb::DoJsonArray(Json::Value &dataValue)
 {

@@ -148,6 +148,10 @@ private:
 	// Mqtt V2 message handle
 	void initMqttMessageV2();
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
@@ -210,6 +214,8 @@ public:
 	void setRefreshToken(string refresh_token);
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
+
+	void AddAllDeviceStatusV2(Json::Value &reqValue);
 };
 
 extern Gateway *gateway;

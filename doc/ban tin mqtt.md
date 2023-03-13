@@ -109,7 +109,7 @@ Request:
 Response:
 ```json
 {
-    "cmd": "controlDevRsp",
+    "cmd": "controlAllDevRsp",
     "rqi": "abc123456",
     "data": {
         "code": 0

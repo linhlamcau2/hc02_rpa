@@ -16,6 +16,13 @@ int DeviceBleSensorTempHum::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBleSensorTempHum::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	moduleTempHum->BuildTelemetryValueV2(pushDataValue);
+	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
+	return 0;
+}
+
 void DeviceBleSensorTempHum::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;

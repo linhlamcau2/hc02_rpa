@@ -132,6 +132,13 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ModuleHsl::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_HUE] = h;
+	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
+	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
+}
+
 bool ModuleHsl::DoJsonArray(Json::Value &dataValue)
 {
 	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());

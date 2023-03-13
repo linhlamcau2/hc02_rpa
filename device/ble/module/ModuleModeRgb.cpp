@@ -111,6 +111,11 @@ void ModuleModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ModuleModeRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_MODE_RGB] = mode;
+}
+
 bool ModuleModeRgb::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());

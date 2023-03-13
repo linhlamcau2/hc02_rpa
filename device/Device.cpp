@@ -112,12 +112,6 @@ void Device::UnregisterTrigger(RuleInputDevice *ruleInputDevice)
 	deviceRuleInputList.erase(remove(deviceRuleInputList.begin(), deviceRuleInputList.end(), ruleInputDevice), deviceRuleInputList.end());
 }
 
-int Device::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	LOGW("BuildTelemetryValue");
-	return -1;
-}
-
 int Device::BuildAttributesValue(Json::Value &pushDataValue)
 {
 	Json::Value deviceData;

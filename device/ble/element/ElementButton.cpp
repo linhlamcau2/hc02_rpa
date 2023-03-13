@@ -105,6 +105,11 @@ void ElementButton::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ElementButton::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[key] = bt;
+}
+
 bool ElementButton::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());

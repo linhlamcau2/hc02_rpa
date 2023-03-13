@@ -22,6 +22,16 @@ int DeviceBleSwitchScene6DC::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBleSwitchScene6DC::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
+	for (int i = 0; i < 6; i++)
+	{
+		moduleButton[i]->BuildTelemetryValueV2(pushDataValue);
+	}
+	return 0;
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void DeviceBleSwitchScene6DC::InitAttribute(int attributeId, double value)
 {

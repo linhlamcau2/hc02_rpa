@@ -90,6 +90,11 @@ void ModuleTimeActionPir::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ModuleTimeActionPir::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
+}
+
 bool ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
 	if (dataValue.isObject() &&

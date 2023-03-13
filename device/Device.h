@@ -4,6 +4,7 @@
 #include <vector>
 #include <json.h>
 #include <byteswap.h>
+#include "ErrorCode.h"
 #include "RuleInputDevice.h"
 
 #define KEY_ATTRIBUTE_ONOFF "onoff"
@@ -166,7 +167,8 @@ public:
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
-	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
+	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
+	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
 
 	void DeviceInputData(uint8_t *data, int len, uint32_t addr);

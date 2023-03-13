@@ -27,6 +27,16 @@ int DeviceBleLightOnoffCctDimHslModeRGB::BuildTelemetryValue(Json::Value &pushDa
 	return 0;
 }
 
+int DeviceBleLightOnoffCctDimHslModeRGB::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	moduleOnOff->BuildTelemetryValueV2(pushDataValue);
+	moduleDim->BuildTelemetryValueV2(pushDataValue);
+	moduleHsl->BuildTelemetryValueV2(pushDataValue);
+	moduleModeRgb->BuildTelemetryValueV2(pushDataValue);
+	elementCct->BuildTelemetryValueV2(pushDataValue);
+	return 0;
+}
+
 void DeviceBleLightOnoffCctDimHslModeRGB::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;

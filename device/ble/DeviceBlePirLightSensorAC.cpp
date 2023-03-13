@@ -22,6 +22,15 @@ int DeviceBlePirLightSensorAC::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBlePirLightSensorAC::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	modulePirSensor->BuildTelemetryValueV2(pushDataValue);
+	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
+	moduleLightSensor->BuildTelemetryValueV2(pushDataValue);
+	moduleTimeActionPir->BuildTelemetryValueV2(pushDataValue);
+	return 0;
+}
+
 void DeviceBlePirLightSensorAC::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;

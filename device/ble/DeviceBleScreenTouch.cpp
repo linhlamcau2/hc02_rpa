@@ -29,6 +29,11 @@ int DeviceBleScreenTouch::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBleScreenTouch::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	return 0;
+}
+
 void DeviceBleScreenTouch::InputData(uint8_t *data, int len, uint32_t addr)
 {
 }

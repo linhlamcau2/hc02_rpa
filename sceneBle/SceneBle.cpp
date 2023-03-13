@@ -88,7 +88,7 @@ bool SceneBle::DelDevice(Device *device)
 	return false;
 }
 
-void SceneBle::Do(int id)
+bool SceneBle::Do()
 {
-	bleProtocol->CallScene(0xffff, id, 10, true, 1);
+	return bleProtocol->CallScene(0xffff, id, 10, true, 1);
 }

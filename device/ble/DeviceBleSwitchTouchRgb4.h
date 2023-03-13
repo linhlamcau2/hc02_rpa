@@ -18,6 +18,7 @@ public:
 	bool CheckAddr(uint32_t addr);
 
 	int BuildTelemetryValue(Json::Value &pushDataValue);
+	int BuildTelemetryValueV2(Json::Value &pushDataValue);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	void InitAttribute(int attributeId, double value);

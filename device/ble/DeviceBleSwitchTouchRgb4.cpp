@@ -27,6 +27,16 @@ int DeviceBleSwitchTouchRgb4::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBleSwitchTouchRgb4::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		elementButton[i]->BuildTelemetryValueV2(pushDataValue);
+		elementRgb[i]->BuildTelemetryValueV2(pushDataValue);
+	}
+	return 0;
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void DeviceBleSwitchTouchRgb4::InitAttribute(int attributeId, double value)
 {

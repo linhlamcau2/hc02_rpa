@@ -22,6 +22,15 @@ int DeviceBlePirLightSensorDC::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBlePirLightSensorDC::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	modulePirSensor->BuildTelemetryValueV2(pushDataValue);
+	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
+	moduleLightSensor->BuildTelemetryValueV2(pushDataValue);
+	moduleTimeActionPir->BuildTelemetryValueV2(pushDataValue);
+	return 0;
+}
+
 // messgae config
 
 /*

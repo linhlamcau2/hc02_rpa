@@ -99,6 +99,11 @@ void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ModuleButton::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[key] = bt;
+}
+
 bool ModuleButton::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());

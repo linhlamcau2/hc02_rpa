@@ -18,6 +18,14 @@ int DeviceBleDoorSensor::BuildTelemetryValue(Json::Value &pushDataValue)
 	return 0;
 }
 
+int DeviceBleDoorSensor::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	moduleDoorHangOn->BuildTelemetryValueV2(pushDataValue);
+	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
+	moduleDoorStatus->BuildTelemetryValueV2(pushDataValue);
+	return 0;
+}
+
 void DeviceBleDoorSensor::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;

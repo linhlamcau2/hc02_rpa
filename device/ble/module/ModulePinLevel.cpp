@@ -92,3 +92,8 @@ void ModulePinLevel::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = pin;
 	jsonValue.append(dataValue);
 }
+
+void ModulePinLevel::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_BATTERY] = pin;
+}
