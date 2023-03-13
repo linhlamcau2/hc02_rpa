@@ -2494,35 +2494,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (properties.isArray())
-				{
-					int hsl = 0;
-					int rgbDimOnOff = 0;
-					for (Json::ArrayIndex i = 0; i < properties.size(); i++)
-					{
-						Json::Value property = properties[i];
-						if (property.isObject() &&
-								property.isMember("ID") && property["ID"].isInt())
-						{
-							if (property["ID"].asInt() == BLE_ATTRIBUTE_HUE || property["ID"].asInt() == BLE_ATTRIBUTE_SATURATION || property["ID"].asInt() == BLE_ATTRIBUTE_LUMINANCE)
-							{
-								hsl++;
-							}
-							else if (property["ID"].asInt() == BLE_ATTRIBUTE_R || property["ID"].asInt() == BLE_ATTRIBUTE_B || property["ID"].asInt() == BLE_ATTRIBUTE_G || property["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF || property["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
-							{
-								rgbDimOnOff++;
-							}
-						}
-					}
-					if (hsl == 3 || rgbDimOnOff == 5)
-					{
-						device->Do(properties);
-					}
-					else
-					{
-						device->DoJsonArray(properties);
-					}
-				}
+				device->DoJsonArray(properties);
 			}
 			else
 			{
