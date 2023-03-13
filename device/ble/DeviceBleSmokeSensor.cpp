@@ -5,25 +5,6 @@ DeviceBleSmokeSensor::DeviceBleSmokeSensor(string id, string name, string mac, s
 		: DeviceBle(id, name, mac, device_id, addr, BLE_SMOKE_SENSOR, version)
 {
 	moduleSmoke = new ModuleSmoke(this, addr);
-}
-
-int DeviceBleSmokeSensor::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	moduleSmoke->BuildTelemetryValue(pushDataValue);
-	return 0;
-}
-
-int DeviceBleSmokeSensor::BuildTelemetryValueV2(Json::Value &pushDataValue)
-{
-	moduleSmoke->BuildTelemetryValueV2(pushDataValue);
-	return 0;
-}
-
-void DeviceBleSmokeSensor::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	if (moduleSmoke->InputData(data, len, values))
-	{
-		PushTelemetry(values);
-	}
+	modules.push_back(moduleSmoke);
+	powerSource = POWER_BATTERY;
 }

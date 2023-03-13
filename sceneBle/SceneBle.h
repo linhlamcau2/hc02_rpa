@@ -33,6 +33,7 @@ public:
 	void SetName(string name);
 	int GetPositionDevice(Device *device);
 	bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
+	bool AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB);
 	bool DelDevice(Device *device);
 	bool Do();
 };

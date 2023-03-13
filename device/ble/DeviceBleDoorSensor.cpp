@@ -7,37 +7,8 @@ DeviceBleDoorSensor::DeviceBleDoorSensor(string id, string name, string mac, str
 	moduleDoorHangOn = new ModuleDoorHangOn(this, addr);
 	moduleDoorStatus = new ModuleDoorStatus(this, addr);
 	modulePinLevel = new ModulePinLevel(this, addr);
+	modules.push_back(moduleDoorHangOn);
+	modules.push_back(moduleDoorStatus);
+	modules.push_back(modulePinLevel);
 	powerSource = POWER_BATTERY;
-}
-
-int DeviceBleDoorSensor::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	moduleDoorHangOn->BuildTelemetryValue(pushDataValue);
-	modulePinLevel->BuildTelemetryValue(pushDataValue);
-	moduleDoorStatus->BuildTelemetryValue(pushDataValue);
-	return 0;
-}
-
-int DeviceBleDoorSensor::BuildTelemetryValueV2(Json::Value &pushDataValue)
-{
-	moduleDoorHangOn->BuildTelemetryValueV2(pushDataValue);
-	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
-	moduleDoorStatus->BuildTelemetryValueV2(pushDataValue);
-	return 0;
-}
-
-void DeviceBleDoorSensor::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	if (!moduleDoorHangOn->InputData(data, len, values))
-	{
-		if (!moduleDoorStatus->InputData(data, len, values))
-		{
-			if (!modulePinLevel->InputData(data, len, values))
-			{
-				return;
-			}
-		}
-	}
-	PushTelemetry(values);
 }

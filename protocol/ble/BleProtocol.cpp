@@ -1334,7 +1334,7 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	return -1;
 }
 
-int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
+int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 {
 	LOGD("Set scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
 	uint8_t dataRsp[100];
@@ -1383,7 +1383,7 @@ int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRg
 }
 
 // TODO: BelProtocol DelScene
-int BleProtocol::DelSceneLights(uint16_t devAddr, uint16_t scene)
+int BleProtocol::DelSceneBle(uint16_t devAddr, uint16_t scene)
 {
 	LOGD("Del scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
 	uint8_t dataRsp[100];

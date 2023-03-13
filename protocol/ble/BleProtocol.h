@@ -189,8 +189,8 @@ public:
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	// Scene light
-	int SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
-	int DelSceneLights(uint16_t devAddr, uint16_t scene);
+	int SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
+	int DelSceneBle(uint16_t devAddr, uint16_t scene);
 	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
 
