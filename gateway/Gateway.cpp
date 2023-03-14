@@ -27,6 +27,8 @@
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "DeviceBleLightOnoffCctDimHslModeRGB.h"
+#include "DeviceBleSwitchTouchRgb1.h"
+#include "DeviceBleSwitchTouchRgb2.h"
 #include "DeviceBleSwitchTouchRgb3.h"
 #include "DeviceBleSwitchTouchRgb4.h"
 #include "DeviceBleSwitchScene6DC.h"
@@ -516,6 +518,12 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 		break;
 	case BLE_LED_DAY_RGB:
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
+		break;
+	case BLE_SWITCH_RGB_1:
+		device = new DeviceBleSwitchTouchRgb1(id, name, mac, device_id, addr, version);
+		break;
+	case BLE_SWITCH_RGB_2:
+		device = new DeviceBleSwitchTouchRgb2(id, name, mac, device_id, addr, version);
 		break;
 	case BLE_SWITCH_RGB_3:
 		device = new DeviceBleSwitchTouchRgb3(id, name, mac, device_id, addr, version);

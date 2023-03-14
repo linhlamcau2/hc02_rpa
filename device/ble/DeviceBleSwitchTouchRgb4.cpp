@@ -11,7 +11,6 @@ DeviceBleSwitchTouchRgb4::DeviceBleSwitchTouchRgb4(string id, string name, strin
 		elements.push_back(elementButton[i]);
 		elements.push_back(elementRgb[i]);
 	}
-	// TODO: recheck 4 or 5
 	countElement = 4;
 	powerSource = POWER_AC;
 }
