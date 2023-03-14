@@ -78,16 +78,17 @@ bool SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 {
 	if (addOnlyDB == false)
 	{
+		int modeRGB = 0;
 		if (data.isObject() &&
 				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
-			int modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
-			if (bleProtocol->SetSceneBle(device->GetAddr(), id, modeRGB) == 0)
-			{
-				DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
-				deviceList.push_back(deviceInSceneBle);
-				return true;
-			}
+			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
+		}
+		if (bleProtocol->SetSceneBle(device->GetAddr(), id, modeRGB) == 0)
+		{
+			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+			deviceList.push_back(deviceInSceneBle);
+			return true;
 		}
 	}
 	else
