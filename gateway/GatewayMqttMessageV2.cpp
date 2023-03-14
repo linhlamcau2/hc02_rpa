@@ -822,59 +822,78 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value devices = reqValue["devices"];
 			Json::Value scenes = reqValue["scenes"];
 			int roomAddr = 0;
-			// for (auto &x : roomList)
-			// {
-			// 	if (x.first >= roomAddr)
-			// 	{
-			// 		roomAddr = x.first + 1;
-			// 	}
-			// }
-			// Room *room = new Room(roomId, roomAddr, roomName);
-			// if (room)
-			// {
-			// 	if (AddNewRoom(room, true, true))
-			// 	{
-			// 		for (auto &deviceValue : devices)
-			// 		{
-			// 			if (deviceValue.isString())
-			// 			{
-			// 				string deviceId = deviceValue.asString();
-			// 				Device *device = getDeviceFromId(deviceId);
-			// 				if (device)
-			// 				{
-			// 					int deviceAddr = device->GetAddr();
-			// 					if (room->AddDevice(device, deviceAddr, true))
-			// 					{
-			// 						database->DeviceInRoomAdd(room, device, deviceAddr);
-			// 						successList.append(deviceId);
-			// 					}
-			// 					else
-			// 					{
-			// 						LOGD("add room deviceId %s error", deviceId.c_str());
-			// 						failedList.append(deviceId);
-			// 					}
-			// 				}
-			// 				else
-			// 				{
-			// 					LOGD("deviceId %s dose not exist", deviceId.c_str());
-			// 					failedList.append(deviceId);
-			// 				}
-			// 			}
-			// 		}
-			// 		respValue["data"]["code"] = CODE_OK;
-			// 		respValue["data"]["addr"] = roomAddr;
-			// 		respValue["data"]["success"] = successList;
-			// 		respValue["data"]["failed"] = failedList;
-			// 	}
-			// 	else
-			// 	{
-			// 		respValue["data"]["code"] = CODE_DATABASE_ERROR;
-			// 	}
-			// }
-			// else
-			// {
-			// 	respValue["data"]["code"] = CODE_MEMORY_ERROR;
-			// }
+			for (const auto &[id, room] : roomList)
+			{
+				if (room->GetAddr() >= roomAddr)
+				{
+					roomAddr = room->GetAddr() + 200;
+				}
+			}
+			LOGD("roomAddr: %d", roomAddr);
+			Room *room = new Room(roomId, roomAddr, roomName);
+			if (room)
+			{
+				if (AddNewRoom(room))
+				{
+					// string sceneNames[] = {"Cảnh 1", "Cảnh 2", "Cảnh 3", "Cảnh 4", "Cảnh 5", "Cảnh 6"};
+					for (int i = 0; i < scenes.size(); i++)
+					{
+						if (scenes[i].isString())
+						{
+							string sceneId = scenes[i].asString();
+							SceneBle *scene = new SceneBle(sceneId, roomAddr + i + 1, "Cảnh " + to_string(i + 1));
+							if (scene)
+							{
+								AddNewSceneBle(scene, true, true);
+							}
+							else
+							{
+								respValue["data"]["code"] = CODE_MEMORY_ERROR;
+							}
+						}
+					}
+					for (auto &deviceValue : devices)
+					{
+						if (deviceValue.isString())
+						{
+							string deviceId = deviceValue.asString();
+							Device *device = getDeviceFromId(deviceId);
+							if (device)
+							{
+								int deviceAddr = device->GetAddr();
+								// TODO: them vao phong
+								if (room->AddDevice2(device, true))
+								{
+									database->DeviceInRoomAdd(room, device);
+									successList.append(deviceId);
+								}
+								else
+								{
+									LOGD("add room deviceId %s error", deviceId.c_str());
+									failedList.append(deviceId);
+								}
+							}
+							else
+							{
+								LOGD("deviceId %s dose not exist", deviceId.c_str());
+								failedList.append(deviceId);
+							}
+						}
+					}
+					respValue["data"]["code"] = CODE_OK;
+					respValue["data"]["addr"] = roomAddr;
+					respValue["data"]["success"] = successList;
+					respValue["data"]["failed"] = failedList;
+				}
+				else
+				{
+					respValue["data"]["code"] = CODE_DATABASE_ERROR;
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
 		}
 		else
 		{

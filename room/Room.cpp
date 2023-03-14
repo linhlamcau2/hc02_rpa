@@ -71,6 +71,12 @@ bool Room::AddDevice(Device *device, bool sendBle)
 	return false;
 }
 
+bool Room::AddDevice2(Device *device, bool sendBle)
+{
+	LOGW("AddDevice2");
+	return false;
+}
+
 bool Room::DelDevcie(Device *device)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
