@@ -89,7 +89,6 @@ int TimerSchedule::RegisterTimer(string timerStr, TimerCallbackFunc timerCallbac
 
 int TimerSchedule::RegisterTimer(int time, TimerCallbackFunc timerCallbackFunc)
 {
-	//TODO: sap xep list thoi gian
 	Timer *timer = new Timer(++index, time, timerCallbackFunc);
 	mtx.lock();
 	timerList.push_back(timer);

@@ -10,6 +10,10 @@ DeviceBlePirLightSensorDC::DeviceBlePirLightSensorDC(string id, string name, str
 	moduleLightSensor = new ModuleLightSensor(this, addr);
 	modulePinLevel = new ModulePinLevel(this, addr);
 	moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
+	modules.push_back(modulePirSensor);
+	modules.push_back(moduleLightSensor);
+	modules.push_back(modulePinLevel);
+	modules.push_back(moduleTimeActionPir);
 	powerSource = POWER_BATTERY;
 }
 
@@ -19,6 +23,15 @@ int DeviceBlePirLightSensorDC::BuildTelemetryValue(Json::Value &pushDataValue)
 	modulePinLevel->BuildTelemetryValue(pushDataValue);
 	moduleLightSensor->BuildTelemetryValue(pushDataValue);
 	moduleTimeActionPir->BuildTelemetryValue(pushDataValue);
+	return 0;
+}
+
+int DeviceBlePirLightSensorDC::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	modulePirSensor->BuildTelemetryValueV2(pushDataValue);
+	modulePinLevel->BuildTelemetryValueV2(pushDataValue);
+	moduleLightSensor->BuildTelemetryValueV2(pushDataValue);
+	moduleTimeActionPir->BuildTelemetryValueV2(pushDataValue);
 	return 0;
 }
 
@@ -111,14 +124,27 @@ bool DeviceBlePirLightSensorDC::CheckBufConfig()
 	mtx.unlock();
 	return true;
 }
+
 bool DeviceBlePirLightSensorDC::PushToBuf(Json::Value data)
 {
-
 	string id = Util::genRandRQI(16);
 	item_buf_t item_buf = {id, data};
 
 	mtx.lock();
 	bufConfig.push_back(item_buf);
+	mtx.unlock();
+
+	Config(item_buf);
+	return false;
+}
+
+bool DeviceBlePirLightSensorDC::PushToBufV2(Json::Value data)
+{
+	string id = Util::genRandRQI(16);
+	item_buf_t item_buf = {id, data};
+
+	mtx.lock();
+	bufConfigV2.push_back(item_buf);
 	mtx.unlock();
 
 	Config(item_buf);
@@ -141,5 +167,12 @@ bool DeviceBlePirLightSensorDC::DelItemBuf(string id)
 bool DeviceBlePirLightSensorDC::Do(Json::Value &dataValue)
 {
 	PushToBuf(dataValue);
+	return false;
+}
+
+// TODO: need to handle data in bufConfigV2
+bool DeviceBlePirLightSensorDC::DoV2(Json::Value &dataValue)
+{
+	PushToBufV2(dataValue);
 	return false;
 }

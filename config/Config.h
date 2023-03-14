@@ -8,11 +8,11 @@
 #define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "localhost"
+#define HOST_DEFAULT "mqtt.truesight.asia"
 #define PORT_KEY "port"
 #define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT "client_id"
+#define CLIENT_ID_DEFAULT ""
 #define USERNAME_KEY "username"
 #define USERNAME_DEFAULT ""
 #define PASSWORD_KEY "password"

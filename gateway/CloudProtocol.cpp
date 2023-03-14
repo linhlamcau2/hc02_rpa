@@ -121,11 +121,12 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 		string rqi = payloadJson["rqi"].asString();
 		if (onRpcCallbackFuncListV2.find(cmd) != onRpcCallbackFuncListV2.end())
 		{
-			OnRpcCallbackFuncV2 onRpcV2CallbackFunc = onRpcCallbackFuncListV2[cmd];
-			int rs = onRpcV2CallbackFunc(payloadJson, respValue, rqi);
+			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncListV2[cmd];
+			int rs = onRpcCallbackFunc(payloadJson, respValue);
 			if (rs == 0)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
 				Publish(pubTopic, respValue.toString());
 			}
 			else if (rs == 1)
@@ -159,10 +160,10 @@ int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onR
 	return 0;
 }
 
-int CloudProtocol::OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFuncV2 onRpcCallbackFuncV2)
+int CloudProtocol::OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
 {
 	LOGI("OnDeviceRpcCallbackRegisterV2 cmd: %s", cmd.c_str());
-	onRpcCallbackFuncListV2[cmd] = onRpcCallbackFuncV2;
+	onRpcCallbackFuncListV2[cmd] = onRpcCallbackFunc;
 	return 0;
 }
 

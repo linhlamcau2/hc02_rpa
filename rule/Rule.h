@@ -5,9 +5,6 @@
 #include "RuleInput.h"
 #include "RuleOutput.h"
 
-#define EVENT_TRIGGER		"EVENT_TRIGGER"
-#define COUNTDOWN			"COUNTDOWN"
-
 using namespace std;
 
 typedef enum
@@ -37,20 +34,17 @@ private:
 
 	bool isAvailable;
 	int timerRegisterIndex;
-	string cmd;
-	bool enbale;
 
 	vector<RuleInput *> ruleInputList;
 	vector<RuleOutput *> ruleOutputList;
 
 public:
 	Rule(string id, string type, unsigned char repeater);
-	Rule(string id, string type, unsigned char repeater, int startTime, int endTime, string cmd, bool enable);
+	Rule(string id, string type, unsigned char repeater, int startTime, int endTime);
 	~Rule();
 
 	bool isEnable;
 	string GetId();
-	string GetCmd();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();

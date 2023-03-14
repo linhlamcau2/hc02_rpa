@@ -54,7 +54,7 @@ int Db::GroupAdd(Group *group)
 
 int Db::GroupUpdate(Group *group)
 {
-	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE meshId=" + to_string(group->GetId()) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE id=" + to_string(group->GetId()) + ";";
 	return Sqlite_Exec(sql);
 }
 

@@ -14,15 +14,9 @@ class LocalProtocol : public Mqtt
 #endif
 {
 private:
-	string subTopic;
-	string pubTopic;
-	string subTopicV2;
-	string pubTopicV2;
-
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnLocalCallbackFunc;
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncList;
-	typedef function<int(Json::Value &reqValue, Json::Value &respValue, string &rqi)> OnLocalCallbackFuncV2;
-	map<string, OnLocalCallbackFuncV2> onLocalCallbackFuncListV2;
+	map<string, OnLocalCallbackFunc> onLocalCallbackFuncListV2;
 
 	void OnLocalMessage(string &topic, string &payload);
 	void OnLocalMessageV2(string &topic, string &payload);
@@ -40,7 +34,7 @@ public:
 	int LocalPublish(string topic, string payload);
 
 	int OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLocalCallbackFunc);
-	int OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFuncV2 onLocalCallbackFuncV2);
+	int OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc);
 
 	int PublishToLocalMessage(string payload);
 	int PublishToLocalMessage(Json::Value payloadJson);

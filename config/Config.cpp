@@ -231,7 +231,7 @@ void Config::ReadConfig()
 		localPort = PORT_DEFAULT;
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL CLIENT_ID_KEY, str_temp))
-		localClientId = CLIENT_ID_DEFAULT;
+		localClientId = string(str_temp);
 	else
 		localClientId = CLIENT_ID_DEFAULT;
 

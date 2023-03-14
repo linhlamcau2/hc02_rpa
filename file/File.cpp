@@ -8,28 +8,30 @@ File::File(string path, string name)
 	this->name = name;
 	haveInfo = false;
 	chunkIndex = 0;
-
-	string filePath = path + "/" + name;
-	fstream uploadFile;
-	uploadFile.open(filePath.c_str(), ios::in | ios::binary);
-	if (uploadFile.is_open())
-	{
-		// Tính kích thước file
-		uploadFile.seekg(0, ios::end);
-		fileSize = uploadFile.tellg();
-		uploadFile.seekg(0, ios::beg);
-		uploadFile.close();
-
-		chunkCount = fileSize / BIN_PACKAGE_SIZE;
-		if (fileSize % BIN_PACKAGE_SIZE)
-			++chunkCount;
-
-		haveInfo = true;
-	}
 }
 
 bool File::HaveInfo()
 {
+	if (!haveInfo)
+	{
+		string filePath = path + "/" + name;
+		fstream uploadFile;
+		uploadFile.open(filePath.c_str(), ios::in | ios::binary);
+		if (uploadFile.is_open())
+		{
+			// Tính kích thước file
+			uploadFile.seekg(0, ios::end);
+			fileSize = uploadFile.tellg();
+			uploadFile.seekg(0, ios::beg);
+			uploadFile.close();
+
+			chunkCount = fileSize / BIN_PACKAGE_SIZE;
+			if (fileSize % BIN_PACKAGE_SIZE)
+				++chunkCount;
+
+			haveInfo = true;
+		}
+	}
 	return haveInfo;
 }
 

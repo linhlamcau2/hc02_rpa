@@ -109,3 +109,9 @@ void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = hum;
 	jsonValue.append(dataValue);
 }
+
+void ModuleTempHum::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_TEMP] = temp;
+	jsonValue[KEY_ATTRIBUTE_HUMIDITY] = hum;
+}

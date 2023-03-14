@@ -58,7 +58,33 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 {
 	if (addOnlyDB == false)
 	{
-		if (bleProtocol->SetSceneLights(device->GetAddr(), id, modeRGB) == 0)
+		if (bleProtocol->SetSceneBle(device->GetAddr(), id, modeRGB) == 0)
+		{
+			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+			deviceList.push_back(deviceInSceneBle);
+			return true;
+		}
+	}
+	else
+	{
+		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+		deviceList.push_back(deviceInSceneBle);
+		return true;
+	}
+	return false;
+}
+
+bool SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
+{
+	if (addOnlyDB == false)
+	{
+		int modeRGB = 0;
+		if (data.isObject() &&
+				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+		{
+			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
+		}
+		if (bleProtocol->SetSceneBle(device->GetAddr(), id, modeRGB) == 0)
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			deviceList.push_back(deviceInSceneBle);
@@ -76,7 +102,7 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 
 bool SceneBle::DelDevice(Device *device)
 {
-	if (bleProtocol->DelSceneLights(device->GetAddr(), id) == 0)
+	if (bleProtocol->DelSceneBle(device->GetAddr(), id) == 0)
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)
@@ -88,7 +114,7 @@ bool SceneBle::DelDevice(Device *device)
 	return false;
 }
 
-void SceneBle::Do(int id)
+bool SceneBle::Do()
 {
-	bleProtocol->CallScene(0xffff, id, 10, true, 1);
+	return bleProtocol->CallScene(0xffff, id, 10, true, 1);
 }

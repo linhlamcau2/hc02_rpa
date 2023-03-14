@@ -90,3 +90,8 @@ void ModuleDoorStatus::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = status;
 	jsonValue.append(dataValue);
 }
+
+void ModuleDoorStatus::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_DOOR] = status;
+}

@@ -105,3 +105,9 @@ void ModuleSmoke::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = power;
 	jsonValue.append(dataValue);
 }
+
+void ModuleSmoke::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_SMOKE] = smoke;
+	jsonValue[KEY_ATTRIBUTE_SMOKE_PIN] = power;
+}

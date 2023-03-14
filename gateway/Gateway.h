@@ -147,16 +147,28 @@ private:
 
 	// Mqtt V2 message handle
 	void initMqttMessageV2();
-	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue, string rqi);
-	int OnGetInfoHC(Json::Value &reqValue, Json::Value &respValue, string rqi);
+	// Bản tin điều khiển
+	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	// Bản tin cấu hình
+	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
+	// thieu scene controller
+	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 
-	void OnRPCStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRPCAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRPCRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRPCCreateCountDown(Json::Value &reqValue, Json::Value &respValue, bool addGateway, bool addDatabase);
-	int OnRPCDelCountDown(Json::Value &reqValue, Json::Value &respValue);
+	// Cấu hình HC
+	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
@@ -191,12 +203,6 @@ public:
 	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
 #endif
 
-	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
-	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
-	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
-	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
-	Room *AddNewRoom(Room *room);
-
 	uint16_t getBleUnicast();
 	string getBleNetkey();
 	string getBleAppKey();
@@ -219,6 +225,15 @@ public:
 	void setRefreshToken(string refresh_token);
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
+
+	void AddAllDeviceStatusV2(Json::Value &reqValue);
+
+	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
+	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
+	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
+	Rule *AddRuleV2(Json::Value &ruleValue);
+	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
+	Room *AddNewRoom(Room *room);
 };
 
 extern Gateway *gateway;

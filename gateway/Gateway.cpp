@@ -62,9 +62,9 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 
 void Gateway::init()
 {
-	// CloudProtocol::init();
+	CloudProtocol::init();
 	LocalProtocol::init();
-	// Udp::init();
+	Udp::init();
 
 	initUdpMessage();
 	initMqttMessage();
@@ -89,7 +89,7 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 
-	// CloudConnect();
+	CloudConnect();
 	LocalConnect();
 
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
@@ -660,7 +660,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), EVENT_TRIGGER, true);
+				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
 				if (!rule)
 				{
 					LOGW("New rule error");
@@ -961,4 +961,166 @@ void Gateway::setVersion(string version)
 }
 void Gateway::setName(string name)
 {
+}
+
+void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
+{
+	for (const auto &[id, device] : deviceList)
+	{
+		Json::Value deviceValue;
+		device->BuildTelemetryValueV2(dataValue);
+		dataValue.append(deviceValue);
+	}
+}
+
+Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
+{
+	// TODO: Check Rule id exist
+	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isObject())
+	{
+		string id = ruleValue["id"].asString();
+		string type = ruleValue["type"].asString();
+		int repeat = ruleValue["repeat"].asInt();
+		Json::Value inputValue = ruleValue["input"];
+		Json::Value outputValue = ruleValue["output"];
+
+		Rule *rule = NULL;
+		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
+		{
+			Json::Value timeValue = ruleValue["time"];
+			if (timeValue.isMember("start") && timeValue["start"].isString() &&
+					timeValue.isMember("end") && timeValue["end"].isString())
+			{
+				string startTime = timeValue["start"].asString();
+				string endTime = timeValue["end"].asString();
+				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+			}
+		}
+		if (!rule)
+		{
+			rule = new Rule(id, type, repeat);
+		}
+		if (!rule)
+		{
+			LOGE("New rule error, out of memory");
+			return NULL;
+		}
+
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
+		{
+			Json::Value timerValue = inputValue["timer"];
+			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
+					timerValue.isMember("time") && timerValue["time"].isString())
+			{
+				int repeat = timerValue["repeat"].asInt();
+				string timerStr = timerValue["time"].asString();
+				LOGI("Have Timer: %s", timerStr.c_str());
+				int timer = Util::ConvertStrTimeToInt(timerStr);
+				if (timer > 0)
+				{
+					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, timer, repeat);
+					rule->AddRuleInput(ruleInputTimer);
+				}
+			}
+		}
+		if (inputValue.isMember("device") && inputValue["device"].isArray())
+		{
+			Json::Value deviceRuleInputList = inputValue["device"];
+			for (Json::Value::ArrayIndex i = 0; i < deviceRuleInputList.size(); i++)
+			{
+				Json::Value deviceRuleInputValue = deviceRuleInputList[i];
+				if (deviceRuleInputValue.isObject())
+				{
+					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
+							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+					{
+						string mac = deviceRuleInputValue["mac"].asString();
+						Json::Value dataValue = deviceRuleInputValue["data"];
+						Device *device = gateway->getDevice(mac);
+						if (device)
+						{
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, device, dataValue);
+							rule->AddRuleInput(ruleInputDevice);
+						}
+					}
+				}
+			}
+		}
+
+		if (outputValue.isMember("device") && outputValue["device"].isArray())
+		{
+			Json::Value deviceRuleOutputList = outputValue["device"];
+			for (Json::Value::ArrayIndex i = 0; i < deviceRuleOutputList.size(); i++)
+			{
+				Json::Value deviceRuleOutputValue = deviceRuleOutputList[i];
+				if (deviceRuleOutputValue.isObject())
+				{
+					if (deviceRuleOutputValue.isMember("mac") && deviceRuleOutputValue["mac"].isString() &&
+							deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
+					{
+						Json::Value dataValue = deviceRuleOutputValue["data"];
+						string mac = deviceRuleOutputValue["mac"].asString();
+						Device *device = gateway->getDevice(mac);
+						if (device)
+						{
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
+						}
+					}
+				}
+			}
+		}
+		if (outputValue.isMember("group") && outputValue["group"].isArray())
+		{
+			Json::Value groupRuleOutputList = outputValue["group"];
+			for (Json::Value::ArrayIndex i = 0; i < groupRuleOutputList.size(); i++)
+			{
+				Json::Value groupRuleOutputValue = groupRuleOutputList[i];
+				if (groupRuleOutputValue.isObject())
+				{
+					if (groupRuleOutputValue.isMember("id") && groupRuleOutputValue["id"].isInt() &&
+							groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
+					{
+						int id = groupRuleOutputValue["id"].asInt();
+						Json::Value dataValue = groupRuleOutputValue["data"];
+						Group *group = gateway->getGroup(id);
+						if (group)
+						{
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
+						}
+					}
+				}
+			}
+		}
+		// if (outputValue.isMember("relay") && outputValue["relay"].isArray())
+		// {
+		// 	Json::Value relayRuleOutputList = outputValue["relay"];
+		// 	for (Json::Value::ArrayIndex i = 0; i < relayRuleOutputList.size(); i++)
+		// 	{
+		// 		Json::Value relayRuleOutputValue = relayRuleOutputList[i];
+		// 		if (relayRuleOutputValue.isObject())
+		// 		{
+		// 			if (relayRuleOutputValue.isMember("relay") && relayRuleOutputValue["relay"].isInt() &&
+		// 					relayRuleOutputValue.isMember("value") && relayRuleOutputValue["value"].isInt())
+		// 			{
+		// 				int relay = relayRuleOutputValue["relay"].asInt();
+		// 				int value = relayRuleOutputValue["value"].asInt();
+		// 				RuleOutputRelay *ruleOutputRelay = new RuleOutputRelay(relay, value);
+		// 				rule->AddRuleOutput(ruleOutputRelay);
+		// 			}
+		// 		}
+		// 	}
+		// }
+		return rule;
+	}
+	else
+	{
+		LOGW("Rule format error");
+	}
+	return NULL;
 }

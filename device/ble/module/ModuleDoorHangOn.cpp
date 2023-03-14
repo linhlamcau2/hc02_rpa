@@ -90,3 +90,8 @@ void ModuleDoorHangOn::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = hangOn;
 	jsonValue.append(dataValue);
 }
+
+void ModuleDoorHangOn::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_HANGON] = hangOn;
+}

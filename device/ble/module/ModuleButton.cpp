@@ -14,6 +14,7 @@ ModuleButton::ModuleButton(Device *device, uint32_t addr, int index) : Module(de
 {
 	bt = 0;
 	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr() + index;
+	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr() + index);
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -96,4 +97,38 @@ void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
+}
+
+void ModuleButton::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[key] = bt;
+}
+
+bool ModuleButton::Do(Json::Value &dataValue)
+{
+	// LOGD("Do data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			bleProtocol->SetOnOffLight(addr, value, 0, true);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ModuleButton::DoV2(Json::Value &dataValue)
+{
+	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
+	{
+		int value = dataValue[key].asInt();
+		bleProtocol->SetOnOffLight(addr, value, 0, true);
+		return true;
+	}
+	return false;
 }

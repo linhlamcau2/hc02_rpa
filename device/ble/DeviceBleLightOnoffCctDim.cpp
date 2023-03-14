@@ -7,80 +7,9 @@ DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, str
 	moduleOnOff = new ModuleOnOff(this, addr);
 	moduleDim = new ModuleDim(this, addr);
 	elementCct = new ElementCct(this, addr + 1);
+	modules.push_back(moduleOnOff);
+	modules.push_back(moduleDim);
+	elements.push_back(elementCct);
+	countElement = 2;
 	powerSource = POWER_AC;
-}
-
-bool DeviceBleLightOnoffCctDim::CheckAddr(uint32_t addr)
-{
-	return ((this->addr <= addr) && (this->addr + 1 >= addr));
-}
-
-int DeviceBleLightOnoffCctDim::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	moduleOnOff->BuildTelemetryValue(pushDataValue);
-	moduleDim->BuildTelemetryValue(pushDataValue);
-	elementCct->BuildTelemetryValue(pushDataValue);
-	return 0;
-}
-
-void DeviceBleLightOnoffCctDim::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	if (!moduleOnOff->InputData(data, len, values))
-	{
-		if (!moduleDim->InputData(data, len, values))
-		{
-			if (!elementCct->InputData(data, len, values))
-			{
-				return;
-			}
-		}
-	}
-	PushTelemetry(values);
-}
-
-bool DeviceBleLightOnoffCctDim::CheckData(Json::Value &dataValue, bool &rs)
-{
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (!moduleOnOff->CheckData(dataValue, rs))
-	{
-		if (!moduleDim->CheckData(dataValue, rs))
-		{
-			if (!elementCct->CheckData(dataValue, rs))
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-bool DeviceBleLightOnoffCctDim::Do(Json::Value &dataValue)
-{
-	if (!moduleOnOff->Do(dataValue))
-	{
-		if (!moduleDim->Do(dataValue))
-		{
-			if (!elementCct->Do(dataValue))
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-bool DeviceBleLightOnoffCctDim::DoMqttV2(Json::Value &dataValue)
-{
-	if (!moduleOnOff->DoMqttV2(dataValue))
-	{
-		if (!moduleDim->DoMqttV2(dataValue))
-		{
-			if (!elementCct->DoMqttV2(dataValue))
-			{
-				return false;
-			}
-		}
-	}
-	return true;
 }

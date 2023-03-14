@@ -43,7 +43,8 @@ public:
 	bool DelDevice(Device *device, int epId);
 
 	bool Do(Json::Value &dataValue);
-	bool Do(int id, int value);
+	bool DoV2(Json::Value &dataValue);
 	void DoBle();
+	void DoBleV2();
 	void DoZigbee();
 };

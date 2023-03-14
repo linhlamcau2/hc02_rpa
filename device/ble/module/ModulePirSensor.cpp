@@ -96,3 +96,8 @@ void ModulePirSensor::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = pir;
 	jsonValue.append(dataValue);
 }
+
+void ModulePirSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
+}

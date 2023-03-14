@@ -4,7 +4,50 @@
 #include <vector>
 #include <json.h>
 #include <byteswap.h>
+#include "ErrorCode.h"
 #include "RuleInputDevice.h"
+#include "module/Module.h"
+#include "element/Element.h"
+
+#define KEY_ATTRIBUTE_ONOFF "onoff"
+#define KEY_ATTRIBUTE_DIM "dim"
+#define KEY_ATTRIBUTE_CCT "cct"
+#define KEY_ATTRIBUTE_HUE "h"
+#define KEY_ATTRIBUTE_SATURATION "s"
+#define KEY_ATTRIBUTE_LUMINANCE "l"
+#define KEY_ATTRIBUTE_SONG "song"
+#define KEY_ATTRIBUTE_BLINK_MODE "blm"
+#define KEY_ATTRIBUTE_BATTERY "bat"
+#define KEY_ATTRIBUTE_LUX "lux"
+#define KEY_ATTRIBUTE_PIR "pir"
+#define KEY_ATTRIBUTE_BUTTON "bt"
+#define KEY_ATTRIBUTE_ACTIME "actime"
+#define KEY_ATTRIBUTE_PM2_5 "pm2.5"
+#define KEY_ATTRIBUTE_PM10 "pm10"
+#define KEY_ATTRIBUTE_PM1_0 "pm1.0"
+#define KEY_ATTRIBUTE_TEMP "temp"
+#define KEY_ATTRIBUTE_HUMIDITY "hum"
+#define KEY_ATTRIBUTE_MODE_RGB "sceneRGB"
+#define KEY_ATTRIBUTE_HANGON "hangon"
+#define KEY_ATTRIBUTE_COUNTDOWN "countdown"
+#define KEY_ATTRIBUTE_AIR_CONDITIONER_WIND "airConditionerWind"
+#define KEY_ATTRIBUTE_AIR_CONDITIONER_MODE "airConditionerMode"
+#define KEY_ATTRIBUTE_AIR_CONDITIONER_TEMP "airConditionerTemp"
+#define KEY_ATTRIBUTE_CURTAIN_OPEN "curtainOpen"
+#define KEY_ATTRIBUTE_CURTAIN_CLOSE "curtainClose"
+#define KEY_ATTRIBUTE_CURTAIN_PAUSE "curtainPause"
+#define KEY_ATTRIBUTE_CURTAIN_OPENED "curtainOpened"
+#define KEY_ATTRIBUTE_SMOKE "smoke"
+#define KEY_ATTRIBUTE_DOOR "door"
+#define KEY_ATTRIBUTE_SMOKE_PIN "smokePin"
+#define KEY_ATTRIBUTE_DKTX_SCENE "remoteScene"
+#define KEY_ATTRIBUTE_ONLINE_OFFLINE "status"
+#define KEY_ATTRIBUTE_MOTOR "motor"
+#define KEY_ATTRIBUTE_R "r"
+#define KEY_ATTRIBUTE_G "g"
+#define KEY_ATTRIBUTE_B "b"
+#define KEY_ATTRIBUTE_DIM_ON "dimOn"
+#define KEY_ATTRIBUTE_DIM_OFF "dimOff"
 
 using namespace std;
 
@@ -57,7 +100,7 @@ enum
 	BLE_AC_SCENE_SCREEN_TOUCH = 23003,
 	BLE_REMOTE_M3_V2 = 23004,
 	BLE_REMOTE_M4 = 23005,
-	
+
 	BLE_PM_SENSOR = 37001,
 	BLE_TEMP_HUM_SENSOR = 38001, // 0x030801,
 	BLE_PIR_LIGHT_SENSOR_DC = 32001,
@@ -91,6 +134,11 @@ protected:
 	int rssi;
 	protocol_e protocol;
 	string device_id;
+	int countElement;
+	Json::Value values; // telemetry data
+
+	vector<Module *> modules;
+	vector<Element *> elements;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -108,7 +156,6 @@ public:
 	string GetName();
 	string GetMac();
 	uint32_t GetAddr();
-	virtual bool CheckAddr(uint32_t addr);
 	void SetAddr(uint32_t addr);
 	uint32_t GetType();
 	uint16_t GetVersion();
@@ -117,6 +164,7 @@ public:
 	int GetRSSI();
 
 	void SetRSSI(int rssi);
+	virtual bool CheckAddr(uint32_t addr);
 
 	protocol_e GetProtocol();
 
@@ -127,16 +175,19 @@ public:
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
+	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue);
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
 
 	void DeviceInputData(uint8_t *data, int len, uint32_t addr);
 
 	virtual void InitAttribute(int attributeId, double value) {}
-	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0) {}
-	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
+	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
+	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 	virtual void CheckTrigger();
-	virtual bool Do(Json::Value &dataValue) { return false; }
+	virtual bool Do(Json::Value &dataValue);
+	virtual bool DoV2(Json::Value &dataValue);
 	virtual bool DoJsonArray(Json::Value &dataValue);
+	virtual bool DoJsonArrayV2(Json::Value &dataValue);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value jsonValue);

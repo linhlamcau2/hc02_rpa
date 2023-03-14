@@ -48,7 +48,6 @@ void ButtonSignal::OnRelease()
 	LOGI("OnRelease");
 	isBlinkLed = false;
 	releaseTime = Util::millis();
-	// LOGD("interval: %ld", (releaseTime - pressTime));
 	if (releaseTime - pressTime < DOUBLE_CLICK_TIME)
 	{
 		clickCount++;

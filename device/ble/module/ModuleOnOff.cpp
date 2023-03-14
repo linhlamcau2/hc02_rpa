@@ -71,7 +71,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 					value1 = listValue[0].asInt();
 					value2 = listValue[1].asInt();
 				}
-				else if (listValue.size() == 1 && listValue[0].isInt() )
+				else if (listValue.size() == 1 && listValue[0].isInt())
 				{
 					value1 = listValue[0].asInt();
 				}
@@ -104,9 +104,14 @@ void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+void ModuleOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
+}
+
 bool ModuleOnOff::Do(Json::Value &dataValue)
 {
-	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	// LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -122,20 +127,15 @@ bool ModuleOnOff::Do(Json::Value &dataValue)
 	return false;
 }
 
-bool ModuleOnOff::DoMqttV2(Json::Value &dataValue)
+bool ModuleOnOff::DoV2(Json::Value &dataValue)
 {
-	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	LOGD("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			bleProtocol->SetOnOffLight(addr, value, 0, true);
-			return true;
-		}
+		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		bleProtocol->SetOnOffLight(addr, value, 0, true);
+		return true;
 	}
 	return false;
 }

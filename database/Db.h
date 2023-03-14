@@ -15,7 +15,7 @@
 #elif defined(__ANDROID__)
 #define DB_NAME "/etc/smh/smh.sqlite"
 #else
-#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
+#define DB_NAME "/smh.sqlite"
 #endif
 
 using namespace std;
@@ -69,7 +69,7 @@ public:
 	int GroupDel(Group *group);
 	int GroupDel(string id);
 	int GroupDelAll();
-	
+
 	int DeviceInGroupRead();
 	int DeviceInGroupAdd(Group *group, Device *device, int epId);
 	int DeviceInGroupDel(Group *group, Device *device, int epId);

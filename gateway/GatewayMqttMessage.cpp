@@ -1,4 +1,5 @@
 #include "Gateway.h"
+#include <fstream>
 #include "Log.h"
 #include "Db.h"
 #include "Util.h"
@@ -8,7 +9,6 @@
 #include "Http.h"
 #include "Config.h"
 #include "Base64.h"
-#include <fstream>
 
 void Gateway::initMqttMessage()
 {
@@ -707,7 +707,9 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 						dataJsonRsp["FAILED"].append(scene->deviceList[i]->device->GetId());
 					}
 				}
-				delete sceneBleList[scene->GetId()];
+				sceneBleList.erase(scene->GetId());
+				database->SceneBleDel(scene);
+				delete scene;
 			}
 			else
 			{
@@ -1572,8 +1574,9 @@ int Gateway::OnRpcDelGroup(Json::Value &reqValue, Json::Value &respValue)
 				if (!hasDeviceDelGroupFailed)
 				{
 					database->GroupDel(group);
+					groupList.erase(group->GetId());
+					delete group;
 				}
-
 				// respValue["code"] = 0;
 				// return 0;
 			}
@@ -2494,35 +2497,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (properties.isArray())
-				{
-					int hsl = 0;
-					int rgbDimOnOff = 0;
-					for (Json::ArrayIndex i = 0; i < properties.size(); i++)
-					{
-						Json::Value property = properties[i];
-						if (property.isObject() &&
-								property.isMember("ID") && property["ID"].isInt())
-						{
-							if (property["ID"].asInt() == BLE_ATTRIBUTE_HUE || property["ID"].asInt() == BLE_ATTRIBUTE_SATURATION || property["ID"].asInt() == BLE_ATTRIBUTE_LUMINANCE)
-							{
-								hsl++;
-							}
-							else if (property["ID"].asInt() == BLE_ATTRIBUTE_R || property["ID"].asInt() == BLE_ATTRIBUTE_B || property["ID"].asInt() == BLE_ATTRIBUTE_G || property["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF || property["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
-							{
-								rgbDimOnOff++;
-							}
-						}
-					}
-					if (hsl == 3 || rgbDimOnOff == 5)
-					{
-						device->Do(properties);
-					}
-					else
-					{
-						device->DoJsonArray(properties);
-					}
-				}
+				device->DoJsonArray(properties);
 			}
 			else
 			{
@@ -2607,7 +2582,7 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			SceneBle *scene = getSceneBleFromId(sceneId);
 			if (scene)
 			{
-				scene->Do(scene->GetId());
+				scene->Do();
 			}
 			else
 			{
@@ -2620,8 +2595,6 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 {
-// TODO: add for esp platform
-#ifndef ESP_PLATFORM
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
@@ -2668,7 +2641,6 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-#endif
 	return -1;
 }
 
@@ -2886,7 +2858,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), COUNTDOWN, true);
+				rule = new Rule(eventTriggerId, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleList[eventTriggerId] = rule;

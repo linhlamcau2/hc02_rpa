@@ -15,6 +15,6 @@ void RuleOutputSceneBle::RunOutput()
 {
 	if (sceneBle)
 	{
-		sceneBle->Do(sceneBle->GetId());
+		sceneBle->Do();
 	}
 }

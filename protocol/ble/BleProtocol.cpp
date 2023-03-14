@@ -260,13 +260,19 @@ int BleProtocol::GetAppKey()
 		appkeyStr.erase(appkeyStr.begin() + 12, appkeyStr.begin() + 13);
 		appkeyStr.erase(appkeyStr.begin() + 16, appkeyStr.begin() + 17);
 		appkeyStr.erase(appkeyStr.begin() + 20, appkeyStr.begin() + 21);
-		char *ak = new char[appkeyStr.length() + 1];
-		strcpy(ak, appkeyStr.c_str());
-		for (int i = 0; i < 16; i++)
+		uint8_t appKey[16];
+		if (appkeyStr.length() % 2 == 0 && appkeyStr.length() > 0)
 		{
-			sscanf((char *)ak + i * 2, "%2x", (uint32_t *)&appkeyStr[i]);
+			for (int i = 0; i < appkeyStr.length(); i += 2)
+			{
+				std::string hexByte = appkeyStr.substr(i, 2);
+				appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+			}
 		}
-		delete ak;
+		else
+		{
+			LOGW("App key error");
+		}
 	}
 	return 0;
 }
@@ -280,16 +286,18 @@ int BleProtocol::GetNetKey()
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
 	if (rs == 0)
 	{
-		pro_net_info = (pro_net_info_t *)&dataRsp[1];
+		// pro_net_info = (pro_net_info_t *)&dataRsp[1];
+		memcpy(&pro_net_info.netKey[0], &dataRsp[1], sizeof(pro_net_info_t));
 
-		uint32_t ivIndex = (pro_net_info->iv_index[0] << 24) | (pro_net_info->iv_index[1] << 16) | (pro_net_info->iv_index[2] << 8) | (pro_net_info->iv_index[3]);
+		uint32_t ivIndex = (pro_net_info.iv_index[0] << 24) | (pro_net_info.iv_index[1] << 16) | (pro_net_info.iv_index[2] << 8) | (pro_net_info.iv_index[3]);
 		if ((ivIndex == 0x11223344) || (ivIndex == 0))
 		{
+			// database->GatewayUpdateIvIndex(gateway, ivIndex);
 			for (int i = 0; i < 16; i++)
 			{
-				netKey[i] = pro_net_info->netKey[i];
+				netKey[i] = pro_net_info.netKey[i];
 			}
-			nextAddr = pro_net_info->unicast_address[0] | (pro_net_info->unicast_address[1] << 8);
+			nextAddr = pro_net_info.unicast_address[0] | (pro_net_info.unicast_address[1] << 8);
 			if (nextAddr == 0)
 				nextAddr = 2;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
@@ -603,14 +611,14 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
-		pro_net_info_t *data_pro;
+		pro_net_info_t data_pro;
 	} provision_message_t;
 	provision_message_t provision_message;
 	memset(&provision_message, 0x00, sizeof(provision_message));
 	provision_message.opcode = HCI_GATEWAY_CMD_SET_NODE_PARA;
-	provision_message.data_pro = pro_net_info;
-	provision_message.data_pro->unicast_address[0] = deviceAddr & 0xFF;
-	provision_message.data_pro->unicast_address[1] = (deviceAddr >> 8) & 0xFF;
+	memcpy(&provision_message.data_pro.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
+	provision_message.data_pro.unicast_address[0] = deviceAddr & 0xFF;
+	provision_message.data_pro.unicast_address[1] = (deviceAddr >> 8) & 0xFF;
 	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, 26, HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
 	if (rs == 0)
 	{
@@ -1326,7 +1334,7 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	return -1;
 }
 
-int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
+int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 {
 	LOGD("Set scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
 	uint8_t dataRsp[100];
@@ -1375,7 +1383,7 @@ int BleProtocol::SetSceneLights(uint16_t devAddr, uint16_t scene, uint8_t modeRg
 }
 
 // TODO: BelProtocol DelScene
-int BleProtocol::DelSceneLights(uint16_t devAddr, uint16_t scene)
+int BleProtocol::DelSceneBle(uint16_t devAddr, uint16_t scene)
 {
 	LOGD("Del scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
 	uint8_t dataRsp[100];
@@ -2632,6 +2640,8 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 int BleProtocol::GetInfogw()
 {
 	LOGD("GetInfogw");
+	uint8_t n = 0x02;
+	SendMessage(SYSTEM_REQ, &n, 1, 0, 0, 0, 10000);
 	uint8_t d[2] = {0x16, 0x00};
 	return SendMessage(SYSTEM_REQ, d, 2, 0, 0, 0, 1000);
 }
@@ -2645,24 +2655,27 @@ int BleProtocol::GetInfoMesh()
 	return SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
 }
 
-int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev)
+int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 {
 	LOGD("UpdateDeviceKeyDev");
-	if (devKeyDev)
+	if (devKeyDev.size() == 32)
 	{
 		typedef struct __attribute__((packed))
 		{
 			uint8_t header;
 			uint16_t devAddr;
-			uint8_t devKey[16];
 			uint16_t element;
+			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
 			.header = 0x12,
 			.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
-		memcpy(update_devkey_device.devKey, devKeyDev, 16);
-		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, 23, 0, 0, 0, 1000);
+		for (int i = 0; i < 16; i++)
+		{
+			sscanf(devKeyDev.c_str() + i * 2, "%2x", &update_devkey_device.devKey[i]);
+		}
+		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, 21, 0, 0, 0, 1000);
 	}
 	else
 	{
@@ -2671,24 +2684,28 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, uint8_t *devKeyDev)
 	return 0;
 }
 
-int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev)
+int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 {
 	LOGD("UpdateDeviceKeyGateway");
-	if (devKeyDev)
+	if (devKeyDev.size() == 32)
 	{
 		typedef struct __attribute__((packed))
 		{
 			uint8_t header;
 			uint16_t devAddr;
-			uint8_t devKey[16];
 			uint16_t element;
+			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
 			.header = 0x12,
 			.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
-		memcpy(update_devkey_device.devKey, devKeyDev, 16);
-		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, 23, 0, 0, 0, 1000);
+		for (int i = 0; i < 16; i++)
+		{
+			sscanf(devKeyDev.c_str() + i * 2, "%2x", &update_devkey_device.devKey[i]);
+		}
+
+		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, 21, 0, 0, 0, 1000);
 	}
 	else
 	{
@@ -2697,36 +2714,44 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, uint8_t *devKeyDev)
 	return 0;
 }
 
-int BleProtocol::UpdateNetKey(uint16_t gwAddr, uint8_t *netKey, uint32_t indexId)
+int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 {
 	LOGD("UpdateNetKey");
-	typedef struct __attribute__((packed))
+	if (netKey.size() == 32)
 	{
-		uint8_t opcode;
-		uint8_t netKey[16];
-		uint8_t rev[3];
-		uint32_t index;
-		uint16_t addGw;
-	} set_netkey_message_t;
-	set_netkey_message_t set_netkey_message;
-	memset(&set_netkey_message, 0x00, sizeof(set_netkey_message));
-	set_netkey_message.opcode = HCI_GATEWAY_CMD_SET_PRO_PARA;
-	for (int i = 0; i < 16; i++)
-	{
-		set_netkey_message.netKey[i] = netKey[i];
+		typedef struct __attribute__((packed))
+		{
+			uint8_t opcode;
+			uint8_t netKey[16];
+			uint8_t rev[3];
+			uint32_t index;
+			uint16_t addGw;
+		} set_netkey_message_t;
+		set_netkey_message_t set_netkey_message;
+		memset(&set_netkey_message, 0x00, sizeof(set_netkey_message));
+		set_netkey_message.opcode = HCI_GATEWAY_CMD_SET_PRO_PARA;
+		for (int i = 0; i < 16; i++)
+		{
+			sscanf(netKey.c_str() + i * 2, "%2x", &set_netkey_message.netKey[i]);
+		}
+		set_netkey_message.index = bswap_32(indexId);
+		set_netkey_message.addGw = gwAddr;
+		uint16_t adrGw = gwAddr;
+		gateway->setBleUnicast(adrGw);
+		database->GatewayUpdateUnicast(gateway, adrGw);
+		return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, 26, HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 	}
-	set_netkey_message.index = bswap_32(indexId);
-	set_netkey_message.addGw = gwAddr;
-	uint16_t adrGw = gwAddr;
-	gateway->setBleUnicast(adrGw);
-	database->GatewayUpdateUnicast(gateway, adrGw);
-	return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, 26, HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
+	else
+	{
+		LOGW("UpdateNetKey error");
+	}
+	return 0;
 }
 
-int BleProtocol::UpdateDevKey(uint16_t gwAddr, uint8_t *devKey)
+int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 {
 	LOGD("SetGwKey");
-	if (devKey)
+	if (devKey.size() == 32)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2736,35 +2761,47 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, uint8_t *devKey)
 		} set_gwkey_message_t;
 		set_gwkey_message_t set_gwkey_message;
 		set_gwkey_message.opcode = 0x0D;
-		set_gwkey_message.gwAddr = bswap_16(gwAddr);
+		set_gwkey_message.gwAddr = (gwAddr);
 		for (int i = 0; i < 16; i++)
 		{
-			set_gwkey_message.gwKey[i] = devKey[i];
+			sscanf(devKey.c_str() + i * 2, "%2x", &set_gwkey_message.gwKey[i]);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&set_gwkey_message, 19, 0, 0, 0, 1000);
+	}
+	else
+	{
+		LOGW("SetGwKey error");
 	}
 	return 0;
 }
 
-int BleProtocol::UpdateAppKey(uint8_t *appKey)
+int BleProtocol::UpdateAppKey(string appKey)
 {
 	LOGD("UpdateAppKey");
-	uint8_t dataRsp[100];
-	int lenRsp;
-	typedef struct __attribute__((packed))
+	if (appKey.size() == 32)
 	{
-		uint8_t opcode;
-		uint8_t rev[3];
-		uint8_t appKey[16];
-	} binding_all_message_t;
-	binding_all_message_t binding_all_message;
-	memset(&binding_all_message, 0x00, sizeof(binding_all_message));
-	binding_all_message.opcode = HCI_GATEWAY_CMD_START_KEYBIND;
-	for (int i = 0; i < 16; i++)
-	{
-		binding_all_message.appKey[i] = appKey[i];
+		uint8_t dataRsp[100];
+		int lenRsp;
+		typedef struct __attribute__((packed))
+		{
+			uint8_t opcode;
+			uint8_t rev[3];
+			uint8_t appKey[16];
+		} binding_all_message_t;
+		binding_all_message_t binding_all_message;
+		memset(&binding_all_message, 0x00, sizeof(binding_all_message));
+		binding_all_message.opcode = HCI_GATEWAY_CMD_START_KEYBIND;
+		for (int i = 0; i < 16; i++)
+		{
+			sscanf(appKey.c_str() + i * 2, "%2x", &binding_all_message.appKey[i]);
+		}
+		int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, 20, HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
+		return rs;
 	}
-	SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, 20, HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
+	else
+	{
+		LOGW("UpdateAppKey error");
+	}
 	return 0;
 }
 
@@ -2776,14 +2813,14 @@ int BleProtocol::UpdateMaxAddr(uint16_t addr)
 	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
-		pro_net_info_t *data;
+		pro_net_info_t data;
 	} provision_message_t;
 	provision_message_t provision_message;
 	memset(&provision_message, 0x00, sizeof(provision_message));
 	provision_message.opcode = HCI_GATEWAY_CMD_SET_NODE_PARA;
-	provision_message.data = pro_net_info;
-	provision_message.data->unicast_address[0] = addr & 0xFF;
-	provision_message.data->unicast_address[1] = (addr >> 8) & 0xFF;
-	SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, 26, HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
-	return 0;
+	memcpy(&provision_message.data.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
+	provision_message.data.unicast_address[0] = addr & 0xFF;
+	provision_message.data.unicast_address[1] = (addr >> 8) & 0xFF;
+	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, 26, HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
+	return rs;
 }

@@ -116,3 +116,8 @@ void ModuleLightSensor::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["VALUE"] = lux;
 	jsonValue.append(dataValue);
 }
+
+void ModuleLightSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_LUX] = lux;
+}
