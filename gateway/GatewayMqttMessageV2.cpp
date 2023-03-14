@@ -15,6 +15,7 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("requestDev", bind(&Gateway::OnRequestDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
@@ -31,6 +32,7 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("requestDev", bind(&Gateway::OnRequestDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
@@ -58,7 +60,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				bool rs = device->DoV2(devData);
+				int rs = device->DoV2(devData);
 				respValue["data"]["code"] = rs;
 			}
 			else
@@ -161,7 +163,7 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 			Group *group = getGroupFromId(groupId);
 			if (group)
 			{
-				bool rs = group->DoV2(devData);
+				int rs = group->DoV2(devData);
 				respValue["data"]["code"] = rs;
 			}
 			else
@@ -197,7 +199,7 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 			SceneBle *scene = getSceneBleFromId(sceneId);
 			if (scene)
 			{
-				bool rs = scene->Do();
+				int rs = scene->Do();
 				respValue["data"]["code"] = rs;
 			}
 			else

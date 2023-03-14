@@ -15,6 +15,8 @@ protected:
 public:
 	Element(Device *device, uint32_t addr);
 
+	bool CheckAddr(uint32_t addr);
+
 	/**
 	 * @brief Parse raw data to element parameter value
 	 *

@@ -129,12 +129,15 @@ bool ModuleOnOff::Do(Json::Value &dataValue)
 
 bool ModuleOnOff::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		bleProtocol->SetOnOffLight(addr, value, 0, true);
+		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+		{
+			this->onoff = onoff;
+		}
 		return true;
 	}
 	return false;

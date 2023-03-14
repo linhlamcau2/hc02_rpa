@@ -260,7 +260,6 @@ int BleProtocol::GetAppKey()
 		appkeyStr.erase(appkeyStr.begin() + 12, appkeyStr.begin() + 13);
 		appkeyStr.erase(appkeyStr.begin() + 16, appkeyStr.begin() + 17);
 		appkeyStr.erase(appkeyStr.begin() + 20, appkeyStr.begin() + 21);
-		uint8_t appKey[16];
 		if (appkeyStr.length() % 2 == 0 && appkeyStr.length() > 0)
 		{
 			for (int i = 0; i < appkeyStr.length(); i += 2)
@@ -2668,12 +2667,12 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-			.header = 0x12,
-			.devAddr = devAddr};
+				.header = 0x12,
+				.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf(devKeyDev.c_str() + i * 2, "%2x", &update_devkey_device.devKey[i]);
+			sscanf(devKeyDev.c_str() + i * 2, "%2x", (unsigned int *)&update_devkey_device.devKey[i]);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, 21, 0, 0, 0, 1000);
 	}
@@ -2697,12 +2696,12 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-			.header = 0x12,
-			.devAddr = gwAddr};
+				.header = 0x12,
+				.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf(devKeyDev.c_str() + i * 2, "%2x", &update_devkey_device.devKey[i]);
+			sscanf(devKeyDev.c_str() + i * 2, "%2x", (unsigned int *)&update_devkey_device.devKey[i]);
 		}
 
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, 21, 0, 0, 0, 1000);
@@ -2732,7 +2731,7 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 		set_netkey_message.opcode = HCI_GATEWAY_CMD_SET_PRO_PARA;
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf(netKey.c_str() + i * 2, "%2x", &set_netkey_message.netKey[i]);
+			sscanf(netKey.c_str() + i * 2, "%2x", (unsigned int *)&set_netkey_message.netKey[i]);
 		}
 		set_netkey_message.index = bswap_32(indexId);
 		set_netkey_message.addGw = gwAddr;
@@ -2764,7 +2763,7 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 		set_gwkey_message.gwAddr = (gwAddr);
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf(devKey.c_str() + i * 2, "%2x", &set_gwkey_message.gwKey[i]);
+			sscanf(devKey.c_str() + i * 2, "%2x", (unsigned int *)&set_gwkey_message.gwKey[i]);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&set_gwkey_message, 19, 0, 0, 0, 1000);
 	}
@@ -2793,7 +2792,7 @@ int BleProtocol::UpdateAppKey(string appKey)
 		binding_all_message.opcode = HCI_GATEWAY_CMD_START_KEYBIND;
 		for (int i = 0; i < 16; i++)
 		{
-			sscanf(appKey.c_str() + i * 2, "%2x", &binding_all_message.appKey[i]);
+			sscanf(appKey.c_str() + i * 2, "%2x", (unsigned int *)&binding_all_message.appKey[i]);
 		}
 		int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, 20, HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
 		return rs;

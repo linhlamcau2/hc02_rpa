@@ -136,12 +136,15 @@ bool ModuleModeRgb::Do(Json::Value &dataValue)
 
 bool ModuleModeRgb::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-		bleProtocol->CallModeRgb(addr, value);
+		int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+		if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)
+		{
+			this->mode = mode;
+		}
 		return true;
 	}
 	return false;

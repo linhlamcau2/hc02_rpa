@@ -132,15 +132,16 @@ bool ElementCct::Do(Json::Value &dataValue)
 
 bool ElementCct::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		// TODO: check way to use cct value
-		uint16_t cct = (value * 192) + 800;
-		LOGD("DoV2 cct: %d", cct);
-		bleProtocol->SetCctLight(addr, cct, 0, true);
+		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		uint16_t value = (cct * 192) + 800;
+		if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
+		{
+			this->cct = cct;
+		}
 		return true;
 	}
 	return false;

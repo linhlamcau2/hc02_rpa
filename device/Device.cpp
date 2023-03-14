@@ -166,8 +166,11 @@ void Device::InputData(uint8_t *data, int len, uint32_t addr)
 	}
 	for (auto &element : elements)
 	{
-		if (element->InputData(data, len, values) == CODE_OK)
-			break;
+		if (element->CheckAddr(addr))
+		{
+			if (element->InputData(data, len, values) == CODE_OK)
+				break;
+		}
 	}
 	PushTelemetry(values);
 }

@@ -18,6 +18,11 @@ ElementRgb::ElementRgb(Device *device, uint32_t addr) : Element(device, addr)
 	idB = BLE_ATTRIBUTE_B;
 	idDimOn = BLE_ATTRIBUTE_DIM_ON;
 	idDimOff = BLE_ATTRIBUTE_DIM_OFF;
+	keyR = KEY_ATTRIBUTE_R + to_string(addr - device->GetAddr());
+	keyG = KEY_ATTRIBUTE_G + to_string(addr - device->GetAddr());
+	keyB = KEY_ATTRIBUTE_B + to_string(addr - device->GetAddr());
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + to_string(addr - device->GetAddr());
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + to_string(addr - device->GetAddr());
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -166,11 +171,11 @@ void ElementRgb::BuildTelemetryValue(Json::Value &jsonValue)
 
 void ElementRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
-	jsonValue[BLE_ATTRIBUTE_R] = r;
-	jsonValue[BLE_ATTRIBUTE_G] = g;
-	jsonValue[BLE_ATTRIBUTE_B] = b;
-	jsonValue[KEY_ATTRIBUTE_DIM_ON] = dimOn;
-	jsonValue[KEY_ATTRIBUTE_DIM_OFF] = dimOff;
+	jsonValue[keyR] = r;
+	jsonValue[keyG] = g;
+	jsonValue[keyB] = b;
+	jsonValue[keyDimOn] = dimOn;
+	jsonValue[keyDimOff] = dimOff;
 }
 
 // TODO: viet anh recheck DoJsonArray
@@ -226,20 +231,27 @@ bool ElementRgb::DoJsonArray(Json::Value &dataValue)
 
 bool ElementRgb::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_R) && dataValue[KEY_ATTRIBUTE_R].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_G) && dataValue[KEY_ATTRIBUTE_G].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_B) && dataValue[KEY_ATTRIBUTE_B].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM_ON) && dataValue[KEY_ATTRIBUTE_DIM_ON].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM_OFF) && dataValue[KEY_ATTRIBUTE_DIM_OFF].isInt())
+			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
-		int r = dataValue[KEY_ATTRIBUTE_R].asInt();
-		int g = dataValue[KEY_ATTRIBUTE_G].asInt();
-		int b = dataValue[KEY_ATTRIBUTE_B].asInt();
-		int dimOn = dataValue[KEY_ATTRIBUTE_DIM_ON].asInt();
-		int dimOff = dataValue[KEY_ATTRIBUTE_DIM_OFF].asInt();
-		bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
+		int r = dataValue[keyR].asInt();
+		int g = dataValue[keyG].asInt();
+		int b = dataValue[keyB].asInt();
+		int dimOn = dataValue[keyDimOn].asInt();
+		int dimOff = dataValue[keyDimOff].asInt();
+		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+		{
+			this->r = r;
+			this->g = g;
+			this->b = b;
+			this->dimOn = dimOn;
+			this->dimOff = dimOff;
+		}
 		return true;
 	}
 	return false;

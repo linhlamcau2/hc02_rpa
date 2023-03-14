@@ -27,6 +27,7 @@
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "DeviceBleLightOnoffCctDimHslModeRGB.h"
+#include "DeviceBleSwitchTouchRgb3.h"
 #include "DeviceBleSwitchTouchRgb4.h"
 #include "DeviceBleSwitchScene6DC.h"
 #include "DeviceBleSensorTempHum.h"
@@ -516,6 +517,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	case BLE_LED_DAY_RGB:
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
 		break;
+	case BLE_SWITCH_RGB_3:
+		device = new DeviceBleSwitchTouchRgb3(id, name, mac, device_id, addr, version);
+		break;
 	case BLE_SWITCH_RGB_4:
 		device = new DeviceBleSwitchTouchRgb4(id, name, mac, device_id, addr, version);
 		break;
@@ -968,7 +972,8 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 	for (const auto &[id, device] : deviceList)
 	{
 		Json::Value deviceValue;
-		device->BuildTelemetryValueV2(dataValue);
+		deviceValue["id"] = device->GetId();
+		device->BuildTelemetryValueV2(deviceValue);
 		dataValue.append(deviceValue);
 	}
 }
