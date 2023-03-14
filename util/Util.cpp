@@ -22,6 +22,7 @@ using namespace std;
 string Util::genRandRQI(int size)
 {
 	string rqi = "";
+	srand((int) time(0));
 	for (int i = 0; i < size; i++)
 	{
 		rqi += 'a' + rand() % 26;

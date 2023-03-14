@@ -20,6 +20,11 @@
         "compare": "cpp",
         "ratio": "cpp",
         "tuple": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "fstream": "cpp",
+        "unordered_map": "cpp",
+        "istream": "cpp",
+        "numeric": "cpp",
+        "sstream": "cpp"
     }
 }

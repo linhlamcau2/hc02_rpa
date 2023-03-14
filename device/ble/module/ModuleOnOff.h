@@ -70,4 +70,6 @@ public:
 	 * @return false
 	 */
 	bool Do(Json::Value &dataValue);
+
+	bool DoMqttV2(Json::Value &dataValue);
 };

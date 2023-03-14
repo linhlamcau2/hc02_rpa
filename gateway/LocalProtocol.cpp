@@ -1,6 +1,7 @@
 #include "LocalProtocol.h"
 #include <string.h>
 #include "Log.h"
+#include "Wifi.h"
 #include "Util.h"
 
 #define HC_CONTROL_TOPIC "HC.CONTROL"

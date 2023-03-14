@@ -64,7 +64,7 @@ void Gateway::init()
 {
 	// CloudProtocol::init();
 	LocalProtocol::init();
-	Udp::init();
+	// Udp::init();
 
 	initUdpMessage();
 	initMqttMessage();
@@ -89,7 +89,7 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 
-	CloudConnect();
+	// CloudConnect();
 	LocalConnect();
 
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
@@ -660,7 +660,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
+				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), EVENT_TRIGGER, true);
 				if (!rule)
 				{
 					LOGW("New rule error");

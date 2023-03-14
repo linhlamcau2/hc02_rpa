@@ -14,6 +14,11 @@ class LocalProtocol : public Mqtt
 #endif
 {
 private:
+	string subTopic;
+	string pubTopic;
+	string subTopicV2;
+	string pubTopicV2;
+
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnLocalCallbackFunc;
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncList;
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue, string &rqi)> OnLocalCallbackFuncV2;

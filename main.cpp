@@ -70,15 +70,16 @@ int main(int argc, char *argv[])
 
 	fileTransfer = new FileTransfer();
 
-	string mac = Wifi::GetMacAddress();
+	// string mac = Wifi::GetMacAddress();
+	string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac,
 												config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
 												config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 
-	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
-	bleProtocol->init();
+	// bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
+	// bleProtocol->init();
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);

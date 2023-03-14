@@ -69,3 +69,18 @@ bool DeviceBleLightOnoffCctDim::Do(Json::Value &dataValue)
 	}
 	return true;
 }
+
+bool DeviceBleLightOnoffCctDim::DoMqttV2(Json::Value &dataValue)
+{
+	if (!moduleOnOff->DoMqttV2(dataValue))
+	{
+		if (!moduleDim->DoMqttV2(dataValue))
+		{
+			if (!elementCct->DoMqttV2(dataValue))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}

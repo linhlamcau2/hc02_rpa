@@ -121,3 +121,21 @@ bool ModuleOnOff::Do(Json::Value &dataValue)
 	}
 	return false;
 }
+
+bool ModuleOnOff::DoMqttV2(Json::Value &dataValue)
+{
+	// LOGD("DoTrigger data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int value = dataValue["VALUE"].asInt();
+			bleProtocol->SetOnOffLight(addr, value, 0, true);
+			return true;
+		}
+	}
+	return false;
+}
