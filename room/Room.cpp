@@ -7,19 +7,8 @@ DeviceInRoom::DeviceInRoom(Device *device)
 	this->device = device;
 }
 
-Room::Room(string roomUUId, int id)
+Room::Room(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
-	this->roomUUId = roomUUId;
-	this->id = id;
-}
-
-string Room::GetUUId()
-{
-	return roomUUId;
-}
-int Room::GetId()
-{
-	return id;
 }
 
 int Room::GetPositionDevice(Device *device)
@@ -51,7 +40,7 @@ bool Room::AddDevice(Device *device, bool sendBle)
 
 		if (sendBle)
 		{
-			if (bleProtocol->SetGroup(device->GetAddr(), id + 49152) == 0)
+			if (bleProtocol->SetGroup(device->GetAddr(), addr + 49152) == 0)
 			{
 				if (devcieInRoom)
 				{
@@ -64,7 +53,7 @@ bool Room::AddDevice(Device *device, bool sendBle)
 			}
 			else
 			{
-				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), roomUUId.c_str());
+				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), id.c_str());
 			}
 		}
 		else

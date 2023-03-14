@@ -339,7 +339,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 			LOGI("addr: 0x%04X, type: 0x%04X, mac: %s", srcAddr, type, mac.c_str());
 			if (type && mac != "")
 			{
-				Device *device = gateway->getDevice(mac);
+				Device *device = gateway->getDeviceFromMac(mac);
 				if (device)
 				{
 					LOGI("Update device");

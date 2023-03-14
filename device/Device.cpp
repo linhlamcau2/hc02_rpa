@@ -5,12 +5,9 @@
 #include <functional>
 #include <unistd.h>
 
-Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
+Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
-	this->id = id;
-	this->name = name;
 	this->mac = mac;
-	this->addr = addr;
 	this->type = type;
 	this->device_id = device_id;
 	this->version = version;
@@ -26,16 +23,6 @@ Device::~Device()
 {
 }
 
-string Device::GetId()
-{
-	return id;
-}
-
-string Device::GetName()
-{
-	return name;
-}
-
 string Device::GetMac()
 {
 	return mac;
@@ -46,19 +33,9 @@ string Device::GetDeviceId()
 	return device_id;
 }
 
-uint32_t Device::GetAddr()
-{
-	return addr;
-}
-
 bool Device::CheckAddr(uint32_t addr)
 {
 	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
-}
-
-void Device::SetAddr(uint32_t addr)
-{
-	this->addr = addr;
 }
 
 uint32_t Device::GetType()

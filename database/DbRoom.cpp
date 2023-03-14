@@ -16,12 +16,12 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int id = sqlite3_column_int(stmt, index++);
-                Room * room = new Room(roomId, id);
-                if (!gateway->AddNewRoom(room))
-                {
-                    LOGE("Add new room failed");
-                }
+				int addr = sqlite3_column_int(stmt, index++);
+				Room *room = new Room(roomId, addr, "");
+				if (!gateway->AddNewRoom(room))
+				{
+					LOGE("Add new room failed");
+				}
 			}
 			else if (s == SQLITE_DONE)
 			{
@@ -44,24 +44,24 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (roomId, addr) VALUES ('" + room->GetUUId() + "'," + to_string(room->GetId()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (roomId, addr) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomUpdate(Room *room, int id)
 {
-	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE roomId = \"" + room->GetUUId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE roomId = \"" + room->GetId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomDel(Room *room)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId = \'" + room->GetUUId() + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId = \'" + room->GetId() + "\';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomDelAll()
 {
-    string sql = "DELETE FROM " TABLE_NAME ";";
-    return Sqlite_Exec(sql);
+	string sql = "DELETE FROM " TABLE_NAME ";";
+	return Sqlite_Exec(sql);
 }

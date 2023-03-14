@@ -56,13 +56,13 @@ int Db::DeviceInGroupRead()
 // TODO: add epId to db
 int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (groupId, mac, epId) VALUES (\"" + group->GetUUId() + "\",\"" + device->GetMac() + "\"," + to_string(epId) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (groupId, mac, epId) VALUES (\"" + group->GetId() + "\",\"" + device->GetMac() + "\"," + to_string(epId) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInGroupDel(Group *group, Device *device, int epId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetUUId() + "\" AND mac=\"" + device->GetMac() + "\" AND epId = " + to_string(epId) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetId() + "\" AND mac=\"" + device->GetMac() + "\" AND epId = " + to_string(epId) + ";";
 	return Sqlite_Exec(sql);
 }
 

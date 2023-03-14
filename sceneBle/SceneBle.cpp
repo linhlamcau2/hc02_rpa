@@ -9,36 +9,8 @@ DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 	this->data = data;
 }
 
-SceneBle::SceneBle(string sceneBleUUId, int id, string name)
+SceneBle::SceneBle(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
-	this->id = id;
-	this->sceneBleUUId = sceneBleUUId;
-	this->name = name;
-}
-
-int SceneBle::GetId()
-{
-	return id;
-}
-
-string SceneBle::GetUUId()
-{
-	return sceneBleUUId;
-}
-
-void SceneBle::SetUuid(string uuid)
-{
-	this->sceneBleUUId = uuid;
-}
-
-string SceneBle::GetName()
-{
-	return name;
-}
-
-void SceneBle::SetName(string name)
-{
-	this->name = name;
 }
 
 int SceneBle::GetPositionDevice(Device *device)
@@ -58,7 +30,7 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 {
 	if (addOnlyDB == false)
 	{
-		if (bleProtocol->SetSceneBle(device->GetAddr(), id, modeRGB) == 0)
+		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			deviceList.push_back(deviceInSceneBle);
@@ -84,7 +56,7 @@ bool SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		}
-		if (bleProtocol->SetSceneBle(device->GetAddr(), id, modeRGB) == 0)
+		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			deviceList.push_back(deviceInSceneBle);
@@ -102,7 +74,7 @@ bool SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 
 bool SceneBle::DelDevice(Device *device)
 {
-	if (bleProtocol->DelSceneBle(device->GetAddr(), id) == 0)
+	if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == 0)
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)
@@ -116,5 +88,5 @@ bool SceneBle::DelDevice(Device *device)
 
 bool SceneBle::Do()
 {
-	return bleProtocol->CallScene(0xffff, id, 10, true, 1);
+	return bleProtocol->CallScene(0xffff, addr, 10, true, 1);
 }

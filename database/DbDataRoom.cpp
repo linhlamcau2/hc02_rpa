@@ -19,30 +19,30 @@ static int DataRoomParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-                Room * room = gateway->getRoomFromId(id);
-                string roomdata ;
-                string decode = macaron::Base64::Decode(data, roomdata);
+				Room *room = gateway->getRoomFromId(id);
+				string roomdata;
+				string decode = macaron::Base64::Decode(data, roomdata);
 				LOGE("room data raw: %s", roomdata.c_str());
-                if (decode == "")
-                {
-                    Json::Value roomValue;
+				if (decode == "")
+				{
+					Json::Value roomValue;
 					Json::Reader r;
 					r.parse(roomdata, roomValue);
-                    if (roomValue.isObject())
+					if (roomValue.isObject())
 					{
 						LOGI("Room data config: %s", roomValue.toString().c_str());
-                        if (room)
-                            room->DataConfigAdd(roomValue.toString());
-                        else
-                        {
-                            LOGW("Room does not exsit");
-                        }
-                    }
+						if (room)
+							room->DataConfigAdd(roomValue.toString());
+						else
+						{
+							LOGW("Room does not exsit");
+						}
+					}
 					else
 					{
 						LOGW("Room data config error %s", roomValue.toString().c_str());
 					}
-                }
+				}
 				else
 				{
 					LOGW("decode error");
@@ -81,7 +81,7 @@ int Db::DataRoomUpdate(string id, string data)
 
 int Db::DataRoomDel(string id, string data)
 {
-    string sql = "DELETE FROM " TABLE_NAME " WHERE id = \"" + id+"\" AND data = \"" + data +"\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE id = \"" + id + "\" AND data = \"" + data + "\";";
 	return Sqlite_Exec(sql);
 }
 

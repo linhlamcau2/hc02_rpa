@@ -4,9 +4,8 @@
 #include "Util.h"
 #include "Log.h"
 
-Rule::Rule(string id, string type, unsigned char repeater)
+Rule::Rule(string id, string type, unsigned char repeater) : Object(id, 0, "")
 {
-	this->id = id;
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
@@ -16,9 +15,8 @@ Rule::Rule(string id, string type, unsigned char repeater)
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, string type, unsigned char repeater, int startTime, int endTime)
+Rule::Rule(string id, string type, unsigned char repeater, int startTime, int endTime) : Object(id, 0, "")
 {
-	this->id = id;
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
@@ -44,14 +42,10 @@ Rule::~Rule()
 		timerSchedule->UnregisterTimer(timerRegisterIndex);
 }
 
-string Rule::GetId()
-{
-	return id;
-}
-
 void Rule::Check()
 {
-	if (isEnable){
+	if (isEnable)
+	{
 		bool checkRuleInputResult = false;
 		int currentTimer = Util::GetCurrentTimer();
 		int currentWeekDay = Util::GetCurrentWeekDay();

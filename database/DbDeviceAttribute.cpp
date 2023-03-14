@@ -18,7 +18,7 @@ static int DeviceAttributeParse(sqlite3_stmt *stmt, void *ptr)
 				string deviceMac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int attributeId = sqlite3_column_int(stmt, index++);
 				double value = sqlite3_column_double(stmt, index++);
-				Device *device = gateway->getDevice(deviceMac);
+				Device *device = gateway->getDeviceFromMac(deviceMac);
 				if (device)
 				{
 					device->InitAttribute(attributeId, value);

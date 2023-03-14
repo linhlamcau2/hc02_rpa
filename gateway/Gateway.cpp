@@ -3,11 +3,11 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <algorithm>
-#include <json.h>
 #include <string.h>
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include "json.h"
 #include "Db.h"
 #include "Util.h"
 #include "Wifi.h"
@@ -61,6 +61,99 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	udpBroadcastThread = NULL;
+}
+
+Device *Gateway::getDeviceFromMac(string mac)
+{
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->GetMac() == mac)
+			return device;
+	}
+	return NULL;
+}
+
+Device *Gateway::getDeviceFromId(string id)
+{
+	if (deviceList.find(id) != deviceList.end())
+	{
+		return deviceList[id];
+	}
+	return NULL;
+}
+
+DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
+{
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
+		{
+			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
+			if (deviceBle)
+				return deviceBle;
+		}
+	}
+	return NULL;
+}
+
+Group *Gateway::getGroupFromId(string id)
+{
+	if (groupList.find(id) != groupList.end())
+	{
+		return groupList[id];
+	}
+	return NULL;
+}
+
+Group *Gateway::getGroupFromAddr(int addr)
+{
+	for (const auto &[id, group] : groupList)
+	{
+		if (group->GetAddr() == addr)
+		{
+			return group;
+		}
+	}
+	return NULL;
+}
+
+SceneBle *Gateway::getSceneBleFromId(string id)
+{
+	if (sceneBleList.find(id) != sceneBleList.end())
+	{
+		return sceneBleList[id];
+	}
+	return NULL;
+}
+
+SceneBle *Gateway::getSceneBleFromAddr(int addr)
+{
+	for (const auto &[id, sceneBle] : sceneBleList)
+	{
+		if (sceneBle->GetAddr() == addr)
+		{
+			return sceneBle;
+		}
+	}
+	return NULL;
+}
+
+Rule *Gateway::getRuleFromId(string id)
+{
+	if (ruleList.find(id) != ruleList.end())
+	{
+		return ruleList[id];
+	}
+	return NULL;
+}
+
+Room *Gateway::getRoomFromId(string id)
+{
+	if (roomList.find(id) != roomList.end())
+	{
+		return roomList[id];
+	}
+	return NULL;
 }
 
 void Gateway::init()
@@ -132,7 +225,6 @@ void Gateway::ResetFactory()
 	groupList.clear();
 	ruleList.clear();
 	sceneBleList.clear();
-	scanDeviceList.clear();
 
 	database->DeviceDelAll();
 	database->GatewayDelAll();
@@ -386,106 +478,6 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 #endif
 }
 
-Group *Gateway::getGroup(int id)
-{
-	if (groupList.find(id) != groupList.end())
-	{
-		return groupList[id];
-	}
-	return NULL;
-}
-
-Group *Gateway::getGroupFromId(string groupId)
-{
-	for (const auto &[id, group] : groupList)
-	{
-		if (group->GetUUId() == groupId)
-			return group;
-	}
-	return NULL;
-}
-
-Device *Gateway::getDevice(string mac)
-{
-	if (deviceList.find(mac) != deviceList.end())
-	{
-		return deviceList[mac];
-	}
-	return NULL;
-}
-
-Device *Gateway::getDeviceFromId(string deviceId)
-{
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->GetId() == deviceId)
-			return device;
-	}
-	return NULL;
-}
-
-DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
-{
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
-		{
-			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
-			if (deviceBle)
-				return deviceBle;
-		}
-	}
-	return NULL;
-}
-
-Rule *Gateway::getRuleById(string eventId)
-{
-	for (const auto &[id, rule] : ruleList)
-	{
-		if (rule->GetId() == eventId)
-		{
-			return rule;
-		}
-	}
-	return NULL;
-}
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
-{
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->CheckAddr(addr) && device->GetProtocol() >= ZIGBEE_DEVICE)
-		{
-			DeviceZigbee *deviceZigbee = dynamic_cast<DeviceZigbee *>(device);
-			if (deviceZigbee)
-				return deviceZigbee;
-		}
-	}
-	return NULL;
-}
-#endif
-
-SceneBle *Gateway::getSceneBleFromId(string sceneBleUUId)
-{
-	for (const auto &[id, scene] : sceneBleList)
-	{
-		if (scene->GetUUId() == sceneBleUUId)
-			return scene;
-	}
-	return NULL;
-}
-
-Room *Gateway::getRoomFromId(string roomUUId)
-{
-	for (auto &[id, room] : roomList)
-	{
-		if (id == roomUUId)
-			return room;
-	}
-	return NULL;
-}
-
 Device *Gateway::AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
@@ -572,7 +564,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	{
 		device->lastTimeActive = time(NULL);
 		if (addGateway)
-			deviceList[mac] = device;
+			deviceList[id] = device;
 		if (addDatabase)
 			database->DeviceAdd(device);
 		// if (connected)
@@ -891,7 +883,7 @@ Room *Gateway::AddNewRoom(Room *room)
 {
 	if (room)
 	{
-		roomList[room->GetUUId()] = room;
+		roomList[room->GetId()] = room;
 	}
 	return room;
 }
@@ -1053,7 +1045,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 					{
 						string mac = deviceRuleInputValue["mac"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];
-						Device *device = gateway->getDevice(mac);
+						Device *device = gateway->getDeviceFromMac(mac);
 						if (device)
 						{
 							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, device, dataValue);
@@ -1077,7 +1069,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 					{
 						Json::Value dataValue = deviceRuleOutputValue["data"];
 						string mac = deviceRuleOutputValue["mac"].asString();
-						Device *device = gateway->getDevice(mac);
+						Device *device = gateway->getDeviceFromMac(mac);
 						if (device)
 						{
 							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
@@ -1098,9 +1090,9 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 					if (groupRuleOutputValue.isMember("id") && groupRuleOutputValue["id"].isInt() &&
 							groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
 					{
-						int id = groupRuleOutputValue["id"].asInt();
+						int addr = groupRuleOutputValue["id"].asInt();
 						Json::Value dataValue = groupRuleOutputValue["data"];
-						Group *group = gateway->getGroup(id);
+						Group *group = gateway->getGroupFromAddr(addr);
 						if (group)
 						{
 							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);

@@ -6,10 +6,9 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-
-#include "Log.h"
-#include <json.h>
 #include <signal.h>
+#include "json.h"
+#include "Log.h"
 #include "Config.h"
 #include "Gateway.h"
 #include "Device.h"
@@ -73,8 +72,8 @@ int main(int argc, char *argv[])
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac,
-						  config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
-						  config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
+												config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
+												config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);

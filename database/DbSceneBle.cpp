@@ -18,7 +18,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				string sceneId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int meshId = sqlite3_column_int(stmt, index++);
+				int addr = sqlite3_column_int(stmt, index++);
 				string propertiesData = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				Json::Value payloadJson;
 				Json::Reader r;
@@ -26,7 +26,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				if (payloadJson.isArray())
 				{
 					SceneBle *scene = gateway->getSceneBleFromId(sceneId);
-					Device *device = gateway->getDevice(deviceId);
+					Device *device = gateway->getDeviceFromMac(deviceId);
 					if (scene)
 					{
 						scene->AddDevice(device, payloadJson, 0, true);
@@ -34,7 +34,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 					}
 					else
 					{
-						SceneBle *tempScene = new SceneBle(sceneId, meshId, sceneId);
+						SceneBle *tempScene = new SceneBle(sceneId, addr, sceneId);
 						gateway->AddNewSceneBle(tempScene, true, false);
 					}
 				}
@@ -64,18 +64,18 @@ int Db::SceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('" + scene->GetUUId() + "', '" + device->GetId() + "', '" + scene->GetName() + "', " + to_string(scene->GetId()) + ", '" + data.toString() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('" + scene->GetId() + "', '" + device->GetId() + "', '" + scene->GetName() + "', " + to_string(scene->GetAddr()) + ", '" + data.toString() + "');";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetUUId() + "' AND deviceId='" + device->GetId() + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetId() + "' AND deviceId='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::SceneBleDel(SceneBle *scene)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetUUId() + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetId() + "';";
 	return Sqlite_Exec(sql);
 }

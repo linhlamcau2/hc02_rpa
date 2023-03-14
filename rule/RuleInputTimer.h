@@ -3,7 +3,7 @@
 #include "RuleInput.h"
 #include "Rule.h"
 #include <functional>
-#include <json.h>
+#include "json.h"
 
 using namespace std;
 

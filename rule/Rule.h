@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "Object.h"
 #include "RuleInput.h"
 #include "RuleOutput.h"
 
@@ -20,10 +21,9 @@ typedef enum
 	SCENE_MODE_WEEKEND_DAY = 0x06,
 } RuleMode;
 
-class Rule
+class Rule : public Object
 {
 private:
-	string id;
 	string type;
 	unsigned char repeater;
 	bool fullDay;
@@ -44,7 +44,6 @@ public:
 	~Rule();
 
 	bool isEnable;
-	string GetId();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();
