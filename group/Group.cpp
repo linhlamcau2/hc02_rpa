@@ -14,33 +14,10 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 	this->epId = epId;
 }
 
-Group::Group(string groupUUId, int id, string name)
+Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
-	this->groupUUId = groupUUId;
-	this->id = id;
-	this->name = name;
 	this->numberOfBleDevice = 0;
 	this->numberOfZigbeeDevice = 0;
-}
-
-int Group::GetId()
-{
-	return id;
-}
-
-void Group::SetName(string name)
-{
-	this->name = name;
-}
-
-string Group::GetName()
-{
-	return name;
-}
-
-string Group::GetUUId()
-{
-	return groupUUId;
 }
 
 int Group::GetPositionDevice(Device *device)
@@ -77,7 +54,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 		if (sendBle)
 		{
-			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
+			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == 0)
 			{
 				if (deviceInGroup)
 				{
@@ -88,7 +65,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 			}
 			else
 			{
-				LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), id);
+				LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), addr);
 			}
 		}
 		else
@@ -117,7 +94,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 		}
 		else
 		{
-			LOGW("Add Zigbee device %s to group %d error", device->GetId().c_str(), id);
+			LOGW("Add Zigbee device %s to group %d error", device->GetId().c_str(), addr);
 		}
 	}
 #endif
@@ -128,7 +105,7 @@ bool Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, id + ID_START) == 0)
+		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == 0)
 		{
 			int deviceIndex = GetPositionDevice(device);
 			if (deviceIndex > -1)
@@ -198,15 +175,15 @@ void Group::DoBle()
 			LOGD("id: %d, value: %d", idProperty, value);
 			if (idProperty == 0)
 			{
-				bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
+				bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
 			}
 			else if (idProperty == 1)
 			{
-				bleProtocol->SetDimmingLight(id + ID_START, (value * 65535) / 100, 0, true);
+				bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, 0, true);
 			}
 			else if (idProperty == 2)
 			{
-				bleProtocol->SetCctLight(id + ID_START, (value * 192) + 800, 0, true);
+				bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, 0, true);
 			}
 			else if (idProperty == 3)
 			{
@@ -225,11 +202,11 @@ void Group::DoBle()
 			}
 			else if (idProperty == 23)
 			{
-				bleProtocol->CallModeRgb(id + ID_START, value);
+				bleProtocol->CallModeRgb(addr + ID_START, value);
 			}
 			else
 			{
-				LOGW("DoTrigger id: %d don't support", id);
+				LOGW("DoTrigger addr: %d don't support", addr);
 			}
 		}
 		else
@@ -239,7 +216,7 @@ void Group::DoBle()
 	}
 	if (isIdHue && isIdLuminance && isIdSaturation)
 	{
-		bleProtocol->SetHSLLight(id + ID_START, valueHue, valueSaturation, valueLuminance, 0, true);
+		bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, 0, true);
 	}
 }
 
@@ -250,19 +227,19 @@ void Group::DoBleV2()
 		if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-			bleProtocol->SetOnOffLight(id + ID_START, value, 0, true);
+			bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 			uint16_t dim = (value * 65535) / 100;
-			bleProtocol->SetDimmingLight(id + ID_START, dim, 0, true);
+			bleProtocol->SetDimmingLight(addr + ID_START, dim, 0, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
 			uint16_t cct = (value * 192) + 800;
-			bleProtocol->SetCctLight(id + ID_START, cct, 0, true);
+			bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
 				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
@@ -271,12 +248,12 @@ void Group::DoBleV2()
 			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 			int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-			bleProtocol->SetHSLLight(id + ID_START, h, s, l, 0, true);
+			bleProtocol->SetHSLLight(addr + ID_START, h, s, l, 0, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-			bleProtocol->CallModeRgb(id + ID_START, value);
+			bleProtocol->CallModeRgb(addr + ID_START, value);
 		}
 	}
 }
@@ -291,15 +268,15 @@ void Group::DoZigbee(Json::Value *dataValue)
 			string method = (*dataValue)["method"].asString();
 			if (method == "TurnOn")
 			{
-				zigbeeProtocol->ZCLOnoffGroup(id, 0);
+				zigbeeProtocol->ZCLOnoffGroup(addr, 0);
 			}
 			else if (method == "TurnOff")
 			{
-				zigbeeProtocol->ZCLOnoffGroup(id, 1);
+				zigbeeProtocol->ZCLOnoffGroup(addr, 1);
 			}
 			else if (method == "Toggle")
 			{
-				zigbeeProtocol->ZCLOnoffGroup(id, 2);
+				zigbeeProtocol->ZCLOnoffGroup(addr, 2);
 			}
 			else
 			{

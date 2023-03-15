@@ -1,0 +1,17 @@
+#pragma once
+
+#include "DeviceBle.h"
+#include "element/ElementButton.h"
+#include "element/ElementRgb.h"
+
+using namespace std;
+
+class DeviceBleSwitchTouchRgb3 : public DeviceBle
+{
+private:
+	ElementButton *elementButton[3];
+	ElementRgb *elementRgb[3];
+
+public:
+	DeviceBleSwitchTouchRgb3(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
+};

@@ -6,10 +6,9 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-
-#include "Log.h"
-#include <json.h>
 #include <signal.h>
+#include "json.h"
+#include "Log.h"
 #include "Config.h"
 #include "Gateway.h"
 #include "Device.h"

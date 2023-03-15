@@ -266,7 +266,7 @@ static bool ledBle = false;
 void Util::LedInternet(bool value)
 {
 	ledInternet = value;
-#ifndef __ANDROID__
+#ifdef __OPENWRT__
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
@@ -281,7 +281,7 @@ void Util::LedInternet(bool value)
 void Util::LedService(bool value)
 {
 	ledService = value;
-#ifndef __ANDROID__
+#ifdef __OPENWRT__
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
@@ -296,7 +296,7 @@ void Util::LedService(bool value)
 void Util::LedZigbee(bool value)
 {
 	ledZigbee = value;
-#ifndef __ANDROID__
+#ifdef __OPENWRT__
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
@@ -311,7 +311,7 @@ void Util::LedZigbee(bool value)
 void Util::LedBle(bool value)
 {
 	ledBle = value;
-#ifndef __ANDROID__
+#ifdef __OPENWRT__
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
@@ -325,7 +325,7 @@ void Util::LedBle(bool value)
 
 void Util::LedAll(bool value)
 {
-#ifndef __ANDROID__
+#ifdef __OPENWRT__
 	if (value)
 	{
 		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");

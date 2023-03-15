@@ -113,12 +113,15 @@ bool ModuleTimeActionPir::Do(Json::Value &dataValue)
 
 bool ModuleTimeActionPir::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
-		bleProtocol->TimeActionPirLightSensor(addr, value);
+		int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
+		if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)
+		{
+			this->time = time;
+		}
 		return true;
 	}
 	return false;

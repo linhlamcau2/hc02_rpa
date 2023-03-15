@@ -8,6 +8,7 @@ class ElementRgb : public Element
 protected:
 	uint8_t r, g, b, dimOn, dimOff;
 	int idR, idG, idB, idDimOn, idDimOff;
+	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
 	ElementRgb(Device *device, uint32_t addr);

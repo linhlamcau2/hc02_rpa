@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "json.h"
+#include "Object.h"
 #include "Device.h"
 
 using namespace std;
@@ -16,21 +17,12 @@ public:
 	DeviceInSceneBle(Device *device, Json::Value data);
 };
 
-class SceneBle
+class SceneBle : public Object
 {
-private:
-	int id;
-	string name;
-	string sceneBleUUId;
-
 public:
 	vector<DeviceInSceneBle *> deviceList;
-	SceneBle(string sceneBleUUId, int id, string name);
-	int GetId();
-	string GetUUId();
-	void SetUuid(string uuid);
-	string GetName();
-	void SetName(string name);
+	SceneBle(string id, uint32_t addr, string name);
+	
 	int GetPositionDevice(Device *device);
 	bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
 	bool AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB);

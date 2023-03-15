@@ -193,8 +193,34 @@ Request:
 ```
 
 Response:
-```
-- HC phản hồi bản tin số 1
+```json
+{
+    "cmd": "requestDevSttRsp",
+    "rqi": "abc123456",
+    "data": {
+        "device": [{
+                "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+                "data": {
+                    "stt": 1,
+                    "bt0": 1,
+                    "onoff0": 0,
+                    "h": 0,
+                    "s": 2,
+                    "l": 4,
+                    "dim": 50
+                }
+            },
+            {
+                "id": "b717f8d8-6f18-43c0-ae46-69c32998f654",
+                "data": {
+                    "stt": 1,
+                    "temp": 25,
+                    "hum": 90
+                }
+            }
+        ]
+    }
+}
 ```
 
 * Note:
@@ -219,7 +245,7 @@ Request:
 Response:
 ```json
 {
-    "cmd": "stopScanBleRsp",
+    "cmd": "startScanBleRsp",
     "rqi": "abc123456",
     "data": {
         "code": 0
@@ -286,14 +312,14 @@ Response:
 - Với cả thiết bị nhiều element cũng chỉ gửi 1 bản tin như các thiết bị bình thường
 ```
 
-### II.1.4. Xóa thiết bị khỏi nhóm: server->HC
+### II.1.4. Xóa thiết bị khỏi HC: server->HC
 Request:
 ```json
 {
     "cmd": "delDev",
     "rqi": "abc123456",
     "data": {
-        "device": [
+        "devices": [
             "b717f8d8-6f18-43c0-ae46-69c32998f653",
             "b717f8d8-6f18-43c0-ae46-69c32998f654"
         ]
@@ -328,7 +354,7 @@ Request:
     "data": {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "name": "abc",
-        "device": [
+        "devices": [
             "b717f8d8-6f18-43c0-ae46-69c32998f653",
             "b717f8d8-6f18-43c0-ae46-69c32998f654"
         ]
@@ -460,7 +486,7 @@ Request:
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "name": "abc",
         "devices": [{
-                "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+                "id": ["b717f8d8-6f18-43c0-ae46-69c32998f653"],
                 "data": {
                     "bt0": 1,
                     "h": 0,
@@ -468,7 +494,7 @@ Request:
                     "l": 4,
                     "dim": 50
                 }, {
-                "id": "b717f8d8-6f18-43c0-ae46-69c32998f654",
+                "id": ["b717f8d8-6f18-43c0-ae46-69c32998f654"],
                 "data": {
                     "bt0": 1,
                     "h": 0,
@@ -479,7 +505,7 @@ Request:
             }
         ],
         "groups": [{//có dùng với group được không?
-                "id": "b717f8d8-6f18-43c0-ae46-69c32998f655",
+                "id": ["b717f8d8-6f18-43c0-ae46-69c32998f655"],
                 "data": {
                     "bt0": 1,
                     "h": 0,
@@ -536,6 +562,29 @@ Response:
         "failed": [
             "b717f8d8-6f18-43c0-ae46-69c32998f654"
         ]
+    }
+}
+```
+
+### II.3.3. Goi cảnh: server->HC
+Request:
+```json
+{
+    "cmd": "callScene",
+    "rqi": "abc123456",
+    "data": {
+        "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2"
+    }
+}
+```
+
+Response:
+```json
+{
+    "cmd": "callSceneRsp",
+    "rqi": "abc123456",
+    "data": {
+        "code": 0
     }
 }
 ```
@@ -781,11 +830,11 @@ Response:
 }
 ```
 
-### II.6.3. Xóa thiết bị vào phòng: server->HC
+### II.6.3. Xóa thiết bị khỏi phòng: server->HC
 Request:
 ```json
 {
-  "cmd": "delDevToRoom",
+  "cmd": "delDevFromRoom",
   "rqi": "abc123456",
   "data": {
     "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
@@ -800,7 +849,7 @@ Request:
 Response:
 ```json
 {
-    "cmd": "delDevToRoomRsp",
+    "cmd": "delDevFromRoomRsp",
     "rqi": "abc123456",
     "data": {
         "code": 0,

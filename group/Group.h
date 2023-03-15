@@ -2,7 +2,8 @@
 
 #include <string>
 #include <vector>
-#include <json.h>
+#include "json.h"
+#include "Object.h"
 #include "Device.h"
 
 using namespace std;
@@ -15,13 +16,9 @@ public:
 	DeviceInGroup(Device *device, int epId);
 };
 
-class Group
+class Group : public Object
 {
 private:
-	int id;
-	string name;
-	string groupUUId;
-
 	int numberOfBleDevice;
 	int numberOfZigbeeDevice;
 
@@ -31,12 +28,8 @@ public:
 	vector<DeviceInGroup *> deviceList;
 
 public:
-	Group(string groupUUId, int id, string name);
+	Group(string id, uint32_t addr, string name);
 
-	int GetId();
-	void SetName(string name);
-	string GetName();
-	string GetUUId();
 	int GetPositionDevice(Device *device);
 
 	bool AddDevice(Device *device, int epId, bool sendBle);

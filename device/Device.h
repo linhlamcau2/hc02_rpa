@@ -2,9 +2,10 @@
 
 #include <string>
 #include <vector>
-#include <json.h>
 #include <byteswap.h>
+#include "json.h"
 #include "ErrorCode.h"
+#include "Object.h"
 #include "RuleInputDevice.h"
 #include "module/Module.h"
 #include "element/Element.h"
@@ -122,13 +123,10 @@ enum
 	POWER_AC,
 };
 
-class Device
+class Device : public Object
 {
 protected:
-	string id;
-	string name;
 	string mac;
-	uint32_t addr;
 	uint32_t type;
 	uint16_t version;
 	int rssi;
@@ -154,11 +152,7 @@ public:
 	Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
-	string GetId();
-	string GetName();
 	string GetMac();
-	uint32_t GetAddr();
-	void SetAddr(uint32_t addr);
 	uint32_t GetType();
 	uint16_t GetVersion();
 	string GetVersionStr();

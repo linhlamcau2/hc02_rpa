@@ -201,7 +201,7 @@ bool ModuleHsl::DoJsonArray(Json::Value &dataValue)
 
 bool ModuleHsl::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
 			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
@@ -210,7 +210,12 @@ bool ModuleHsl::DoV2(Json::Value &dataValue)
 		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		bleProtocol->SetHSLLight(addr, h, s, l, 0, true);
+		if (bleProtocol->SetHSLLight(addr, h, s, l, 0, true) == CODE_OK)
+		{
+			this->h = h;
+			this->s = s;
+			this->l = l;
+		}
 		return true;
 	}
 	return false;

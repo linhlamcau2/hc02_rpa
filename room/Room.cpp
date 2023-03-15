@@ -7,19 +7,8 @@ DeviceInRoom::DeviceInRoom(Device *device)
 	this->device = device;
 }
 
-Room::Room(string roomUUId, int id)
+Room::Room(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
-	this->roomUUId = roomUUId;
-	this->id = id;
-}
-
-string Room::GetUUId()
-{
-	return roomUUId;
-}
-int Room::GetId()
-{
-	return id;
 }
 
 int Room::GetPositionDevice(Device *device)
@@ -47,33 +36,33 @@ bool Room::AddDevice(Device *device, bool sendBle)
 	}
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		DeviceInRoom *devcieInRoom = new DeviceInRoom(device);
+		DeviceInRoom *deviceInRoom = new DeviceInRoom(device);
 
 		if (sendBle)
 		{
-			if (bleProtocol->SetGroup(device->GetAddr(), id + 49152) == 0)
+			if (bleProtocol->SetGroup(device->GetAddr(), addr + 49152) == 0)
 			{
-				if (devcieInRoom)
+				if (deviceInRoom)
 				{
 					if (GetPositionDevice(device) == -1)
 					{
-						deviceList.push_back(devcieInRoom);
+						deviceList.push_back(deviceInRoom);
 						return true;
 					}
 				}
 			}
 			else
 			{
-				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), roomUUId.c_str());
+				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), id.c_str());
 			}
 		}
 		else
 		{
-			if (devcieInRoom)
+			if (deviceInRoom)
 			{
 				if (GetPositionDevice(device) == -1)
 				{
-					deviceList.push_back(devcieInRoom);
+					deviceList.push_back(deviceInRoom);
 					return true;
 				}
 			}
@@ -82,7 +71,50 @@ bool Room::AddDevice(Device *device, bool sendBle)
 	return false;
 }
 
-bool Room::DelDevcie(Device *device)
+bool Room::AddDevice2(Device *device, bool sendBle)
+{
+	LOGW("AddDevice2");
+	if (!device)
+	{
+		return false;
+	}
+	if (device->GetProtocol() == BLE_DEVICE)
+	{
+		DeviceInRoom *deviceInRoom = new DeviceInRoom(device);
+		if (sendBle)
+		{
+			if (bleProtocol->AddDeviceToRoom(device->GetAddr(), addr) == 0)
+			{
+				if (deviceInRoom)
+				{
+					if (GetPositionDevice(device) == -1)
+					{
+						deviceList.push_back(deviceInRoom);
+						return true;
+					}
+				}
+			}
+			else
+			{
+				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), id.c_str());
+			}
+		}
+		else
+		{
+			if (deviceInRoom)
+			{
+				if (GetPositionDevice(device) == -1)
+				{
+					deviceList.push_back(deviceInRoom);
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool Room::DelDevice(Device *device)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -93,6 +125,12 @@ bool Room::DelDevcie(Device *device)
 		}
 		return true;
 	}
+	return false;
+}
+
+bool Room::DelDevice2(Device *device)
+{
+	LOGW("DelDevice2");
 	return false;
 }
 

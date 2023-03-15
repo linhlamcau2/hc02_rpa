@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <json.h>
+#include "json.h"
 
 #define PROFILE_ZHA 0x0104
 

@@ -3,8 +3,8 @@
 #include <string>
 #include <map>
 #include <functional>
-#include <json.h>
 #include <thread>
+#include "json.h"
 #include "CloudProtocol.h"
 #include "LocalProtocol.h"
 #include "Udp.h"
@@ -46,11 +46,10 @@ private:
 	bool isUdpBroadcasting;
 
 	map<string, Device *> deviceList;
-	map<int, Group *> groupList;
+	map<string, Group *> groupList;
+	map<string, SceneBle *> sceneBleList;
 	map<string, Rule *> ruleList;
-	map<int, SceneBle *> sceneBleList;
 	map<string, Room *> roomList;
-	vector<Device *> scanDeviceList;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
@@ -112,7 +111,6 @@ private:
 	int OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcGetScanDevice(Json::Value &reqValue, Json::Value &respValue);
 
 	// Rule
 	int OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue);
@@ -193,20 +191,20 @@ public:
 	void StopUdpBroadcast();
 
 	void AddDeviceToScanList(Device *scanDevice);
-	Group *getGroup(int id);
-	Group *getGroupFromId(string groupId);
 
-	Device *getDevice(string mac);
-	Device *getDeviceFromId(string deviceId);
+	Device *getDeviceFromMac(string mac);
+	Device *getDeviceFromId(string id);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
-	Rule *getRuleById(string eventId);
 
-	SceneBle *getSceneBleFromId(string sceneBleUUId);
-	Room *getRoomFromId(string roomUUId);
+	Group *getGroupFromId(string id);
+	Group *getGroupFromAddr(int addr);
 
-#ifdef CONFIG_ENABLE_ZIGBEE
-	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
-#endif
+	SceneBle *getSceneBleFromId(string id);
+	SceneBle *getSceneBleFromAddr(int addr);
+
+	Rule *getRuleFromId(string id);
+
+	Room *getRoomFromId(string id);
 
 	uint16_t getBleUnicast();
 	string getBleNetkey();

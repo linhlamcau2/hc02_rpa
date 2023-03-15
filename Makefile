@@ -11,7 +11,7 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Ifile -Iota
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Ifile -Iota
 DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
 # DEFINES += -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
@@ -30,6 +30,7 @@ endif
 DEVICESRC += $(wildcard button/*.cpp)
 DEVICESRC += $(wildcard config/*.cpp)
 DEVICESRC += $(wildcard database/*.cpp)
+DEVICESRC += $(wildcard object/*.cpp)
 DEVICESRC += $(wildcard device/*.cpp)
 DEVICESRC += $(wildcard device/ble/*.cpp)
 DEVICESRC += $(wildcard device/ble/module/*.cpp)

@@ -146,3 +146,19 @@ bool ModuleModeRgb::DoV2(Json::Value &dataValue)
 	}
 	return false;
 }
+
+bool ModuleModeRgb::DoV2(Json::Value &dataValue)
+{
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+	{
+		int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+		if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)
+		{
+			this->mode = mode;
+		}
+		return true;
+	}
+	return false;
+}

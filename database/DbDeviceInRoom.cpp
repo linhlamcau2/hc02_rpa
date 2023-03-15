@@ -17,12 +17,12 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int id = sqlite3_column_int(stmt, index++);
+				int addr = sqlite3_column_int(stmt, index++);
 				Room *room = gateway->getRoomFromId(roomId);
 				Device *device = gateway->getDeviceFromId(deviceId);
 				if (!room)
 				{
-					room = new Room(roomId, id);
+					room = new Room(roomId, addr, "");
 					room = gateway->AddNewRoom(room);
 				}
 				if (!device)
@@ -55,13 +55,13 @@ int Db::DeviceInRoomRead()
 
 int Db::DeviceInRoomAdd(Room *room, Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (deviceId, roomId, id) VALUES (\"" + device->GetId() + "\",\"" + room->GetUUId() + "\", " + to_string(room->GetId()) + ");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (deviceId, roomId, id) VALUES (\"" + device->GetId() + "\",\"" + room->GetId() + "\", " + to_string(room->GetAddr()) + ");";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInRoomDel(Room *room, Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId= \"" + room->GetUUId() + "\" AND deviceId=\"" + device->GetId() + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId= \"" + room->GetId() + "\" AND deviceId=\"" + device->GetId() + "\";";
 	return Sqlite_Exec(sql);
 }
 

@@ -11,6 +11,37 @@
 #define APP_REQ 0xFFE8
 #define RAL_MAGIC 0x0428
 
+#define RD_VENDOR_ID 0x0211
+
+#define RD_OPCODE_PROVISION 0xE0
+#define RD_OPCODE_PROVISION_RSP 0xE1
+#define RD_OPCODE_CONFIG 0xE2
+#define RD_OPCODE_CONFIG_RSP 0xE3
+
+#define RD_OPCODE_PROVISION_SET_GW_ADDR 0x0002
+#define RD_OPCODE_PROVISION_GET_DEV_TYPE 0x0003
+
+#define RD_OPCODE_CONFIG_SET_SCENE_SWITCH_SCENE_DC 0x0102
+#define RD_OPCODE_CONFIG_DEL_SCENE_SWITCH_SCENE_DC 0x0202
+#define RD_OPCODE_CONFIG_SET_SCENE_SWITCH_SCENE_AC 0x0103
+#define RD_OPCODE_CONFIG_DEL_SCENE_SWITCH_SCENE_AC 0x0203
+#define RD_OPCODE_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR 0x0145
+#define RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR 0x0245
+#define RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR 0x0345
+#define RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH 0x010A
+#define RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH 0x020A
+#define RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR 0x030A
+#define RD_OPCODE_CONFIG_SEND_WEATHER_OUTDOOR 0x050A
+#define RD_OPCODE_CONFIG_EDIT_ICON_SCREEN_TOUCH 0x070A
+#define RD_OPCODE_CONFIG_SEND_DATE 0x080A
+#define RD_OPCODE_CONFIG_SEND_TIME 0x090A
+#define RD_OPCODE_CONFIG_DEL_ALL_SCENE 0x0A0A
+#define RD_OPCODE_CONFIG_SET_GROUP 0x0B0A
+#define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH 0x000B
+#define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
+#define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
+#define RD_OPCODE_CONFIG_SET_TIMER 0x070B
+
 enum
 {
 	// send cmd part
@@ -64,13 +95,13 @@ using namespace std;
 class BleProtocol : public Uart
 {
 private:
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t opcode;
 		uint8_t data[100];
 	} message_req_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t len;
 		uint8_t magic;
@@ -78,7 +109,7 @@ private:
 		uint8_t data[];
 	} message_rsp_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		bool status;
 		uint8_t opcode;
@@ -89,7 +120,7 @@ private:
 		int compare_len;
 	} message_rsp_list_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t uuid[8];
 		uint8_t deviceType[4];
@@ -97,17 +128,17 @@ private:
 		uint16_t magic;
 	} uuid_t;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t mac[6];
 		uint8_t len;
 		uint8_t header_type;
 		uint8_t beacon_type;
 		uint8_t uuid[16];
-		uint8_t uri_hash[4];
-		uint8_t obb_info[2];
+		uint32_t uri_hash;
+		uint16_t obb_info;
 		int8_t rssi;
-		uint8_t dc[2];
+		uint16_t dc;
 	} scan_device_message_t;
 
 	typedef struct __attribute__((packed))
@@ -115,9 +146,18 @@ private:
 		uint8_t netKey[16];
 		uint16_t key_index;
 		uint8_t flag;
-		uint8_t iv_index[4];
-		uint8_t unicast_address[2];
+		uint32_t iv_index;
+		uint16_t unicast_address;
 	} pro_net_info_t;
+
+	typedef struct __attribute__((packed))
+	{
+		uint16_t nkIdx;
+		uint16_t akIdx;
+		uint8_t retryCnt;
+		uint8_t rspMax;
+		uint16_t devAddr;
+	} ble_message_header_t;
 
 	typedef function<void(scan_device_message_t *scan_device_message)> AddDeviceFunc;
 	AddDeviceFunc addDeviceFunc;
@@ -224,6 +264,8 @@ public:
 	int SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day);
 	int SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second);
 	int SetGroup(uint16_t devAddr, uint16_t group);
+	// Optimize add device to Room
+	int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
 
 	// Backup
 	int GetInfogw();

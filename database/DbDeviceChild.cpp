@@ -51,7 +51,7 @@ int Db::DeviceChildUpdate(string deviceId, int element)
 
 int Db::DeviceChildDel(string deviceId)
 {
-    string sql = "DELETE FROM " TABLE_NAME " WHERE id = \"" + deviceId +"\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE id = \"" + deviceId + "\";";
 	return Sqlite_Exec(sql);
 }
 

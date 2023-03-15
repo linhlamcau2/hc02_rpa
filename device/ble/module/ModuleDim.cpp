@@ -143,13 +143,16 @@ bool ModuleDim::Do(Json::Value &dataValue)
 
 bool ModuleDim::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		uint16_t dim = (value * 65535) / 100;
-		bleProtocol->SetDimmingLight(addr, dim, 0, true);
+		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+		uint16_t value = (dim * 65535) / 100;
+		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+		{
+			this->dim = dim;
+		}
 		return true;
 	}
 	return false;

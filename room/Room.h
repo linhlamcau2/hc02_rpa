@@ -2,7 +2,8 @@
 
 #include <string>
 #include <vector>
-#include <json.h>
+#include "json.h"
+#include "Object.h"
 #include "Device.h"
 
 using namespace std;
@@ -10,27 +11,24 @@ using namespace std;
 class DeviceInRoom
 {
 public:
-    Device *device;
-    DeviceInRoom(Device *device);
+	Device *device;
+	DeviceInRoom(Device *device);
 };
 
-class Room
+class Room : public Object
 {
-private:
-    string roomUUId;
-    int id;
-
 public:
-    vector<DeviceInRoom *> deviceList;
-    vector<string> dataConfig;
+	vector<DeviceInRoom *> deviceList;
+	vector<string> dataConfig;
 
-    Room(string roomUUId, int id);
-    string GetUUId();
-    int GetId();
-    int GetPositionDevice(Device *device);
-    bool AddDevice(Device *device, bool sendBle);
-    bool DelDevcie(Device *device);
+	Room(string id, uint32_t addr, string name);
 
-    int DataConfigAdd(string data);
-    int DataConfigDel(string data);
+	int GetPositionDevice(Device *device);
+	bool AddDevice(Device *device, bool sendBle);
+	bool AddDevice2(Device *device, bool sendBle);
+	bool DelDevice(Device *device);
+	bool DelDevice2(Device *device);
+
+	int DataConfigAdd(string data);
+	int DataConfigDel(string data);
 };

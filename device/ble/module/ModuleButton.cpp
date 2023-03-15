@@ -122,12 +122,15 @@ bool ModuleButton::Do(Json::Value &dataValue)
 
 bool ModuleButton::DoV2(Json::Value &dataValue)
 {
-	LOGD("DoV2 data: %s", dataValue.toString().c_str());
+	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int value = dataValue[key].asInt();
-		bleProtocol->SetOnOffLight(addr, value, 0, true);
+		int bt = dataValue[key].asInt();
+		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
+		{
+			this->bt = bt;
+		}
 		return true;
 	}
 	return false;

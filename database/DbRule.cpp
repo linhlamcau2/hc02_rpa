@@ -20,7 +20,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int status = sqlite3_column_int(stmt, index++);
 				int type = sqlite3_column_int(stmt, index++);
-				string ruledata ;
+				string ruledata;
 				LOGW("Rule raw: %s", data.c_str());
 				string decode = macaron::Base64::Decode(data, ruledata);
 				if ((decode == "") && status)
@@ -76,7 +76,7 @@ int Db::RuleUpdate(string id, string rule)
 }
 int Db::RuleUpdateStatus(string id, int isEnable)
 {
-	string sql = "UPDATE " TABLE_NAME "SET isEnable="+to_string(isEnable)+" WHERE id=\"" + id + "\";";
+	string sql = "UPDATE " TABLE_NAME "SET isEnable=" + to_string(isEnable) + " WHERE id=\"" + id + "\";";
 	return Sqlite_Exec(sql);
 }
 
