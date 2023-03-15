@@ -193,8 +193,34 @@ Request:
 ```
 
 Response:
-```
-- HC phản hồi bản tin số 1
+```json
+{
+    "cmd": "requestDevSttRsp",
+    "rqi": "abc123456",
+    "data": {
+        "device": [{
+                "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+                "data": {
+                    "stt": 1,
+                    "bt0": 1,
+                    "onoff0": 0,
+                    "h": 0,
+                    "s": 2,
+                    "l": 4,
+                    "dim": 50
+                }
+            },
+            {
+                "id": "b717f8d8-6f18-43c0-ae46-69c32998f654",
+                "data": {
+                    "stt": 1,
+                    "temp": 25,
+                    "hum": 90
+                }
+            }
+        ]
+    }
+}
 ```
 
 * Note:
