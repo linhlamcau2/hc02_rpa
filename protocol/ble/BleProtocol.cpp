@@ -673,26 +673,26 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	LOGD("SetGwAddr");
 	uint8_t dataRsp[100];
 	int lenRsp;
-	uint8_t setGwAddrHeader[] = {0xe1, 0x11, 0x02, 0x02, 0x00};
+	uint8_t setGwAddrHeader[] = {RD_OPCODE_PROVISION_RSP, 0x11, 0x02, 0x02, 0x00};
 	typedef struct __attribute__((packed))
 	{
-		uint8_t rev[4];
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
 		uint16_t header;
-		uint16_t devAddr;
-		uint8_t data[13];
+		uint16_t gwAddr;
+		uint8_t data[4];
 	} set_gw_addr_message_t;
 	set_gw_addr_message_t set_gw_addr_message;
 	memset(&set_gw_addr_message, 0x00, sizeof(set_gw_addr_message));
-	set_gw_addr_message.header = 0;
-	set_gw_addr_message.devAddr = devAddr;
-	set_gw_addr_message.data[0] = 0xE0;
-	set_gw_addr_message.data[1] = 0x11;
-	set_gw_addr_message.data[2] = 0x02;
-	set_gw_addr_message.data[3] = 0xE1;
-	set_gw_addr_message.data[4] = 0x00;
-	set_gw_addr_message.data[5] = 0x02;
-	set_gw_addr_message.data[6] = 0x00;
-	set_gw_addr_message.data[7] = 0x01;
+	set_gw_addr_message.ble_message_header.devAddr = devAddr;
+	set_gw_addr_message.opcodeVendor = RD_OPCODE_PROVISION;
+	set_gw_addr_message.vendorId = RD_VENDOR_ID;
+	set_gw_addr_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;
+	set_gw_addr_message.header = RD_OPCODE_PROVISION_SET_GW_ADDR;
+	set_gw_addr_message.gwAddr = 0x0001;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
 	if (rs == 0)
 	{
@@ -878,14 +878,23 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 	memset(&onoff_message, 0x00, sizeof(onoff_message));
 	if (ack)
 	{
-		uint8_t turnOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04, onoff};
+		struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcodeRsp;
+		} turnOnOffHeader = {
+				.devAddr = devAddr,
+				.gwAddr = 0x0001,
+				.opcodeRsp = G_ONOFF_STATUS,
+		};
 		onoff_message.addr = devAddr;
 		onoff_message.opcode = 0x0282;
 		onoff_message.onoff = onoff;
 		onoff_message.rev2 = 0;
 		onoff_message.transition = transition;
 		int rs = 0;
-		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 7);
+		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, (uint8_t *)&turnOnOffHeader, 0, sizeof(turnOnOffHeader));
 		if (rs == 0)
 		{
 			typedef struct __attribute__((packed))
@@ -1561,11 +1570,7 @@ int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	uint8_t setSceneDcHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1579,7 +1584,7 @@ int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	} set_scene_dc_message_t;
 	set_scene_dc_message_t set_scene_dc_message = {0};
 	memset(&set_scene_dc_message, 0x00, sizeof(set_scene_dc_message));
-	set_scene_dc_message.addr = devAddr;
+	set_scene_dc_message.ble_message_header.devAddr = devAddr;
 	set_scene_dc_message.opcodeVendor = RD_OPCODE_CONFIG;
 	set_scene_dc_message.vendorId = RD_VENDOR_ID;
 	set_scene_dc_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1622,11 +1627,7 @@ int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	uint8_t setSceneAcHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1640,7 +1641,7 @@ int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	} set_scene_ac_message_t;
 	set_scene_ac_message_t set_scene_ac_message = {0};
 	memset(&set_scene_ac_message, 0x00, sizeof(set_scene_ac_message));
-	set_scene_ac_message.addr = devAddr;
+	set_scene_ac_message.ble_message_header.devAddr = devAddr;
 	set_scene_ac_message.opcodeVendor = RD_OPCODE_CONFIG;
 	set_scene_ac_message.vendorId = RD_VENDOR_ID;
 	set_scene_ac_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1684,11 +1685,7 @@ int BleProtocol::DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	uint8_t delSceneDcHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1700,7 +1697,7 @@ int BleProtocol::DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	} del_scene_dc_message_t;
 	del_scene_dc_message_t del_scene_dc_message = {0};
 	memset(&del_scene_dc_message, 0x00, sizeof(del_scene_dc_message));
-	del_scene_dc_message.addr = devAddr;
+	del_scene_dc_message.ble_message_header.devAddr = devAddr;
 	del_scene_dc_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_scene_dc_message.vendorId = RD_VENDOR_ID;
 	del_scene_dc_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1740,11 +1737,7 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	uint8_t delSceneAcHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1756,7 +1749,7 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	} del_scene_ac_message_t;
 	del_scene_ac_message_t del_scene_ac_message = {0};
 	memset(&del_scene_ac_message, 0x00, sizeof(del_scene_ac_message));
-	del_scene_ac_message.addr = devAddr;
+	del_scene_ac_message.ble_message_header.devAddr = devAddr;
 	del_scene_ac_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_scene_ac_message.vendorId = RD_VENDOR_ID;
 	del_scene_ac_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1818,11 +1811,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 	uint8_t sceneLightPirHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1834,7 +1823,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 	} scene_light_pir_message_t;
 	scene_light_pir_message_t scene_light_pir_message = {0};
 	memset(&scene_light_pir_message, 0x00, sizeof(scene_light_pir_message));
-	scene_light_pir_message.addr = devAddr;
+	scene_light_pir_message.ble_message_header.devAddr = devAddr;
 	scene_light_pir_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_light_pir_message.vendorId = RD_VENDOR_ID;
 	scene_light_pir_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1880,11 +1869,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 	uint8_t sceneLightPirHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1894,7 +1879,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 	} scene_light_pir_message_t;
 	scene_light_pir_message_t scene_light_pir_message = {0};
 	memset(&scene_light_pir_message, 0x00, sizeof(scene_light_pir_message));
-	scene_light_pir_message.addr = devAddr;
+	scene_light_pir_message.ble_message_header.devAddr = devAddr;
 	scene_light_pir_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_light_pir_message.vendorId = RD_VENDOR_ID;
 	scene_light_pir_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1937,11 +1922,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 	uint8_t timeActionHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -1951,7 +1932,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 	} time_action_message_t;
 	time_action_message_t time_action_message = {0};
 	memset(&time_action_message, 0x00, sizeof(time_action_message));
-	time_action_message.addr = devAddr;
+	time_action_message.ble_message_header.devAddr = devAddr;
 	time_action_message.opcodeVendor = RD_OPCODE_CONFIG;
 	time_action_message.vendorId = RD_VENDOR_ID;
 	time_action_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -1988,11 +1969,7 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	uint8_t sceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2004,7 +1981,7 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	} scene_screen_touch_message_t;
 	scene_screen_touch_message_t scene_screen_touch_message = {0};
 	memset(&scene_screen_touch_message, 0x00, sizeof(scene_screen_touch_message));
-	scene_screen_touch_message.addr = devAddr;
+	scene_screen_touch_message.ble_message_header.devAddr = devAddr;
 	scene_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_screen_touch_message.vendorId = RD_VENDOR_ID;
 	scene_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2044,11 +2021,7 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	uint8_t editIconScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2059,7 +2032,7 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	} edit_icon_screen_touch_message_t;
 	edit_icon_screen_touch_message_t edit_icon_screen_touch_message = {0};
 	memset(&edit_icon_screen_touch_message, 0x00, sizeof(edit_icon_screen_touch_message));
-	edit_icon_screen_touch_message.addr = devAddr;
+	edit_icon_screen_touch_message.ble_message_header.devAddr = devAddr;
 	edit_icon_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	edit_icon_screen_touch_message.vendorId = RD_VENDOR_ID;
 	edit_icon_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2098,11 +2071,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 	uint8_t delSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2112,7 +2081,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 	} del_scene_screen_touch_message_t;
 	del_scene_screen_touch_message_t del_scene_screen_touch_message = {0};
 	memset(&del_scene_screen_touch_message, 0x00, sizeof(del_scene_screen_touch_message));
-	del_scene_screen_touch_message.addr = devAddr;
+	del_scene_screen_touch_message.ble_message_header.devAddr = devAddr;
 	del_scene_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_scene_screen_touch_message.vendorId = RD_VENDOR_ID;
 	del_scene_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2149,11 +2118,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 	uint8_t delAllSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2163,7 +2128,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 	} del_allscene_screen_touch_message_t;
 	del_allscene_screen_touch_message_t del_allscene_screen_touch_message = {0};
 	memset(&del_allscene_screen_touch_message, 0x00, sizeof(del_allscene_screen_touch_message));
-	del_allscene_screen_touch_message.addr = devAddr;
+	del_allscene_screen_touch_message.ble_message_header.devAddr = devAddr;
 	del_allscene_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_allscene_screen_touch_message.vendorId = RD_VENDOR_ID;
 	del_allscene_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2202,11 +2167,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 	uint8_t weatherOutdoorScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2217,7 +2178,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 	} weather_outdoor_screen_touch_message_t;
 	weather_outdoor_screen_touch_message_t weather_outdoor_screen_touch_message = {0};
 	memset(&weather_outdoor_screen_touch_message, 0x00, sizeof(weather_outdoor_screen_touch_message));
-	weather_outdoor_screen_touch_message.addr = devAddr;
+	weather_outdoor_screen_touch_message.ble_message_header.devAddr = devAddr;
 	weather_outdoor_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	weather_outdoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_outdoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2256,11 +2217,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	uint8_t weatherIndoorScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2272,7 +2229,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	} weather_indoor_screen_touch_message_t;
 	weather_indoor_screen_touch_message_t weather_indoor_screen_touch_message = {0};
 	memset(&weather_indoor_screen_touch_message, 0x00, sizeof(weather_indoor_screen_touch_message));
-	weather_indoor_screen_touch_message.addr = devAddr;
+	weather_indoor_screen_touch_message.ble_message_header.devAddr = devAddr;
 	weather_indoor_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	weather_indoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_indoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2313,11 +2270,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 	uint8_t dateScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2330,7 +2283,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 	} date_screen_touch_message_t;
 	date_screen_touch_message_t date_screen_touch_message = {0};
 	memset(&date_screen_touch_message, 0x00, sizeof(date_screen_touch_message));
-	date_screen_touch_message.addr = devAddr;
+	date_screen_touch_message.ble_message_header.devAddr = devAddr;
 	date_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	date_screen_touch_message.vendorId = RD_VENDOR_ID;
 	date_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2372,11 +2325,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 	uint8_t timeScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2388,7 +2337,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 	} time_screen_touch_message_t;
 	time_screen_touch_message_t time_screen_touch_message = {0};
 	memset(&time_screen_touch_message, 0x00, sizeof(time_screen_touch_message));
-	time_screen_touch_message.addr = devAddr;
+	time_screen_touch_message.ble_message_header.devAddr = devAddr;
 	time_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	time_screen_touch_message.vendorId = RD_VENDOR_ID;
 	time_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2428,11 +2377,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 	uint8_t groupScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2442,7 +2387,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 	} group_screen_touch_message_t;
 	group_screen_touch_message_t group_screen_touch_message = {0};
 	memset(&group_screen_touch_message, 0x00, sizeof(group_screen_touch_message));
-	group_screen_touch_message.addr = devAddr;
+	group_screen_touch_message.ble_message_header.devAddr = devAddr;
 	group_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	group_screen_touch_message.vendorId = RD_VENDOR_ID;
 	group_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2479,11 +2424,7 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 	// uint8_t addDevToRoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	// typedef struct __attribute__((packed))
 	// {
-	// 	uint16_t nkIdx;
-	// 	uint16_t akIdx;
-	// 	uint8_t retryCnt;
-	// 	uint8_t rspMax;
-	// 	uint16_t addr;
+	// ble_message_header_t ble_message_header;
 	// 	uint8_t opcodeVendor;
 	// 	uint16_t vendorId;
 	// 	uint8_t opcodeRsp;
@@ -2493,7 +2434,7 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 	// } add_dev_to_room_message_t;
 	// add_dev_to_room_message_t add_dev_to_room_message = {0};
 	// memset(&add_dev_to_room_message, 0x00, sizeof(add_dev_to_room_message));
-	// add_dev_to_room_message.addr = devAddr;
+	// add_dev_to_room_message.ble_message_header.devAddr = devAddr;
 	// add_dev_to_room_message.opcodeVendor = RD_OPCODE_CONFIG;
 	// add_dev_to_room_message.vendorId = RD_VENDOR_ID;
 	// add_dev_to_room_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2530,11 +2471,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 	uint8_t controlRgbSwitchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2549,7 +2486,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 	} controlrgb_switch_message_t;
 	controlrgb_switch_message_t controlrgb_switch_message = {0};
 	memset(&controlrgb_switch_message, 0x00, sizeof(controlrgb_switch_message));
-	controlrgb_switch_message.addr = devAddr;
+	controlrgb_switch_message.ble_message_header.devAddr = devAddr;
 	controlrgb_switch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	controlrgb_switch_message.vendorId = RD_VENDOR_ID;
 	controlrgb_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2591,11 +2528,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t v
 	uint8_t controlRelaySwitchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2606,7 +2539,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t v
 	} control_relay_switch_message_t;
 	control_relay_switch_message_t control_relay_switch_message = {0};
 	memset(&control_relay_switch_message, 0x00, sizeof(control_relay_switch_message));
-	control_relay_switch_message.addr = devAddr;
+	control_relay_switch_message.ble_message_header.devAddr = devAddr;
 	control_relay_switch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	control_relay_switch_message.vendorId = RD_VENDOR_ID;
 	control_relay_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2645,11 +2578,7 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	uint8_t setIdCombineHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2659,7 +2588,7 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	} set_id_combine_message_t;
 	set_id_combine_message_t set_id_combine_message = {0};
 	memset(&set_id_combine_message, 0x00, sizeof(set_id_combine_message));
-	set_id_combine_message.addr = devAddr;
+	set_id_combine_message.ble_message_header.devAddr = devAddr;
 	set_id_combine_message.opcodeVendor = RD_OPCODE_CONFIG;
 	set_id_combine_message.vendorId = RD_VENDOR_ID;
 	set_id_combine_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -2696,11 +2625,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-		uint16_t nkIdx;
-		uint16_t akIdx;
-		uint8_t retryCnt;
-		uint8_t rspMax;
-		uint16_t addr;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2711,7 +2636,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	} timer_message_t;
 	timer_message_t timer_message = {0};
 	memset(&timer_message, 0x00, sizeof(timer_message));
-	timer_message.addr = devAddr;
+	timer_message.ble_message_header.devAddr = devAddr;
 	timer_message.opcodeVendor = RD_OPCODE_CONFIG;
 	timer_message.vendorId = RD_VENDOR_ID;
 	timer_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;

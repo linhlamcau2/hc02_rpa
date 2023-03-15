@@ -18,6 +18,9 @@
 #define RD_OPCODE_CONFIG 0xE2
 #define RD_OPCODE_CONFIG_RSP 0xE3
 
+#define RD_OPCODE_PROVISION_SET_GW_ADDR 0x0002
+#define RD_OPCODE_PROVISION_GET_DEV_TYPE 0x0003
+
 #define RD_OPCODE_CONFIG_SET_SCENE_SWITCH_SCENE_DC 0x0102
 #define RD_OPCODE_CONFIG_DEL_SCENE_SWITCH_SCENE_DC 0x0202
 #define RD_OPCODE_CONFIG_SET_SCENE_SWITCH_SCENE_AC 0x0103
@@ -146,6 +149,15 @@ private:
 		uint32_t iv_index;
 		uint16_t unicast_address;
 	} pro_net_info_t;
+
+	typedef struct __attribute__((packed))
+	{
+		uint16_t nkIdx;
+		uint16_t akIdx;
+		uint8_t retryCnt;
+		uint8_t rspMax;
+		uint16_t devAddr;
+	} ble_message_header_t;
 
 	typedef function<void(scan_device_message_t *scan_device_message)> AddDeviceFunc;
 	AddDeviceFunc addDeviceFunc;
