@@ -74,6 +74,43 @@ bool Room::AddDevice(Device *device, bool sendBle)
 bool Room::AddDevice2(Device *device, bool sendBle)
 {
 	LOGW("AddDevice2");
+	if (!device)
+	{
+		return false;
+	}
+	if (device->GetProtocol() == BLE_DEVICE)
+	{
+		DeviceInRoom *devcieInRoom = new DeviceInRoom(device);
+		if (sendBle)
+		{
+			if (bleProtocol->AddDeviceToRoom(device->GetAddr(), addr) == 0)
+			{
+				if (devcieInRoom)
+				{
+					if (GetPositionDevice(device) == -1)
+					{
+						deviceList.push_back(devcieInRoom);
+						return true;
+					}
+				}
+			}
+			else
+			{
+				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), id.c_str());
+			}
+		}
+		else
+		{
+			if (devcieInRoom)
+			{
+				if (GetPositionDevice(device) == -1)
+				{
+					deviceList.push_back(devcieInRoom);
+					return true;
+				}
+			}
+		}
+	}
 	return false;
 }
 

@@ -9,6 +9,8 @@
 #include "Base64.h"
 #include <fstream>
 
+#define ROOM_START_ADDR 0xD000
+
 void Gateway::initMqttMessageV2()
 {
 	OnDeviceRpcCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
@@ -821,7 +823,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			string roomName = data["name"].asString();
 			Json::Value devices = reqValue["devices"];
 			Json::Value scenes = reqValue["scenes"];
-			int roomAddr = 0;
+			int roomAddr = ROOM_START_ADDR;
 			for (const auto &[id, room] : roomList)
 			{
 				if (room->GetAddr() >= roomAddr)
