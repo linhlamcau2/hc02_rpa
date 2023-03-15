@@ -24,7 +24,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	virtual bool InputData(uint8_t *data, int len, Json::Value &jsonValue) { return false; }
+	virtual bool InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2) { return false; }
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	/**

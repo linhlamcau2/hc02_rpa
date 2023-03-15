@@ -30,16 +30,16 @@ void ModuleButton::SaveAttribute()
 }
 #endif
 
-bool ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00 && data[3] + 10 == id)
 	{
 		bt = data[4];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)

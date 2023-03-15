@@ -55,7 +55,7 @@ void ElementRgb::SaveAttribute()
 }
 #endif
 
-bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -82,9 +82,9 @@ bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ElementRgb::CheckData(Json::Value &dataValue, bool &rs)

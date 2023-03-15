@@ -137,6 +137,8 @@ protected:
 	int countElement;
 	Json::Value values; // telemetry data
 
+	Json::Value valuesV2;
+
 	vector<Module *> modules;
 	vector<Element *> elements;
 
@@ -190,9 +192,11 @@ public:
 	virtual bool DoJsonArrayV2(Json::Value &dataValue);
 
 	int PushTelemetry();
-	int PushTelemetry(Json::Value jsonValue);
+	int PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2);
 	int PushAttributes();
 	int PushAttributes(Json::Value jsonValue);
+
+	void Getstatus(Json::Value &jsonValue);
 
 	static void InitDeviceModelList();
 	static void RegisterDeviceModel(uint32_t type, string model, string name);

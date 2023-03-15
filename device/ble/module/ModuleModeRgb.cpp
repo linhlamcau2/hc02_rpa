@@ -26,7 +26,7 @@ void ModuleModeRgb::SaveAttribute()
 #endif
 
 // TODO: recheck
-bool ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -50,11 +50,11 @@ bool ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
-				return true;
+				return false;
 			}
 		}
 	}
-	return false;
+	return true;
 }
 
 bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
@@ -128,10 +128,10 @@ bool ModuleModeRgb::Do(Json::Value &dataValue)
 		{
 			int value = dataValue["VALUE"].asInt();
 			bleProtocol->CallModeRgb(addr, value);
-			return true;
+			return false;
 		}
 	}
-	return false;
+	return true;
 }
 
 bool ModuleModeRgb::DoV2(Json::Value &dataValue)

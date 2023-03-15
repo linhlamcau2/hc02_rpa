@@ -25,16 +25,16 @@ void ModuleTimeActionPir::SaveAttribute()
 }
 #endif
 
-bool ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x03)
 	{
 		time = data[5] | (data[6] << 8);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)

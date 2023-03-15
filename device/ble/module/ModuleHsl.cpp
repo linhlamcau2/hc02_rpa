@@ -41,7 +41,7 @@ void ModuleHsl::SaveAttribute()
 }
 #endif
 
-bool ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -53,17 +53,21 @@ bool ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_HSL)
 	{
-		l = data_message->l;
-		h = data_message->h;
-		s = data_message->s;
+		if((l != data_message->l) || (h != data_message->h) || (s != data_message->s))
+		{
+			l = data_message->l;
+			h = data_message->h;
+			s = data_message->s;
+			BuildTelemetryValue(jsonValue);
+			BuildTelemetryValueV2(jsonValueV2);
+		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)

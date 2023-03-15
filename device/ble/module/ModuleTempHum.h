@@ -39,7 +39,7 @@ public:
 	 * @return true if data include this module opcode
 	 * @return false
 	 */
-	bool InputData(uint8_t *data, int len, Json::Value &jsonValue);
+	bool InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2);
 
 	/**
 	 * @brief Check rule input

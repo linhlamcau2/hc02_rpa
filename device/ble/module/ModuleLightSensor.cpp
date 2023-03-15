@@ -25,7 +25,7 @@ void ModuleLightSensor::SaveAttribute()
 }
 #endif
 
-bool ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52)
 	{
@@ -40,7 +40,7 @@ bool ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue
 			lux = (data_message->lux);
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
-			return true;
+			return false;
 		}
 		else if (data[1] == 0x05 && data[2] == 0x00)
 		{
@@ -56,11 +56,11 @@ bool ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue
 			{
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
-				return true;
+				return false;
 			}
 		}
 	}
-	return false;
+	return true;
 }
 
 bool ModuleLightSensor::CheckData(Json::Value &dataValue, bool &rs)

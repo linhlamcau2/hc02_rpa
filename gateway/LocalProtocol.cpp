@@ -199,3 +199,13 @@ int LocalProtocol::PublishToLocalMessage(Json::Value payloadJson)
 {
 	return PublishToLocalMessage(payloadJson.toString());
 }
+
+int LocalProtocol::PublishToLocalMessageV2(string payload)
+{
+	return Publish(HC_RESPONSE_TOPIC_V2, payload);
+}
+
+int LocalProtocol::PublishToLocalMessageV2(Json::Value payloadJson)
+{
+	return PublishToLocalMessageV2(payloadJson.toString());
+}

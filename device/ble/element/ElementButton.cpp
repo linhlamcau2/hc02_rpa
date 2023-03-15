@@ -26,7 +26,7 @@ void ElementButton::SaveAttribute()
 }
 #endif
 
-bool ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -46,9 +46,9 @@ bool ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ElementButton::CheckData(Json::Value &dataValue, bool &rs)

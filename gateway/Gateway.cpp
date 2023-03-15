@@ -70,7 +70,6 @@ void Gateway::init()
 	initMqttMessage();
 	initMqttMessageV2();
 
-	LOGI("DeviceRead");
 	database->GatewayRead();
 	database->DeviceRead();
 	database->DeviceAttributeRead();
@@ -92,8 +91,8 @@ void Gateway::init()
 	CloudConnect();
 	LocalConnect();
 
-	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
-	checkOnlineThread.detach();
+	// thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	// checkOnlineThread.detach();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -509,6 +508,8 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 		device = new DeviceBleLightOnoffCctDim(id, name, mac, device_id, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
+		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
+		break;
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
 		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);

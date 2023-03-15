@@ -92,24 +92,24 @@ bool DeviceBlePirLightSensorDC::Config(item_buf_t &data)
 void DeviceBlePirLightSensorDC::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
-	if (modulePirSensor->InputData(data, len, values))
+	if (modulePirSensor->InputData(data, len, values, valuesV2))
 	{
-		PushTelemetry(values);
+		PushTelemetry(values, valuesV2);
 		CheckBufConfig();
 	}
-	if (moduleLightSensor->InputData(data, len, values))
+	if (moduleLightSensor->InputData(data, len, values, valuesV2))
 	{
-		PushTelemetry(values);
+		PushTelemetry(values, valuesV2);
 		CheckBufConfig();
 	}
-	if (modulePinLevel->InputData(data, len, values))
+	if (modulePinLevel->InputData(data, len, values, valuesV2))
 	{
-		PushTelemetry(values);
+		PushTelemetry(values, valuesV2);
 		CheckBufConfig();
 	}
-	if (moduleTimeActionPir->InputData(data, len, values))
+	if (moduleTimeActionPir->InputData(data, len, values, valuesV2))
 	{
-		PushTelemetry(values);
+		PushTelemetry(values, valuesV2);
 		CheckBufConfig();
 	}
 }

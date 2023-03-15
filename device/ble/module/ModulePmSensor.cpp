@@ -35,7 +35,7 @@ void ModulePmSensor::SaveAttribute()
 }
 #endif
 
-bool ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52 && data[1] == 0x07 && data[2] == 0x02)
 	{
@@ -51,9 +51,9 @@ bool ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		pm1_0 = bswap_16(data_message->pm1_0);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)

@@ -15,7 +15,7 @@
 #elif defined(__ANDROID__)
 #define DB_NAME "/etc/smh/smh.sqlite"
 #else
-#define DB_NAME "/smh.sqlite"
+#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
 #endif
 
 using namespace std;

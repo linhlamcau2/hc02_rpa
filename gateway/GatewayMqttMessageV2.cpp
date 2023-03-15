@@ -7,6 +7,7 @@
 #include "BleDefine.h"
 #include "Http.h"
 #include "Base64.h"
+#include "Wifi.h"
 #include <fstream>
 
 void Gateway::initMqttMessageV2()
@@ -42,6 +43,10 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getInfoHc", bind(&Gateway::OnGetInfoHC, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getDeviceStatus", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getAllDeviceStatus", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getDeviceList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -59,7 +64,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				bool rs = device->DoV2(devData);
-				respValue["data"]["code"] = rs;
+				respValue["data"]["code"] = CODE_OK;
 			}
 			else
 			{
@@ -772,5 +777,116 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 	ResetFactory();
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetDeviceStatus");
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value devices = data["devices"];
+			Json::Value dataValue;
+			Json::Value dataDevices;
+			for (Json::ArrayIndex i = 0; i < devices.size(); i++)
+			{
+				string deviceId = devices[i].asString();
+				Json::Value deviceData;
+				Json::Value jsonValue;
+				deviceData["id"] = deviceId;
+				Device *device = getDeviceFromId(deviceId);
+				device->Getstatus(jsonValue);
+				deviceData["data"] = jsonValue;
+				dataDevices["device"].append(deviceData);
+			}
+			respValue["data"] = dataDevices;
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}		
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}	
+	respValue["cmd"] = "getDeviceStatusRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetAllDeviceStatus");
+	Json::Value dataValue;
+	Json::Value dataDevices;
+	for ( auto& temp_device : deviceList)
+	{
+		Device * device = temp_device.second;
+		string deviceId = device->GetId();
+		Json::Value deviceData;
+		Json::Value jsonValue;
+		deviceData["id"] = deviceId;
+		device->Getstatus(jsonValue);
+		deviceData["data"] = jsonValue;
+		dataDevices["device"].append(deviceData);
+	}
+	respValue["data"] = dataDevices;
+	respValue["cmd"] = "getAllDeviceStatusRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetDeviceList");
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value dataValue;
+		Json::Value dataDevices;
+		for ( auto& temp_device : deviceList)
+		{
+			Device * device = temp_device.second;
+			Json::Value deviceData;
+			Json::Value jsonValue;
+			deviceData["id"] = device->GetId();
+			deviceData["addr"] = device->GetAddr();
+			deviceData["type"] = device->GetType();
+			deviceData["mac"] = device->GetMac();
+			deviceData["ver"] = device->GetVersionStr();
+			dataDevices["device"].append(deviceData);
+		}
+		respValue["data"] = dataDevices;
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		LOGW("OnGetDeviceList %s format error", reqValue.toString().c_str());
+	}
+	respValue["cmd"] = "getDeviceList";
+	return CODE_OK;
+}
+
+int Gateway::OnGetInfoHC(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetInfoHC");
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		Json::Value jsonValue;
+		Json::Value dataValue;
+		dataValue["mac"] = mac;
+		dataValue["ip"] = Wifi::GetIP();
+		dataValue["name"] = "RD_HC";
+		dataValue["ver"] = "1.2.9";
+		respValue["data"] = dataValue;
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		LOGW("OnGetInfoHC %s format error", reqValue.toString().c_str());
+	}
+	respValue["cmd"] = "getInfoHcRsp";
 	return CODE_OK;
 }

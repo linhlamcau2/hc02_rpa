@@ -25,7 +25,7 @@ void ModuleDim::SaveAttribute()
 }
 #endif
 
-bool ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -37,17 +37,31 @@ bool ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
 	{
 		if (len <= 5)
-			dim = data_message->dim_first;
+		{
+			if(dim != data_message->dim_first)
+			{
+				dim = data_message->dim_first;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
+		}
 		else
-			dim = data_message->dim;
+		{
+			if(dim != data_message->dim)
+			{
+				dim = data_message->dim;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
+		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	LOGE("finish dim ------------------------------------------------------");
+	return true;
 }
 
 bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
@@ -99,13 +113,13 @@ void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = id;
-	dataValue["VALUE"] = dim;
+	dataValue["VALUE"] = dim*100/65535;
 	jsonValue.append(dataValue);
 }
 
 void ModuleDim::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
+	jsonValue[KEY_ATTRIBUTE_DIM] = dim*100/65535;
 }
 
 bool ModuleDim::Do(Json::Value &dataValue)

@@ -21,7 +21,7 @@
 #include "FileTransfer.h"
 
 #include "BleProtocol.h"
-#define BLE_UART_PORT "/dev/ttyS1"
+#define BLE_UART_PORT "/dev/ttyUSB0"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -70,7 +70,8 @@ int main(int argc, char *argv[])
 
 	fileTransfer = new FileTransfer();
 
-	string mac = Wifi::GetMacAddress();
+	// string mac = Wifi::GetMacAddress();
+	string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac,
 						  config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
@@ -92,8 +93,8 @@ int main(int argc, char *argv[])
 	fileTransfer->init();
 	sleep(2);
 
-	fileTransfer->uploadFile(".", "smh.sqlite");
-	fileTransfer->uploadFile(".", "readme.txt");
+	// fileTransfer->uploadFile(".", "smh.sqlite");
+	// fileTransfer->uploadFile(".", "readme.txt");
 
 	// thread sendFile1(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot1.rar"));
 	// sendFile1.detach();

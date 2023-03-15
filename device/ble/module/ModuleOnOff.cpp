@@ -25,7 +25,7 @@ void ModuleOnOff::SaveAttribute()
 }
 #endif
 
-bool ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+bool ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -37,17 +37,26 @@ bool ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
 		if (len == 3)
-			onoff = data_message->state;
+			if(onoff != data_message->state)
+			{
+				onoff = data_message->state;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
 		else
-			onoff = data_message->onoff;
+			if(onoff != data_message->state)
+			{
+				onoff = data_message->onoff;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
