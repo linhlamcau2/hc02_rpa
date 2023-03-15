@@ -20,7 +20,6 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("requestDev", bind(&Gateway::OnRequestDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
@@ -30,6 +29,10 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("addDevToRoom", bind(&Gateway::OnAddDeviceToRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("delDevFromRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
@@ -38,7 +41,6 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("requestDev", bind(&Gateway::OnRequestDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
@@ -48,6 +50,10 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("addDevToRoom", bind(&Gateway::OnAddDeviceToRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delDevFromRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -616,8 +622,8 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 							{
 								if (deviceValue.isString())
 								{
-									string devcieId = deviceValue.asString();
-									Device *device = getDeviceFromId(devcieId);
+									string deviceId = deviceValue.asString();
+									Device *device = getDeviceFromId(deviceId);
 									if (device)
 									{
 										if (scene->AddDeviceV2(device, deviceProperties, false))
@@ -862,8 +868,6 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							Device *device = getDeviceFromId(deviceId);
 							if (device)
 							{
-								int deviceAddr = device->GetAddr();
-								// TODO: them vao phong
 								if (room->AddDevice2(device, true))
 								{
 									database->DeviceInRoomAdd(room, device);
@@ -871,7 +875,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								}
 								else
 								{
-									LOGD("add room deviceId %s error", deviceId.c_str());
+									LOGD("add to room deviceId %s error", deviceId.c_str());
 									failedList.append(deviceId);
 								}
 							}
@@ -907,6 +911,182 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
 	respValue["cmd"] = "createRoomRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString() &&
+				data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string roomId = data["id"].asString();
+			Json::Value devices = reqValue["devices"];
+			Room *room = getRoomFromId(roomId);
+			if (room)
+			{
+				for (auto &deviceValue : devices)
+				{
+					if (deviceValue.isString())
+					{
+						string deviceId = deviceValue.asString();
+						Device *device = getDeviceFromId(deviceId);
+						if (device)
+						{
+							if (room->AddDevice2(device, true))
+							{
+								database->DeviceInRoomAdd(room, device);
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("add to room deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
+						}
+						else
+						{
+							LOGD("deviceId %s dose not exist", deviceId.c_str());
+							failedList.append(deviceId);
+						}
+					}
+				}
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "addDevToRoomRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString() &&
+				data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string roomId = data["id"].asString();
+			Json::Value devices = reqValue["devices"];
+			Room *room = getRoomFromId(roomId);
+			if (room)
+			{
+				for (auto &deviceValue : devices)
+				{
+					if (deviceValue.isString())
+					{
+						string deviceId = deviceValue.asString();
+						Device *device = getDeviceFromId(deviceId);
+						if (device)
+						{
+							if (room->DelDevice2(device))
+							{
+								database->DeviceInRoomDel(room, device);
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("delete from room deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
+						}
+						else
+						{
+							LOGD("deviceId %s dose not exist", deviceId.c_str());
+							failedList.append(deviceId);
+						}
+					}
+				}
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delDevFromRoomRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("id") && data["id"].isString())
+		{
+			Json::Value successList;
+			Json::Value failedList;
+			string roomId = data["id"].asString();
+			Room *room = getRoomFromId(roomId);
+			if (room)
+			{
+				for (auto &deviceInRoom : room->deviceList)
+				{
+					if (room->DelDevice2(deviceInRoom->device))
+					{
+						database->DeviceInRoomDel(room, deviceInRoom->device);
+						successList.append(deviceInRoom->device->GetId());
+					}
+					else
+					{
+						LOGD("delete from room deviceId %s error", deviceInRoom->device->GetId().c_str());
+						failedList.append(deviceInRoom->device->GetId());
+					}
+				}
+				database->RoomDel(room);
+				delete room;
+				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["success"] = successList;
+				respValue["data"]["failed"] = failedList;
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delRoomRsp";
 	return CODE_OK;
 }
 

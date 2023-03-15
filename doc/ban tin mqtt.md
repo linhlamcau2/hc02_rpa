@@ -834,7 +834,7 @@ Response:
 Request:
 ```json
 {
-  "cmd": "delDevToRoom",
+  "cmd": "delDevFromRoom",
   "rqi": "abc123456",
   "data": {
     "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
@@ -849,7 +849,7 @@ Request:
 Response:
 ```json
 {
-    "cmd": "delDevToRoomRsp",
+    "cmd": "delDevFromRoomRsp",
     "rqi": "abc123456",
     "data": {
         "code": 0,

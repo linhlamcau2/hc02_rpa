@@ -166,6 +166,9 @@ private:
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);

@@ -92,7 +92,7 @@ public:
 	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
 	int SceneBleDel(SceneBle *scene);
 
-    	int RoomRead();
+	int RoomRead();
 	int RoomAdd(Room *room);
 	int RoomUpdate(Room *room, int id);
 	int RoomDel(Room *room);

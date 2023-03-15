@@ -573,8 +573,8 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 							}
 							for (Json::ArrayIndex j = 0; j < deviceList.size(); j++)
 							{
-								string devcieId = deviceList[j].asString();
-								Device *device = getDeviceFromId(devcieId);
+								string deviceId = deviceList[j].asString();
+								Device *device = getDeviceFromId(deviceId);
 								if (device)
 								{
 									if (scene->AddDevice(device, deviceProperties, modeRgb, false))
@@ -771,8 +771,8 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								Json::Value devices = group["DEVICES"];
 								for (Json::ArrayIndex j = 0; j < devices.size(); j++)
 								{
-									string devcieId = devices[j].asString();
-									Device *device = getDeviceFromId(devcieId);
+									string deviceId = devices[j].asString();
+									Device *device = getDeviceFromId(deviceId);
 									if (device)
 									{
 										int tempDeviceAddr = device->GetAddr();
@@ -865,8 +865,8 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							{
 								for (auto n = 0; n < groupInScene->deviceList.size(); n++)
 								{
-									string devcieId = groupInScene->deviceList[n]->device->GetId();
-									Device *deviceInScene = getDeviceFromId(devcieId);
+									string deviceId = groupInScene->deviceList[n]->device->GetId();
+									Device *deviceInScene = getDeviceFromId(deviceId);
 									if (deviceInScene)
 									{
 										int tempDeviceAddr = deviceInScene->GetAddr();
@@ -1474,8 +1474,8 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 						Json::Value devices = dataValue["DEVICES"];
 						for (Json::ArrayIndex i = 0; i < devices.size(); i++)
 						{
-							string devcieId = devices[i].asString();
-							Device *device = getDeviceFromId(devcieId);
+							string deviceId = devices[i].asString();
+							Device *device = getDeviceFromId(deviceId);
 							if (device)
 							{
 								int tempDeviceAddr = device->GetAddr();
@@ -1605,8 +1605,8 @@ int Gateway::OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 				{
 					for (int i = 0; i < (int)deviceList.size(); i++)
 					{
-						string devcieId = deviceList[i].asString();
-						Device *device = getDeviceFromId(devcieId);
+						string deviceId = deviceList[i].asString();
+						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
 							int tempDeviceAddr = device->GetAddr();

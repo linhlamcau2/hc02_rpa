@@ -26,7 +26,8 @@ public:
 	int GetPositionDevice(Device *device);
 	bool AddDevice(Device *device, bool sendBle);
 	bool AddDevice2(Device *device, bool sendBle);
-	bool DelDevcie(Device *device);
+	bool DelDevice(Device *device);
+	bool DelDevice2(Device *device);
 
 	int DataConfigAdd(string data);
 	int DataConfigDel(string data);
