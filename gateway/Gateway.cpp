@@ -339,7 +339,7 @@ int Gateway::CheckOnlineThread()
 		}
 		sleep(1);
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::UdpBroadcastThread()
@@ -401,7 +401,7 @@ int Gateway::UdpBroadcastThread()
 	isUdpBroadcasting = false;
 	free(udpBroadcastThread);
 	udpBroadcastThread = NULL;
-	return 0;
+	return CODE_OK;
 }
 
 void Gateway::StartUdpBroadcast()

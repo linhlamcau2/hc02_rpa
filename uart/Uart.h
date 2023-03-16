@@ -7,6 +7,7 @@
 #include <functional>
 #include <termios.h>
 #include <mutex>
+#include "ErrorCode.h"
 
 using namespace std;
 

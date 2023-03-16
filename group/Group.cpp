@@ -30,7 +30,7 @@ int Group::GetPositionDevice(Device *device)
 			return i;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 /**

@@ -1,7 +1,8 @@
 #include "TimerSchedule.h"
+#include <unistd.h>
 #include "Util.h"
 #include "Log.h"
-#include <unistd.h>
+#include "ErrorCode.h"
 
 static void run(TimerSchedule *timerSchedule);
 
@@ -107,5 +108,5 @@ int TimerSchedule::UnregisterTimer(int index)
 		}
 	}
 	mtx.unlock();
-	return 0;
+	return CODE_OK;
 }

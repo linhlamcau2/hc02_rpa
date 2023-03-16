@@ -11,7 +11,7 @@ DeviceZigbeeOnoff::DeviceZigbeeOnoff(string id, string name, string mac, uint32_
 int DeviceZigbeeOnoff::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	clusterOnoff->BuildTelemetryValue(pushDataValue);
-	return 0;
+	return CODE_OK;
 }
 
 void DeviceZigbeeOnoff::InitAttribute(int attributeId, double value)

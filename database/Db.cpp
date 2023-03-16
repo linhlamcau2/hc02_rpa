@@ -76,7 +76,7 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 		LOGD("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
 	}
 	LOGD("\n");
-	return 0;
+	return CODE_OK;
 }
 
 int Db::Sqlite_Exec(string &sql)
@@ -92,7 +92,7 @@ int Db::Sqlite_Exec(string &sql)
 		{
 			LOGE("Can't open database: %s", sqlite3_errmsg(db));
 			pthread_mutex_unlock(&mutex);
-			return -1;
+			return CODE_ERROR;
 		}
 		else
 		{
@@ -120,7 +120,7 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 	if (!Parse)
 	{
 		LOGW("Parse func NULL");
-		return 1;
+		return CODE_ERROR;
 	}
 
 	LOGD("ReadAll table %s", table.c_str());

@@ -275,7 +275,7 @@ int BleProtocol::GetAppKey()
 			LOGW("App key error");
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int BleProtocol::GetNetKey()
@@ -285,7 +285,7 @@ int BleProtocol::GetNetKey()
 	uint8_t dataRsp[100];
 	int lenRsp;
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		// pro_net_info = (pro_net_info_t *)&dataRsp[1];
 		memcpy(&pro_net_info.netKey[0], &dataRsp[1], sizeof(pro_net_info_t));
@@ -385,9 +385,8 @@ int BleProtocol::StartScan()
 	if (rs)
 	{
 		LOGE("Send start scan error, rs: %d", rs);
-		return 1;
 	}
-	return 0;
+	return rs;
 }
 
 int BleProtocol::StopScan()
@@ -398,9 +397,8 @@ int BleProtocol::StopScan()
 	if (rs)
 	{
 		LOGE("Send stop scan error, rs: %d", rs);
-		return 1;
 	}
-	return 0;
+	return rs;
 }
 
 int BleProtocol::ResetFactory()
@@ -411,7 +409,7 @@ int BleProtocol::ResetFactory()
 	if (rs)
 	{
 		LOGE("Send reset factory error, rs: %d", rs);
-		return 1;
+		return rs;
 	}
 	while (GetNetKey())
 	{
@@ -419,7 +417,7 @@ int BleProtocol::ResetFactory()
 	}
 	GetAppKey();
 	database->GatewayRead();
-	return 0;
+	return rs;
 }
 
 string BleProtocol::uuidToStr(uuid_t *uuid)
@@ -453,7 +451,7 @@ static uint32_t convertDeviceType(uint32_t type)
 	return (arr[0] + (arr[1] * 1000) + (arr[2] * 10000));
 }
 
-bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
+int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
 	uint16_t version = 0;
@@ -480,14 +478,13 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 								gateway->AddDeviceToScanList(device);
 								isAdding = true;
 								StartScan();
-								return false;
+								return CODE_OK;
 							}
 							else
 							{
 								ResetDev(nextAddr);
 								isAdding = true;
 								StartScan();
-								return false;
 							}
 						}
 						else
@@ -496,14 +493,12 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 							if (!isProvisioning)
 							{
 								isAdding = false;
-								return false;
 							}
 							else
 							{
 								LOGW("GetDeviceType false");
 								isAdding = true;
 								StartScan();
-								return false;
 							}
 						}
 					}
@@ -513,14 +508,12 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						if (!isProvisioning)
 						{
 							isAdding = false;
-							return false;
 						}
 						else
 						{
 							LOGW("SetGwAddr false");
 							isAdding = true;
 							StartScan();
-							return false;
 						}
 					}
 				}
@@ -530,14 +523,12 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 					if (!isProvisioning)
 					{
 						isAdding = false;
-						return false;
 					}
 					else
 					{
 						LOGW("BindingAll false");
 						isAdding = true;
 						StartScan();
-						return false;
 					}
 				}
 			}
@@ -547,7 +538,6 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 				if (!isProvisioning)
 				{
 					isAdding = false;
-					return false;
 				}
 				else
 				{
@@ -561,7 +551,6 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 			if (!isProvisioning)
 			{
 				isAdding = false;
-				return false;
 			}
 			else
 			{
@@ -575,7 +564,6 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 		if (!isProvisioning)
 		{
 			isAdding = false;
-			return false;
 		}
 		else
 		{
@@ -584,7 +572,7 @@ bool BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 		}
 	}
 	isAdding = false;
-	return false;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -615,7 +603,7 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 	memcpy(&provision_message.data_pro.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
 	provision_message.data_pro.unicast_address = deviceAddr;
 	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -626,7 +614,7 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 		if (provision_rsp_message->status)
 		{
 			LOGD("Provision OK");
-			return 0;
+			return CODE_OK;
 		}
 		else
 		{
@@ -634,7 +622,7 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 		}
 	}
 	LOGW("Provision err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::BindingAll()
@@ -656,16 +644,16 @@ int BleProtocol::BindingAll()
 		binding_all_message.appKey[i] = appKey[i];
 	}
 	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, sizeof(binding_all_message_t), HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		if (lenRsp == 1 && dataRsp[0] == 1)
 		{
 			LOGD("BindingAll OK");
-			return 0;
+			return CODE_OK;
 		}
 	}
 	LOGW("BindingAll err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
@@ -694,7 +682,7 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	set_gw_addr_message.header = RD_OPCODE_PROVISION_SET_GW_ADDR;
 	set_gw_addr_message.gwAddr = 0x0001;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -710,12 +698,12 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 			if (set_gw_addr_rsp_message->opcode[0] == 0xE1 && set_gw_addr_rsp_message->opcode[1] == 0x11 && set_gw_addr_rsp_message->opcode[2] == 0x02 && set_gw_addr_rsp_message->header[0] == 0x02 && set_gw_addr_rsp_message->header[1] == 0x00)
 			{
 				LOGD("SetGwAddr OK");
-				return 0;
+				return CODE_OK;
 			}
 		}
 	}
 	LOGW("SetGwAddr err");
-	return -1;
+	return CODE_ERROR;
 }
 
 /**
@@ -773,7 +761,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 	check_type_message.data[5] = 0x03;
 	genSecurityKey(mac, devAddr, &check_type_message.data[7]);
 	int rs = SendMessage(APP_REQ, (uint8_t *)&check_type_message, sizeof(check_type_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, checkTypeHeader, 4, 5);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -793,12 +781,12 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 				deviceType = (check_type_rsp_message->deviceType[0] << 16) | (check_type_rsp_message->deviceType[1] << 8) | check_type_rsp_message->deviceType[2];
 				deviceVersion = (check_type_rsp_message->version[0] << 8) | (check_type_rsp_message->version[1]);
 				LOGD("GetDeviceType OK, deviceType: 0x%04X, version: %d", deviceType, deviceVersion);
-				return 0;
+				return CODE_OK;
 			}
 		}
 	}
 	LOGW("GetDeviceType err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::ResetDev(uint16_t devAddr)
@@ -818,11 +806,11 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 	reset_message.addr = devAddr;
 	reset_message.opcode = 0x4980;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, sizeof(reset_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, resetHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::ResetDelAll()
@@ -846,18 +834,18 @@ int BleProtocol::ResetDelAll()
 	reset_message.data[6] = 0xff;
 
 	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, sizeof(reset_message_t), 0, 0, 0, 1000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SendOnlineCheck(uint16_t devAddr)
 {
 	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
 	BleProtocol::GetOnoffLight(devAddr);
-	return 0;
+	return CODE_OK;
 }
 
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)
@@ -895,7 +883,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.transition = transition;
 		int rs = 0;
 		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, (uint8_t *)&turnOnOffHeader, 0, sizeof(turnOnOffHeader));
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -910,12 +898,12 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 				if (lenRsp == 7)
 				{
 					if (onoff == onoff_rsp_message->data[0])
-						return 0;
+						return CODE_OK;
 				}
 				else
 				{
 					if (onoff == onoff_rsp_message->data[1])
-						return 0;
+						return CODE_OK;
 				}
 				LOGW("Onoff resp state not match with input control");
 			}
@@ -929,13 +917,13 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.rev2 = 0;
 		onoff_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), 0, dataRsp, &lenRsp, 1000);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 	LOGW("SetOnOff err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::GetOnoffLight(uint16_t devAddr)
@@ -955,7 +943,7 @@ int BleProtocol::GetOnoffLight(uint16_t devAddr)
 	onoff_message.addr = devAddr;
 	onoff_message.opcode = G_ONOFF_GET;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, getOnOffHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -967,12 +955,12 @@ int BleProtocol::GetOnoffLight(uint16_t devAddr)
 		onoff_rsp_message_t *onoff_rsp_message = (onoff_rsp_message_t *)dataRsp;
 		if (onoff_rsp_message->opcode == G_ONOFF_STATUS)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 
 	LOGW("GetOnOff err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transition, bool ack)
@@ -1001,7 +989,7 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 		dim_message.offset = 0;
 		dim_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dimmingHeader, 0, 6);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -1015,14 +1003,14 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 			{
 				if ((dim_rsp_message->data[0] | dim_rsp_message->data[1] << 8) == dim)
 				{
-					return 0;
+					return CODE_OK;
 				}
 			}
 			else if (lenRsp > 8)
 			{
 				if ((dim_rsp_message->data[2] | dim_rsp_message->data[3] << 8) == dim)
 				{
-					return 0;
+					return CODE_OK;
 				}
 			}
 		}
@@ -1035,13 +1023,13 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 		dim_message.offset = 0;
 		dim_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), 0, dataRsp, &lenRsp, 1000);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 	LOGW("Dimming err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition, bool ack)
@@ -1072,7 +1060,7 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 		}
 		cct_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&cct_message, sizeof(cct_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, cctHeader, 0, 6);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -1086,14 +1074,14 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 			{
 				if (cct == (cct_rsp_message->data[0] | (cct_rsp_message->data[1] << 8)))
 				{
-					return 0;
+					return CODE_OK;
 				}
 			}
 			else if (lenRsp > 10)
 			{
 				if (cct == (cct_rsp_message->data[4] | (cct_rsp_message->data[5] << 8)))
 				{
-					return 0;
+					return CODE_OK;
 				}
 			}
 		}
@@ -1109,13 +1097,13 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 		}
 		cct_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&cct_message, sizeof(cct_message_t), 0, dataRsp, &lenRsp, 1000);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 	LOGW("Cct err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t L, uint16_t transition, bool ack)
@@ -1147,7 +1135,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.offset = 0;
 		hsl_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, hslHeader, 0, 6);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -1161,7 +1149,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 			hsl_rsp_message_t *hsl_rsp_message = (hsl_rsp_message_t *)dataRsp;
 			if (hsl_rsp_message->h == H && hsl_rsp_message->l == L && hsl_rsp_message->s == S)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			LOGW("hsl resp state not match with input control");
 		}
@@ -1176,13 +1164,13 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.offset = 0;
 		hsl_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), 0, dataRsp, &lenRsp, 1000);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 	LOGW("Set hsl err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, uint16_t transition, bool ack)
@@ -1212,7 +1200,7 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 		dimcct_message.offset = 0;
 		dimcct_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, sizeof(dimcct_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dimcctHeader, 0, 6);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -1225,7 +1213,7 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 			dimcct_rsp_message_t *dimcct_rsp_message = (dimcct_rsp_message_t *)dataRsp;
 			if (dimcct_rsp_message->dim == dim && dimcct_rsp_message->cct == cct)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			LOGW("dim cct resp state not match with input control");
 		}
@@ -1239,13 +1227,13 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 		dimcct_message.offset = 0;
 		dimcct_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, sizeof(dimcct_message_t), 0, dataRsp, &lenRsp, 1000);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 	LOGW("Set dim cct err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group)
@@ -1271,7 +1259,7 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	addgroup_message.group = group;
 	addgroup_message.offset = 0x1000;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&addgroup_message, sizeof(addgroup_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addGroupHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1285,12 +1273,12 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 		addgroup_rsp_message_t *addgroup_rsp_message = (addgroup_rsp_message_t *)dataRsp;
 		if (element == addgroup_rsp_message->element && group == addgroup_rsp_message->group)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("add group resp state not match with input control");
 	}
 	LOGW("Add group err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group)
@@ -1316,12 +1304,12 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	delgroup_message.group = group;
 	delgroup_message.offset = 0x1000;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&delgroup_message, sizeof(delgroup_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delGroupHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
-		return 0;
+		return CODE_OK;
 	}
 	LOGW("Del group err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
@@ -1346,7 +1334,7 @@ int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 	setscene_message.scene = scene;
 	setscene_message.modeRgb = modeRgb;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&setscene_message, sizeof(setscene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1359,7 +1347,7 @@ int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 		setscene_rsp_message_t *setscene_rsp_message = (setscene_rsp_message_t *)dataRsp;
 		if (setscene_rsp_message->scene == scene)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		else
 		{
@@ -1367,7 +1355,7 @@ int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 		}
 	}
 	LOGW("Set scene err");
-	return -1;
+	return CODE_ERROR;
 }
 
 // TODO: BelProtocol DelScene
@@ -1390,12 +1378,12 @@ int BleProtocol::DelSceneBle(uint16_t devAddr, uint16_t scene)
 	delscene_message.opcode = 0x9e82;
 	delscene_message.scene = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&delscene_message, sizeof(delscene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
-		return 0;
+		return CODE_OK;
 	}
 	LOGW("Del scene err");
-	return -1;
+	return CODE_ERROR;
 }
 
 // TODO: BelProtocol ActiveScene
@@ -1425,7 +1413,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 		callscene_message.offset = 0;
 		callscene_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, callSceneHeader, 0, 6);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -1439,7 +1427,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 			{
 				if (scene == (callscene_rsp_message->data[2] | (callscene_rsp_message->data[3] << 8)))
 				{
-					return 0;
+					return CODE_OK;
 				}
 				else
 				{
@@ -1450,7 +1438,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 			{
 				if (scene == (callscene_rsp_message->data[0] | (callscene_rsp_message->data[1] << 8)))
 				{
-					return 0;
+					return CODE_OK;
 				}
 				else
 				{
@@ -1467,14 +1455,14 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 		callscene_message.offset = 0;
 		callscene_message.transition = transition;
 		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 0, dataRsp, &lenRsp, 1000);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
-			return 0;
+			return CODE_OK;
 		}
 	}
 
 	LOGW("Call scene err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
@@ -1498,7 +1486,7 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 	modergb_message.header = 0x0919;
 	modergb_message.mode = modeRgb;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&modergb_message, sizeof(modergb_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeRgbHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1513,13 +1501,13 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 		{
 			if (modergb_rsp_message->mode == modeRgb)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			LOGW("call mode rgb resp state not match with input control");
 		}
 	}
 	LOGW("call mode rgb err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::UpdateLights(uint16_t devAddr)
@@ -1542,7 +1530,7 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 	update_message.opcode = 0x5082;
 	update_message.header = 0x02;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, updateHeader, 0, 6);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1554,12 +1542,12 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 		update_rsp_message_t *update_rsp_message = (update_rsp_message_t *)dataRsp;
 		if (update_rsp_message->header == 0x02)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("update lights resp state not match with input control");
 	}
 	LOGW("update lights err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type)
@@ -1594,7 +1582,7 @@ int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	set_scene_dc_message.sceneId = sceneId;
 	set_scene_dc_message.type = type;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_scene_dc_message, sizeof(set_scene_dc_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneDcHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1611,12 +1599,12 @@ int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 		set_scene_dc_rsp_message_t *set_scene_dc_rsp_message = (set_scene_dc_rsp_message_t *)dataRsp;
 		if (set_scene_dc_rsp_message->header == 0x0102 && set_scene_dc_rsp_message->button == button && set_scene_dc_rsp_message->mode == mode && set_scene_dc_rsp_message->sceneId == sceneId && set_scene_dc_rsp_message->type == type)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("set scene dc resp state not match with input control");
 	}
 	LOGW("set scene dc remote err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type)
@@ -1651,7 +1639,7 @@ int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	set_scene_ac_message.sceneId = sceneId;
 	set_scene_ac_message.type = type;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_scene_ac_message, sizeof(set_scene_ac_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setSceneAcHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1669,12 +1657,12 @@ int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 		LOGD("Header: %d, Scene: %d", set_scene_ac_rsp_message->header, sceneId);
 		if (set_scene_ac_rsp_message->header == 0x0103 && set_scene_ac_rsp_message->button == button && set_scene_ac_rsp_message->mode == mode && set_scene_ac_rsp_message->sceneId == sceneId && set_scene_ac_rsp_message->type == type)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("set scene ac scene resp state not match with input control");
 	}
 	LOGW("set scene ac remote err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode)
@@ -1705,7 +1693,7 @@ int BleProtocol::DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	del_scene_dc_message.button = button;
 	del_scene_dc_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_dc_message, sizeof(del_scene_dc_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneDcHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1721,12 +1709,12 @@ int BleProtocol::DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 		LOGD("Header: %d", del_scene_dc_rsp_message->header);
 		if (del_scene_dc_rsp_message->header == 0x0202 && del_scene_dc_rsp_message->button == button && del_scene_dc_rsp_message->mode == mode)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("del scene dc scene resp state not match with input control");
 	}
 	LOGW("del scene dc scene err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t mode)
@@ -1757,7 +1745,7 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	del_scene_ac_message.button = button;
 	del_scene_ac_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_ac_message, sizeof(del_scene_ac_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneAcHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1773,12 +1761,12 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 		LOGD("Header: %d", del_scene_ac_rsp_message->header);
 		if (del_scene_ac_rsp_message->header == 0x0203 && del_scene_ac_rsp_message->button == button && del_scene_ac_rsp_message->mode == mode)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("del scene ac scene resp state not match with input control");
 	}
 	LOGW("del scene ac scene err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type)
@@ -1833,7 +1821,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 	scene_light_pir_message.infoScene[1] = (data_scene_pir_light.data >> 16) & 0xFF;
 	scene_light_pir_message.infoScene[2] = (data_scene_pir_light.data >> 8) & 0xFF;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneLightPirHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1847,7 +1835,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 		scene_light_pir_rsp_message_t *scene_light_pir_rsp_message = (scene_light_pir_rsp_message_t *)&dataRsp;
 		if (scene_light_pir_rsp_message->header == 0x0145 && scene_light_pir_rsp_message->scene == scene)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		else
 		{
@@ -1858,7 +1846,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 	{
 		LOGW("Scene light pir error");
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
@@ -1886,7 +1874,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 	scene_light_pir_message.header = RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR;
 	scene_light_pir_message.sceneId = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneLightPirHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1900,7 +1888,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 		scene_light_pir_rsp_message_t *scene_light_pir_rsp_message = (scene_light_pir_rsp_message_t *)&dataRsp;
 		if (scene_light_pir_rsp_message->header == 0x0245 && scene_light_pir_rsp_message->scene == scene)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		else
 		{
@@ -1911,7 +1899,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 	{
 		LOGW("Del Scene light pir error");
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
@@ -1939,7 +1927,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 	time_action_message.header = RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR;
 	time_action_message.time = time;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&time_action_message, sizeof(time_action_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeActionHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -1953,12 +1941,12 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 		time_action_rsp_message_t *time_action_rsp_message = (time_action_rsp_message_t *)dataRsp;
 		if (time_action_rsp_message->header == 0x0345 && time_action_rsp_message->time == time)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("time action pir light resp state not match with input control");
 	}
 	LOGW("time action pir light err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type)
@@ -1990,7 +1978,7 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	scene_screen_touch_message.icon = icon;
 	scene_screen_touch_message.type = type;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_screen_touch_message, sizeof(scene_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2005,12 +1993,12 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
 		if (scene_screen_touch_rsp_message->header == 0x010a && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("scene screen touch resp state not match with input control");
 	}
 	LOGW("scene screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon)
@@ -2040,7 +2028,7 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	edit_icon_screen_touch_message.sceneId = scene;
 	edit_icon_screen_touch_message.icon = icon;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&edit_icon_screen_touch_message, sizeof(edit_icon_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, editIconScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2055,12 +2043,12 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
 		if (scene_screen_touch_rsp_message->header == 0x070a && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("edit icon screen touch resp state not match with input control");
 	}
 	LOGW("edit icon screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
@@ -2088,7 +2076,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 	del_scene_screen_touch_message.header = RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH;
 	del_scene_screen_touch_message.sceneId = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_screen_touch_message, sizeof(del_scene_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2102,12 +2090,12 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
 		if (scene_screen_touch_rsp_message->header == 0x020a && scene_screen_touch_rsp_message->scene == scene)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("del scene screen touch resp state not match with input control");
 	}
 	LOGW("del scene screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::DelAllScene(uint16_t devAddr)
@@ -2138,7 +2126,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 		del_allscene_screen_touch_message.check[i] = i;
 	}
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_allscene_screen_touch_message, sizeof(del_allscene_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delAllSceneScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2151,12 +2139,12 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
 		if (scene_screen_touch_rsp_message->header == 0x0a0a)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("del all scene screen touch resp state not match with input control");
 	}
 	LOGW("del all scene screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t temp)
@@ -2186,7 +2174,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 	weather_outdoor_screen_touch_message.temp = temp;
 	weather_outdoor_screen_touch_message.status = status;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_outdoor_screen_touch_message, sizeof(weather_outdoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherOutdoorScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2201,12 +2189,12 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
 		if (weather_outdoor_screen_touch_rsp_message->header == 0x050a && weather_outdoor_screen_touch_rsp_message->temp == temp && weather_outdoor_screen_touch_rsp_message->status == status)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("weather outdoor screen touch resp state not match with input control");
 	}
 	LOGW("weather outdoor screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum, uint16_t pm25)
@@ -2238,7 +2226,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	weather_indoor_screen_touch_message.hum = hum;
 	weather_indoor_screen_touch_message.pm25 = pm25;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_indoor_screen_touch_message, sizeof(weather_indoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherIndoorScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2254,12 +2242,12 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
 		if (weather_outdoor_screen_touch_rsp_message->header == 0x030a && weather_outdoor_screen_touch_rsp_message->temp == temp && weather_outdoor_screen_touch_rsp_message->hum == hum)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("weather indoor screen touch resp state not match with input control");
 	}
 	LOGW("weather indoor screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day)
@@ -2293,7 +2281,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 	date_screen_touch_message.date = date;
 	date_screen_touch_message.day = day;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&date_screen_touch_message, sizeof(date_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dateScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2310,12 +2298,12 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
 		if (date_screen_touch_rsp_message->header == 0x080a && date_screen_touch_rsp_message->years == bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("date screen touch resp state not match with input control");
 	}
 	LOGW("date screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second)
 {
@@ -2346,7 +2334,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 	time_screen_touch_message.minute = minute;
 	time_screen_touch_message.second = second;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&time_screen_touch_message, sizeof(time_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2362,12 +2350,12 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
 		if (date_screen_touch_rsp_message->header == 0x090a && date_screen_touch_rsp_message->hours == hours && date_screen_touch_rsp_message->minute == minute && date_screen_touch_rsp_message->second == second)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("time screen touch resp state not match with input control");
 	}
 	LOGW("time screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 {
@@ -2394,7 +2382,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 	group_screen_touch_message.header = RD_OPCODE_CONFIG_SET_GROUP;
 	group_screen_touch_message.group = bswap_16(group);
 	int rs = SendMessage(APP_REQ, (uint8_t *)&group_screen_touch_message, sizeof(group_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, groupScreenTouchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2408,12 +2396,12 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
 		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(group))
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("group screen touch resp state not match with input control");
 	}
 	LOGW("group screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
@@ -2441,7 +2429,7 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 	// add_dev_to_room_message.header = 0x0b0a;
 	// add_dev_to_room_message.roomAddr = bswap_16(roomAddr);
 	// int rs = SendMessage(APP_REQ, (uint8_t *)&add_dev_to_room_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, add_dev_to_room_message, 0, 7);
-	// if (rs == 0)
+	// if (rs == CODE_OK)
 	// {
 	// 	typedef struct __attribute__((packed))
 	// 	{
@@ -2455,12 +2443,12 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 	// 	group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
 	// 	if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(group))
 	// 	{
-	// 		return 0;
+	// 		return CODE_OK;
 	// 	}
 	// 	LOGW("group screen touch resp state not match with input control");
 	// }
 	// LOGW("group screen touch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff)
@@ -2498,7 +2486,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 	controlrgb_switch_message.dimOn = dimOn;
 	controlrgb_switch_message.dimOff = dimOff;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&controlrgb_switch_message, sizeof(controlrgb_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlRgbSwitchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2512,12 +2500,12 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 		controlrgb_switch_rsp_message_t *controlrgb_switch_rsp_message = (controlrgb_switch_rsp_message_t *)dataRsp;
 		if (controlrgb_switch_rsp_message->header == 0x050b && controlrgb_switch_rsp_message->button == button)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("control rgb switch resp state not match with input control");
 	}
 	LOGW("control rgb switch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value)
@@ -2547,7 +2535,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t v
 	control_relay_switch_message.relay = relay;
 	control_relay_switch_message.value = value;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, sizeof(control_relay_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlRelaySwitchHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2562,12 +2550,12 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t v
 		control_relay_switch_rsp_message_t *control_relay_switch_rsp_message = (control_relay_switch_rsp_message_t *)dataRsp;
 		if (control_relay_switch_rsp_message->header == 0x000b && control_relay_switch_rsp_message->relay == relay && control_relay_switch_rsp_message->value == value)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("control relay switch resp state not match with input control");
 	}
 	LOGW("control relay switch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
@@ -2595,7 +2583,7 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	set_id_combine_message.header = RD_OPCODE_CONFIG_SET_ID_COMBINE;
 	set_id_combine_message.id = id;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_id_combine_message, sizeof(set_id_combine_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setIdCombineHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2609,12 +2597,12 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 		set_id_combine_rsp_message_t *set_id_combine_rsp_message = (set_id_combine_rsp_message_t *)dataRsp;
 		if (set_id_combine_rsp_message->header == 0x060b && set_id_combine_rsp_message->id == id)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("set id combine resp state not match with input control");
 	}
 	LOGW("set id combine err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
@@ -2644,7 +2632,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	timer_message.status = status;
 	timer_message.timer = bswap_32(timer);
 	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, sizeof(timer_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -2659,12 +2647,12 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 		timer_rsp_message_t *timer_rsp_message = (timer_rsp_message_t *)dataRsp;
 		if (timer_rsp_message->header == 0x070b && timer_rsp_message->status == status)
 		{
-			return 0;
+			return CODE_OK;
 		}
 		LOGW("timer resp state not match with input control");
 	}
 	LOGW("timer switch err");
-	return -1;
+	return CODE_ERROR;
 }
 
 int BleProtocol::GetInfogw()
@@ -2711,7 +2699,7 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 	{
 		LOGW("devKey error");
 	}
-	return 0;
+	return CODE_ERROR;
 }
 
 int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
@@ -2740,7 +2728,7 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 	{
 		LOGW("UpdateDeviceKeyGateway error");
 	}
-	return 0;
+	return CODE_ERROR;
 }
 
 int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
@@ -2774,12 +2762,12 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 	{
 		LOGW("UpdateNetKey error");
 	}
-	return 0;
+	return CODE_ERROR;
 }
 
 int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 {
-	LOGD("SetGwKey");
+	LOGD("UpdateDevKey");
 	if (devKey.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -2799,9 +2787,9 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 	}
 	else
 	{
-		LOGW("SetGwKey error");
+		LOGW("UpdateDevKey error");
 	}
-	return 0;
+	return CODE_ERROR;
 }
 
 int BleProtocol::UpdateAppKey(string appKey)
@@ -2824,14 +2812,13 @@ int BleProtocol::UpdateAppKey(string appKey)
 		{
 			sscanf(appKey.c_str() + i * 2, "%2x", (unsigned int *)&binding_all_message.appKey[i]);
 		}
-		int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, sizeof(binding_all_message_t), HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
-		return rs;
+		return SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, sizeof(binding_all_message_t), HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
 	}
 	else
 	{
 		LOGW("UpdateAppKey error");
 	}
-	return 0;
+	return CODE_ERROR;
 }
 
 int BleProtocol::UpdateMaxAddr(uint16_t addr)
@@ -2849,6 +2836,5 @@ int BleProtocol::UpdateMaxAddr(uint16_t addr)
 	provision_message.opcode = HCI_GATEWAY_CMD_SET_NODE_PARA;
 	memcpy(&provision_message.data.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
 	provision_message.data.unicast_address = addr;
-	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
-	return rs;
+	return SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
 }

@@ -121,7 +121,7 @@ int Util::ConvertStrTimeToInt(string time)
 	int second;
 	if (sscanf(time.c_str(), "%d:%d:%d", &hour, &minute, &second) == 3)
 		return hour * 3600 + minute * 60 + second;
-	return -1;
+	return CODE_ERROR;
 }
 
 uint8_t Util::CalCrc(uint8_t length, uint8_t *data)

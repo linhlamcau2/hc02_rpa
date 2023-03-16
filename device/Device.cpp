@@ -125,7 +125,7 @@ int Device::BuildAttributesValue(Json::Value &pushDataValue)
 	deviceData["mac"] = mac;
 	deviceData["type"] = (int)type;
 	pushDataValue[id] = deviceData;
-	return 0;
+	return CODE_OK;
 }
 
 void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
@@ -247,7 +247,7 @@ int Device::PushTelemetry()
 	{
 		return gateway->PublishToGatewayTelemetry(pushData);
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
@@ -291,13 +291,13 @@ int Device::PushAttributes()
 	{
 		return gateway->PublishToGatewayAttributes(pushData);
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Device::PushAttributes(Json::Value jsonValue)
 {
 	if (jsonValue.isNull())
-		return -1;
+		return CODE_ERROR;
 	return gateway->PublishToGatewayAttributes(jsonValue);
 }
 

@@ -7,6 +7,7 @@
 #include <mosquittopp.h>
 
 #include "ActionCallback.h"
+#include "ErrorCode.h"
 
 using namespace std;
 

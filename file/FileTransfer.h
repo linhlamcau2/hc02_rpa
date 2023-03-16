@@ -17,7 +17,7 @@ private:
 
 	void OnFWMessage(string &topic, char *payload, int payloadlen);
 
-	bool UploadChunk(string sessionId, File *file);
+	int UploadChunk(string sessionId, File *file);
 
 	int OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue);
@@ -29,8 +29,8 @@ public:
 
 	void init();
 
-	bool uploadFile(string path, string name);
-	bool downloadFile(string path, string name);
+	int uploadFile(string path, string name);
+	int downloadFile(string path, string name);
 };
 
 extern FileTransfer *fileTransfer;
