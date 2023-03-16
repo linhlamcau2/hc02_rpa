@@ -2801,10 +2801,6 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 	{
 		LOGW("SetGwKey error");
 	}
-	else
-	{
-		LOGW("SetGwKey error");
-	}
 	return 0;
 }
 

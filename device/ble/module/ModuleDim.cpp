@@ -60,7 +60,6 @@ bool ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 		CheckTrigger();
 		return false;
 	}
-	LOGE("finish dim ------------------------------------------------------");
 	return true;
 }
 

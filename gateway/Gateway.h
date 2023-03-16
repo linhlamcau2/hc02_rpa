@@ -164,6 +164,7 @@ private:
 	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
 	// thieu scene controller
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetInfoHC(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
@@ -172,6 +173,12 @@ private:
 	int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
