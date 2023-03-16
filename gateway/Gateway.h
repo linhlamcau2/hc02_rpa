@@ -21,8 +21,12 @@
 #include "DeviceZigbee.h"
 #endif
 
+#ifndef MODEL
+#define MODEL "RD_HC"
+#endif
+
 #ifndef VERSION
-#define VERSION 0.0.1
+#define VERSION "0.0.1"
 #endif
 
 #define STR_(x) #x
@@ -150,7 +154,11 @@ private:
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	// int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	// Bản tin cấu hình
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);

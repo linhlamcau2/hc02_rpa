@@ -7,6 +7,7 @@
 #include "BleDefine.h"
 #include "Http.h"
 #include "Base64.h"
+#include "Wifi.h"
 #include <fstream>
 
 #define ROOM_START_ADDR 0xD000
@@ -17,7 +18,10 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegisterV2("requestDev", bind(&Gateway::OnRequestDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
@@ -38,7 +42,10 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegisterV2("requestDev", bind(&Gateway::OnRequestDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
@@ -233,14 +240,88 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
-int Gateway::OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRequestDeviceStatus");
-	Json::Value deviceData;
-	AddAllDeviceStatusV2(deviceData);
+	LOGD("OnGetDeviceStatus");
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("devices") && data["devices"].isArray())
+		{
+			Json::Value devicesData;
+			Json::Value devices = data["devices"];
+			for (auto &deviceValue : devices)
+			{
+				if (deviceValue.isString())
+				{
+					string deviceId = deviceValue.asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
+					{
+						Json::Value deviceValue;
+						deviceValue["id"] = device->GetId();
+						device->BuildTelemetryValueV2(deviceValue);
+						devicesData.append(deviceValue);
+					}
+				}
+			}
+			respValue["data"]["code"] = CODE_OK;
+			respValue["data"]["devices"] = devicesData;
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "getDevSttRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetAllDeviceStatus");
+	Json::Value devicesData;
+	AddAllDeviceStatusV2(devicesData);
 	respValue["data"]["code"] = CODE_OK;
-	respValue["data"]["device"] = deviceData;
-	respValue["cmd"] = "requestDevSttRsp";
+	respValue["data"]["devices"] = devicesData;
+	respValue["cmd"] = "getAllDevSttRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetDeviceList");
+	Json::Value devicesData;
+	for (const auto &[id, device] : deviceList)
+	{
+		Json::Value deviceValue;
+		deviceValue["id"] = device->GetId();
+		deviceValue["addr"] = device->GetAddr();
+		deviceValue["type"] = device->GetType();
+		deviceValue["mac"] = device->GetMac();
+		deviceValue["ver"] = device->GetVersionStr();
+		devicesData.append(deviceValue);
+	}
+	respValue["data"]["devices"] = devicesData;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getDeviceList";
+	return CODE_OK;
+}
+
+int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetHcInfo");
+	Json::Value dataValue;
+	dataValue["mac"] = mac;
+	dataValue["ip"] = Wifi::GetIP();
+	dataValue["name"] = STR(MODEL);
+	dataValue["ver"] = STR(VERSION);
+	respValue["data"] = dataValue;
+	respValue["cmd"] = "getInfoHcRsp";
 	return CODE_OK;
 }
 
@@ -276,7 +357,7 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 		{
 			Json::Value successList;
 			Json::Value failedList;
-			Json::Value devices = reqValue["devices"];
+			Json::Value devices = data["devices"];
 			for (auto &deviceValue : devices)
 			{
 				if (deviceValue.isString())
@@ -334,7 +415,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value failedList;
 			string groupId = data["id"].asString();
 			string groupName = data["name"].asString();
-			Json::Value devices = reqValue["devices"];
+			Json::Value devices = data["devices"];
 			// TODO: add start address of normal group
 			int groupAddr = 1;
 			for (const auto &[id, group] : groupList)
@@ -415,7 +496,7 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value successList;
 			Json::Value failedList;
 			string groupId = data["id"].asString();
-			Json::Value devices = reqValue["devices"];
+			Json::Value devices = data["devices"];
 			Group *group = getGroupFromId(groupId);
 			if (group)
 			{
@@ -479,7 +560,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 			Json::Value successList;
 			Json::Value failedList;
 			string groupId = data["id"].asString();
-			Json::Value devices = reqValue["devices"];
+			Json::Value devices = data["devices"];
 			Group *group = getGroupFromId(groupId);
 			if (group)
 			{
@@ -827,8 +908,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value failedList;
 			string roomId = data["id"].asString();
 			string roomName = data["name"].asString();
-			Json::Value devices = reqValue["devices"];
-			Json::Value scenes = reqValue["scenes"];
+			Json::Value devices = data["devices"];
+			Json::Value scenes = data["scenes"];
 			int roomAddr = ROOM_START_ADDR;
 			for (const auto &[id, room] : roomList)
 			{
@@ -925,7 +1006,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value successList;
 			Json::Value failedList;
 			string roomId = data["id"].asString();
-			Json::Value devices = reqValue["devices"];
+			Json::Value devices = data["devices"];
 			Room *room = getRoomFromId(roomId);
 			if (room)
 			{
@@ -988,7 +1069,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 			Json::Value successList;
 			Json::Value failedList;
 			string roomId = data["id"].asString();
-			Json::Value devices = reqValue["devices"];
+			Json::Value devices = data["devices"];
 			Room *room = getRoomFromId(roomId);
 			if (room)
 			{

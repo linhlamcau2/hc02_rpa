@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string.h>
 #include <curl/curl.h>
+#include "ErrorCode.h"
 
 #define BASE_URL_DEV "https://iot-dev.truesight.asia"
 #define BASE_URL_PRO "https://rallismartv2.rangdong.com.vn"
@@ -32,7 +33,7 @@ public:
 	string UploadFile(string refreshToken, string dormitory, string pathFile);
 	bool CreateBackup(string refreshToken, string dormitory, string mac, string version, string size, string path, string hcId);
 	string DownloadFile(string dormitory);
-	int setMethod(string method);
-	int setUrl(string url);
-	int setToken(string token);
+	void setMethod(string method);
+	void setUrl(string url);
+	void setToken(string token);
 };

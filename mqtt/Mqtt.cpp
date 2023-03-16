@@ -96,10 +96,10 @@ int Mqtt::removeObjectFromVector(vector<MQTTPubSub *> *mqttPubSubs, MQTTPubSub *
 		if (*it == mqttPubSub)
 		{
 			(*mqttPubSubs).erase(it);
-			return 1;
+			return CODE_OK;
 		}
-	};
-	return 0;
+	}
+	return CODE_ERROR;
 }
 
 void Mqtt::SubscribeList()
@@ -200,7 +200,7 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 {
 	time_t currentTime;
 	if (!connected)
-		return -1;
+		return CODE_ERROR;
 	MQTTPubSub mqttPublish;
 	mqttPublish.setState(false);
 	LOGV("Publish topic: %s, payload:\n%s", topic.c_str(), payload.c_str());
@@ -345,8 +345,7 @@ void Mqtt::OnMessage(string topic, char *payload, int payloadlen)
 {
 	// LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	ActionCallback *actionCallback;
-	int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
-	if (getCallback == 1)
+	if (findActionCallbackFuncFromTopic(topic, &actionCallback) == CODE_OK)
 	{
 		if (actionCallback->getType() == 1)
 		{
@@ -413,28 +412,28 @@ int checkMqttTopic(string retrieveTopic, string registerTopic)
 	for (size_t i = 0; i < retrieveList.size(); i++)
 	{
 		if (registerList.size() < i)
-			return 0;
+			return CODE_ERROR;
 		if (registerList.at(i) == "#")
-			return 1; // OK
+			return CODE_OK; // OK
 		if (registerList.at(i) == "+")
 			continue;
 		if (registerList.at(i) != retrieveList.at(i))
-			return 0;
+			return CODE_ERROR;
 	}
 	if (registerList.size() == retrieveList.size())
-		return 1; // OK
-	return 0;
+		return CODE_OK; // OK
+	return CODE_ERROR;
 }
 
 int Mqtt::findActionCallbackFuncFromTopic(string topic, ActionCallback **actionCallback)
 {
 	for (auto &action : actionCallbacks)
 	{
-		if (checkMqttTopic(topic, action.getTopic()))
+		if (checkMqttTopic(topic, action.getTopic()) == CODE_OK)
 		{
 			*actionCallback = &action;
-			return 1;
+			return CODE_OK;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }

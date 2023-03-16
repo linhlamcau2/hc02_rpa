@@ -117,7 +117,7 @@ int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("OnRpcHcConnectCloud %s error", reqValue.toString().c_str());
 	}
-	return 1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
@@ -186,13 +186,13 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		}
 		dataJsonRsp["STATUS"] = status;
 		respValue["DATA"] = dataJsonRsp;
-		return 0;
+		return CODE_OK;
 	}
 	else
 	{
 		LOGW("OnRpcHcBackup %s error", reqValue.toString().c_str());
 	}
-	return 1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
@@ -204,7 +204,7 @@ int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 		bleProtocol->StopScan();
 	}
 	respValue["code"] = 0;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
@@ -213,7 +213,7 @@ int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 	bleProtocol->isAdding = false;
 	bleProtocol->isProvisioning = false;
 	respValue = reqValue;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue)
@@ -221,7 +221,7 @@ int Gateway::OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue)
 	LOGW("Reset ble");
 	bleProtocol->ResetFactory();
 	respValue["code"] = 0;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
@@ -232,7 +232,7 @@ int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	Json::Value data;
 	data["STATUS"] = "SUCCESS";
 	respValue["DATA"] = data;
-	return 0;
+	return CODE_OK;
 }
 
 // int Gateway::OnRpcBleAddDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -251,11 +251,11 @@ int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
 // 			uint32_t type = dataValue["type"].asInt64();
 // 			int rs = bleProtocol->AddDevice(deviceId, name, mac, type);
 // 			respValue["code"] = rs;
-// 			return 0;
+// 			return CODE_OK;
 // 		}
 // 	}
 // 	respValue["code"] = -1;
-// 	return -1;
+// 	return CODE_ERROR;
 // }
 
 int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -284,7 +284,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
@@ -311,7 +311,7 @@ int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
 		}
 	}
 	respValue["DATA"] = dataJsonRsp;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
@@ -347,9 +347,9 @@ int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["DATA"] = dataJsonRsp;
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue)
@@ -382,9 +382,9 @@ int Gateway::OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValu
 			LOGW("OnRpcSwitchStatusEvent msg enough info");
 		}
 		respValue["DATA"] = dataJsonRsp;
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue)
@@ -405,9 +405,9 @@ int Gateway::OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 			database->RuleDel(ruleId);
 		}
 		respValue["DATA"] = dataJsonRsp;
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
@@ -459,9 +459,9 @@ int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("Error adding rule");
 		}
 		respValue["DATA"] = dataJsonRsp;
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
@@ -516,9 +516,9 @@ int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("Error adding rule");
 		}
 		respValue["DATA"] = dataJsonRsp;
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
@@ -599,7 +599,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 		}
 		respValue["DATA"] = dataJsonRsp;
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
@@ -669,7 +669,7 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			respValue["DATA"] = dataJsonRsp;
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
@@ -717,7 +717,7 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 		}
 		respValue["DATA"] = dataJsonRsp;
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -913,7 +913,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("OnRpcCreateRoom error: %s", respValue.toString().c_str());
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -1143,7 +1143,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("OnRpcAddDevToRoom error: %s", respValue.toString().c_str());
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -1293,7 +1293,7 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 		}
 	}
 	LOGE("Return");
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -1416,7 +1416,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("OnRpcDeleteRoom msg error");
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -1433,13 +1433,16 @@ int Gateway::OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue)
 				Room *room = getRoomFromId(roomId);
 				if (room)
 				{
-					listMsgPush = room->dataConfig;
-					return 2;
+					for (auto &dataConfig : room->dataConfig)
+					{
+						respValue.append(dataConfig);
+					}
+					return CODE_DATA_ARRAY;
 				}
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -1484,7 +1487,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 									database->DeviceInGroupAdd(group, device, tempDeviceAddr);
 									data["SUCCESS"].append(device->GetId());
 									// respValue["code"] = 0;
-									// return 0;
+									// return CODE_OK;
 								}
 								else
 								{
@@ -1493,7 +1496,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 							}
 						}
 						// respValue["code"] = 0;
-						// return 0;
+						// return CODE_OK;
 						respValue["DATA"] = data;
 					}
 				}
@@ -1504,7 +1507,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -1524,12 +1527,12 @@ int Gateway::OnRpcUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
 				group->SetName(name);
 				database->GroupUpdate(group);
 				respValue["code"] = 0;
-				return 0;
+				return CODE_OK;
 			}
 		}
 	}
 	respValue["code"] = -1;
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcDelGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -1575,13 +1578,13 @@ int Gateway::OnRpcDelGroup(Json::Value &reqValue, Json::Value &respValue)
 					delete group;
 				}
 				// respValue["code"] = 0;
-				// return 0;
+				// return CODE_OK;
 			}
 			respValue["DATA"] = data;
 		}
 	}
 	// respValue["code"] = -1;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -1615,7 +1618,7 @@ int Gateway::OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 								database->DeviceInGroupAdd(group, device, tempDeviceAddr);
 								data["SUCCESS"].append(device->GetId());
 								// respValue["code"] = 0;
-								// return 0;
+								// return CODE_OK;
 							}
 							else
 							{
@@ -1632,14 +1635,14 @@ int Gateway::OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 			}
 		}
 		// respValue["code"] = -1;
-		// return -1;
+		// return CODE_ERROR;
 	}
 	catch (const char *msg)
 	{
 		LOGE("OnRpcAddDeviceToGroup fail");
-		return -1;
+		return CODE_ERROR;
 	}
-	return 0;
+	return CODE_OK;
 }
 
 /**
@@ -1678,7 +1681,7 @@ int Gateway::OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 							database->DeviceInGroupDel(group, device, tempDeviceAddr);
 							data["SUCCESS"].append(device->GetId());
 							// respValue["code"] = 0;
-							// return 0;
+							// return CODE_OK;
 						}
 						else
 						{
@@ -1695,7 +1698,7 @@ int Gateway::OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 		}
 	}
 	// respValue["code"] = -1;
-	return 0;
+	return CODE_OK;
 }
 
 static int GetIdButton(string button)
@@ -1708,7 +1711,7 @@ static int GetIdButton(string button)
 			return (i + 1);
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue)
@@ -1740,14 +1743,14 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 					{
 						if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
 						{
-							return 0;
+							return CODE_OK;
 						}
 					}
 					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
 					{
 						if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
 						{
-							return 0;
+							return CODE_OK;
 						}
 					}
 				}
@@ -1762,7 +1765,7 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 			}
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue)
@@ -1791,14 +1794,14 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 				{
 					if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue) == 0)
 					{
-						return 0;
+						return CODE_OK;
 					}
 				}
 				else if (device->GetType() == BLE_AC_SCENE_CONTACT)
 				{
 					if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue) == 0)
 					{
-						return 0;
+						return CODE_OK;
 					}
 				}
 			}
@@ -1808,7 +1811,7 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 			}
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue)
@@ -1861,7 +1864,7 @@ int Gateway::OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue)
@@ -1919,7 +1922,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 		}
 		dataJsonRsp["DATA"] = data;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue)
 {
@@ -1970,7 +1973,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 		}
 		dataJsonRsp["DATA"] = data;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue)
 {
@@ -2008,10 +2011,10 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 			}
 		}
 		respValue["DATA"] = data;
-		return 0;
+		return CODE_OK;
 	}
 	LOGW("OnRpcRemoveScenePirLightSensor error: %s", reqValue.toString().c_str());
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
@@ -2087,10 +2090,10 @@ int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["DATA"] = dataJson;
-		return 0;
+		return CODE_OK;
 	}
 	LOGW("OnRpcRemoveScenePirLightSensor error: %s", reqValue.toString().c_str());
-	return -1;
+	return CODE_ERROR;
 }
 
 /*
@@ -2177,7 +2180,7 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 		}
 		respValue["DATA"] = dataJsonRsp;
 	}
-	return 0;
+	return CODE_OK;
 }
 
 /**
@@ -2281,7 +2284,7 @@ int Gateway::OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue
 		}
 		respValue["DATA"] = dataJsonRsp;
 	}
-	return 0;
+	return CODE_OK;
 }
 
 /**
@@ -2362,7 +2365,7 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 		dataJsonRsp["STATUS"] = "SUCCESS";
 		respValue["DATA"] = dataJsonRsp;
 	}
-	return 0;
+	return CODE_OK;
 }
 /**
  * @brief
@@ -2393,11 +2396,11 @@ int Gateway::OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue)
 			uint16_t version = dataValue["version"].asInt();
 			Device *device = AddNewDevice(deviceId, name, mac, devicekey, addr, type, version, true, true);
 			respValue["code"] = 0;
-			return 0;
+			return CODE_OK;
 		}
 	}
 	respValue["code"] = -1;
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -2443,7 +2446,7 @@ int Gateway::OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("Format error");
 	}
 	respValue = reqValue;
-	return 0;
+	return CODE_OK;
 }
 
 //
@@ -2453,7 +2456,7 @@ int Gateway::OnRpcDelAllDevice(Json::Value &reqValue, Json::Value &respValue)
 	deviceList.clear();
 	bleProtocol->ResetFactory();
 	respValue["code"] = 0;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -2487,7 +2490,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("Format error");
 	}
 	respValue = reqValue;
-	return 1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -2522,7 +2525,7 @@ int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue)
@@ -2541,7 +2544,7 @@ int Gateway::OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respVal
 	}
 	respValue["CMD"] = "DEVICE_UPDATE";
 	respValue["DATA"] = dataValue;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
@@ -2563,7 +2566,7 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
@@ -2610,11 +2613,11 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 			{
 				dataJsonRsp["STATUS"] = 0;
 				respValue["DATA"] = dataJsonRsp;
-				return 0;
+				return CODE_OK;
 			}
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue)
@@ -2697,12 +2700,12 @@ int Gateway::OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 				{
 					respValue["code"] = 0;
 				}
-				return 0;
+				return CODE_OK;
 			}
 		}
 	}
 	respValue["code"] = err;
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -2780,7 +2783,7 @@ int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
@@ -2840,14 +2843,14 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 			{
 				LOGW("Scene %s not found", sceneId.c_str());
 			}
-			return 0;
+			return CODE_OK;
 		}
 		else
 		{
 			LOGW("CountDown failed");
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue)
@@ -2861,11 +2864,11 @@ int Gateway::OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue)
 		{
 			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
 			ruleList.erase(ruleList.find(ruleId));
-			return 0;
+			return CODE_OK;
 		}
-		return 0;
+		return CODE_OK;
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
@@ -2885,7 +2888,7 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 				string sum = dataValue["CHECK_SUM"].asString();
 				string url = dataValue["URL"].asString();
 				Ota::startOta(name, url, sum);
-				return 0;
+				return CODE_OK;
 			}
 		}
 	}
@@ -2893,5 +2896,5 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	return 0;
+	return CODE_OK;
 }

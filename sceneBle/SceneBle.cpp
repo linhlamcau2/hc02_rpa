@@ -23,7 +23,7 @@ int SceneBle::GetPositionDevice(Device *device)
 			return i;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB)

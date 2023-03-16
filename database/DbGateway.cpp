@@ -34,20 +34,20 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				gateway->setBleUnicast(ble_unicast);
 				gateway->setDormitory(dormitory);
 				gateway->setRefreshToken(refresh);
-				return 0;
+				return CODE_OK;
 			}
 			else if (s == SQLITE_DONE)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
 				LOGE("GatewayParse");
-				return 1;
+				return CODE_ERROR;
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Db::GatewayRead()

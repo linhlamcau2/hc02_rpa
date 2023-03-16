@@ -26,16 +26,16 @@ static int DeviceAttributeParse(sqlite3_stmt *stmt, void *ptr)
 			}
 			else if (s == SQLITE_DONE)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
 				LOGE("DeviceAttributeParse");
-				return 1;
+				return CODE_ERROR;
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Db::DeviceAttributeRead()
@@ -59,7 +59,7 @@ int Db::DeviceAttributeAddOrReplace(Device *device, int attributeId, double valu
 {
 	// string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES (\"" + device->GetMac() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
 	// return Sqlite_Exec(sql);
-	return 0;
+	return CODE_OK;
 }
 
 int Db::DeviceAttributeDel(Device *device, int attributeId)

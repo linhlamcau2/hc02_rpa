@@ -40,7 +40,7 @@ int Uart::Open(int baudrate)
 	if (tcgetattr(fd, &tty) != 0)
 	{
 		LOGE("Error %i from tcgetattr: %s", errno, strerror(errno));
-		return -1;
+		return CODE_ERROR;
 	}
 	tty.c_cflag &= ~PARENB;				 // Clear parity bit, disabling parity (most common)
 	tty.c_cflag &= ~CSTOPB;				 // Clear stop field, only one stop bit used in communication (most common)
@@ -74,7 +74,7 @@ int Uart::Open(int baudrate)
 	if (tcsetattr(fd, TCSANOW, &tty) != 0)
 	{
 		LOGE("Error %i from tcsetattr: %s", errno, strerror(errno));
-		return -1;
+		return CODE_ERROR;
 	}
 	uartThread = new thread(HandleInMessage, this);
 	uartThread->detach();
@@ -101,27 +101,27 @@ int Uart::ChangeBaudrate(int baudrate)
 	int rc1, rc2;
 
 	if (fd <= 0)
-		return -1;
+		return CODE_ERROR;
 	if (tcgetattr(fd, &tty) < 0)
 	{
 		printf("Error from tcgetattr: %s\n", strerror(errno));
-		return -1;
+		return CODE_ERROR;
 	}
 	rc1 = cfsetospeed(&tty, baudrate);
 	rc2 = cfsetispeed(&tty, baudrate);
 	if ((rc1 | rc2) != 0)
 	{
 		printf("Error from cfsetxspeed: %s\n", strerror(errno));
-		return -1;
+		return CODE_ERROR;
 	}
 	if (tcsetattr(fd, TCSANOW, &tty) != 0)
 	{
 		printf("Error from tcsetattr: %s\n", strerror(errno));
-		return -1;
+		return CODE_ERROR;
 	}
 	tcflush(fd, TCIOFLUSH); /* discard buffers */
 
-	return 0;
+	return CODE_OK;
 }
 
 ssize_t Uart::Read(void *buf, size_t count)
@@ -178,5 +178,5 @@ static void HandleInMessage(Uart *uart)
 int Uart::OnMessage(unsigned char *data, int len)
 {
 	LOGE("OnMessage len: %d, data: %s", len, data);
-	return 0;
+	return CODE_ERROR;
 }

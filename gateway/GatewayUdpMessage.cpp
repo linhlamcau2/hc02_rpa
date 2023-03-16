@@ -20,7 +20,7 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		string dormitoryId = reqValue["DORMITORY_ID"].asString();
 		if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
 		{
-			return -1;
+			return CODE_ERROR;
 		}
 		// string macGw;
 		// for (int i = 0; i < 5; i++)
@@ -34,13 +34,13 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		respValue["TLS"] = false;
 		respValue["MQTT_PORT"] = 1883;
 		respValue["VERSION"] = STR(VERSION);
-		return 0;
+		return CODE_OK;
 	}
 	else
 	{
 		LOGW("OnUdpScanHc payload: %s error", reqValue.toString().c_str());
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
@@ -65,7 +65,7 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 			respValue.append(wifiResp);
 		}
 	}
-	return 10; // respValue as an array
+	return CODE_DATA_ARRAY;
 #else
 	string rqi = "";
 	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
@@ -96,7 +96,7 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 				respValue["TO"] = toRsp;
 				Wifi::ScanWifi(dataRsp);
 				respValue["DATA"] = dataRsp;
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
@@ -113,7 +113,7 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
 	}
 
-	return -1;
+	return CODE_ERROR;
 #endif
 }
 
@@ -182,7 +182,7 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 						fromRsp["DORMITORY_ID"] = dormitoryId;
 						respValue["FROM"] = fromRsp;
 						GatewayConnectToCloudNotice();
-						return 0;
+						return CODE_OK;
 					}
 					else
 					{
@@ -216,7 +216,7 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 									respValue["FROM"] = fromRsp;
 								}
 								GatewayConnectToCloudNotice();
-								return 0;
+								return CODE_OK;
 							}
 							else
 							{
@@ -250,11 +250,11 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("OnUdpHcSetup payload: %s error", reqValue.toString().c_str());
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcConnectCloud");
-	return 1;
+	return CODE_ERROR;
 }

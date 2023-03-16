@@ -21,7 +21,7 @@ int Room::GetPositionDevice(Device *device)
 			return i;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 /**
@@ -140,11 +140,11 @@ int Room::DataConfigAdd(string data)
 	{
 		if (dataConfig[i] == data)
 		{
-			return -1;
+			return CODE_ERROR;
 		}
 	}
 	dataConfig.push_back(data);
-	return 0;
+	return CODE_OK;
 }
 
 int Room::DataConfigDel(string data)
@@ -154,8 +154,8 @@ int Room::DataConfigDel(string data)
 		if (dataConfig[i] == data)
 		{
 			dataConfig.erase(dataConfig.begin() + i);
-			return 0;
+			return CODE_OK;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }

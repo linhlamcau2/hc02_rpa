@@ -55,35 +55,25 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		{
 			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
 			int rs = onLocalCallbackFunc(payloadJson, respValue);
-			if (rs == 0)
+			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 			}
-			else if (rs == 1)
+			else if (rs == CODE_DATA_ARRAY)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-			}
-			else if (rs == -10)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
-				exit(1);
-			}
-			else if (rs == 2)
-			{
-				if (listMsgPush.size() > 0)
+				if (respValue.isArray())
 				{
-					for (uint32_t i = 0; i < listMsgPush.size(); i++)
+					for (auto &respV : respValue)
 					{
-						Publish(HC_RESPONSE_TOPIC, listMsgPush[i]);
+						Publish(HC_RESPONSE_TOPIC, respV.toString());
 					}
-					listMsgPush.clear();
 				}
-				else
-				{
-					LOGW("List msg push empty");
-				}
+			}
+			else if (rs == CODE_NOT_RESPONSE)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 			}
 			else
 			{
@@ -121,36 +111,27 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 		{
 			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncListV2[cmd];
 			int rs = onLocalCallbackFunc(payloadJson, respValue);
-			if (rs == 0)
+			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				respValue["rqi"] = rqi;
 				Publish(HC_RESPONSE_TOPIC_V2, respValue.toString());
 			}
-			else if (rs == 1)
+			else if (rs == CODE_DATA_ARRAY)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-			}
-			else if (rs == -10)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC_V2, respValue.toString());
-				exit(1);
-			}
-			else if (rs == 2)
-			{
-				if (listMsgPush.size() > 0)
+				if (respValue.isArray())
 				{
-					for (uint32_t i = 0; i < listMsgPush.size(); i++)
+					for (auto &respV : respValue)
 					{
-						Publish(HC_RESPONSE_TOPIC_V2, listMsgPush[i]);
+						respV["rqi"] = rqi;
+						Publish(HC_RESPONSE_TOPIC_V2, respV.toString());
 					}
-					listMsgPush.clear();
 				}
-				else
-				{
-					LOGW("List msg push empty");
-				}
+			}
+			else if (rs == CODE_NOT_RESPONSE)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 			}
 			else
 			{
@@ -180,14 +161,14 @@ int LocalProtocol::OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLoc
 {
 	LOGI("OnLocalCallbackRegister cmd: %s", cmd.c_str());
 	onLocalCallbackFuncList[cmd] = onLocalCallbackFunc;
-	return 0;
+	return CODE_OK;
 }
 
 int LocalProtocol::OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
 {
 	LOGI("OnLocalCallbackRegisterV2 cmd: %s", cmd.c_str());
 	onLocalCallbackFuncListV2[cmd] = onLocalCallbackFunc;
-	return 0;
+	return CODE_OK;
 }
 
 int LocalProtocol::PublishToLocalMessage(string payload)

@@ -41,7 +41,7 @@ int ZigbeeProtocol::RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCa
 {
 	LOGD("RegisterCmd type: 0x%04X", type);
 	onCmdCallbackFuncList[type] = onCmdCallbackFunc;
-	return 0;
+	return CODE_OK;
 }
 
 static uint8_t checCrC(uint16_t type, uint16_t len, uint8_t *payload)
@@ -66,7 +66,7 @@ void ZigbeeProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 	{
 		OnCmdCallbackFunc onCmdCallbackFunc = onCmdCallbackFuncList[type];
 		int rs = onCmdCallbackFunc(message_rsp->payload, len);
-		if (rs == 0)
+		if (rs == CODE_OK)
 		{
 			LOGD("onCmdCallbackFunc OK");
 		}
@@ -178,7 +178,7 @@ int ZigbeeProtocol::OnDeviceAnnounce(uint8_t *buff, uint16_t len)
 	if (len != 11)
 	{
 		LOGW("DeviceAnnounce format error");
-		return -1;
+		return CODE_ERROR;
 	}
 	typedef struct
 	{
@@ -193,7 +193,7 @@ int ZigbeeProtocol::OnDeviceAnnounce(uint8_t *buff, uint16_t len)
 	scanList[devAddr] = mac;
 	// DiscoveryActiveEndpoint(devAddr);
 	ReadAttribute(devAddr);
-	return 0;
+	return CODE_OK;
 }
 
 int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
@@ -213,13 +213,13 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 		{
 			LOGW("Zigbee device 0x%04X not found", srcAddr);
 		}
-		return 0;
+		return CODE_OK;
 	}
 	else
 	{
 		LOGW("OnReportAttribute format error");
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
@@ -366,7 +366,7 @@ int ZigbeeProtocol::CommissionFormation()
 {
 	LOGD("CommissionFormation");
 	int rs = SendMessage(ZBHCI_CMD_BDB_COMMISSION_FORMATION, 0, 0, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("CommissionFormation ok");
 	}
@@ -381,7 +381,7 @@ int ZigbeeProtocol::ResetFactory()
 {
 	LOGD("ResetFactory");
 	int rs = SendMessage(ZBHCI_CMD_BDB_FACTORY_RESET, 0, 0, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("ResetFactory ok");
 	}
@@ -396,7 +396,7 @@ int ZigbeeProtocol::SetChannel(uint8_t channel)
 {
 	LOGD("SetChannel");
 	int rs = SendMessage(ZBHCI_CMD_BDB_CHANNEL_SET, &channel, 1, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 5000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("SetChannel ok");
 	}
@@ -422,7 +422,7 @@ int ZigbeeProtocol::DiscoverySimpleDescription(uint16_t addr, uint8_t endpoint)
 	discovery_simple_description.endpoint = endpoint;
 
 	int rs = SendMessage(ZBHCI_CMD_DISCOVERY_SIMPLE_DESC_REQ, (uint8_t *)&discovery_simple_description, 5, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("DiscoverySimpleDescription ok");
 	}
@@ -446,7 +446,7 @@ int ZigbeeProtocol::DiscoveryActiveEndpoint(uint16_t addr)
 	discovery_active_endpoint.nwkAddrOfInterest = bswap_16(addr);
 
 	int rs = SendMessage(ZBHCI_CMD_DISCOVERY_ACTIVE_EP_REQ, (uint8_t *)&discovery_active_endpoint, 4, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("DiscoveryActiveEndpoint ok");
 	}
@@ -471,7 +471,7 @@ int ZigbeeProtocol::PermitJoin(uint8_t duration)
 			.permitDuration = duration,
 			.TC_significance = 1};
 	int rs = SendMessage(ZBHCI_CMD_MGMT_PERMIT_JOIN_REQ, (uint8_t *)&permit_join_req, sizeof(permit_join_req), ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("PermitJoin ok");
 	}
@@ -518,7 +518,7 @@ int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 	read_attribute_req.attrList[4] = ATTRIBUTE_BASIC_PowerSource;
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ATTR_READ, (uint8_t *)&read_attribute_req, 11 + 2 * read_attribute_req.attrNum, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("ReadAttribute ok");
 	}
@@ -557,7 +557,7 @@ int ZigbeeProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 	add_group.groupName[1] = 'b';
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_GROUP_ADD, (uint8_t *)&add_group, 9, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("AddGroup ok");
 	}
@@ -591,7 +591,7 @@ int ZigbeeProtocol::ZCLOnoffDevice(uint16_t devAddr, uint8_t func)
 	zcl_onoff.dstEp = 0xFF;
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ONOFF_ON + func, (uint8_t *)&zcl_onoff, 5, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("ZCLOnoffDevice ok");
 	}
@@ -623,7 +623,7 @@ int ZigbeeProtocol::ZCLOnoffGroup(uint16_t groupAddr, uint8_t func)
 	zcl_onoff.srcEp = 0x01;
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ONOFF_ON + func, (uint8_t *)&zcl_onoff, 4, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
-	if (rs == 0)
+	if (rs == CODE_OK)
 	{
 		LOGD("ZCLOnoffGroup ok");
 	}
