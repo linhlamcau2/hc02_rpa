@@ -82,6 +82,12 @@ int Mqtt::Connect()
 		LOGE("loop_start failed code %d, err %s", result, mosqpp::strerror(result));
 	}
 	return result;
+	if (result == MOSQ_ERR_SUCCESS)
+	{
+		return CODE_OK;
+	}
+	LOGW("Connect err: %d", result);
+	return CODE_ERROR;
 }
 
 int Mqtt::Reconnect()
