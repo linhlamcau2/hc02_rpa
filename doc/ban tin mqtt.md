@@ -1,3 +1,13 @@
+Thiết bị gửi lên server, server phản hồi:
+- v1/json/req/<mac>/server -> v1/json/resp/server/<mac>
+
+Server gửi xuống thiết bị, thiết bị phản hồi:
+- v1/json/req/server/<mac> -> v1/json/resp/<mac>/server
+
+*note:
+- req, resp: loại bản tin
+- <mac>/server, server/<mac>: chiều đi của bản tin
+
 # Bản tin MQTT
 
 ## I. Bản tin điều khiển
