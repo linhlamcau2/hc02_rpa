@@ -18,24 +18,7 @@
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
 #include "FileTransfer.h"
-
 #include "BleProtocol.h"
-
-#ifndef BLE_UART_PORT
-#ifdef __OPENWRT__
-#define BLE_UART_PORT "/dev/ttyS1"
-#elif defined(__ANDROID__)
-#define BLE_UART_PORT "/dev/ttyS5"
-#elif defined(ESP_PLATFORM)
-#else
-#define BLE_UART_PORT "/dev/ttyUSB0"
-#endif
-#endif
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-#include "ZigbeeProtocol.h"
-#define ZIGBEE_UART_PORT "/dev/ttyS0"
-#endif
 
 #define TAG "MAIN"
 

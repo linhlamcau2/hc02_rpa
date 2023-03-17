@@ -1129,3 +1129,13 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 	}
 	return NULL;
 }
+
+int Gateway::pushDeviceUpdateLocalV2(Json::Value &dataValue)
+{
+	return PublishToLocalMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+}
+
+int Gateway::pushDeviceUpdateCloudV2(Json::Value &dataValue)
+{
+	return PublishToCloudMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+}

@@ -5,6 +5,8 @@
 #include <functional>
 #include <thread>
 #include "json.h"
+#include "Define.h"
+#include "ErrorCode.h"
 #include "CloudProtocol.h"
 #include "LocalProtocol.h"
 #include "Udp.h"
@@ -15,18 +17,9 @@
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
 #include "Room.h"
-#include "ErrorCode.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
-#endif
-
-#ifndef MODEL
-#define MODEL "RD_HC"
-#endif
-
-#ifndef VERSION
-#define VERSION "0.0.1"
 #endif
 
 #define STR_(x) #x
@@ -180,6 +173,7 @@ private:
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
+	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
@@ -245,6 +239,9 @@ public:
 	Rule *AddRuleV2(Json::Value &ruleValue);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 	Room *AddNewRoom(Room *room);
+
+	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
+	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
 };
 
 extern Gateway *gateway;
