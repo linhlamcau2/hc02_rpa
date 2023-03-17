@@ -1,15 +1,20 @@
 #include "CloudProtocol.h"
+#include <string.h>
+#include <unistd.h>
 #include "Log.h"
 #include "Util.h"
 #include "Wifi.h"
-#include <string.h>
 
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
-	subTopic = "/v1/server/hc/" + mac + "/json";
-	pubTopic = "/v1/hc/" + mac + "/server/json";
-	subTopicV2 = "/v2/server/hc/" + mac + "/json";
-	pubTopicV2 = "/v2/hc/" + mac + "/server/json";
+	this->mac = mac;
+	subTopicV1 = "v1/json/server/" + mac;
+	pubTopicV1 = "v1/json/" + mac + "/server";
+
+	subReqTopicV2 = "v2/json/req/server/" + mac;
+	subRespTopicV2 = "v2/json/resp/server/" + mac;
+	pubReqTopicV2 = "v2/json/req/" + mac + "/server";
+	pubRespTopicV2 = "v2/json/resp/" + mac + "/server";
 
 	Json::Value jsonValue;
 	Json::Value datanValue;
@@ -17,7 +22,7 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 	datanValue["IP_ADDRESS"] = Wifi::GetIP();
 	jsonValue["CMD"] = "HOME_CONTROLLER";
 	jsonValue["DATA"] = datanValue;
-	SetWillset(pubTopic, jsonValue.toString());
+	SetWillset(pubTopicV1, jsonValue.toString());
 }
 
 CloudProtocol::~CloudProtocol()
@@ -27,8 +32,9 @@ CloudProtocol::~CloudProtocol()
 void CloudProtocol::init()
 {
 	Mqtt::init();
-	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopic);
-	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subTopicV2);
+	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopicV1);
+	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
+	addActionCallback(bind(&CloudProtocol::OnServerRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -79,7 +85,7 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(pubTopic, respValue.toString());
+				Publish(pubTopicV1, respValue.toString());
 			}
 			else if (rs == CODE_DATA_ARRAY)
 			{
@@ -88,7 +94,7 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 				{
 					for (auto &respV : respValue)
 					{
-						Publish(pubTopic, respV.toString());
+						Publish(pubTopicV1, respV.toString());
 					}
 				}
 			}
@@ -138,7 +144,7 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				respValue["rqi"] = rqi;
-				Publish(pubTopicV2, respValue.toString());
+				Publish(pubRespTopicV2, respValue.toString());
 			}
 			else if (rs == CODE_DATA_ARRAY)
 			{
@@ -148,7 +154,7 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 					for (auto &respV : respValue)
 					{
 						respV["rqi"] = rqi;
-						Publish(pubTopicV2, respV.toString());
+						Publish(pubRespTopicV2, respV.toString());
 					}
 				}
 			}
@@ -176,6 +182,47 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 	Util::LedServiceUnlock();
 }
 
+void CloudProtocol::OnServerRespV2(string &topic, string &payload)
+{
+	Json::Value respValue;
+	Json::Value payloadJson;
+	Json::Reader r;
+	r.parse(payload, payloadJson);
+	Util::LedInternet(false);
+	Util::LedServiceLock();
+	if (payloadJson.isObject() &&
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (requestList.find(rqi) != requestList.end())
+		{
+			request_t *request = requestList[rqi];
+			if (cmd == request->respCmd)
+			{
+				request->status = true;
+				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
+				{
+					*request->respValue = payloadJson["data"];
+				}
+			}
+		}
+		else
+		{
+			LOGW("rqi %s not found", rqi.c_str());
+			LOGW("OnLocalRespV2 payload: %s", payload.c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnLocalRespV2 topic: %s", topic.c_str());
+		LOGW("OnLocalRespV2 payload: %s", payload.c_str());
+	}
+	Util::LedInternet(true);
+	Util::LedServiceUnlock();
+}
+
 int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
 {
 	LOGI("OnDeviceRpcCallbackRegister cmd: %s", cmd.c_str());
@@ -198,7 +245,7 @@ int CloudProtocol::OnlineHC(string deviceName)
 	datanValue["IP_ADDRESS"] = Wifi::GetIP();
 	jsonValue["CMD"] = "HOME_CONTROLLER";
 	jsonValue["DATA"] = datanValue;
-	return Publish(pubTopic, jsonValue.toString());
+	return Publish(pubTopicV1, jsonValue.toString());
 }
 
 int CloudProtocol::CloudPublish(string topic, string payload)
@@ -214,22 +261,22 @@ int CloudProtocol::CloudPublish(string topic, char *payload, int payloadLen)
 
 int CloudProtocol::PublishToDeviceTelemetry(string payload)
 {
-	return Publish(pubTopic, payload);
+	return Publish(pubTopicV1, payload);
 }
 
 int CloudProtocol::PublishToDeviceAttributes(string payload)
 {
-	return Publish(pubTopic, payload);
+	return Publish(pubTopicV1, payload);
 }
 
 int CloudProtocol::PublishToGatewayTelemetry(string payload)
 {
-	return Publish(pubTopic, payload);
+	return Publish(pubTopicV1, payload);
 }
 
 int CloudProtocol::PublishToGatewayAttributes(string payload)
 {
-	return Publish(pubTopic, payload);
+	return Publish(pubTopicV1, payload);
 }
 
 int CloudProtocol::PublishToDeviceTelemetry(Json::Value payloadJson)
@@ -250,4 +297,33 @@ int CloudProtocol::PublishToGatewayTelemetry(Json::Value payloadJson)
 int CloudProtocol::PublishToGatewayAttributes(Json::Value payloadJson)
 {
 	return PublishToGatewayAttributes(payloadJson.toString());
+}
+
+int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
+{
+	LOGD("PublishToCloudMessageV2: %s", reqValue.toString().c_str());
+	int rs = CODE_OK;
+	Json::Value sendValue;
+	string rqi = Util::genRandRQI(16);
+	sendValue["data"] = reqValue;
+	sendValue["rqi"] = rqi;
+	sendValue["cmd"] = reqCmd;
+	request_t request = {
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
+	};
+	requestList[rqi] = &request;
+	Publish(pubReqTopicV2, sendValue.toString());
+	while (!request.status && --timeout)
+	{
+		usleep(1000);
+	}
+	if (!request.status)
+	{
+		rs = CODE_ERROR;
+	}
+	requestList.erase(rqi);
+	LOGD("PublishToCloudMessageV2 rs: %d", rs);
+	return rs;
 }

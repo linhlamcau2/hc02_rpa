@@ -37,6 +37,7 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("delDevFromRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("SSHRemote", bind(&Gateway::OnSSHRemote, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
@@ -61,6 +62,7 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("delDevFromRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("SSHRemote", bind(&Gateway::OnSSHRemote, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -318,7 +320,8 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 	Json::Value dataValue;
 	dataValue["mac"] = mac;
 	dataValue["ip"] = Wifi::GetIP();
-	dataValue["name"] = STR(MODEL);
+	dataValue["name"] = "RD HC";
+	dataValue["type"] = MODEL;
 	dataValue["ver"] = STR(VERSION);
 	respValue["data"] = dataValue;
 	respValue["cmd"] = "getInfoHcRsp";
@@ -1177,5 +1180,93 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 	ResetFactory();
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnSSHRemote(Json::Value &reqValue, Json::Value &respValue)
+{
+	int err = 0;
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("type") && data["type"].isString() &&
+				data.isMember("key") && data["key"].isString() &&
+				data.isMember("user") && data["user"].isString() &&
+				data.isMember("host") && data["host"].isString() &&
+				data.isMember("serverPort") && data["serverPort"].isInt() &&
+				data.isMember("forwardPort") && data["forwardPort"].isInt())
+		{
+			string key = "";
+			string type = data["type"].asString();
+			string user = data["user"].asString();
+			string host = data["host"].asString();
+			uint32_t serverPort = data["serverPort"].asInt();
+			uint32_t forwardPort = data["forwardPort"].asInt();
+			uint32_t localPort = 22;
+			if (data.isMember("localPort") && data["localPort"].isInt())
+			{
+				localPort = data["localPort"].asInt();
+			}
+			if (type == "base64")
+			{
+				string keyBase64 = data["key"].asString();
+				string decode = macaron::Base64::Decode(keyBase64, key);
+				if (decode != "")
+				{
+					err = 1;
+					LOGW("Base64 decode err: %s", decode.c_str());
+				}
+			}
+			else
+			{
+				key = data["key"].asString();
+			}
+
+			if (err == 0)
+			{
+				// save key file
+				system("rm /key.txt");
+				system("rm /output.txt");
+				ofstream keyFile("/key.txt");
+				keyFile << key;
+				keyFile.close();
+
+				system("chmod 600 /key.txt");
+				system("killall ssh");
+				string cmd = "ssh -i /key.txt -o StrictHostKeyChecking=no -f -N -T -R" + to_string(forwardPort) + ":localhost:" + to_string(localPort) + " " + user + "@" + host + " -p " + to_string(serverPort);
+				cmd += " >> /output.txt 2>&1";
+				LOGI("cmd: %s", cmd.c_str());
+				system(cmd.c_str());
+				sleep(2);
+				bool err = false;
+				FILE *fp = fopen("/output.txt", "r");
+				char path[512] = {0};
+				if (fp)
+				{
+					while (fgets(path, sizeof(path), fp) != NULL)
+					{
+						if (strlen(path) > 1)
+						{
+							LOGW("SSH err: %s", path);
+							err = true;
+							break;
+						}
+					}
+					fclose(fp);
+				}
+				if (err)
+				{
+					respValue["msg"] = string(path);
+					respValue["code"] = 1;
+				}
+				else
+				{
+					respValue["code"] = 0;
+				}
+				return CODE_OK;
+			}
+		}
+	}
+	respValue["code"] = err;
 	return CODE_OK;
 }

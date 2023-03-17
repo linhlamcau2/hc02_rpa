@@ -10,14 +10,6 @@
 #include "SceneBle.h"
 #include "Room.h"
 
-#ifdef ESP_PLATFORM
-#define DB_NAME "/spiffs/smh.sqlite"
-#elif defined(__ANDROID__)
-#define DB_NAME "/etc/smh/smh.sqlite"
-#else
-#define DB_NAME "/smh.sqlite"
-#endif
-
 using namespace std;
 
 class Db

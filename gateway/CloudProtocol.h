@@ -9,10 +9,22 @@ using namespace std;
 class CloudProtocol : public Mqtt
 {
 private:
-	string subTopic;
-	string pubTopic;
-	string subTopicV2;
-	string pubTopicV2;
+	typedef struct
+	{
+		bool status;
+		string respCmd;
+		Json::Value *respValue;
+	} request_t;
+	map<string, request_t *> requestList;
+
+	string mac;
+	string subTopicV1;
+	string pubTopicV1;
+
+	string subReqTopicV2;
+	string subRespTopicV2;
+	string pubReqTopicV2;
+	string pubRespTopicV2;
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
@@ -20,6 +32,7 @@ private:
 
 	void OnDeviceRpc(string &topic, string &payload);
 	void OnDeviceRpcV2(string &topic, string &payload);
+	void OnServerRespV2(string &topic, string &payload);
 
 public:
 	CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
@@ -52,4 +65,6 @@ public:
 	int PublishToDeviceAttributes(Json::Value payloadJson);
 	int PublishToGatewayTelemetry(Json::Value payloadJson);
 	int PublishToGatewayAttributes(Json::Value payloadJson);
+
+	int PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
 };

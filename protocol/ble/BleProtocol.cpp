@@ -93,6 +93,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		}
 		break;
 	}
+
 	case HCI_GATEWAY_CMD_SEND_NODE_INFO:
 	{
 		for (int i = 0; i < 16; i++)
@@ -101,7 +102,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		}
 		break;
 	}
-
+	
 	default:
 		break;
 	}
@@ -187,7 +188,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data, int compare_position, int compare_len)
 {
 	// mtxWaitSendUart.lock();
-	int rs = 0;
+	int rs = CODE_OK;
 	if (pthread_mutex_lock(&mutex) == 0)
 	{
 		message_rsp_list_st message_rsp_list = {
@@ -222,11 +223,10 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 				usleep(1000);
 				--timeout;
 			}
-			if (message_rsp_list.status)
+			if (!message_rsp_list.status)
 			{
+				rs = CODE_ERROR;
 			}
-			else
-				rs = -1;
 			messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
 		}
 		else
@@ -320,14 +320,12 @@ int BleProtocol::GetNetKey()
 			string devicekeyGwStr = arrayToString844412((uint8_t *)gwKey);
 			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
 			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
-
-			rs = 1;
 		}
 	}
 	else
 	{
 		LOGE("Send GetNetKey error, rs: %d", rs);
-		rs = 1;
+		rs = CODE_ERROR;
 	}
 	return rs;
 }
