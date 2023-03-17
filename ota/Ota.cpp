@@ -5,7 +5,7 @@ void Ota::init()
 {
 }
 
-bool Ota::startOta(string name, string url, string sum)
+int Ota::startOta(string name, string url, string sum)
 {
 	return CODE_ERROR;
 }

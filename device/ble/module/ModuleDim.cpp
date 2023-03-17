@@ -25,7 +25,7 @@ void ModuleDim::SaveAttribute()
 }
 #endif
 
-bool ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -45,9 +45,9 @@ bool ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
@@ -108,7 +108,7 @@ void ModuleDim::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
 }
 
-bool ModuleDim::Do(Json::Value &dataValue)
+int ModuleDim::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -121,13 +121,13 @@ bool ModuleDim::Do(Json::Value &dataValue)
 			int value = dataValue["VALUE"].asInt();
 			uint16_t dim = (value * 65535) / 100;
 			bleProtocol->SetDimmingLight(addr, dim, 0, true);
-			return true;
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleDim::DoV2(Json::Value &dataValue)
+int ModuleDim::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -139,7 +139,7 @@ bool ModuleDim::DoV2(Json::Value &dataValue)
 		{
 			this->dim = dim;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

@@ -30,7 +30,7 @@ void ModuleSmoke::SaveAttribute()
 }
 #endif
 
-bool ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x08 && data[2] == 0x01)
 	{
@@ -44,9 +44,9 @@ bool ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		power = (data_message->power);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleSmoke::CheckData(Json::Value &dataValue, bool &rs)

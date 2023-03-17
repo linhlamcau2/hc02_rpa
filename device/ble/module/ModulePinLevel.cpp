@@ -25,16 +25,16 @@ void ModulePinLevel::SaveAttribute()
 }
 #endif
 
-bool ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x01 && data[2] == 0x00)
 	{
 		pin = data[4];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)

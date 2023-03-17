@@ -24,8 +24,8 @@ public:
 	SceneBle(string id, uint32_t addr, string name);
 	
 	int GetPositionDevice(Device *device);
-	bool AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
-	bool AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB);
-	bool DelDevice(Device *device);
-	bool Do();
+	int AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
+	int AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB);
+	int DelDevice(Device *device);
+	int Do();
 };

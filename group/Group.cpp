@@ -41,13 +41,13 @@ int Group::GetPositionDevice(Device *device)
  * @return true success
  * @return false fail
  */
-bool Group::AddDevice(Device *device, int epId, bool sendBle)
+int Group::AddDevice(Device *device, int epId, bool sendBle)
 {
 	// TODO: Check exsit
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
-	// 	return false;
+	// 	return CODE_ERROR;
 	if (!device)
-		return false;
+		return CODE_ERROR;
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -60,7 +60,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 				{
 					deviceList.push_back(deviceInGroup);
 					numberOfBleDevice++;
-					return true;
+					return CODE_OK;
 				}
 			}
 			else
@@ -74,7 +74,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
-				return true;
+				return CODE_OK;
 			}
 		}
 	}
@@ -90,7 +90,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 				deviceList.push_back(deviceInGroup);
 				numberOfZigbeeDevice++;
 			}
-			return true;
+			return CODE_OK;
 		}
 		else
 		{
@@ -98,10 +98,10 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 		}
 	}
 #endif
-	return false;
+	return CODE_ERROR;
 }
 
-bool Group::DelDevice(Device *device, int epId)
+int Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -112,7 +112,7 @@ bool Group::DelDevice(Device *device, int epId)
 			{
 				deviceList.erase(deviceList.begin() + deviceIndex);
 			}
-			return true;
+			return CODE_OK;
 		}
 	}
 
@@ -127,10 +127,10 @@ bool Group::DelDevice(Device *device, int epId)
 	// TODO: remove from list
 	// if (device)
 	// 	deviceList.erase(remove(deviceList.begin(), deviceList.end(), device), deviceList.end());
-	return false;
+	return CODE_ERROR;
 }
 
-bool Group::Do(Json::Value &dataValue)
+int Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBle();
@@ -141,10 +141,10 @@ bool Group::Do(Json::Value &dataValue)
 	doZigbeeThread.detach();
 #endif
 
-	return true;
+	return CODE_OK;
 }
 
-bool Group::DoV2(Json::Value &dataValue)
+int Group::DoV2(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBleV2();
@@ -155,7 +155,7 @@ bool Group::DoV2(Json::Value &dataValue)
 	doZigbeeThread.detach();
 #endif
 
-	return true;
+	return CODE_OK;
 }
 
 void Group::DoBle()

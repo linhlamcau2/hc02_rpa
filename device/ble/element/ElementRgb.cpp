@@ -60,7 +60,7 @@ void ElementRgb::SaveAttribute()
 }
 #endif
 
-bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -87,9 +87,9 @@ bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ElementRgb::CheckData(Json::Value &dataValue, bool &rs)
@@ -179,7 +179,7 @@ void ElementRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
 }
 
 // TODO: viet anh recheck DoJsonArray
-bool ElementRgb::DoJsonArray(Json::Value &dataValue)
+int ElementRgb::DoJsonArray(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isArray())
@@ -226,10 +226,10 @@ bool ElementRgb::DoJsonArray(Json::Value &dataValue)
 			bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ElementRgb::DoV2(Json::Value &dataValue)
+int ElementRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -252,7 +252,7 @@ bool ElementRgb::DoV2(Json::Value &dataValue)
 			this->dimOn = dimOn;
 			this->dimOff = dimOff;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

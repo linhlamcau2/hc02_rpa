@@ -28,11 +28,11 @@ int Room::GetPositionDevice(Device *device)
  * Id room là id group tất cả thiết bị trong phòng
  * Lấy unicast room là unicast group tất cả thiết bị
  */
-bool Room::AddDevice(Device *device, bool sendBle)
+int Room::AddDevice(Device *device, bool sendBle)
 {
 	if (!device)
 	{
-		return false;
+		return CODE_ERROR;
 	}
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -47,7 +47,7 @@ bool Room::AddDevice(Device *device, bool sendBle)
 					if (GetPositionDevice(device) == -1)
 					{
 						deviceList.push_back(deviceInRoom);
-						return true;
+						return CODE_OK;
 					}
 				}
 			}
@@ -63,20 +63,20 @@ bool Room::AddDevice(Device *device, bool sendBle)
 				if (GetPositionDevice(device) == -1)
 				{
 					deviceList.push_back(deviceInRoom);
-					return true;
+					return CODE_OK;
 				}
 			}
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool Room::AddDevice2(Device *device, bool sendBle)
+int Room::AddDevice2(Device *device, bool sendBle)
 {
 	LOGW("AddDevice2");
 	if (!device)
 	{
-		return false;
+		return CODE_ERROR;
 	}
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -90,7 +90,7 @@ bool Room::AddDevice2(Device *device, bool sendBle)
 					if (GetPositionDevice(device) == -1)
 					{
 						deviceList.push_back(deviceInRoom);
-						return true;
+						return CODE_OK;
 					}
 				}
 			}
@@ -106,15 +106,15 @@ bool Room::AddDevice2(Device *device, bool sendBle)
 				if (GetPositionDevice(device) == -1)
 				{
 					deviceList.push_back(deviceInRoom);
-					return true;
+					return CODE_OK;
 				}
 			}
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool Room::DelDevice(Device *device)
+int Room::DelDevice(Device *device)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -123,15 +123,15 @@ bool Room::DelDevice(Device *device)
 		{
 			deviceList.erase(deviceList.begin() + deviceIndex);
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool Room::DelDevice2(Device *device)
+int Room::DelDevice2(Device *device)
 {
 	LOGW("DelDevice2");
-	return false;
+	return CODE_ERROR;
 }
 
 int Room::DataConfigAdd(string data)

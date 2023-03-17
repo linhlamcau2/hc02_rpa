@@ -180,7 +180,7 @@ void Device::CheckTrigger()
 	}
 }
 
-bool Device::DoJsonArray(Json::Value &dataValue)
+int Device::DoJsonArray(Json::Value &dataValue)
 {
 	if (dataValue.isArray())
 	{
@@ -193,10 +193,10 @@ bool Device::DoJsonArray(Json::Value &dataValue)
 	{
 		Do(dataValue);
 	}
-	return true;
+	return CODE_OK;
 }
 
-bool Device::DoJsonArrayV2(Json::Value &dataValue)
+int Device::DoJsonArrayV2(Json::Value &dataValue)
 {
 	if (dataValue.isArray())
 	{
@@ -209,10 +209,10 @@ bool Device::DoJsonArrayV2(Json::Value &dataValue)
 	{
 		DoV2(dataValue);
 	}
-	return true;
+	return CODE_OK;
 }
 
-bool Device::Do(Json::Value &dataValue)
+int Device::Do(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{
@@ -225,7 +225,7 @@ bool Device::Do(Json::Value &dataValue)
 	return CODE_OK;
 }
 
-bool Device::DoV2(Json::Value &dataValue)
+int Device::DoV2(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{

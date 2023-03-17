@@ -2,6 +2,7 @@
 
 #include <string>
 #include "json.h"
+#include "ErrorCode.h"
 
 using namespace std;
 
@@ -26,7 +27,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	virtual bool InputData(uint8_t *data, int len, Json::Value &jsonValue) { return false; }
+	virtual int InputData(uint8_t *data, int len, Json::Value &jsonValue) { return CODE_ERROR; }
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	/**
@@ -50,7 +51,7 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	virtual bool Do(Json::Value &dataValue) { return false; }
+	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
 
 	/**
 	 * @brief Do an action use message format version 2
@@ -59,5 +60,5 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	virtual bool DoV2(Json::Value &dataValue) { return false; }
+	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
 };

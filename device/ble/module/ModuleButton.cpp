@@ -30,16 +30,16 @@ void ModuleButton::SaveAttribute()
 }
 #endif
 
-bool ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00 && data[3] + 10 == id)
 	{
 		bt = data[4];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
@@ -104,7 +104,7 @@ void ModuleButton::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[key] = bt;
 }
 
-bool ModuleButton::Do(Json::Value &dataValue)
+int ModuleButton::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
@@ -114,13 +114,13 @@ bool ModuleButton::Do(Json::Value &dataValue)
 		{
 			int value = dataValue["VALUE"].asInt();
 			bleProtocol->SetOnOffLight(addr, value, 0, true);
-			return true;
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleButton::DoV2(Json::Value &dataValue)
+int ModuleButton::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -131,7 +131,7 @@ bool ModuleButton::DoV2(Json::Value &dataValue)
 		{
 			this->bt = bt;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
