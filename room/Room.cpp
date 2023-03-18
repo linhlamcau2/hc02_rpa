@@ -21,7 +21,7 @@ int Room::GetPositionDevice(Device *device)
 			return i;
 		}
 	}
-	return CODE_ERROR;
+	return -1;
 }
 
 /**
@@ -134,28 +134,12 @@ int Room::DelDevice2(Device *device)
 	return CODE_ERROR;
 }
 
-int Room::DataConfigAdd(string data)
+string Room::GetDataConfig()
 {
-	for (uint32_t i = 0; i < dataConfig.size(); i++)
-	{
-		if (dataConfig[i] == data)
-		{
-			return CODE_ERROR;
-		}
-	}
-	dataConfig.push_back(data);
-	return CODE_OK;
+	return dataConfig;
 }
 
-int Room::DataConfigDel(string data)
+void Room::SetDataConfig(string dataConfig)
 {
-	for (uint32_t i = 0; i < dataConfig.size(); i++)
-	{
-		if (dataConfig[i] == data)
-		{
-			dataConfig.erase(dataConfig.begin() + i);
-			return CODE_OK;
-		}
-	}
-	return CODE_ERROR;
+	this->dataConfig = dataConfig;
 }

@@ -131,7 +131,7 @@ protected:
 	uint16_t version;
 	int rssi;
 	protocol_e protocol;
-	string device_id;
+	string data;
 	int countElement;
 	Json::Value values; // telemetry data
 
@@ -147,14 +147,14 @@ public:
 	time_t lastTimeCheck;
 
 public:
-	Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
+	Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
 	string GetMac();
 	uint32_t GetType();
 	uint16_t GetVersion();
 	string GetVersionStr();
-	string GetDeviceId();
+	string GetData();
 	int GetRSSI();
 
 	void SetRSSI(int rssi);

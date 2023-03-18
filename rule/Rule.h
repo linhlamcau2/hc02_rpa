@@ -25,6 +25,7 @@ class Rule : public Object
 {
 private:
 	string type;
+	string name;
 	unsigned char repeater;
 	bool fullDay;
 	int startTime;

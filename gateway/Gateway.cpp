@@ -57,6 +57,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->dormitoryId = "";
 	this->refresh_token = "";
 	this->ble_unicast = 0;
+	this->ble_iv_index = 0;
 	this->ble_appkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
@@ -96,6 +97,13 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 	return NULL;
 }
 
+void Gateway::delDevice(Device *device)
+{
+	deviceList.erase(device->GetId());
+	database->DeviceDel(device);
+	delete device;
+}
+
 Group *Gateway::getGroupFromId(string id)
 {
 	if (groupList.find(id) != groupList.end())
@@ -115,6 +123,13 @@ Group *Gateway::getGroupFromAddr(int addr)
 		}
 	}
 	return NULL;
+}
+
+void Gateway::delGroup(Group *group)
+{
+	groupList.erase(group->GetId());
+	database->GroupDel(group);
+	delete group;
 }
 
 SceneBle *Gateway::getSceneBleFromId(string id)
@@ -138,6 +153,13 @@ SceneBle *Gateway::getSceneBleFromAddr(int addr)
 	return NULL;
 }
 
+void Gateway::delSceneBle(SceneBle *sceneBle)
+{
+	sceneBleList.erase(sceneBle->GetId());
+	database->SceneBleDel(sceneBle);
+	delete sceneBle;
+}
+
 Rule *Gateway::getRuleFromId(string id)
 {
 	if (ruleList.find(id) != ruleList.end())
@@ -147,6 +169,13 @@ Rule *Gateway::getRuleFromId(string id)
 	return NULL;
 }
 
+void Gateway::delRule(Rule *rule)
+{
+	ruleList.erase(rule->GetId());
+	database->RuleDel(rule);
+	delete rule;
+}
+
 Room *Gateway::getRoomFromId(string id)
 {
 	if (roomList.find(id) != roomList.end())
@@ -154,6 +183,13 @@ Room *Gateway::getRoomFromId(string id)
 		return roomList[id];
 	}
 	return NULL;
+}
+
+void Gateway::delRoom(Room *room)
+{
+	roomList.erase(room->GetId());
+	database->RoomDel(room);
+	delete room;
 }
 
 void Gateway::init()
@@ -175,7 +211,7 @@ void Gateway::init()
 	database->RuleRead();
 	database->SceneBleRead();
 	database->RoomRead();
-	database->DataRoomRead();
+	database->DeviceInSceneBleRead();
 	database->DeviceInRoomRead();
 	if (gateway->getId().compare("") == 0)
 	{
@@ -892,6 +928,10 @@ uint16_t Gateway::getBleUnicast()
 {
 	return ble_unicast;
 }
+uint32_t Gateway::getBleIvIndex()
+{
+	return ble_iv_index;
+}
 
 string Gateway::getBleNetkey()
 {
@@ -934,6 +974,11 @@ string Gateway::getMac()
 void Gateway::setBleUnicast(uint16_t unicast)
 {
 	this->ble_unicast = unicast;
+}
+
+void Gateway::setBleIvIndex(uint32_t ivIndex)
+{
+	this->ble_iv_index = ivIndex;
 }
 void Gateway::setBleNetkey(string netkey)
 {

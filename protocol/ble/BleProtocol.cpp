@@ -20,16 +20,10 @@ static uint8_t plaintext[] = {0x24, 0x02, 0x28, 0x04, 0x28, 0x11, 0x20, 0x20, 0x
 
 #ifdef ESP_PLATFORM
 BleProtocol::BleProtocol(int num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
-{
 #else
-BleProtocol::BleProtocol(char *uartPort, int uartBaudrate) : Uart(uartPort, 100000)
-{
-	if (Open(uartBaudrate) < 0)
-	{
-		LOGE("Open uart error")
-		exit(1);
-	}
+BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 #endif
+{
 	nextAddr = 0;
 	isAdding = false;
 }

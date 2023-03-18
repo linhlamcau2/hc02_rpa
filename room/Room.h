@@ -17,10 +17,11 @@ public:
 
 class Room : public Object
 {
+private:
+	string dataConfig;
+
 public:
 	vector<DeviceInRoom *> deviceList;
-	vector<string> dataConfig;
-
 	Room(string id, uint32_t addr, string name);
 
 	int GetPositionDevice(Device *device);
@@ -29,6 +30,6 @@ public:
 	int DelDevice(Device *device);
 	int DelDevice2(Device *device);
 
-	int DataConfigAdd(string data);
-	int DataConfigDel(string data);
+	string GetDataConfig();
+	void SetDataConfig(string dataConfig);
 };

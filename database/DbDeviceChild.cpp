@@ -39,19 +39,19 @@ int Db::DeviceChildRead()
 
 int Db::DeviceChildAdd(string deviceId, int element)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (deviceId, element) VALUES (\"" + deviceId + "\"," + to_string(element) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, element) VALUES (\"" + deviceId + "\"," + to_string(element) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceChildUpdate(string deviceId, int element)
 {
-	string sql = "UPDATE " TABLE_NAME " SET deviceId=\"" + deviceId + "\", element=" + to_string(element) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET device_id=\"" + deviceId + "\", element=" + to_string(element) + ";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceChildDel(string deviceId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id = \"" + deviceId + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id = \"" + deviceId + "\";";
 	return Sqlite_Exec(sql);
 }
 
