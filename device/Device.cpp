@@ -5,11 +5,11 @@
 #include <functional>
 #include <unistd.h>
 
-Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
+Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
 	this->mac = mac;
 	this->type = type;
-	this->device_id = device_id;
+	this->data = data;
 	this->version = version;
 	countElement = 1;
 	powerSource = POWER_UNKNOWN;
@@ -28,9 +28,9 @@ string Device::GetMac()
 	return mac;
 }
 
-string Device::GetDeviceId()
+string Device::GetData()
 {
-	return device_id;
+	return data;
 }
 
 bool Device::CheckAddr(uint32_t addr)

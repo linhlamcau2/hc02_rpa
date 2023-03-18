@@ -35,13 +35,14 @@ class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 private:
 	string id;
 	string mac;
-	string dormitoryId;
+	string version;
 	string ble_netkey;
 	string ble_appkey;
 	string ble_devicekey;
-	string refresh_token;
 	uint16_t ble_unicast;
-	string version;
+	uint32_t ble_iv_index;
+	string dormitoryId;
+	string refresh_token;
 	thread *udpBroadcastThread;
 	bool isUdpBroadcasting;
 
@@ -204,6 +205,7 @@ public:
 	Room *getRoomFromId(string id);
 
 	uint16_t getBleUnicast();
+	uint32_t getBleIvIndex();
 	string getBleNetkey();
 	string getBleAppKey();
 	string getBleDeviceKey();
@@ -215,6 +217,7 @@ public:
 	string getMac();
 
 	void setBleUnicast(uint16_t unicast);
+	void setBleIvIndex(uint32_t ivIndex);
 	void setBleNetkey(string netkey);
 	void setBleAppkey(string appkey);
 	void setBleDevicekey(string devicekey);

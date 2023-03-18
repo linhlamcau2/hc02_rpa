@@ -2870,28 +2870,44 @@ int Gateway::OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRpcUpdateFirmware");
+	LOGD("OnRPCUpdateFirmware");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
 	{
 		Json::Value datasValue = reqValue["DATA"];
+		string nameOld = "";
+		string name;
+		string sum;
+		string url;
 		for (Json::ArrayIndex i = 0; i < datasValue.size(); i++)
 		{
 			Json::Value dataValue = datasValue[0];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
-					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
-					dataValue.isMember("URL") && dataValue["URL"].isString())
+				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+				dataValue.isMember("URL") && dataValue["URL"].isString())
 			{
-				string name = dataValue["NAME"].asString();
-				string sum = dataValue["CHECK_SUM"].asString();
-				string url = dataValue["URL"].asString();
-				Ota::startOta(name, url, sum);
-				return 0;
+				name = dataValue["NAME"].asString();
+				sum = dataValue["CHECK_SUM"].asString();
+				url = dataValue["URL"].asString();
+				string check = name + ".tar.xz";
+				if (url.find(check) != std::string::npos)
+				{
+					if (name > nameOld)
+					{
+						nameOld = name;
+					}
+				}
 			}
+		}
+		if (nameOld != "")
+		{
+			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
+			Ota::startOta(name, url, sum);
+			return 1;
 		}
 	}
 	else
 	{
 		LOGW("Format error");
 	}
-	return 0;
+	return 1;
 }

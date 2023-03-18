@@ -128,28 +128,12 @@ bool Room::DelDevcie(Device *device)
 	return false;
 }
 
-int Room::DataConfigAdd(string data)
+string Room::GetDataConfig()
 {
-	for (uint32_t i = 0; i < dataConfig.size(); i++)
-	{
-		if (dataConfig[i] == data)
-		{
-			return -1;
-		}
-	}
-	dataConfig.push_back(data);
-	return 0;
+	return dataConfig;
 }
 
-int Room::DataConfigDel(string data)
+void Room::SetDataConfig(string dataConfig)
 {
-	for (uint32_t i = 0; i < dataConfig.size(); i++)
-	{
-		if (dataConfig[i] == data)
-		{
-			dataConfig.erase(dataConfig.begin() + i);
-			return 0;
-		}
-	}
-	return -1;
+	this->dataConfig = dataConfig;
 }

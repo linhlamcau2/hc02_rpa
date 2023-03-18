@@ -15,9 +15,12 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int addr = sqlite3_column_int(stmt, index++);
+				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				
+				Group *group = gateway->getGroupFromId(id);
+				if (group)
 				Group *group = new Group(id, addr, name);
 				if (gateway->AddNewGroup(group, true, false))
 				{
@@ -48,13 +51,13 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (name, groupId, meshId) VALUES ('" + group->GetName() + "','" + group->GetId() + "'," + to_string(group->GetAddr()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GroupUpdate(Group *group)
 {
-	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE id=" + to_string(group->GetAddr()) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE group_id= \"" + group->GetId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
@@ -65,7 +68,7 @@ int Db::GroupDel(Group *group)
 
 int Db::GroupDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId = \'" + id + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id = \'" + id + "\';";
 	return Sqlite_Exec(sql);
 }
 

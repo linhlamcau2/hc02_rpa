@@ -1,6 +1,7 @@
 #include "Db.h"
 #include "Log.h"
 #include "Util.h"
+#include "Base64.h"
 
 #define TABLE_NAME "[Room]"
 
@@ -17,10 +18,32 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int addr = sqlite3_column_int(stmt, index++);
-				Room *room = new Room(roomId, addr, "");
-				if (!gateway->AddNewRoom(room))
+				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
+				Room *room = new Room(roomId, addr, name);
+				if (room)
 				{
-					LOGE("Add new room failed");
+					string roomData;
+					string decode = macaron::Base64::Decode(data, roomData);
+					if (decode == "")
+					{
+						Json::Value roomValue;
+						Json::Reader r;
+						r.parse(roomData, roomValue);
+						if (roomValue.isObject())
+						{
+							room->SetDataConfig(roomValue.toString());
+						}
+					}
+					else
+					{
+						LOGW("Decode data error: %s", data);
+					}
+					if (!gateway->AddNewRoom(room))
+					{
+						LOGE("Add new room failed");
+					}
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -44,19 +67,19 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (roomId, addr) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'"+room->GetName()+"','"+macaron::Base64::Encode(room->GetDataConfig())+"')";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomUpdate(Room *room, int id)
 {
-	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE roomId = \"" + room->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE room_id = \"" + room->GetId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomDel(Room *room)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE roomId = \'" + room->GetId() + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id = \'" + room->GetId() + "\';";
 	return Sqlite_Exec(sql);
 }
 

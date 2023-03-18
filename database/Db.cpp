@@ -11,6 +11,7 @@ Db *database = NULL;
 
 Db::Db()
 {
+	LOGI("Init db");
 }
 
 void Db::init(void)

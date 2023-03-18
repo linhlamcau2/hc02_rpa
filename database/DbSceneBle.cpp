@@ -1,6 +1,7 @@
 #include "Db.h"
 #include "Log.h"
 #include "Util.h"
+#include "Base64.h"
 
 #define TABLE_NAME "SceneBle"
 
@@ -16,31 +17,14 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string sceneId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int addr = sqlite3_column_int(stmt, index++);
-				string propertiesData = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				Json::Value payloadJson;
-				Json::Reader r;
-				r.parse(propertiesData, payloadJson);
-				if (payloadJson.isArray())
+				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
+				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneId);
+				if (!sceneBle)
 				{
-					SceneBle *scene = gateway->getSceneBleFromId(sceneId);
-					Device *device = gateway->getDeviceFromMac(deviceId);
-					if (scene)
-					{
-						scene->AddDevice(device, payloadJson, 0, true);
-						gateway->AddNewSceneBle(scene, true, false);
-					}
-					else
-					{
-						SceneBle *tempScene = new SceneBle(sceneId, addr, sceneId);
-						gateway->AddNewSceneBle(tempScene, true, false);
-					}
-				}
-				else
-				{
-					LOGW("SceneBle json format error data: %s", propertiesData.c_str());
+					sceneBle = new SceneBle(sceneId, addr, name);
+					gateway->AddNewSceneBle(sceneBle, true, false);
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -62,20 +46,26 @@ int Db::SceneBleRead()
 	return ReadAll(TABLE_NAME, NULL, SceneBleParse);
 }
 
-int Db::DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data)
+int Db::SceneBleAdd(SceneBle *scene)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (sceneId, deviceId, name, meshId, data) VALUES ('" + scene->GetId() + "', '" + device->GetId() + "', '" + scene->GetName() + "', " + to_string(scene->GetAddr()) + ", '" + data.toString() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name) VALUES ('" + scene->GetId() + "', " + to_string(scene->GetAddr()) + ", '" + scene->GetName() + "');";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId)
+int Db::SceneBleUpdate(SceneBle *scene)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetId() + "' AND deviceId='" + device->GetId() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(scene->GetAddr()) + " AND name='" + scene->GetName() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::SceneBleDel(SceneBle *scene)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE sceneId='" + scene->GetId() + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id='" + scene->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::SceneBleDelAll()
+{
+	string sql = "DELETE FROM " TABLE_NAME ";";
 	return Sqlite_Exec(sql);
 }
