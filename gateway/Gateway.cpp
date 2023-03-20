@@ -205,14 +205,15 @@ void Gateway::init()
 	LOGI("DeviceRead");
 	database->GatewayRead();
 	database->DeviceRead();
+	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
-	database->RuleRead();
 	database->SceneBleRead();
-	database->RoomRead();
 	database->DeviceInSceneBleRead();
+	database->RoomRead();
 	database->DeviceInRoomRead();
+	database->RuleRead();
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -497,12 +498,25 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		LOGW("scanDevice null");
 		return;
 	}
+	string data = scanDevice->GetData();
+	string devKey = "";
+	Json::Value json;
+	Json::Reader r;
+	r.parse(data, json);
+	if (json.isObject())
+	{
+		if (json.isMember("devicekey") && json["devicekey"].isString())
+		{
+			devKey = json["devicekey"].asString();
+		}
+	}
+
 	dataValue["DEVICE_ID"] = scanDevice->GetId();
 	dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
 	dataValue["DEVICE_TYPE_ID"] = (int)scanDevice->GetType();
 	dataValue["MAC_ADDRESS"] = scanDevice->GetMac();
 	dataValue["FIRMWARE_VERSION"] = scanDevice->GetVersionStr();
-	dataValue["DEVICE_KEY"] = scanDevice->GetDeviceId();
+	dataValue["DEVICE_KEY"] = devKey;
 	dataValue["NET_KEY"] = gateway->getBleNetkey();
 	dataValue["APP_KEY"] = gateway->getBleAppKey();
 	jsonValue["CMD"] = "NEW_DEVICE";
@@ -880,7 +894,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RuleAdd(id, ruleStr, status, 1);
+				database->RuleAdd(rule, ruleStr, status, 1);
 			}
 			bool isEnable = (status) ? true : false;
 			rule->isEnable = isEnable;

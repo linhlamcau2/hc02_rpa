@@ -42,11 +42,11 @@ public:
 	int DeviceAttributeDel(Device *device, int attributeId);
 	int DeviceAttributeDelAll();
 
-	int DeviceChildRead();
-	int DeviceChildAdd(string deviceId, int element);
-	int DeviceChildUpdate(string deviceId, int element);
-	int DeviceChildDel(string deviceId);
-	int DeviceChildDelAll();
+	int DeviceBleChildRead();
+	int DeviceBleChildAdd(string deviceId, int element);
+	int DeviceBleChildUpdate(string deviceId, int element);
+	int DeviceBleChildDel(string deviceId);
+	int DeviceBleChildDelAll();
 
 	int DeviceInGroupRead();
 	int DeviceInGroupAdd(Group *group, Device *device, int epId);

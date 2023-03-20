@@ -712,7 +712,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 									{
 										if (scene->AddDeviceV2(device, deviceProperties, false))
 										{
-											database->DeviceInSceneBleAdd(scene, device, deviceProperties);
+											database->DeviceInSceneBleAdd(scene, device, deviceProperties.toString());
 											successList.append(device->GetId());
 										}
 										else
@@ -769,7 +769,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					if (scene->DelDevice(deviceInScene->device))
 					{
-						database->DeviceInSceneBleDel(scene, deviceInScene->device, deviceInScene->device->GetAddr());
+						database->DeviceInSceneBleDel(scene, deviceInScene->device);
 						successList.append(deviceInScene->device->GetId());
 					}
 					else
@@ -846,7 +846,7 @@ int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 			ruleList[rule->GetId()] = rule;
 			string ruleStr = data.toString();
 			ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-			database->RuleAdd(rule->GetId(), ruleStr, true, 1);
+			database->RuleAdd(rule, ruleStr, true, 1);
 			rule->Check();
 			respValue["data"]["code"] = CODE_OK;
 		}
@@ -874,7 +874,7 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 			Rule *rule = getRuleFromId(ruleId);
 			if (rule)
 			{
-				database->RuleDel(ruleId);
+				database->RuleDel(rule);
 				delete ruleList[ruleId];
 				ruleList.erase(ruleId);
 				respValue["data"]["code"] = CODE_OK;

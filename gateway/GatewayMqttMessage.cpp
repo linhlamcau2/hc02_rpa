@@ -1,5 +1,6 @@
-#include "Gateway.h"
 #include <fstream>
+#include <algorithm>
+#include "Gateway.h"
 #include "Log.h"
 #include "Db.h"
 #include "Util.h"
@@ -370,7 +371,7 @@ int Gateway::OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValu
 			if (rule)
 			{
 				rule->isEnable = (status) ? true : false;
-				database->RuleUpdateStatus(ruleId, status);
+				database->RuleUpdateStatus(rule, status);
 			}
 			else
 			{
@@ -399,10 +400,17 @@ int Gateway::OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = ruleId;
-			LOGI("Delete Rule id: %s", ruleId.c_str());
-			delete ruleList[ruleId];
-			ruleList.erase(ruleList.find(ruleId));
-			database->RuleDel(ruleId);
+			Rule *rule = gateway->getRuleFromId(ruleId);
+			if (rule)
+			{
+				delete ruleList[ruleId];
+				ruleList.erase(ruleList.find(ruleId));
+				database->RuleDel(rule);
+			}
+			else
+			{
+				LOGW("Rule not found");
+			}
 		}
 		respValue["DATA"] = dataJsonRsp;
 		return CODE_OK;
@@ -579,7 +587,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 								{
 									if (scene->AddDevice(device, deviceProperties, modeRgb, false))
 									{
-										database->DeviceInSceneBleAdd(scene, device, deviceProperties);
+										database->DeviceInSceneBleAdd(scene, device, deviceProperties.toString());
 										dataJsonRsp["SUCCESS"].append(device->GetId());
 									}
 									else
@@ -646,7 +654,7 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 							{
 								if (scene->AddDevice(device, deviceProperties, modeRgb, false))
 								{
-									database->DeviceInSceneBleAdd(scene, device, deviceProperties);
+									database->DeviceInSceneBleAdd(scene, device, deviceProperties.toString());
 									dataJsonRsp["SUCCESS"].append(deviceId);
 								}
 								else
@@ -699,7 +707,7 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 					if (scene->DelDevice(listDevInScene[i]))
 					{
 						dataJsonRsp["SUCCESS"].append(listDevInScene[i]->GetId());
-						database->DeviceInSceneBleDel(scene, listDevInScene[i], 0);
+						database->DeviceInSceneBleDel(scene, listDevInScene[i]);
 					}
 					else
 					{
@@ -746,11 +754,11 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					jsonGroupRsp["GROUP_ID"] = groupId;
 					jsonGroupRsp["FAILED"] = Json::arrayValue;
 					int groupAddr = 1;
-					for (const auto &[id, group] : groupList)
+					for (const auto &[id, groupBle] : groupList)
 					{
-						if (group->GetAddr() >= groupAddr)
+						if (groupBle->GetAddr() >= groupAddr)
 						{
-							groupAddr = group->GetAddr() + 1;
+							groupAddr = groupBle->GetAddr() + 1;
 						}
 					}
 					if (!isRoom)
@@ -872,7 +880,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 										int tempDeviceAddr = deviceInScene->GetAddr();
 										if (sceneInRoom->AddDevice(deviceInScene, properties, modeRGB, false))
 										{
-											database->DeviceInSceneBleAdd(sceneInRoom, deviceInScene, properties);
+											database->DeviceInSceneBleAdd(sceneInRoom, deviceInScene, properties.toString());
 											jsonSceneRsp["SUCCESS"].append(deviceInScene->GetId());
 										}
 										else
@@ -902,10 +910,10 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					room = gateway->AddNewRoom(room);
 					database->RoomAdd(room);
 				}
-				room->DataConfigAdd(respValue.toString());
+				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->DataRoomAdd(roomId, respValue.toString());
+				database->RoomAdd(room);
 			}
 		}
 		else
@@ -1098,7 +1106,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 										int adrDev = deviceInScene->GetAddr();
 										if (sceneOfGw->AddDevice(deviceInScene, properties, mode, false))
 										{
-											database->DeviceInSceneBleAdd(sceneOfGw, deviceInScene, properties);
+											database->DeviceInSceneBleAdd(sceneOfGw, deviceInScene, properties.toString());
 											sceneJsonRsp["SUCCESS"].append(deviceIdInScene);
 										}
 										else
@@ -1132,10 +1140,10 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 					room = gateway->AddNewRoom(room);
 					database->RoomAdd(room);
 				}
-				room->DataConfigAdd(respValue.toString());
+				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->DataRoomAdd(roomId, respValue.toString());
+				database->RoomAdd(room);
 			}
 		}
 		else
@@ -1244,7 +1252,7 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 								{
 									if (sceneOfGw->DelDevice(deviceDelScene))
 									{
-										database->DeviceInSceneBleDel(sceneOfGw, deviceDelScene, 0);
+										database->DeviceInSceneBleDel(sceneOfGw, deviceDelScene);
 										sceneJsonRsp["SUCCESS"].append(deviceIdDelScene);
 									}
 									else
@@ -1281,10 +1289,10 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 					room = gateway->AddNewRoom(room);
 					database->RoomAdd(room);
 				}
-				room->DataConfigAdd(respValue.toString());
+				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->DataRoomAdd(roomId, respValue.toString());
+				database->RoomAdd(room);
 			}
 		}
 		else
@@ -1375,7 +1383,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						if (sceneOfGw->DelDevice(sceneOfGw->deviceList[m]->device))
 						{
-							database->DeviceInSceneBleDel(sceneOfGw, sceneOfGw->deviceList[m]->device, 0);
+							database->DeviceInSceneBleDel(sceneOfGw, sceneOfGw->deviceList[m]->device);
 							sceneJsonRsp["SUCCESS"].append(sceneOfGw->deviceList[m]->device->GetId());
 						}
 						else
@@ -1405,10 +1413,10 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					room = gateway->AddNewRoom(room);
 					database->RoomAdd(room);
 				}
-				room->DataConfigAdd(respValue.toString());
+				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->DataRoomAdd(roomId, respValue.toString());
+				database->RoomAdd(room);
 			}
 		}
 	}
@@ -1433,11 +1441,8 @@ int Gateway::OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue)
 				Room *room = getRoomFromId(roomId);
 				if (room)
 				{
-					for (auto &dataConfig : room->dataConfig)
-					{
-						respValue.append(dataConfig);
-					}
-					return CODE_DATA_ARRAY;
+					// listMsgPush = room->dataConfig;
+					return 2;
 				}
 			}
 		}
@@ -2885,8 +2890,8 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		{
 			Json::Value dataValue = datasValue[0];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
-				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
-				dataValue.isMember("URL") && dataValue["URL"].isString())
+					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+					dataValue.isMember("URL") && dataValue["URL"].isString())
 			{
 				name = dataValue["NAME"].asString();
 				sum = dataValue["CHECK_SUM"].asString();
