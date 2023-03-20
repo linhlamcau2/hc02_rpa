@@ -70,21 +70,6 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 				exit(1);
 			}
-			else if (rs == 2)
-			{
-				if (listMsgPush.size() > 0)
-				{
-					for (uint32_t i = 0; i < listMsgPush.size(); i++)
-					{
-						Publish(HC_RESPONSE_TOPIC, listMsgPush[i]);
-					}
-					listMsgPush.clear();
-				}
-				else
-				{
-					LOGW("List msg push empty");
-				}
-			}
 			else
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
@@ -136,21 +121,6 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(HC_RESPONSE_TOPIC_V2, respValue.toString());
 				exit(1);
-			}
-			else if (rs == 2)
-			{
-				if (listMsgPush.size() > 0)
-				{
-					for (uint32_t i = 0; i < listMsgPush.size(); i++)
-					{
-						Publish(HC_RESPONSE_TOPIC_V2, listMsgPush[i]);
-					}
-					listMsgPush.clear();
-				}
-				else
-				{
-					LOGW("List msg push empty");
-				}
 			}
 			else
 			{
