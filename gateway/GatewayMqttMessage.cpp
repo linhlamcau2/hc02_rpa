@@ -1441,13 +1441,24 @@ int Gateway::OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue)
 				Room *room = getRoomFromId(roomId);
 				if (room)
 				{
-					// listMsgPush = room->dataConfig;
-					return 2;
+					string dataConfig = room->GetDataConfig();
+					Json::Value dataJson;
+					Json::Reader r;
+					r.parse(dataConfig, dataJson);
+					if (dataJson.isObject())
+					{
+						respValue = dataJson;
+						return CODE_OK;
+					}
+					else
+					{
+						LOGW("dataConfig is invalid: %s", dataConfig.c_str());
+					}
 				}
 			}
 		}
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
