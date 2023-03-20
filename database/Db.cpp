@@ -1,4 +1,5 @@
 #include "Db.h"
+#include <sys/stat.h>
 #include "Log.h"
 #ifdef ESP_PLATFORM
 #include "esp_littlefs.h"
@@ -69,9 +70,9 @@ void Db::init(void)
 	{
 		LOGE("Failed to initialize the mutex");
 	}
-	// createTableIfNotExists();
 	struct stat st;
-	if (stat(DB_NAME, &st) != 0) {
+	if (stat(DB_NAME, &st))
+	{
 		createTableIfNotExists();
 	}
 }

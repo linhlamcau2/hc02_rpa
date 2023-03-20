@@ -18,9 +18,9 @@
 
 #ifndef DB_NAME
 #ifdef __OPENWRT__
-#define DB_NAME "/etc/smh/smh.sqlite"
+#define DB_NAME "/root/smh.sqlite"
 #elif defined(__ANDROID__)
-#define DB_NAME "/etc/smh/smh.sqlite"
+#define DB_NAME "/data/rd/smh.sqlite"
 #elif defined(ESP_PLATFORM)
 #define DB_NAME "/spiffs/smh.sqlite"
 #else
