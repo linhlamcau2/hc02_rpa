@@ -163,8 +163,10 @@ private:
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddDeviceGroupBle(Json::Value &deviceList, Json::Value &respSuccessList, Json::Value &respFailList, Group *group);
 	int OnCreateGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSuccessList, Json::Value &respFailList, Group *group);
 	int OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
@@ -173,14 +175,17 @@ private:
 	// thieu scene controller
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetInfoHC(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
+	// int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	// int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
+	// int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);

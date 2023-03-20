@@ -2,7 +2,7 @@
 #include "Log.h"
 #include "Util.h"
 
-#define TABLE_NAME "[Group]"
+#define TABLE_NAME "[Grouping]"
 
 static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 {
@@ -48,7 +48,7 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (name, groupId, meshId) VALUES ('" + group->GetName() + "','" + group->GetId() + "'," + to_string(group->GetAddr()) + ")";
+	string sql = "INSERT INTO " TABLE_NAME " (name, groupId, meshId) VALUES ('" + group->GetName() + "','" + group->GetId() + "'," + to_string(group->GetAddr()) + ");";
 	return Sqlite_Exec(sql);
 }
 

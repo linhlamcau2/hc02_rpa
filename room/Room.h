@@ -5,6 +5,8 @@
 #include "json.h"
 #include "Object.h"
 #include "Device.h"
+#include "Group.h"
+#include "SceneBle.h"
 
 using namespace std;
 
@@ -19,6 +21,8 @@ class Room : public Object
 {
 public:
 	vector<DeviceInRoom *> deviceList;
+	vector<SceneBle *> sceneBleList;
+	vector<Group *> groupList;
 	vector<string> dataConfig;
 
 	Room(string id, uint32_t addr, string name);
