@@ -15,7 +15,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string gateway_id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string ble_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
@@ -27,9 +27,9 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string refresh = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				
-				// LOGI("Gateway: id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, unicast: %d, dormitory: %s, refresh: %s", id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), ble_unicast, dormitory.c_str(), refresh.c_str());
+				// LOGI("Gateway: gateway_id: %s, version: %s, name: %s, appkey: %s, netkey: %s, devicekey: %s, unicast: %d, dormitory: %s, refresh: %s", gateway_id.c_str(), version.c_str(), name.c_str(), ble_appkey.c_str(), ble_netkey.c_str(), ble_devicekey.c_str(), ble_unicast, dormitory.c_str(), refresh.c_str());
 
-				gateway->setId(id);
+				gateway->setId(gateway_id);
 				gateway->setBleAppkey(ble_appkey);
 				gateway->setBleDevicekey(ble_devicekey);
 				gateway->setBleNetkey(ble_netkey);
@@ -60,7 +60,7 @@ int Db::GatewayRead()
 
 int Db::GatewayAdd(Gateway *gateway)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, name, version, ble_netkey, ble_appkey, ble_devicekey, dormitory) VALUES (\"" + gateway->getId() + "\",\"" + gateway->getName() + "\",\"" + gateway->getVersion() + "\",\"" + gateway->getBleNetkey() + "\",\"" + gateway->getBleAppKey() + "\",\"" + gateway->getBleDeviceKey() + "\",\"" + gateway->getDormitory() + "\")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (gateway_id, name, version, ble_netkey, ble_appkey, ble_devicekey, dormitory) VALUES (\"" + gateway->getId() + "\",\"" + gateway->getName() + "\",\"" + gateway->getVersion() + "\",\"" + gateway->getBleNetkey() + "\",\"" + gateway->getBleAppKey() + "\",\"" + gateway->getBleDeviceKey() + "\",\"" + gateway->getDormitory() + "\")";
 	LOGD("sql: %s", sql.c_str());
 	return Sqlite_Exec(sql);
 }
@@ -71,51 +71,51 @@ int Db::GatewayUpdate(Gateway *gateway)
 	return Sqlite_Exec(sql);
 }
 
-int Db::GatewayUpdateId(Gateway *gateway, string id)
+int Db::GatewayUpdateId(Gateway *gateway, string gateway_id)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (id) VALUES (\"" + id + "\");";
+	string sql = "INSERT INTO " TABLE_NAME " (gateway_id) VALUES (\"" + gateway_id + "\");";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateNetKey(Gateway *gateway, string netkey)
 {
-	string sql = "UPDATE " TABLE_NAME " SET ble_netkey=\"" + netkey + "\" WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET ble_netkey=\"" + netkey + "\" WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateAppKey(Gateway *gateway, string appkey)
 {
-	string sql = "UPDATE " TABLE_NAME " SET ble_appkey=\"" + appkey + "\" WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET ble_appkey=\"" + appkey + "\" WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateDeviceKey(Gateway *gateway, string devicekey)
 {
-	string sql = "UPDATE " TABLE_NAME " SET ble_devicekey=\"" + devicekey + "\" WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET ble_devicekey=\"" + devicekey + "\" WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast)
 {
-	string sql = "UPDATE " TABLE_NAME " SET ble_unicast =" + to_string(unicast) + " WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET ble_unicast =" + to_string(unicast) + " WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateIvIndex(Gateway *gateway, uint32_t iv_index)
 {
-	string sql = "UPDATE " TABLE_NAME " SET ble_iv_index =" + to_string(iv_index) + " WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET ble_iv_index =" + to_string(iv_index) + " WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateDormitory(Gateway *gateway, string dormitory)
 {
-	string sql = "UPDATE " TABLE_NAME " SET dormitory=\"" + dormitory + "\" WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET dormitory=\"" + dormitory + "\" WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken)
 {
-	string sql = "UPDATE " TABLE_NAME " SET refresh_token=\"" + refreshToken + "\" WHERE id=\"" + gateway->getId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET refresh_token=\"" + refreshToken + "\" WHERE gateway_id=\"" + gateway->getId() + "\";";
 	return Sqlite_Exec(sql);
 }
 
@@ -124,9 +124,9 @@ int Db::GatewayDel(Gateway *gateway)
 	return DeviceDel(gateway->getId());
 }
 
-int Db::GatewayDel(string id)
+int Db::GatewayDel(string gateway_id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=\"" + id + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE gateway_id=\"" + gateway_id + "\";";
 	return Sqlite_Exec(sql);
 }
 
