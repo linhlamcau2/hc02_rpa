@@ -184,6 +184,7 @@ private:
 	// int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetGroupList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
 

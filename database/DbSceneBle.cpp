@@ -23,19 +23,19 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				Json::Value payloadJson;
 				Json::Reader r;
 				r.parse(propertiesData, payloadJson);
-				if (payloadJson.isArray())
+				if (payloadJson.isObject())
 				{
 					SceneBle *scene = gateway->getSceneBleFromId(sceneId);
-					Device *device = gateway->getDeviceFromMac(deviceId);
+					Device *device = gateway->getDeviceFromId(deviceId);
 					if (scene)
 					{
 						scene->AddDevice(device, payloadJson, 0, true);
-						gateway->AddNewSceneBle(scene, true, false);
 					}
 					else
 					{
 						SceneBle *tempScene = new SceneBle(sceneId, addr, sceneId);
 						gateway->AddNewSceneBle(tempScene, true, false);
+						tempScene->AddDevice(device, payloadJson, 0, true);
 					}
 				}
 				else

@@ -21,7 +21,7 @@ void Gateway::initMqttMessageV2()
 	OnDeviceRpcCallbackRegisterV2("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRpcCallbackRegisterV2("getHcInfo", bind(&Gateway::OnGetInfoHC, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegisterV2("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
@@ -67,6 +67,7 @@ void Gateway::initMqttMessageV2()
 	// OnLocalCallbackRegisterV2("getDeviceList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getRoomList", bind(&Gateway::OnGetRoomList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getDevListInRoom", bind(&Gateway::OnGetDevListInRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getGroupList", bind(&Gateway::OnGetGroupList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createRoom", bind(&Gateway::OnCreateRoom, this, placeholders::_1, placeholders::_2));
@@ -317,7 +318,7 @@ int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
 		roomValue["id"] = room->GetId();
 		roomData.append(roomValue);
 	}
-	respValue["data"]["devices"] = roomData;
+	respValue["data"]["rooms"] = roomData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getRoomListRsp";
 	return CODE_OK;
@@ -371,6 +372,22 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnGetGroupList(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetGroupList");
+	Json::Value groupData;
+	for (const auto &[id, group] : groupList)
+	{
+		Json::Value groupValue;
+		groupValue["id"] = group->GetId();
+		groupData.append(groupValue);
+	}
+	respValue["data"]["groups"] = groupData;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getGroupListRsp";
+	return CODE_OK;
+}
+
 int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetSceneList");
@@ -381,7 +398,7 @@ int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 		sceneValue["id"] = scene->GetId();
 		sceneData.append(sceneValue);
 	}
-	respValue["data"]["devices"] = sceneData;
+	respValue["data"]["scenes"] = sceneData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getSceneListRsp";
 	return CODE_OK;
@@ -395,10 +412,11 @@ int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value data = reqValue["data"];
 		if (data.isMember("scenes") && data["scenes"].isArray() && data["scenes"].size() > 0)
 		{
-			Json::Value scenesData;
+			Json::Value scenesList;
 			Json::Value scenes = data["scenes"];
 			for (auto &sceneValue : scenes)
 			{
+				Json::Value scenesData;
 				if (sceneValue.isString())
 				{
 					string sceneId = sceneValue.asString();
@@ -413,15 +431,16 @@ int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 							string deviceId = deviceInSceneBle->device->GetId();
 							temp_devicesList.append(deviceId);
 						}
-						scenesData.append(temp_devicesList);
+						scenesData["devices"] = temp_devicesList;
 					}
 					else
 						respValue["data"]["code"] = CODE_NOT_FOUND_ROOM;
 				}
 				else
 					respValue["data"]["code"] = CODE_FORMAT_ERROR;
+				scenesList.append(scenesData);
 			}
-			respValue["data"]["rooms"] = scenesData;
+			respValue["data"]["scenes"] = scenesList;
 		}
 	}
 	else
@@ -798,7 +817,6 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 			SceneBle *scene = new SceneBle(sceneId, sceneAddr, sceneName);
 			if (scene)
 			{
-				LOGE("create scene TP1");
 				if (AddNewSceneBle(scene, true, true))
 				{
 					Json::Value groupList = data["devices"];
@@ -811,6 +829,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 							Json::Value device = groupValue["id"];
 							Json::Value deviceProperties = groupValue["data"];
 							string deviceId = device.asString();
+							cout << "---------------------"+deviceId+"-----------" << endl;
 							Device *temp_device = getDeviceFromId(deviceId);
 							if (temp_device)
 							{
