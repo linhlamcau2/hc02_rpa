@@ -250,6 +250,7 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 
 int Mqtt::Publish(string topic, char *payload, int payloadLen)
 {
+	LOGV("Publish topic: %s", topic.c_str());
 	int rs = publish(NULL, topic.c_str(), payloadLen, payload);
 	if (rs == MOSQ_ERR_SUCCESS)
 	{

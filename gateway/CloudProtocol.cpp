@@ -15,6 +15,7 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 	subRespTopicV2 = "v2/json/resp/server/" + mac;
 	pubReqTopicV2 = "v2/json/req/" + mac + "/server";
 	pubRespTopicV2 = "v2/json/resp/" + mac + "/server";
+	pubBinReqTopicV2 = "v2/bin/req/" + mac + "/server/";
 
 	Json::Value jsonValue;
 	Json::Value datanValue;
@@ -325,5 +326,30 @@ int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue,
 	}
 	requestList.erase(rqi);
 	LOGD("PublishToCloudMessageV2 rs: %d", rs);
+	return rs;
+}
+
+int CloudProtocol::PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
+{
+	LOGD("PublishBinToCloudMessageV2");
+	int rs = CODE_OK;
+	request_t request = {
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
+	};
+	string rqi = sessionId + to_string(index);
+	requestList[rqi] = &request;
+	Publish(pubBinReqTopicV2 + sessionId + "/" + to_string(index), payload, payloadLen);
+	while (!request.status && --timeout)
+	{
+		usleep(1000);
+	}
+	if (!request.status)
+	{
+		rs = CODE_ERROR;
+	}
+	requestList.erase(rqi);
+	LOGD("PublishBinToCloudMessageV2 rs: %d", rs);
 	return rs;
 }

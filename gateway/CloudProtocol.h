@@ -25,6 +25,7 @@ private:
 	string subRespTopicV2;
 	string pubReqTopicV2;
 	string pubRespTopicV2;
+	string pubBinReqTopicV2;
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
@@ -67,4 +68,5 @@ public:
 	int PublishToGatewayAttributes(Json::Value payloadJson);
 
 	int PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
+	int PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
 };

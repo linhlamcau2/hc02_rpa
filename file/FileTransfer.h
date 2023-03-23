@@ -10,17 +10,9 @@ using namespace std;
 class FileTransfer
 {
 private:
-	string subFwTopic;
-	string pubFwTopic;
-
-	map<string, File *> files;
+	string subRespTopicV2;
 
 	void OnFWMessage(string &topic, char *payload, int payloadlen);
-
-	int UploadChunk(string sessionId, File *file);
-
-	int OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue);
 
@@ -30,7 +22,9 @@ public:
 	void init();
 
 	int uploadFile(string path, string name);
+	int uploadFile(File &file);
 	int downloadFile(string path, string name);
+	int downloadFile(File &file);
 };
 
 extern FileTransfer *fileTransfer;
