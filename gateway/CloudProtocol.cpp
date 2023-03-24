@@ -136,14 +136,15 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 	Util::LedServiceLock();
 	if (payloadJson.isObject() &&
 			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
 		if (onRpcCallbackFuncListV2.find(cmd) != onRpcCallbackFuncListV2.end())
 		{
 			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncListV2[cmd];
-			int rs = onRpcCallbackFunc(payloadJson, respValue);
+			int rs = onRpcCallbackFunc(payloadJson["data"], respValue);
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
