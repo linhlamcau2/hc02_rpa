@@ -728,7 +728,7 @@ int Gateway::OnCallScene(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 {
-	Rule *rule = AddRuleV2(data);
+	Rule *rule = AddRuleV2(reqValue);
 	if (rule)
 	{
 		LOGI("Add Rule %s", rule->GetId().c_str());
