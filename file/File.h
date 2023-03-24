@@ -22,6 +22,7 @@ public:
 	string sumAlg;
 	string sum;
 	streamsize fileSize;
+	string filePath;
 
 	volatile int chunkIndex;
 	int chunkCount;
@@ -39,6 +40,8 @@ public:
 	void OpenToWrite();
 	bool IsOpen();
 
-	int Read(uint32_t position, char *buff, uint32_t size);
-	int Write(uint32_t position, char *buff, uint32_t size);
+	int Read(char *buff, uint32_t size);
+	int Read(char *buff, uint32_t size, uint32_t position);
+	int Write(char *buff, uint32_t size);
+	int Write(char *buff, uint32_t size, uint32_t position);
 };

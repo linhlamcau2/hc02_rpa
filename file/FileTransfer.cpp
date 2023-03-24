@@ -3,6 +3,7 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "File.h"
+#include "Util.h"
 
 FileTransfer *fileTransfer = NULL;
 
@@ -52,7 +53,7 @@ int FileTransfer::uploadFile(File &file)
 				file.chunkIndex = 0;
 				while (file.chunkIndex < file.chunkCount)
 				{
-					uint32_t size = file.Read(file.chunkIndex * BIN_PACKAGE_SIZE, fileContent, BIN_PACKAGE_SIZE);
+					uint32_t size = file.Read(fileContent, BIN_PACKAGE_SIZE);
 					Json::Value respValue;
 					rs = gateway->PublishBinToCloudMessageV2(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
 					if (rs == CODE_OK)
@@ -109,27 +110,63 @@ int FileTransfer::downloadFile(File &file)
 	if (rs == CODE_OK)
 	{
 		LOGD("DownloadFile respValue: %s", respValue.toString().c_str());
-		file.OpenToWrite();
-		if (file.IsOpen())
+		if (respValue.isMember("code") && respValue["code"].isInt() &&
+				respValue.isMember("size") && respValue["size"].isInt())
 		{
-			file.chunkIndex = 0;
-			while (file.chunkIndex < file.chunkCount)
+			rs = respValue["code"].asInt();
+			if (rs == CODE_OK)
 			{
-				Json::Value jsonValue;
-				Json::Value dataValue;
-				dataValue["chunk"] = file.chunkIndex;
-				dataValue["sessionId"] = sessionId;
-				string rqi = sessionId + to_string(file.chunkIndex);
-				char payload[BIN_PACKAGE_SIZE];
-				int payloadLen = BIN_PACKAGE_SIZE;
-				rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
-				if (rs == CODE_OK)
+				string cmd = "rm " + file.filePath;
+				Util::ExecuteCMD(cmd.c_str());
+				LOGD("cmd: %s", cmd.c_str());
+
+				file.fileSize = respValue["size"].asInt();
+				file.chunkCount = file.fileSize / BIN_PACKAGE_SIZE;
+				if (file.fileSize % BIN_PACKAGE_SIZE)
+					++file.chunkCount;
+				file.haveInfo = true;
+				LOGD("fileSize: %ld, chunkCount: %d", file.fileSize, file.chunkCount);
+				file.OpenToWrite();
+				if (file.IsOpen())
 				{
-					file.Write(file.chunkIndex * BIN_PACKAGE_SIZE, payload, payloadLen);
-					++file.chunkIndex;
+					file.chunkIndex = 0;
+					while (file.chunkIndex < file.chunkCount)
+					{
+						Json::Value jsonValue;
+						Json::Value dataValue;
+						dataValue["chunk"] = file.chunkIndex;
+						dataValue["sessionId"] = sessionId;
+						string rqi = sessionId + to_string(file.chunkIndex);
+						char payload[BIN_PACKAGE_SIZE];
+						int payloadLen = BIN_PACKAGE_SIZE;
+						rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
+						if (rs == CODE_OK)
+						{
+							file.Write(payload, payloadLen);
+							++file.chunkIndex;
+						}
+						else
+						{
+							LOGW("DownloadBin index %d err: %d", file.chunkIndex, rs);
+						}
+					}
+					file.Close();
 				}
 			}
+			else
+			{
+				LOGW("Cannot download file");
+			}
 		}
+	}
+	if (rs == CODE_OK)
+	{
+		LOGI("Download file %s done", file.name.c_str());
+		LOGW("Need check sum");
+	}
+	else
+	{
+		LOGW("Download file %s err: %d", file.name.c_str(), rs);
 	}
 	return CODE_ERROR;
 }
