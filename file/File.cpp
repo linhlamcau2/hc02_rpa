@@ -72,3 +72,15 @@ int File::Read(uint32_t position, char *buff, uint32_t size)
 	}
 	return rs;
 }
+
+int File::Write(uint32_t position, char *buff, uint32_t size)
+{
+	uint32_t rs = size;
+	file.seekg(chunkIndex * BIN_PACKAGE_SIZE, std::ios::beg);
+	file.read(buff, size);
+	if (file.eof())
+	{
+		rs = fileSize - position;
+	}
+	return rs;
+}

@@ -14,10 +14,6 @@ FileTransfer::FileTransfer()
 void FileTransfer::init()
 {
 	LOGD("init");
-	subRespTopicV2 = "v2/bin/resp/server/" + gateway->getMac();
-
-	// gateway->cloudAddActionCallback(bind(&FileTransfer::OnFWMessage, this, placeholders::_1, placeholders::_2, placeholders::_3), subRespTopicV2);
-	// gateway->OnDeviceRpcCallbackRegister("DownloadFileResp", bind(&FileTransfer::OnRpcDownloadFileResp, this, placeholders::_1, placeholders::_2));
 }
 
 int FileTransfer::uploadFile(string path, string name)
@@ -29,6 +25,7 @@ int FileTransfer::uploadFile(string path, string name)
 int FileTransfer::uploadFile(File &file)
 {
 	LOGD("uploadFile");
+	int rs = CODE_ERROR;
 	string filePath = file.path + "/" + file.name;
 	if (file.HaveInfo())
 	{
@@ -44,20 +41,20 @@ int FileTransfer::uploadFile(File &file)
 		dataValue["sumAlg"] = "md5";
 		dataValue["sessionId"] = sessionId;
 		Json::Value respValue;
-		int rs = gateway->PublishToCloudMessageV2("UploadFile", dataValue, "UploadFileResp", &respValue);
+		rs = gateway->PublishToCloudMessageV2("UploadFile", dataValue, "UploadFileResp", &respValue);
 		if (rs == CODE_OK)
 		{
 			LOGD("uploadFile respValue: %s", respValue.toString().c_str());
-			file.chunkIndex = 0;
 			file.OpenToRead();
 			if (file.IsOpen())
 			{
 				char fileContent[BIN_PACKAGE_SIZE];
+				file.chunkIndex = 0;
 				while (file.chunkIndex < file.chunkCount)
 				{
 					uint32_t size = file.Read(file.chunkIndex * BIN_PACKAGE_SIZE, fileContent, BIN_PACKAGE_SIZE);
 					Json::Value respValue;
-					int rs = gateway->PublishBinToCloudMessageV2(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
+					rs = gateway->PublishBinToCloudMessageV2(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
 					if (rs == CODE_OK)
 					{
 						LOGD("UploadChunk respValue: %s", respValue.toString().c_str());
@@ -66,6 +63,7 @@ int FileTransfer::uploadFile(File &file)
 					else
 					{
 						LOGD("UploadChunk err: %d", rs);
+						rs = CODE_ERROR;
 						break;
 					}
 				}
@@ -77,12 +75,15 @@ int FileTransfer::uploadFile(File &file)
 	{
 		LOGW("Open file %s error", filePath.c_str());
 	}
-	if (file.chunkIndex == file.chunkCount)
+	if (rs == CODE_OK)
 	{
 		LOGI("upload file %s done", file.name.c_str());
-		return CODE_OK;
 	}
-	return CODE_ERROR;
+	else
+	{
+		LOGW("upload file %s err: %d", file.name.c_str(), rs);
+	}
+	return rs;
 }
 
 int FileTransfer::downloadFile(string path, string name)
@@ -94,19 +95,41 @@ int FileTransfer::downloadFile(string path, string name)
 int FileTransfer::downloadFile(File &file)
 {
 	LOGD("downloadFile");
-
-	return CODE_ERROR;
-}
-
-void FileTransfer::OnFWMessage(string &topic, char *payload, int payloadlen)
-{
-}
-
-int FileTransfer::OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue)
-{
-	LOGD("OnRpcDownloadFileResp");
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	int rs = CODE_ERROR;
+	string sessionId = to_string(time(NULL)) + to_string(rand());
+	Json::Value jsonValue;
+	Json::Value dataValue;
+	dataValue["name"] = file.name;
+	dataValue["path"] = file.path;
+	dataValue["chunkSize"] = BIN_PACKAGE_SIZE;
+	dataValue["sumAlg"] = "md5";
+	dataValue["sessionId"] = sessionId;
+	Json::Value respValue;
+	rs = gateway->PublishToCloudMessageV2("DownloadFile", dataValue, "DownloadFileResp", &respValue);
+	if (rs == CODE_OK)
 	{
+		LOGD("DownloadFile respValue: %s", respValue.toString().c_str());
+		file.OpenToWrite();
+		if (file.IsOpen())
+		{
+			file.chunkIndex = 0;
+			while (file.chunkIndex < file.chunkCount)
+			{
+				Json::Value jsonValue;
+				Json::Value dataValue;
+				dataValue["chunk"] = file.chunkIndex;
+				dataValue["sessionId"] = sessionId;
+				string rqi = sessionId + to_string(file.chunkIndex);
+				char payload[BIN_PACKAGE_SIZE];
+				int payloadLen = BIN_PACKAGE_SIZE;
+				rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
+				if (rs == CODE_OK)
+				{
+					file.Write(file.chunkIndex * BIN_PACKAGE_SIZE, payload, payloadLen);
+					++file.chunkIndex;
+				}
+			}
+		}
 	}
 	return CODE_ERROR;
 }

@@ -40,4 +40,5 @@ public:
 	bool IsOpen();
 
 	int Read(uint32_t position, char *buff, uint32_t size);
+	int Write(uint32_t position, char *buff, uint32_t size);
 };

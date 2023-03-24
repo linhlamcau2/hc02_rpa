@@ -9,13 +9,6 @@ using namespace std;
 
 class FileTransfer
 {
-private:
-	string subRespTopicV2;
-
-	void OnFWMessage(string &topic, char *payload, int payloadlen);
-
-	int OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue);
-
 public:
 	FileTransfer();
 
