@@ -41,7 +41,8 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
             uint16_t lux;
         } data_message_t;
         data_message_t *data_message = (data_message_t *)&data[3];
-        lux = (data_message->lux);
+        pir = data_message->pir;
+        lux = data_message->lux;
         if (lux > 0)
         {
             BuildTelemetryValue(jsonValue);
