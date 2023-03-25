@@ -125,7 +125,7 @@ int FileTransfer::downloadFile(File &file)
 				if (file.fileSize % BIN_PACKAGE_SIZE)
 					++file.chunkCount;
 				file.haveInfo = true;
-				LOGD("fileSize: %ld, chunkCount: %d", file.fileSize, file.chunkCount);
+				LOGD("fileSize: %d, chunkCount: %d", (int)file.fileSize, file.chunkCount);
 				file.OpenToWrite();
 				if (file.IsOpen())
 				{

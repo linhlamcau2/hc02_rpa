@@ -32,16 +32,16 @@ public:
 
 	File(string path, string name);
 
-	bool HaveInfo();
+	virtual bool HaveInfo();
 
-	void Open(ios_base::openmode mode);
-	void Close();
-	void OpenToRead();
-	void OpenToWrite();
-	bool IsOpen();
+	virtual void Open(ios_base::openmode mode);
+	virtual void Close();
+	virtual void OpenToRead();
+	virtual void OpenToWrite();
+	virtual bool IsOpen();
 
-	int Read(char *buff, uint32_t size);
-	int Read(char *buff, uint32_t size, uint32_t position);
-	int Write(char *buff, uint32_t size);
-	int Write(char *buff, uint32_t size, uint32_t position);
+	virtual int Read(char *buff, uint32_t size);
+	virtual int Read(char *buff, uint32_t size, uint32_t position);
+	virtual int Write(char *buff, uint32_t size);
+	virtual int Write(char *buff, uint32_t size, uint32_t position);
 };
