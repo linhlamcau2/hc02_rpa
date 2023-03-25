@@ -68,7 +68,7 @@ static int UdpHandleMessage(Udp *udp)
 		buf[recv_len] = '\0';
 		udp->UdpOnMessage(string(buf), &si_other, slen);
 	}
-	return 0;
+	return CODE_OK;
 }
 
 void Udp::init()
@@ -86,11 +86,11 @@ void Udp::stop()
 	isRunning = false;
 }
 
-int Udp::UdpCmdCallbackRegister(string method, OnRpcCallbackFunc onRpcCallbackFunc)
+int Udp::UdpCmdCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
 {
-	LOGI("UdpCmdCallbackRegister method: %s", method.c_str());
-	onRpcCallbackFuncList[method] = onRpcCallbackFunc;
-	return 0;
+	LOGI("UdpCmdCallbackRegister cmd: %s", cmd.c_str());
+	onRpcCallbackFuncList[cmd] = onRpcCallbackFunc;
+	return CODE_OK;
 }
 
 void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
@@ -104,40 +104,40 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	{
 		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
-			string method = payloadJson["CMD"].asString();
-			if (onRpcCallbackFuncList.find(method) != onRpcCallbackFuncList.end())
+			string cmd = payloadJson["CMD"].asString();
+			if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
 			{
-				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[method];
+				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
 				int rs = onRpcCallbackFunc(payloadJson, respValue);
-				if (rs == 0)
+				if (rs == CODE_OK)
 				{
-					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+					LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 					send(respValue.toString(), si_other, slen);
 				}
-				else if (rs == 10) // respValue as an array
+				else if (rs == CODE_DATA_ARRAY)
 				{
-					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+					LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 					if (respValue.isArray())
 					{
-						for (Json::ArrayIndex i = 0; i < respValue.size(); i++)
+						for (auto &respV : respValue)
 						{
-							send(respValue[i].toString(), si_other, slen);
+							send(respV.toString(), si_other, slen);
 							usleep(10000);
 						}
 					}
 				}
-				else if (rs == 1)
+				else if (rs == CODE_NOT_RESPONSE)
 				{
-					LOGD("Call %s OK, rs: %d", method.c_str(), rs);
+					LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				}
 				else
 				{
-					LOGW("Call %s ERR rs: %d", method.c_str(), rs);
+					LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 				}
 			}
 			else
 			{
-				LOGW("Method %s not registed", method.c_str());
+				LOGW("Method %s not registed", cmd.c_str());
 			}
 		}
 		else
@@ -195,6 +195,7 @@ int Udp::send(string message, struct sockaddr_in *si_other, int slen)
 	if (sendto(fd, message.c_str(), message.length(), 0, (struct sockaddr *)si_other, slen) == -1)
 	{
 		LOGW("UDP sendto error");
+		return CODE_ERROR;
 	}
-	return 0;
+	return CODE_OK;
 }

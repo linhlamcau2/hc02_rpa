@@ -25,7 +25,7 @@ void ElementCct::SaveAttribute()
 }
 #endif
 
-bool ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -46,9 +46,9 @@ bool ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
@@ -110,7 +110,7 @@ void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_CCT] = cct;
 }
 
-bool ElementCct::Do(Json::Value &dataValue)
+int ElementCct::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -124,13 +124,13 @@ bool ElementCct::Do(Json::Value &dataValue)
 			uint16_t cct = (value * 192) + 800;
 			LOGD("Do cct: %d", cct);
 			bleProtocol->SetCctLight(addr, cct, 0, true);
-			return true;
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ElementCct::DoV2(Json::Value &dataValue)
+int ElementCct::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -142,7 +142,7 @@ bool ElementCct::DoV2(Json::Value &dataValue)
 		{
 			this->cct = cct;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

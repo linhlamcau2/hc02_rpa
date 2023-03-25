@@ -82,6 +82,12 @@ int Mqtt::Connect()
 		LOGE("loop_start failed code %d, err %s", result, mosqpp::strerror(result));
 	}
 	return result;
+	if (result == MOSQ_ERR_SUCCESS)
+	{
+		return CODE_OK;
+	}
+	LOGW("Connect err: %d", result);
+	return CODE_ERROR;
 }
 
 int Mqtt::Reconnect()
@@ -96,10 +102,10 @@ int Mqtt::removeObjectFromVector(vector<MQTTPubSub *> *mqttPubSubs, MQTTPubSub *
 		if (*it == mqttPubSub)
 		{
 			(*mqttPubSubs).erase(it);
-			return 1;
+			return CODE_OK;
 		}
-	};
-	return 0;
+	}
+	return CODE_ERROR;
 }
 
 void Mqtt::SubscribeList()
@@ -129,7 +135,7 @@ int Mqtt::Subscribe(string topic, int maxTime, int duration)
 	{
 		removeObjectFromVector(&mqttSubscribes, &mqttSubscribe);
 		mtx.unlock();
-		return ret;
+		return CODE_ERROR;
 	}
 	for (int i = 0; i < maxTime; i++)
 	{
@@ -141,7 +147,7 @@ int Mqtt::Subscribe(string topic, int maxTime, int duration)
 				LOGD("Subscribe topic: %s OK", topic.c_str());
 				removeObjectFromVector(&mqttSubscribes, &mqttSubscribe);
 				mtx.unlock();
-				return MOSQ_ERR_SUCCESS;
+				return CODE_OK;
 			}
 			usleep(1000);
 		}
@@ -151,7 +157,7 @@ int Mqtt::Subscribe(string topic, int maxTime, int duration)
 	removeObjectFromVector(&mqttSubscribes, &mqttSubscribe);
 	LOGW("Subscribe topic: %s time out", topic.c_str());
 	mtx.unlock();
-	return MQTT_ERR_TIMEOUT;
+	return CODE_TIMEOUT;
 }
 
 int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
@@ -171,7 +177,7 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 	{
 		removeObjectFromVector(&mqttUnsubscribes, &mqttUnsubscribe);
 		mtx.unlock();
-		return ret;
+		return CODE_ERROR;
 	}
 	for (int i = 0; i < maxTime; i++)
 	{
@@ -183,7 +189,7 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 				LOGD("Unsubscribes topic: %s OK", topic.c_str());
 				removeObjectFromVector(&mqttUnsubscribes, &mqttUnsubscribe);
 				mtx.unlock();
-				return MOSQ_ERR_SUCCESS;
+				return CODE_OK;
 			}
 			usleep(1000);
 		}
@@ -193,14 +199,14 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 	removeObjectFromVector(&mqttUnsubscribes, &mqttUnsubscribe);
 	LOGW("Unsubscribes topic: %s time out", topic.c_str());
 	mtx.unlock();
-	return MQTT_ERR_TIMEOUT;
+	return CODE_TIMEOUT;
 }
 
 int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 {
 	time_t currentTime;
 	if (!connected)
-		return -1;
+		return CODE_ERROR;
 	MQTTPubSub mqttPublish;
 	mqttPublish.setState(false);
 	LOGV("Publish topic: %s, payload:\n%s", topic.c_str(), payload.c_str());
@@ -218,7 +224,7 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 		removeObjectFromVector(&mqttPublishs, &mqttPublish);
 		LOGW("Publish error: %d", ret);
 		mtx.unlock();
-		return ret;
+		return CODE_ERROR;
 	}
 	for (int i = 0; i < maxTime; i++)
 	{
@@ -230,7 +236,7 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 				LOGV("Publish topic: %s OK", topic.c_str());
 				removeObjectFromVector(&mqttPublishs, &mqttPublish);
 				mtx.unlock();
-				return MOSQ_ERR_SUCCESS;
+				return CODE_OK;
 			}
 			usleep(1000);
 		}
@@ -239,12 +245,21 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 	removeObjectFromVector(&mqttPublishs, &mqttPublish);
 	LOGW("Publish topic: %s time out", topic.c_str());
 	mtx.unlock();
-	return MQTT_ERR_TIMEOUT;
+	return CODE_TIMEOUT;
 }
 
 int Mqtt::Publish(string topic, char *payload, int payloadLen)
 {
-	return publish(NULL, topic.c_str(), payloadLen, payload);
+	int rs = publish(NULL, topic.c_str(), payloadLen, payload);
+	if (rs == MOSQ_ERR_SUCCESS)
+	{
+		return CODE_OK;
+	}
+	else
+	{
+		LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
+		return CODE_ERROR;
+	}
 }
 
 bool Mqtt::isConnected()
@@ -345,8 +360,7 @@ void Mqtt::OnMessage(string topic, char *payload, int payloadlen)
 {
 	// LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload.c_str());
 	ActionCallback *actionCallback;
-	int getCallback = findActionCallbackFuncFromTopic(topic, &actionCallback);
-	if (getCallback == 1)
+	if (findActionCallbackFuncFromTopic(topic, &actionCallback) == CODE_OK)
 	{
 		if (actionCallback->getType() == 1)
 		{
@@ -413,28 +427,28 @@ int checkMqttTopic(string retrieveTopic, string registerTopic)
 	for (size_t i = 0; i < retrieveList.size(); i++)
 	{
 		if (registerList.size() < i)
-			return 0;
+			return CODE_ERROR;
 		if (registerList.at(i) == "#")
-			return 1; // OK
+			return CODE_OK; // OK
 		if (registerList.at(i) == "+")
 			continue;
 		if (registerList.at(i) != retrieveList.at(i))
-			return 0;
+			return CODE_ERROR;
 	}
 	if (registerList.size() == retrieveList.size())
-		return 1; // OK
-	return 0;
+		return CODE_OK; // OK
+	return CODE_ERROR;
 }
 
 int Mqtt::findActionCallbackFuncFromTopic(string topic, ActionCallback **actionCallback)
 {
 	for (auto &action : actionCallbacks)
 	{
-		if (checkMqttTopic(topic, action.getTopic()))
+		if (checkMqttTopic(topic, action.getTopic()) == CODE_OK)
 		{
 			*actionCallback = &action;
-			return 1;
+			return CODE_OK;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }

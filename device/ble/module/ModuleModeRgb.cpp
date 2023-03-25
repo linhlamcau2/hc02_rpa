@@ -26,7 +26,7 @@ void ModuleModeRgb::SaveAttribute()
 #endif
 
 // TODO: recheck
-bool ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -50,11 +50,11 @@ bool ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
-				return true;
+				return CODE_OK;
 			}
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
@@ -116,7 +116,7 @@ void ModuleModeRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_MODE_RGB] = mode;
 }
 
-bool ModuleModeRgb::Do(Json::Value &dataValue)
+int ModuleModeRgb::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -128,13 +128,13 @@ bool ModuleModeRgb::Do(Json::Value &dataValue)
 		{
 			int value = dataValue["VALUE"].asInt();
 			bleProtocol->CallModeRgb(addr, value);
-			return true;
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleModeRgb::DoV2(Json::Value &dataValue)
+int ModuleModeRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -145,7 +145,7 @@ bool ModuleModeRgb::DoV2(Json::Value &dataValue)
 		{
 			this->mode = mode;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

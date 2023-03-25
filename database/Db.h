@@ -10,14 +10,6 @@
 #include "SceneBle.h"
 #include "Room.h"
 
-#ifdef ESP_PLATFORM
-#define DB_NAME "/spiffs/smh.sqlite"
-#elif defined(__ANDROID__)
-#define DB_NAME "/etc/smh/smh.sqlite"
-#else
-#define DB_NAME "/smh.sqlite"
-#endif
-
 using namespace std;
 
 class Db
@@ -34,6 +26,7 @@ public:
 	~Db() {}
 
 	void init(void);
+	int createTableIfNotExists();
 
 	int DeviceRead();
 	int DeviceAdd(Device *device);
@@ -63,7 +56,7 @@ public:
 	int DeviceInRoomRead();
 	int DeviceInRoomAdd(Room *room, Device *device);
 	int DeviceInRoomDel(Room *room, Device *device);
-	int DeviceInRoomDelAll(Room *room);
+	int DeviceInRoomDelAll();
 
 	int DeviceInSceneBleRead();
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data);
@@ -72,7 +65,6 @@ public:
 
 	int GatewayRead();
 	int GatewayAdd(Gateway *gateway);
-	int GatewayUpdate(Gateway *gateway);
 	int GatewayUpdateId(Gateway *gateway, string id);
 	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
 	int GatewayUpdateAppKey(Gateway *gateway, string appkey);

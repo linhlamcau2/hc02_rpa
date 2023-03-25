@@ -7,6 +7,7 @@
 #include <functional>
 #include <termios.h>
 #include <mutex>
+#include "ErrorCode.h"
 
 using namespace std;
 
@@ -14,6 +15,7 @@ class Uart
 {
 private:
 	char *port;
+	int baudrate;
 	thread *uartThread;
 	mutex mtx;
 
@@ -22,7 +24,7 @@ public:
 	int timeout;
 	unsigned char rx_buf[BUFFER_SIZE];
 
-	Uart(char *port, int timeout);
+	Uart(char *port, int baudrate, int timeout);
 	virtual ~Uart();
 	
 	void init();

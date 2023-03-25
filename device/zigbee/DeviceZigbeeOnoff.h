@@ -17,5 +17,5 @@ public:
 	void InitAttribute(int attributeId, double value);
 	void InputData(uint8_t *data, int len, uint32_t addr = 0);
 	bool CheckData(Json::Value &dataValue, bool &rs);
-	bool Do(Json::Value &dataValue);
+	int Do(Json::Value &dataValue);
 };

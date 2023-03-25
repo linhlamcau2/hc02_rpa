@@ -1,10 +1,14 @@
 #pragma once
 
 // TODO: add to all Do function
+// TODO: Merge MQTT error code
 typedef enum
 {
+	CODE_ERROR = -1,
 	CODE_OK = 0,
-	CODE_ERROR,
+	CODE_NOT_RESPONSE,
+	CODE_DATA_ARRAY,
+	CODE_TIMEOUT,
 	CODE_NOT_FOUND_DEVICE,
 	CODE_NOT_FOUND_GROUP,
 	CODE_NOT_FOUND_SCENE,

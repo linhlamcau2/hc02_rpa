@@ -20,7 +20,6 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 				int addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-
 				Room *room = new Room(roomId, addr, name);
 				if (room)
 				{
@@ -38,7 +37,7 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 					}
 					else
 					{
-						LOGW("Decode data error: %s", data);
+						LOGW("Decode data error: %s", data.c_str());
 					}
 					if (!gateway->AddNewRoom(room))
 					{
@@ -48,16 +47,16 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 			}
 			else if (s == SQLITE_DONE)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
 				LOGE("RoomParse");
-				return 1;
+				return CODE_ERROR;
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Db::RoomRead()
@@ -67,13 +66,13 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'"+room->GetName()+"','"+macaron::Base64::Encode(room->GetDataConfig())+"')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "')";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomUpdate(Room *room, int id)
 {
-	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE room_id = \"" + room->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE room_id = '" + room->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

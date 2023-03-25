@@ -18,30 +18,29 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				
 				Group *group = gateway->getGroupFromId(id);
+				if (!group)
+					group = new Group(id, addr, name);
 				if (group)
-				Group *group = new Group(id, addr, name);
-				if (gateway->AddNewGroup(group, true, false))
 				{
-				}
-				else
-				{
-					LOGE("AddNewGroup failed");
+					if (!gateway->AddNewGroup(group, true, false))
+					{
+						LOGE("AddNewGroup failed");
+					}
 				}
 			}
 			else if (s == SQLITE_DONE)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
 				LOGE("GroupParse");
-				return 1;
+				return CODE_ERROR;
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Db::GroupRead()
@@ -57,7 +56,7 @@ int Db::GroupAdd(Group *group)
 
 int Db::GroupUpdate(Group *group)
 {
-	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE group_id= \"" + group->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + group->GetName() + "' WHERE group_id= '" + group->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

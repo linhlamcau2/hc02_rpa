@@ -56,7 +56,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->id = "";
 	this->dormitoryId = "";
 	this->refresh_token = "";
-	this->ble_unicast = 0;
+	this->ble_addr = 0;
 	this->ble_iv_index = 0;
 	this->ble_appkey = "";
 	this->ble_appkey = "";
@@ -97,6 +97,13 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 	return NULL;
 }
 
+void Gateway::delDevice(Device *device)
+{
+	deviceList.erase(device->GetId());
+	database->DeviceDel(device);
+	delete device;
+}
+
 Group *Gateway::getGroupFromId(string id)
 {
 	if (groupList.find(id) != groupList.end())
@@ -116,6 +123,13 @@ Group *Gateway::getGroupFromAddr(int addr)
 		}
 	}
 	return NULL;
+}
+
+void Gateway::delGroup(Group *group)
+{
+	groupList.erase(group->GetId());
+	database->GroupDel(group);
+	delete group;
 }
 
 SceneBle *Gateway::getSceneBleFromId(string id)
@@ -139,6 +153,13 @@ SceneBle *Gateway::getSceneBleFromAddr(int addr)
 	return NULL;
 }
 
+void Gateway::delSceneBle(SceneBle *sceneBle)
+{
+	sceneBleList.erase(sceneBle->GetId());
+	database->SceneBleDel(sceneBle);
+	delete sceneBle;
+}
+
 Rule *Gateway::getRuleFromId(string id)
 {
 	if (ruleList.find(id) != ruleList.end())
@@ -148,6 +169,13 @@ Rule *Gateway::getRuleFromId(string id)
 	return NULL;
 }
 
+void Gateway::delRule(Rule *rule)
+{
+	ruleList.erase(rule->GetId());
+	database->RuleDel(rule);
+	delete rule;
+}
+
 Room *Gateway::getRoomFromId(string id)
 {
 	if (roomList.find(id) != roomList.end())
@@ -155,6 +183,13 @@ Room *Gateway::getRoomFromId(string id)
 		return roomList[id];
 	}
 	return NULL;
+}
+
+void Gateway::delRoom(Room *room)
+{
+	roomList.erase(room->GetId());
+	database->RoomDel(room);
+	delete room;
 }
 
 void Gateway::init()
@@ -167,7 +202,6 @@ void Gateway::init()
 	initMqttMessage();
 	initMqttMessageV2();
 
-	LOGI("DeviceRead");
 	database->GatewayRead();
 	database->DeviceRead();
 	database->DeviceBleChildRead();
@@ -183,7 +217,7 @@ void Gateway::init()
 	{
 		id = mac;
 		gateway->setId(id);
-		database->GatewayUpdateId(gateway, id);
+		database->GatewayAdd(gateway);
 		database->GatewayRead();
 	}
 
@@ -229,12 +263,18 @@ void Gateway::ResetFactory()
 	sceneBleList.clear();
 
 	database->DeviceDelAll();
-	database->GatewayDelAll();
-	database->GatewayUpdateId(gateway, gateway->getId());
-	gateway->setBleAppkey("");
 	database->DeviceAttributeDelAll();
+	database->DeviceBleChildDelAll();
 	database->GroupDelAll();
 	database->DeviceInGroupDelAll();
+	database->RoomDelAll();
+	database->DeviceInRoomDelAll();
+	database->SceneBleDelAll();
+	database->DeviceInSceneBleDelAll();
+
+	database->GatewayUpdateId(gateway, "");
+	gateway->setId("");
+	gateway->setBleAppkey("");
 	bleProtocol->ResetDelAll();
 	bleProtocol->ResetFactory();
 }
@@ -342,7 +382,7 @@ int Gateway::CheckOnlineThread()
 		}
 		sleep(1);
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Gateway::UdpBroadcastThread()
@@ -404,7 +444,7 @@ int Gateway::UdpBroadcastThread()
 	isUdpBroadcasting = false;
 	free(udpBroadcastThread);
 	udpBroadcastThread = NULL;
-	return 0;
+	return CODE_OK;
 }
 
 void Gateway::StartUdpBroadcast()
@@ -482,7 +522,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	dataValue["MAC_ADDRESS"] = scanDevice->GetMac();
 	dataValue["FIRMWARE_VERSION"] = scanDevice->GetVersionStr();
 	dataValue["DEVICE_KEY"] = devKey;
-	dataValue["NET_KEY"] = gateway->getBleNetkey();
+	dataValue["NET_KEY"] = gateway->getBleNetKey();
 	dataValue["APP_KEY"] = gateway->getBleAppKey();
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
@@ -493,9 +533,10 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 #endif
 }
 
-Device *Gateway::AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
+Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
+
 	Device *device = NULL;
 	switch (type)
 	{
@@ -516,48 +557,48 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string device_
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
-		device = new DeviceBleLightOnoffCctDim(id, name, mac, device_id, addr, type, version);
+		device = new DeviceBleLightOnoffCctDim(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
-		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
+		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_LED_DAY_RGB:
-		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, device_id, addr, type, version);
+		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_1:
-		device = new DeviceBleSwitchTouchRgb1(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchTouchRgb1(id, name, mac, data, addr, version);
 		break;
 	case BLE_SWITCH_RGB_2:
-		device = new DeviceBleSwitchTouchRgb2(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchTouchRgb2(id, name, mac, data, addr, version);
 		break;
 	case BLE_SWITCH_RGB_3:
-		device = new DeviceBleSwitchTouchRgb3(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchTouchRgb3(id, name, mac, data, addr, version);
 		break;
 	case BLE_SWITCH_RGB_4:
-		device = new DeviceBleSwitchTouchRgb4(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
-		device = new DeviceBleSwitchScene6DC(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, version);
 		break;
 	case BLE_TEMP_HUM_SENSOR:
-		device = new DeviceBleSensorTempHum(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, version);
 		break;
 	case BLE_PM_SENSOR:
-		device = new DeviceBleSensorPm(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSensorPm(id, name, mac, data, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
-		device = new DeviceBlePirLightSensorDC(id, name, mac, device_id, addr, version);
+		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version);
 		break;
 	case BLE_SMOKE_SENSOR:
-		device = new DeviceBleSmokeSensor(id, name, mac, device_id, addr, version);
+		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, version);
 		break;
 	case BLE_DOOR_SENSOR:
-		device = new DeviceBleDoorSensor(id, name, mac, device_id, addr, version);
+		device = new DeviceBleDoorSensor(id, name, mac, data, addr, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
-		device = new DeviceBleScreenTouch(id, name, mac, device_id, addr, version);
+		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
 		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
@@ -606,7 +647,9 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 			}
 		}
 		if (addGateway)
+		{
 			groupList[group->GetId()] = group;
+		}
 	}
 	return group;
 }
@@ -881,15 +924,17 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 	{
 		if (addDatabase)
 		{
-			// int rs = database->GroupAdd(group);
-			// if (rs)
-			// {
-			// LOGW("rs: %d", rs);
-			// return NULL;
-			// }
+			int rs = database->SceneBleAdd(sceneBle);
+			if (rs)
+			{
+				LOGW("rs: %d", rs);
+				return NULL;
+			}
 		}
 		if (addGateway)
+		{
 			sceneBleList[sceneBle->GetId()] = sceneBle;
+		}
 	}
 	return sceneBle;
 }
@@ -903,16 +948,16 @@ Room *Gateway::AddNewRoom(Room *room)
 	return room;
 }
 
-uint16_t Gateway::getBleUnicast()
+uint16_t Gateway::getBleAddr()
 {
-	return ble_unicast;
+	return ble_addr;
 }
 uint32_t Gateway::getBleIvIndex()
 {
 	return ble_iv_index;
 }
 
-string Gateway::getBleNetkey()
+string Gateway::getBleNetKey()
 {
 	return ble_netkey;
 }
@@ -950,9 +995,9 @@ string Gateway::getMac()
 	return mac;
 }
 
-void Gateway::setBleUnicast(uint16_t unicast)
+void Gateway::setBleAddr(uint16_t addr)
 {
-	this->ble_unicast = unicast;
+	this->ble_addr = addr;
 }
 
 void Gateway::setBleIvIndex(uint32_t ivIndex)
@@ -982,6 +1027,10 @@ void Gateway::setRefreshToken(string refresh_token)
 void Gateway::setId(string id)
 {
 	this->id = id;
+}
+void Gateway::setMac(string mac)
+{
+	this->mac = mac;
 }
 void Gateway::setVersion(string version)
 {
@@ -1152,4 +1201,14 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		LOGW("Rule format error");
 	}
 	return NULL;
+}
+
+int Gateway::pushDeviceUpdateLocalV2(Json::Value &dataValue)
+{
+	return PublishToLocalMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+}
+
+int Gateway::pushDeviceUpdateCloudV2(Json::Value &dataValue)
+{
+	return PublishToCloudMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
 }

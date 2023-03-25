@@ -23,7 +23,7 @@ void FileTransfer::init()
 	gateway->OnDeviceRpcCallbackRegister("DownloadFileResp", bind(&FileTransfer::OnRpcDownloadFileResp, this, placeholders::_1, placeholders::_2));
 }
 
-bool FileTransfer::uploadFile(string path, string name)
+int FileTransfer::uploadFile(string path, string name)
 {
 	LOGD("uploadFile");
 	string filePath = path + "/" + name;
@@ -65,23 +65,23 @@ bool FileTransfer::uploadFile(string path, string name)
 	{
 		LOGI("upload file %s done", name.c_str());
 	}
-	return 0;
+	return CODE_OK;
 }
 
-bool FileTransfer::downloadFile(string path, string name)
+int FileTransfer::downloadFile(string path, string name)
 {
 	// isBusy = true;
 	// string filePath = path + "/" + name;
 
 	// isBusy = false;
-	return 0;
+	return CODE_OK;
 }
 
 void FileTransfer::OnFWMessage(string &topic, char *payload, int payloadlen)
 {
 }
 
-bool FileTransfer::UploadChunk(string sessionId, File *file)
+int FileTransfer::UploadChunk(string sessionId, File *file)
 {
 	string filePath = file->path + "/" + file->name;
 	LOGD("UploadChunk: %d, path: %s", file->chunkIndex * BIN_PACKAGE_SIZE, filePath.c_str());
@@ -95,14 +95,14 @@ bool FileTransfer::UploadChunk(string sessionId, File *file)
 			file->Close();
 			gateway->CloudPublish(pubFwTopic + sessionId + "/" + to_string(file->chunkIndex), fileContent, size);
 			free(fileContent);
-			return true;
+			return CODE_OK;
 		}
 		else
 		{
 			LOGW("malloc err");
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 int FileTransfer::OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respValue)
@@ -143,7 +143,7 @@ int FileTransfer::OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respVa
 			}
 		}
 	}
-	return 1;
+	return CODE_ERROR;
 }
 
 int FileTransfer::OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue)
@@ -184,7 +184,7 @@ int FileTransfer::OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &resp
 			}
 		}
 	}
-	return 1;
+	return CODE_ERROR;
 }
 
 int FileTransfer::OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue)
@@ -193,5 +193,5 @@ int FileTransfer::OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &resp
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 	}
-	return 0;
+	return CODE_ERROR;
 }

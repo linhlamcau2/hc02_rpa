@@ -25,7 +25,7 @@ void ModulePirSensor::SaveAttribute()
 }
 #endif
 
-bool ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x05 && data[2] == 0x00)
 	{
@@ -38,9 +38,9 @@ bool ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		pir = (data_message->pir);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModulePirSensor::CheckData(Json::Value &dataValue, bool &rs)

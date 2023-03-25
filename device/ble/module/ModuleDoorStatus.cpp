@@ -25,16 +25,16 @@ void ModuleDoorStatus::SaveAttribute()
 }
 #endif
 
-bool ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
 	{
 		status = data[3];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)

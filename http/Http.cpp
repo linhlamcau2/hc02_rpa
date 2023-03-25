@@ -6,22 +6,19 @@ HTTPRequest::HTTPRequest()
 {
 }
 
-int HTTPRequest::setMethod(string method)
+void HTTPRequest::setMethod(string method)
 {
 	this->method = method;
-	return 0;
 }
 
-int HTTPRequest::setUrl(string url)
+void HTTPRequest::setUrl(string url)
 {
 	this->url = url;
-	return 0;
 }
 
-int HTTPRequest::setToken(string token)
+void HTTPRequest::setToken(string token)
 {
 	this->token = token;
-	return 0;
 }
 
 size_t WriteCallback(char *contents, size_t size, size_t nmemb, void *userp)

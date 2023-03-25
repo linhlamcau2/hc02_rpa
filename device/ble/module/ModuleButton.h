@@ -39,7 +39,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	bool InputData(uint8_t *data, int len, Json::Value &jsonValue);
+	int InputData(uint8_t *data, int len, Json::Value &jsonValue);
 
 	/**
 	 * @brief Check rule input
@@ -78,7 +78,7 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	bool Do(Json::Value &dataValue);
+	int Do(Json::Value &dataValue);
 
 	/**
 	 * @brief Do an action use message format version 2
@@ -87,5 +87,5 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	bool DoV2(Json::Value &dataValue);
+	int DoV2(Json::Value &dataValue);
 };

@@ -28,26 +28,26 @@ int Room::GetPositionDevice(Device *device)
  * Id room là id group tất cả thiết bị trong phòng
  * Lấy unicast room là unicast group tất cả thiết bị
  */
-bool Room::AddDevice(Device *device, bool sendBle)
+int Room::AddDevice(Device *device, bool sendBle)
 {
 	if (!device)
 	{
-		return false;
+		return CODE_ERROR;
 	}
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		DeviceInRoom *devcieInRoom = new DeviceInRoom(device);
+		DeviceInRoom *deviceInRoom = new DeviceInRoom(device);
 
 		if (sendBle)
 		{
 			if (bleProtocol->SetGroup(device->GetAddr(), addr + 49152) == 0)
 			{
-				if (devcieInRoom)
+				if (deviceInRoom)
 				{
 					if (GetPositionDevice(device) == -1)
 					{
-						deviceList.push_back(devcieInRoom);
-						return true;
+						deviceList.push_back(deviceInRoom);
+						return CODE_OK;
 					}
 				}
 			}
@@ -58,39 +58,39 @@ bool Room::AddDevice(Device *device, bool sendBle)
 		}
 		else
 		{
-			if (devcieInRoom)
+			if (deviceInRoom)
 			{
 				if (GetPositionDevice(device) == -1)
 				{
-					deviceList.push_back(devcieInRoom);
-					return true;
+					deviceList.push_back(deviceInRoom);
+					return CODE_OK;
 				}
 			}
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool Room::AddDevice2(Device *device, bool sendBle)
+int Room::AddDevice2(Device *device, bool sendBle)
 {
 	LOGW("AddDevice2");
 	if (!device)
 	{
-		return false;
+		return CODE_ERROR;
 	}
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		DeviceInRoom *devcieInRoom = new DeviceInRoom(device);
+		DeviceInRoom *deviceInRoom = new DeviceInRoom(device);
 		if (sendBle)
 		{
 			if (bleProtocol->AddDeviceToRoom(device->GetAddr(), addr) == 0)
 			{
-				if (devcieInRoom)
+				if (deviceInRoom)
 				{
 					if (GetPositionDevice(device) == -1)
 					{
-						deviceList.push_back(devcieInRoom);
-						return true;
+						deviceList.push_back(deviceInRoom);
+						return CODE_OK;
 					}
 				}
 			}
@@ -101,20 +101,20 @@ bool Room::AddDevice2(Device *device, bool sendBle)
 		}
 		else
 		{
-			if (devcieInRoom)
+			if (deviceInRoom)
 			{
 				if (GetPositionDevice(device) == -1)
 				{
-					deviceList.push_back(devcieInRoom);
-					return true;
+					deviceList.push_back(deviceInRoom);
+					return CODE_OK;
 				}
 			}
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool Room::DelDevcie(Device *device)
+int Room::DelDevice(Device *device)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -123,9 +123,15 @@ bool Room::DelDevcie(Device *device)
 		{
 			deviceList.erase(deviceList.begin() + deviceIndex);
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
+}
+
+int Room::DelDevice2(Device *device)
+{
+	LOGW("DelDevice2");
+	return CODE_ERROR;
 }
 
 string Room::GetDataConfig()

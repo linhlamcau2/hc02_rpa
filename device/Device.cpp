@@ -38,6 +38,11 @@ bool Device::CheckAddr(uint32_t addr)
 	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
 }
 
+string Device::GetDeviceKey()
+{
+	return "";
+}
+
 uint32_t Device::GetType()
 {
 	return type;
@@ -124,7 +129,7 @@ int Device::BuildAttributesValue(Json::Value &pushDataValue)
 	deviceData["mac"] = mac;
 	deviceData["type"] = (int)type;
 	pushDataValue[id] = deviceData;
-	return 0;
+	return CODE_OK;
 }
 
 void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
@@ -180,7 +185,7 @@ void Device::CheckTrigger()
 	}
 }
 
-bool Device::DoJsonArray(Json::Value &dataValue)
+int Device::DoJsonArray(Json::Value &dataValue)
 {
 	if (dataValue.isArray())
 	{
@@ -193,10 +198,10 @@ bool Device::DoJsonArray(Json::Value &dataValue)
 	{
 		Do(dataValue);
 	}
-	return true;
+	return CODE_OK;
 }
 
-bool Device::DoJsonArrayV2(Json::Value &dataValue)
+int Device::DoJsonArrayV2(Json::Value &dataValue)
 {
 	if (dataValue.isArray())
 	{
@@ -209,10 +214,10 @@ bool Device::DoJsonArrayV2(Json::Value &dataValue)
 	{
 		DoV2(dataValue);
 	}
-	return true;
+	return CODE_OK;
 }
 
-bool Device::Do(Json::Value &dataValue)
+int Device::Do(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{
@@ -225,7 +230,7 @@ bool Device::Do(Json::Value &dataValue)
 	return CODE_OK;
 }
 
-bool Device::DoV2(Json::Value &dataValue)
+int Device::DoV2(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{
@@ -246,13 +251,13 @@ int Device::PushTelemetry()
 	{
 		return gateway->PublishToGatewayTelemetry(pushData);
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Device::PushTelemetry(Json::Value jsonValue)
 {
 	if (jsonValue.isNull())
-		return -1;
+		return CODE_ERROR;
 	Json::Value pushDataValue;
 	Json::Value deviceData;
 	deviceData["DEVICE_ID"] = id;
@@ -272,13 +277,13 @@ int Device::PushAttributes()
 	{
 		return gateway->PublishToGatewayAttributes(pushData);
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
 int Device::PushAttributes(Json::Value jsonValue)
 {
 	if (jsonValue.isNull())
-		return -1;
+		return CODE_ERROR;
 	return gateway->PublishToGatewayAttributes(jsonValue);
 }
 

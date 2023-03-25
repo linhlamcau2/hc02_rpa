@@ -1,3 +1,13 @@
+Thiết bị gửi lên server, server phản hồi:
+- v1/json/req/<mac>/server -> v1/json/resp/server/<mac>
+
+Server gửi xuống thiết bị, thiết bị phản hồi:
+- v1/json/req/server/<mac> -> v1/json/resp/<mac>/server
+
+*note:
+- req, resp: loại bản tin
+- <mac>/server, server/<mac>: chiều đi của bản tin
+
 # Bản tin MQTT
 
 ## I. Bản tin điều khiển
@@ -834,7 +844,7 @@ Response:
 Request:
 ```json
 {
-  "cmd": "delDevToRoom",
+  "cmd": "delDevFromRoom",
   "rqi": "abc123456",
   "data": {
     "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
@@ -849,7 +859,7 @@ Request:
 Response:
 ```json
 {
-    "cmd": "delDevToRoomRsp",
+    "cmd": "delDevFromRoomRsp",
     "rqi": "abc123456",
     "data": {
         "code": 0,

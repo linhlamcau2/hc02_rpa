@@ -3,7 +3,7 @@
 #include "Util.h"
 #include "Base64.h"
 
-#define TABLE_NAME "SceneBle"
+#define TABLE_NAME "[SceneBle]"
 
 static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 {
@@ -19,12 +19,14 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				string sceneId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneId);
 				if (!sceneBle)
 				{
 					sceneBle = new SceneBle(sceneId, addr, name);
-					gateway->AddNewSceneBle(sceneBle, true, false);
+					if (sceneBle)
+					{
+						gateway->AddNewSceneBle(sceneBle, true, false);
+					}
 				}
 			}
 			else if (s == SQLITE_DONE)

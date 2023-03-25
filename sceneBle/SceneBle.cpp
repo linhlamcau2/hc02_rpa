@@ -23,10 +23,10 @@ int SceneBle::GetPositionDevice(Device *device)
 			return i;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
 }
 
-bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB)
+int SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB)
 {
 	if (addOnlyDB == false)
 	{
@@ -34,19 +34,19 @@ bool SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool add
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			deviceList.push_back(deviceInSceneBle);
-			return true;
+			return CODE_OK;
 		}
 	}
 	else
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 		deviceList.push_back(deviceInSceneBle);
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
+int SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 {
 	if (addOnlyDB == false)
 	{
@@ -60,19 +60,19 @@ bool SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			deviceList.push_back(deviceInSceneBle);
-			return true;
+			return CODE_OK;
 		}
 	}
 	else
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 		deviceList.push_back(deviceInSceneBle);
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool SceneBle::DelDevice(Device *device)
+int SceneBle::DelDevice(Device *device)
 {
 	if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == 0)
 	{
@@ -81,12 +81,12 @@ bool SceneBle::DelDevice(Device *device)
 		{
 			deviceList.erase(deviceList.begin() + deviceIndex);
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool SceneBle::Do()
+int SceneBle::Do()
 {
 	return bleProtocol->CallScene(0xffff, addr, 10, true, 1);
 }

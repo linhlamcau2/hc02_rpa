@@ -25,16 +25,16 @@ void ModuleDoorHangOn::SaveAttribute()
 }
 #endif
 
-bool ModuleDoorHangOn::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleDoorHangOn::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x04)
 	{
 		hangOn = data[3];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleDoorHangOn::CheckData(Json::Value &dataValue, bool &rs)

@@ -5,13 +5,11 @@
 #include "Log.h"
 #include "Http.h"
 
-using namespace std;
-
 void Ota::init()
 {
 }
 
-bool Ota::startOta(string name, string url, string sum)
+int Ota::startOta(string name, string url, string sum)
 {
 	// Update opkg
 	system("opkg update");
@@ -76,8 +74,8 @@ bool Ota::startOta(string name, string url, string sum)
 	else
 	{
 		LOGW("File download does not exist");
-		return 0;
+		return CODE_OK;
 	}
 
-	return 0;
+	return CODE_OK;
 }

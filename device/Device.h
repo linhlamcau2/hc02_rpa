@@ -159,6 +159,7 @@ public:
 
 	void SetRSSI(int rssi);
 	virtual bool CheckAddr(uint32_t addr);
+	virtual string GetDeviceKey();
 
 	protocol_e GetProtocol();
 
@@ -178,10 +179,10 @@ public:
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 	virtual void CheckTrigger();
-	virtual bool Do(Json::Value &dataValue);
-	virtual bool DoV2(Json::Value &dataValue);
-	virtual bool DoJsonArray(Json::Value &dataValue);
-	virtual bool DoJsonArrayV2(Json::Value &dataValue);
+	virtual int Do(Json::Value &dataValue);
+	virtual int DoV2(Json::Value &dataValue);
+	virtual int DoJsonArray(Json::Value &dataValue);
+	virtual int DoJsonArrayV2(Json::Value &dataValue);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value jsonValue);

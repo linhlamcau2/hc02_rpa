@@ -30,7 +30,7 @@ void ModuleTempHum::SaveAttribute()
 }
 #endif
 
-bool ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
 	{
@@ -44,9 +44,9 @@ bool ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		hum = bswap_16(data_message->hum);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)

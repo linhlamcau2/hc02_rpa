@@ -16,10 +16,6 @@ Db::Db()
 
 void Db::init(void)
 {
-	if (pthread_mutex_init(&mutex, NULL) != 0)
-	{
-		LOGE("Failed to initialize the mutex");
-	}
 #ifdef ESP_PLATFORM
 	LOGI("Initializing SPIFFS");
 
@@ -67,6 +63,28 @@ void Db::init(void)
 // esp_vfs_spiffs_unregister(conf.partition_label);
 // LOGI("SPIFFS unmounted");
 #endif
+
+	if (pthread_mutex_init(&mutex, NULL) != 0)
+	{
+		LOGE("Failed to initialize the mutex");
+	}
+	createTableIfNotExists();
+}
+
+int Db::createTableIfNotExists()
+{
+	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version VARCHAR, hardware_version VARCHAR, active_time INTEGER, update_time INTEGER, data TEXT, PRIMARY KEY (device_id));"
+							 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id));"
+							 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element));"
+							 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id TEXT NOT NULL, device_id TEXT NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element));"
+							 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id TEXT NOT NULL, device_id TEXT NOT NULL, PRIMARY KEY (room_id, device_id));"
+							 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id TEXT NOT NULL, device_id TEXT NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id));"
+							 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey TEXT, PRIMARY KEY (mac));"
+							 "CREATE TABLE IF NOT EXISTS [Group] (group_id TEXT NOT NULL, group_addr INTEGER, name TEXT, PRIMARY KEY (group_id));"
+							 "CREATE TABLE IF NOT EXISTS Room (room_id TEXT NOT NULL, room_addr INTEGER, name TEXT, data TEXT, PRIMARY KEY (room_id));"
+							 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, isEnable INTEGER NOT NULL, type INTEGER, name TEXT, PRIMARY KEY (rule_id));"
+							 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id TEXT NOT NULL, scene_ble_addr TEXT, name INTEGER, PRIMARY KEY (scene_ble_id));";
+	return Sqlite_Exec(sql);
 }
 
 static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -77,7 +95,7 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 		LOGD("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
 	}
 	LOGD("\n");
-	return 0;
+	return CODE_OK;
 }
 
 int Db::Sqlite_Exec(string &sql)
@@ -93,7 +111,7 @@ int Db::Sqlite_Exec(string &sql)
 		{
 			LOGE("Can't open database: %s", sqlite3_errmsg(db));
 			pthread_mutex_unlock(&mutex);
-			return -1;
+			return CODE_ERROR;
 		}
 		else
 		{
@@ -121,7 +139,7 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 	if (!Parse)
 	{
 		LOGW("Parse func NULL");
-		return 1;
+		return CODE_ERROR;
 	}
 
 	LOGD("ReadAll table %s", table.c_str());

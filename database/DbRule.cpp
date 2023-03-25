@@ -21,7 +21,6 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				int status = sqlite3_column_int(stmt, index++);
 				int type = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);
 				if ((decode == "") && status)
@@ -50,16 +49,16 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 			}
 			else if (s == SQLITE_DONE)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
 				LOGE("RuleParse");
-				return 1;
+				return CODE_ERROR;
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Db::RuleRead()
@@ -69,24 +68,24 @@ int Db::RuleRead()
 
 int Db::RuleAdd(Rule *rule, string data, int isEnable, int type)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, isEnable, type, name) VALUES (\"" + rule->GetId() + "\",\"" + macaron::Base64::Encode(data) + "\"," + to_string(isEnable) + "," + to_string(type) + ", \"" + rule->GetName() + "\");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, isEnable, type, name) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(isEnable) + "," + to_string(type) + ", '" + rule->GetName() + "');";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RuleUpdateData(Rule *rule, string data)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data=\"" + data + "\" WHERE rule_id=\"" + rule->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + data + "' WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 int Db::RuleUpdateStatus(Rule *rule, int isEnable)
 {
-	string sql = "UPDATE " TABLE_NAME "SET isEnable=" + to_string(isEnable) + " WHERE rule_id=\"" + rule->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME "SET isEnable=" + to_string(isEnable) + " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RuleDel(Rule *rule)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE rule_id=\"" + rule->GetId() + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

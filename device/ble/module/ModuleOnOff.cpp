@@ -25,7 +25,7 @@ void ModuleOnOff::SaveAttribute()
 }
 #endif
 
-bool ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -45,9 +45,9 @@ bool ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
@@ -109,7 +109,7 @@ void ModuleOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
 }
 
-bool ModuleOnOff::Do(Json::Value &dataValue)
+int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -121,13 +121,13 @@ bool ModuleOnOff::Do(Json::Value &dataValue)
 		{
 			int value = dataValue["VALUE"].asInt();
 			bleProtocol->SetOnOffLight(addr, value, 0, true);
-			return true;
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleOnOff::DoV2(Json::Value &dataValue)
+int ModuleOnOff::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -138,7 +138,7 @@ bool ModuleOnOff::DoV2(Json::Value &dataValue)
 		{
 			this->onoff = onoff;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

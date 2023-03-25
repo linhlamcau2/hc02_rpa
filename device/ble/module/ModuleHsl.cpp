@@ -41,7 +41,7 @@ void ModuleHsl::SaveAttribute()
 }
 #endif
 
-bool ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct
 	{
@@ -61,9 +61,9 @@ bool ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }
 
 bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
@@ -139,7 +139,7 @@ void ModuleHsl::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
 }
 
-bool ModuleHsl::DoJsonArray(Json::Value &dataValue)
+int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 {
 	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
 	if (dataValue.isArray())
@@ -188,14 +188,14 @@ bool ModuleHsl::DoJsonArray(Json::Value &dataValue)
 	// 				bleProtocol->SetHSLLight(addr, h, value, l, 0, true);
 	// 			else if (this->idL == id)
 	// 				bleProtocol->SetHSLLight(addr, h, s, value, 0, true);
-	// 			return true;
+	// 			return CODE_OK;
 	// 		}
 	// 	}
 	// }
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleHsl::DoV2(Json::Value &dataValue)
+int ModuleHsl::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -212,7 +212,7 @@ bool ModuleHsl::DoV2(Json::Value &dataValue)
 			this->s = s;
 			this->l = l;
 		}
-		return true;
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

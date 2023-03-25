@@ -26,16 +26,16 @@ static int DeviceAttributeParse(sqlite3_stmt *stmt, void *ptr)
 			}
 			else if (s == SQLITE_DONE)
 			{
-				return 0;
+				return CODE_OK;
 			}
 			else
 			{
 				LOGE("DeviceAttributeParse");
-				return 1;
+				return CODE_ERROR;
 			}
 		}
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Db::DeviceAttributeRead()
@@ -45,26 +45,26 @@ int Db::DeviceAttributeRead()
 
 int Db::DeviceAttributeAdd(Device *device, int attributeId, double value)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, attribute_id, value) VALUES (\"" + device->GetId() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, attribute_id, value) VALUES ('" + device->GetId() + "', " + to_string(attributeId) + ", " + to_string(value) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceAttributeUpdate(Device *device, int attributeId, double value)
 {
-	string sql = "UPDATE " TABLE_NAME " SET value=" + to_string(value) + " WHERE device_id=\"" + device->GetId() + "\" AND attribute_id=" + to_string(attributeId) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET value=" + to_string(value) + " WHERE device_id='" + device->GetId() + "' AND attribute_id=" + to_string(attributeId) + ";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceAttributeAddOrReplace(Device *device, int attributeId, double value)
 {
-	// string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES (\"" + device->GetMac() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
+	// string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES ('" + device->GetMac() + "', " + to_string(attributeId) + ", " + to_string(value) + ")";
 	// return Sqlite_Exec(sql);
-	return 0;
+	return CODE_OK;
 }
 
 int Db::DeviceAttributeDel(Device *device, int attributeId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id=\"" + device->GetId() + "\" AND attribute_id=" + to_string(attributeId) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "' AND attribute_id=" + to_string(attributeId) + ";";
 	return Sqlite_Exec(sql);
 }
 

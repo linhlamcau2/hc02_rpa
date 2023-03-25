@@ -11,7 +11,7 @@ DeviceZigbeeTelinkOnoff::DeviceZigbeeTelinkOnoff(string id, string name, string 
 int DeviceZigbeeTelinkOnoff::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	clusterOnoff->BuildTelemetryValue(pushDataValue);
-	return 0;
+	return CODE_OK;
 }
 
 void DeviceZigbeeTelinkOnoff::InputData(uint8_t *data, int len, uint32_t addr)

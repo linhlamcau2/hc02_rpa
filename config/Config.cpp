@@ -223,32 +223,32 @@ void Config::ReadConfig()
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL HOST_KEY, str_temp))
 		localHost = string(str_temp);
 	else
-		localHost = HOST_DEFAULT;
+		localHost = "localhost";
 
 	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL PORT_KEY, &int_temp))
 		localPort = int_temp;
 	else
-		localPort = PORT_DEFAULT;
+		localPort = 1883;
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL CLIENT_ID_KEY, str_temp))
 		localClientId = string(str_temp);
 	else
-		localClientId = CLIENT_ID_DEFAULT;
+		localClientId = "";
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL USERNAME_KEY, str_temp))
 		localUsername = string(str_temp);
 	else
-		localUsername = USERNAME_DEFAULT;
+		localUsername = "";
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL PASSWORD_KEY, str_temp))
 		localPassword = string(str_temp);
 	else
-		localPassword = PASSWORD_DEFAULT;
+		localPassword = "";
 
 	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL KEEP_ALIVE_KEY, &int_temp))
 		localKeepAlive = int_temp;
 	else
-		localKeepAlive = KEEP_ALIVE_DEFAULT;
+		localKeepAlive = 10;
 
 	Print();
 }
