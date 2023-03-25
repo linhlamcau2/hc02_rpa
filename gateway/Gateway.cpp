@@ -24,6 +24,7 @@
 
 #include "BleDefine.h"
 #include "BleProtocol.h"
+#include "DeviceBleAll.h"
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "DeviceBleLightOnoffCctDimHslModeRGB.h"
@@ -540,6 +541,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	Device *device = NULL;
 	switch (type)
 	{
+	case BLE_ALL:
+		device = new DeviceBleAll(id, name, mac, data, addr, type, version);
+		break;
 	case BLE_LED_CHIEU_TRANH:
 	case BLE_LED_CHIEU_GUONG:
 	case BLE_DEN_BAN:
