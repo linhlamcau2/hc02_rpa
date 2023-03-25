@@ -284,7 +284,7 @@ extern "C"
 #define LIGHTNESS_LINEAR_GET 0x4F82
 #define LIGHTNESS_LINEAR_SET 0x5082
 #define LIGHTNESS_LINEAR_SET_NOACK 0x5182
-#define HEADER_CALLMODE_RGB  0x0919
+#define HEADER_CALLMODE_RGB 0x0919
 
 /*
  * Opcode of scene
@@ -301,6 +301,7 @@ extern "C"
 #define SCENE_DEL_NOACK 0x9F82
 
 #define GET_STATUS 0x0705
+#define GET_STATUS_SENSOR_PM 0xE405
 
 /*
  * Opcode for type dev

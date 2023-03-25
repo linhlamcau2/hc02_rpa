@@ -5,12 +5,14 @@
 #include "module/ModuleLightSensor.h"
 #include "module/ModulePinLevel.h"
 #include "module/ModuleTimeActionPir.h"
+#include "module/ModulePirLight.h"
 
 using namespace std;
 
 class DeviceBlePirLightSensorAC : public DeviceBle
 {
 private:
+	ModulePirLight *modulePirLight;
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
 	ModulePinLevel *modulePinLevel;

@@ -54,12 +54,12 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -113,14 +113,19 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
-			bleProtocol->SetOnOffLight(addr, value, 0, true);
+			if (bleProtocol)
+			{
+				bleProtocol->SetOnOffLight(addr, value, 0, true);
+			}
+			else
+				LOGW("BleProtocol null");
 			return CODE_OK;
 		}
 	}
@@ -131,13 +136,18 @@ int ModuleOnOff::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
 		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->onoff = onoff;
+			if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+			{
+				this->onoff = onoff;
+			}
 		}
+		else
+			LOGW("BleProtocol null");
 		return CODE_OK;
 	}
 	return CODE_ERROR;

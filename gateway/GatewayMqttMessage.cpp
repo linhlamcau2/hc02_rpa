@@ -30,6 +30,8 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRpcEditSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRpcDeleteSceneBle, this, placeholders::_1, placeholders::_2));
 
+	OnDeviceRpcCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
+
 	OnDeviceRpcCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRpcAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DelAllDevice", bind(&Gateway::OnRpcDelAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DEVICE", bind(&Gateway::OnRpcControlDevice, this, placeholders::_1, placeholders::_2));
@@ -78,6 +80,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SCENE_FOR_SCREEN", bind(&Gateway::OnRpcSceneScreen, this, placeholders::_1, placeholders::_2));
 
@@ -198,21 +201,31 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
-	bleProtocol->isAdding = true;
-	bleProtocol->isProvisioning = true;
-	if (bleProtocol->StartScan())
+	if (bleProtocol)
 	{
-		bleProtocol->StopScan();
+		bleProtocol->isAdding = true;
+		bleProtocol->isProvisioning = true;
+		if (bleProtocol->StartScan())
+		{
+			bleProtocol->StopScan();
+		}
 	}
+	else
+		LOGW("BleProtocol null");
 	respValue["code"] = 0;
 	return CODE_OK;
 }
 
 int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 {
-	bleProtocol->StopScan();
-	bleProtocol->isAdding = false;
-	bleProtocol->isProvisioning = false;
+	if (bleProtocol)
+	{
+		bleProtocol->StopScan();
+		bleProtocol->isAdding = false;
+		bleProtocol->isProvisioning = false;
+	}
+	else
+		LOGW("BleProtocol null");
 	respValue = reqValue;
 	return CODE_OK;
 }
@@ -220,7 +233,12 @@ int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
-	bleProtocol->ResetFactory();
+	if (bleProtocol)
+	{
+		bleProtocol->ResetFactory();
+	}
+	else
+		LOGW("BleProtocol null");
 	respValue["code"] = 0;
 	return CODE_OK;
 }
@@ -271,7 +289,12 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				bleProtocol->ResetDev(device->GetAddr());
+				if (bleProtocol)
+				{
+					bleProtocol->ResetDev(device->GetAddr());
+				}
+				else
+					LOGW("BleProtocol null");
 				delDevice(device);
 				LOGD("remove deviceId: %s", deviceId.c_str());
 			}
@@ -720,6 +743,34 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["DATA"] = dataJsonRsp;
+	}
+	return CODE_OK;
+}
+
+int Gateway::OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString())
+		{
+			string deviceId = dataValue["DEVICE_ID"].asString();
+			Device *device = gateway->getDeviceFromId(deviceId);
+
+			if (device)
+			{
+				if (bleProtocol)
+				{
+					bleProtocol->UpdateStatusSensorsPm(device->GetAddr());
+				}
+				else
+					LOGW("BleProtocol null");
+			}
+			else
+			{
+				LOGW("Device %s does not exsit", deviceId.c_str());
+			}
+		}
 	}
 	return CODE_OK;
 }
@@ -1757,20 +1808,25 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 				SceneBle *scene = getSceneBleFromId(sceneId);
 				if (scene)
 				{
-					if (device->GetType() == BLE_DC_SCENE_CONTACT)
+					if (bleProtocol)
 					{
-						if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
+						if (device->GetType() == BLE_DC_SCENE_CONTACT)
 						{
-							return CODE_OK;
+							if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
+							{
+								return CODE_OK;
+							}
+						}
+						else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+						{
+							if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
+							{
+								return CODE_OK;
+							}
 						}
 					}
-					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
-					{
-						if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
-						{
-							return CODE_OK;
-						}
-					}
+					else
+						LOGW("BleProtocol null");
 				}
 				else
 				{
@@ -1808,20 +1864,25 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (device->GetType() == BLE_DC_SCENE_CONTACT)
+				if (bleProtocol)
 				{
-					if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue) == 0)
+					if (device->GetType() == BLE_DC_SCENE_CONTACT)
 					{
-						return CODE_OK;
+						if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue) == 0)
+						{
+							return CODE_OK;
+						}
+					}
+					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+					{
+						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue) == 0)
+						{
+							return CODE_OK;
+						}
 					}
 				}
-				else if (device->GetType() == BLE_AC_SCENE_CONTACT)
-				{
-					if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue) == 0)
-					{
-						return CODE_OK;
-					}
-				}
+				else
+					LOGW("BleProtocol null");
 			}
 			else
 			{
@@ -1847,34 +1908,39 @@ int Gateway::OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (device->GetType() == BLE_DC_SCENE_CONTACT)
+				if (bleProtocol)
 				{
-					for (int i = 1; i <= 6; i++)
+					if (device->GetType() == BLE_DC_SCENE_CONTACT)
 					{
-						if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), i, 0))
+						for (int i = 1; i <= 6; i++)
 						{
-							LOGW("del scene error button %d, mode 0", i);
+							if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), i, 0))
+							{
+								LOGW("del scene error button %d, mode 0", i);
+							}
+							if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), i, 1))
+							{
+								LOGW("del scene error button %d, mode 1", i);
+							}
 						}
-						if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), i, 1))
+					}
+					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+					{
+						for (int j = 1; j <= 6; j++)
 						{
-							LOGW("del scene error button %d, mode 1", i);
+							if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), j, 0))
+							{
+								LOGW("del scene error button %d, mode 0", j);
+							}
+							if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), j, 1))
+							{
+								LOGW("del scene error button %d, mode 1", j);
+							}
 						}
 					}
 				}
-				else if (device->GetType() == BLE_AC_SCENE_CONTACT)
-				{
-					for (int j = 1; j <= 6; j++)
-					{
-						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), j, 0))
-						{
-							LOGW("del scene error button %d, mode 0", j);
-						}
-						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), j, 1))
-						{
-							LOGW("del scene error button %d, mode 1", j);
-						}
-					}
-				}
+				else
+					LOGW("BleProtocol null");
 			}
 			else
 			{
@@ -1975,7 +2041,12 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 						}
 						else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
 						{
-							bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, lux[0].asInt(), lux[1].asInt(), scene->GetAddr(), 1);
+							if (bleProtocol)
+							{
+								bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, lux[0].asInt(), lux[1].asInt(), scene->GetAddr(), 1);
+							}
+							else
+								LOGW("BleProtocol null");
 						}
 					}
 					else
@@ -2047,7 +2118,7 @@ int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
 			string deviceId = data["DEVICE_ID"].asString();
 			dataJson["DEVICE_ID"] = deviceId;
 			Device *device = getDeviceFromId(deviceId);
-			string status = "SUCCESS";
+			string status = "FAILED";
 			if (device && device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
 			{
 				if (data.isMember("SCENES") && data["SCENES"].isArray())
@@ -2064,10 +2135,15 @@ int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
 							SceneBle *scene = getSceneBleFromId(sceneId);
 							if (scene)
 							{
-								if (bleProtocol->SceneForScreenTouch(device->GetAddr(), scene->GetAddr(), sceneIcon, 1) != 0)
+								if (bleProtocol)
 								{
-									status = "FAILED";
+									if (bleProtocol->SceneForScreenTouch(device->GetAddr(), scene->GetAddr(), sceneIcon, 1) == CODE_OK)
+									{
+										status = "SUCCESS";
+									}
 								}
+								else
+									LOGW("BleProtocol null");
 							}
 							else
 							{
@@ -2088,10 +2164,15 @@ int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
 							SceneBle *sceneDel = getSceneBleFromId(sceneId);
 							if (sceneDel)
 							{
-								if (bleProtocol->DelSceneScreenTouch(device->GetAddr(), sceneDel->GetAddr()) != 0)
+								if (bleProtocol)
 								{
-									status = "FAILED";
+									if (bleProtocol->DelSceneScreenTouch(device->GetAddr(), sceneDel->GetAddr()) == CODE_OK)
+									{
+										status = "SUCCESS";
+									}
 								}
+								else
+									LOGW("BleProtocol null");
 							}
 							else
 							{
@@ -2472,7 +2553,12 @@ int Gateway::OnRpcDelAllDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	database->DeviceDelAll();
 	deviceList.clear();
-	bleProtocol->ResetFactory();
+	if (bleProtocol)
+	{
+		bleProtocol->ResetFactory();
+	}
+	else
+		LOGW("BleProtocol null");
 	respValue["code"] = 0;
 	return CODE_OK;
 }

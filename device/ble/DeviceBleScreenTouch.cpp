@@ -21,6 +21,8 @@ void DeviceBleScreenTouch::SendDatetime()
 			bleProtocol->SendDate(addr, Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
 			bleProtocol->SendTime(addr, Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
 		}
+		else
+			LOGW("BleProtocol null");
 		sleep(3600);
 	}
 }

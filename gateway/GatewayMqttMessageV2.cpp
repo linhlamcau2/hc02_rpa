@@ -115,37 +115,42 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value dataValue = data["data"];
 			if (dataValue.isObject())
 			{
-				if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+				if (bleProtocol)
 				{
-					int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-					bleProtocol->SetOnOffLight(0xFFFF, value, 0, true);
+					if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+					{
+						int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+						bleProtocol->SetOnOffLight(0xFFFF, value, 0, true);
+					}
+					if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+					{
+						int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+						uint16_t dim = (value * 65535) / 100;
+						bleProtocol->SetDimmingLight(0xFFFF, dim, 0, true);
+					}
+					if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+					{
+						int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+						uint16_t cct = (value * 192) + 800;
+						bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
+					}
+					if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+						dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+						dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+					{
+						int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+						int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+						int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+						bleProtocol->SetHSLLight(0xFFFF, h, s, l, 0, true);
+					}
+					if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+					{
+						int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+						bleProtocol->CallModeRgb(0xFFFF, value);
+					}
 				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-					uint16_t dim = (value * 65535) / 100;
-					bleProtocol->SetDimmingLight(0xFFFF, dim, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-					uint16_t cct = (value * 192) + 800;
-					bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-					dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-					dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
-				{
-					int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-					int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-					int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-					bleProtocol->SetHSLLight(0xFFFF, h, s, l, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-					bleProtocol->CallModeRgb(0xFFFF, value);
-				}
+				else
+					LOGW("BleProtocol null");
 				respValue["data"]["code"] = 0;
 			}
 			else
@@ -330,12 +335,17 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
-	bleProtocol->isAdding = true;
-	bleProtocol->isProvisioning = true;
-	if (bleProtocol->StartScan())
+	if (bleProtocol)
 	{
-		bleProtocol->StopScan();
+		bleProtocol->isAdding = true;
+		bleProtocol->isProvisioning = true;
+		if (bleProtocol->StartScan())
+		{
+			bleProtocol->StopScan();
+		}
 	}
+	else
+		LOGW("BleProtocol null");
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "startScanBleRsp";
 	return CODE_OK;
@@ -343,9 +353,14 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
-	bleProtocol->StopScan();
-	bleProtocol->isAdding = false;
-	bleProtocol->isProvisioning = false;
+	if (bleProtocol)
+	{
+		bleProtocol->StopScan();
+		bleProtocol->isAdding = false;
+		bleProtocol->isProvisioning = false;
+	}
+	else
+		LOGW("BleProtocol null");
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "stopScanBleRsp";
 	return CODE_OK;
@@ -369,17 +384,22 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+						if (bleProtocol)
 						{
-							database->DeviceDel(device->GetMac());
-							LOGD("remove deviceId: %s", deviceId.c_str());
-							successList.append(deviceId);
+							if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+							{
+								database->DeviceDel(device->GetMac());
+								LOGD("remove deviceId: %s", deviceId.c_str());
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("delete deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
 						}
 						else
-						{
-							LOGD("delete deviceId %s error", deviceId.c_str());
-							failedList.append(deviceId);
-						}
+							LOGW("BleProtocol null");
 					}
 					else
 					{

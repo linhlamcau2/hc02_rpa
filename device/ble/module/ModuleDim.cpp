@@ -54,12 +54,12 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t dim1 = 0, dim2 = 0;
 			string op = dataValue["OP"].asString();
@@ -99,7 +99,7 @@ void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	Json::Value dataValue;
 	dataValue["ID"] = id;
-	dataValue["VALUE"] = dim;
+	dataValue["VALUE"] = (dim * 100) / 65535;
 	jsonValue.append(dataValue);
 }
 
@@ -112,15 +112,20 @@ int ModuleDim::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t dim = (value * 65535) / 100;
-			bleProtocol->SetDimmingLight(addr, dim, 0, true);
+			if (bleProtocol)
+			{
+				bleProtocol->SetDimmingLight(addr, dim, 0, true);
+			}
+			else
+				LOGW("BleProtocol null");
 			return CODE_OK;
 		}
 	}
@@ -131,14 +136,19 @@ int ModuleDim::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		uint16_t value = (dim * 65535) / 100;
-		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->dim = dim;
+			if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+			{
+				this->dim = dim;
+			}
 		}
+		else
+			LOGW("BleProtocol null");
 		return CODE_OK;
 	}
 	return CODE_ERROR;

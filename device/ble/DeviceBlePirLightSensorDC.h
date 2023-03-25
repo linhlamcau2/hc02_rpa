@@ -5,6 +5,7 @@
 #include "module/ModuleLightSensor.h"
 #include "module/ModulePinLevel.h"
 #include "module/ModuleTimeActionPir.h"
+#include "module/ModulePirLight.h"
 #include <mutex>
 
 using namespace std;
@@ -12,6 +13,7 @@ using namespace std;
 class DeviceBlePirLightSensorDC : public DeviceBle
 {
 private:
+	ModulePirLight * modulePirLight;
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
 	ModulePinLevel *modulePinLevel;

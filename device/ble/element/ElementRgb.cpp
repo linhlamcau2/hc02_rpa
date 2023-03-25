@@ -96,13 +96,13 @@ bool ElementRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idR == id || this->idG == id || this->idB == id || this->idDimOn == id || this->idDimOff == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -223,7 +223,10 @@ int ElementRgb::DoJsonArray(Json::Value &dataValue)
 		}
 		if (isDimOn && isDimOff && isR && isB && isG)
 		{
-			bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
+			if (bleProtocol)
+				bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
+			else
+				LOGW("BleProtocol null");
 		}
 	}
 	return CODE_ERROR;
@@ -233,25 +236,30 @@ int ElementRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
-			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
-			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+		dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+		dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int r = dataValue[keyR].asInt();
 		int g = dataValue[keyG].asInt();
 		int b = dataValue[keyB].asInt();
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->r = r;
-			this->g = g;
-			this->b = b;
-			this->dimOn = dimOn;
-			this->dimOff = dimOff;
+			if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+			{
+				this->r = r;
+				this->g = g;
+				this->b = b;
+				this->dimOn = dimOn;
+				this->dimOff = dimOff;
+			}
 		}
+		else
+			LOGW("BleProtocol null");
 		return CODE_OK;
 	}
 	return CODE_ERROR;

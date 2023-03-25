@@ -99,6 +99,7 @@ private:
 	int OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue);
 

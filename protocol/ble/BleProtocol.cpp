@@ -133,7 +133,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 		{
 			if (message_rsp->len >= 2 && message_rsp->len <= l - 2)
 			{
-				LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
+				// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
 				for (auto &messageResp : messageRespList)
 				{
 					if (message_rsp->opcode == messageResp->opcode)
@@ -1534,6 +1534,35 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 		LOGW("update lights resp state not match with input control");
 	}
 	LOGW("update lights err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::UpdateStatusSensorsPm(uint16_t devAddr)
+{
+	LOGD("Update status sensor addr: 0x%04X ", devAddr);
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t data[6];
+	} update_message_t;
+	update_message_t update_message = {0};
+	memset(&update_message, 0x00, sizeof(update_message));
+	update_message.ble_message_header.devAddr = devAddr;
+	update_message.opcodeVendor = RD_OPCODE_CONFIG;
+	update_message.vendorId = RD_VENDOR_ID;
+	update_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	update_message.header = GET_STATUS_SENSOR_PM;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, 0, 0, 1000);
+	if (rs == CODE_OK)
+	{
+			return CODE_OK;
+	}
+	LOGW("update status sensor err");
 	return CODE_ERROR;
 }
 

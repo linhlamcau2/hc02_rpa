@@ -276,8 +276,13 @@ void Gateway::ResetFactory()
 	database->GatewayUpdateId(gateway, "");
 	gateway->setId("");
 	gateway->setBleAppkey("");
-	bleProtocol->ResetDelAll();
-	bleProtocol->ResetFactory();
+	if (bleProtocol)
+	{
+		bleProtocol->ResetDelAll();
+		bleProtocol->ResetFactory();
+	}
+	else
+		LOGW("BleProtocol null");
 }
 
 int Gateway::CheckOnlineThread()
