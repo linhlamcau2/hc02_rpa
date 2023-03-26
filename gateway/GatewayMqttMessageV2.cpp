@@ -377,14 +377,9 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 					LOGD("deviceId %s dose not exist", deviceId.c_str());
 					failedList.append(deviceId);
 				}
-				else
-				{
-					LOGD("deviceId %s dose not exist", deviceId.c_str());
-					failedList.append(deviceId);
-				}
 			}
 		}
-		respValue["data"]["code"] = CODE_OK;
+		respValue["data"]["code"] = 0;
 		respValue["data"]["success"] = successList;
 		respValue["data"]["failed"] = failedList;
 	}
