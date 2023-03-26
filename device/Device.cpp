@@ -38,6 +38,11 @@ bool Device::CheckAddr(uint32_t addr)
 	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
 }
 
+string Device::GetDeviceKey()
+{
+	return "";
+}
+
 uint32_t Device::GetType()
 {
 	return type;

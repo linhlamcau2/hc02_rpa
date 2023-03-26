@@ -3,6 +3,7 @@
 #include "Wifi.h"
 #include "Util.h"
 #include "Db.h"
+#include <algorithm>
 
 void Gateway::initUdpMessage()
 {
@@ -22,14 +23,11 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		{
 			return CODE_ERROR;
 		}
-		// string macGw;
-		// for (int i = 0; i < 5; i++)
-		// {
-		// 	macGw = mac.erase(mac.find(':'), 1);
-		// }
+		string macGw = mac;
+		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c) { return c == ':'; }), macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
-		respValue["HOSTNAME"] = "RD_HC_" + mac.substr(mac.size() - 4, 4);
+		respValue["HOSTNAME"] = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
 		respValue["MAC"] = mac;
 		respValue["TLS"] = false;
 		respValue["MQTT_PORT"] = 1883;

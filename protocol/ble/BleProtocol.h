@@ -236,6 +236,7 @@ public:
 
 	// update status lights
 	int UpdateLights(uint16_t devAddr);
+	int UpdateStatusSensorsPm(uint16_t devAddr);
 
 	// remote scene
 	int SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);

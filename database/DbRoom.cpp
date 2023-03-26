@@ -72,7 +72,7 @@ int Db::RoomAdd(Room *room)
 
 int Db::RoomUpdate(Room *room, int id)
 {
-	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE room_id = \"" + room->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE room_id = '" + room->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

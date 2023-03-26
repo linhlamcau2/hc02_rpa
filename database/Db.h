@@ -56,7 +56,7 @@ public:
 	int DeviceInRoomRead();
 	int DeviceInRoomAdd(Room *room, Device *device);
 	int DeviceInRoomDel(Room *room, Device *device);
-	int DeviceInRoomDelAll(Room *room);
+	int DeviceInRoomDelAll();
 
 	int DeviceInSceneBleRead();
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data);
@@ -65,7 +65,6 @@ public:
 
 	int GatewayRead();
 	int GatewayAdd(Gateway *gateway);
-	int GatewayUpdate(Gateway *gateway);
 	int GatewayUpdateId(Gateway *gateway, string id);
 	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
 	int GatewayUpdateAppKey(Gateway *gateway, string appkey);

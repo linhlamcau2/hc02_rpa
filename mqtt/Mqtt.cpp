@@ -217,7 +217,7 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 		mqttPublishs.erase(mqttPublishs.begin());
 	}
 	mqttPublishs.push_back(&mqttPublish);
-	LOGV("publish");
+	// LOGV("publish");
 	int ret = publish(&mqttPublish.id, topic.c_str(), payload.size(), payload.c_str());
 	if (ret != MOSQ_ERR_SUCCESS)
 	{
@@ -233,7 +233,7 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 		{
 			if (mqttPublish.getState() == true)
 			{
-				LOGV("Publish topic: %s OK", topic.c_str());
+				// LOGV("Publish topic: %s OK", topic.c_str());
 				removeObjectFromVector(&mqttPublishs, &mqttPublish);
 				mtx.unlock();
 				return CODE_OK;
@@ -250,7 +250,6 @@ int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
 
 int Mqtt::Publish(string topic, char *payload, int payloadLen)
 {
-	LOGV("Publish topic: %s", topic.c_str());
 	int rs = publish(NULL, topic.c_str(), payloadLen, payload);
 	if (rs == MOSQ_ERR_SUCCESS)
 	{
@@ -305,7 +304,7 @@ void Mqtt::on_disconnect(int rc)
 
 void Mqtt::on_publish(int mid)
 {
-	LOGV("Published message with id: %d", mid);
+	// LOGV("Published message with id: %d", mid);
 	for (auto &mqttPublish : mqttPublishs)
 	{
 		if (mqttPublish->id == mid)
@@ -359,7 +358,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 
 void Mqtt::OnMessage(string topic, char *payload, int payloadLen)
 {
-	// LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload.c_str());
+	LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload);
 	ActionCallback *actionCallback;
 	if (findActionCallbackFuncFromTopic(topic, &actionCallback) == CODE_OK)
 	{

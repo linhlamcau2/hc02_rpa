@@ -17,8 +17,8 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string sceneBleId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneBleId);
@@ -47,7 +47,11 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 									}
 								}
 							}
-							sceneBle->AddDevice(device, devInSceneJson, modeRgb, false);
+							sceneBle->AddDevice(device, devInSceneJson, modeRgb, true);
+						}
+						else
+						{
+							LOGE("data json is not array");
 						}
 						// TODO: Check cho du lieu V2
 					}
@@ -55,6 +59,10 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 					{
 						LOGW("Decode data error");
 					}
+				}
+				else
+				{
+					LOGW("Device or scene does not exist");
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -78,13 +86,13 @@ int Db::DeviceInSceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data) VALUES (\"" + scene->GetId() + "\",\"" + device->GetId() + "\",\"" + macaron::Base64::Encode(data) + "\")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data) VALUES ('" + scene->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "')";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInSceneBleDel(SceneBle *scene, Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id= \"" + scene->GetId() + "\" AND device_id=\"" + device->GetId() + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id= '" + scene->GetId() + "' AND device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

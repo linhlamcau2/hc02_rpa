@@ -36,7 +36,7 @@ private:
 	string ble_netkey;
 	string ble_appkey;
 	string ble_devicekey;
-	uint16_t ble_unicast;
+	uint16_t ble_addr;
 	uint32_t ble_iv_index;
 	string dormitoryId;
 	string refresh_token;
@@ -99,6 +99,7 @@ private:
 	int OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue);
 
@@ -177,7 +178,7 @@ private:
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
-	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
+	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
 	void init();
 
 	/**
@@ -214,9 +215,9 @@ public:
 	Room *getRoomFromId(string id);
 	void delRoom(Room *room);
 
-	uint16_t getBleUnicast();
+	uint16_t getBleAddr();
 	uint32_t getBleIvIndex();
-	string getBleNetkey();
+	string getBleNetKey();
 	string getBleAppKey();
 	string getBleDeviceKey();
 	string getDormitory();
@@ -226,13 +227,14 @@ public:
 	string getRefreshToken();
 	string getMac();
 
-	void setBleUnicast(uint16_t unicast);
+	void setBleAddr(uint16_t addr);
 	void setBleIvIndex(uint32_t ivIndex);
 	void setBleNetkey(string netkey);
 	void setBleAppkey(string appkey);
 	void setBleDevicekey(string devicekey);
 	void setDormitory(string dormitory);
 	void setId(string id);
+	void setMac(string mac);
 	void setVersion(string version);
 	void setName(string name);
 	void setRefreshToken(string refresh_token);

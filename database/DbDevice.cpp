@@ -61,13 +61,13 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES (\"" + device->GetId() + "\",\"" + device->GetName() + "\",\"" + device->GetMac() + "\",\"" + macaron::Base64::Encode(device->GetData()) + "\"," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",\"" + device->GetVersionStr() + "\")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "')";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdate(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET device_id=\"" + device->GetId() + "\", name=\"" + device->GetName() + "\", data=\"" + device->GetData() + "\", addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac=\"" + device->GetMac() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + device->GetData() + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
 	return Sqlite_Exec(sql);
 }
 
@@ -78,7 +78,7 @@ int Db::DeviceDel(Device *device)
 
 int Db::DeviceDel(string mac)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE mac=\"" + mac + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE mac='" + mac + "';";
 	return Sqlite_Exec(sql);
 }
 

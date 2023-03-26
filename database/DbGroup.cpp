@@ -20,7 +20,7 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				Group *group = gateway->getGroupFromId(id);
 				if (!group)
-					Group *group = new Group(id, addr, name);
+					group = new Group(id, addr, name);
 				if (group)
 				{
 					if (!gateway->AddNewGroup(group, true, false))
@@ -56,7 +56,7 @@ int Db::GroupAdd(Group *group)
 
 int Db::GroupUpdate(Group *group)
 {
-	string sql = "UPDATE " TABLE_NAME " SET name=\"" + group->GetName() + "\" WHERE group_id= \"" + group->GetId() + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + group->GetName() + "' WHERE group_id= '" + group->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

@@ -3,7 +3,7 @@
 #include "Util.h"
 #include "Base64.h"
 
-#define TABLE_NAME "SceneBle"
+#define TABLE_NAME "[SceneBle]"
 
 static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 {

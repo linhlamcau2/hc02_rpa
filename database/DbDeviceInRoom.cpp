@@ -45,17 +45,17 @@ int Db::DeviceInRoomRead()
 
 int Db::DeviceInRoomAdd(Room *room, Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, device_id) VALUES (\"" + room->GetId()+ "\",\"" + device->GetId() + "\");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, device_id) VALUES ('" + room->GetId()+ "','" + device->GetId() + "');";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInRoomDel(Room *room, Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id= \"" + room->GetId() + "\" AND device_id=\"" + device->GetId() + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id= '" + room->GetId() + "' AND device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceInRoomDelAll(Room *room)
+int Db::DeviceInRoomDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME " ; ";
 	return Sqlite_Exec(sql);

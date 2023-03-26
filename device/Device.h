@@ -60,6 +60,7 @@ typedef enum
 
 enum
 {
+	BLE_ALL = 0,
 	BLE_DOWNLIGHT_SMT = 12001, // 0x010201,
 	BLE_DOWNLIGHT_COB_GOC_RONG = 12002,
 	BLE_DOWNLIGHT_COB_GOC_HEP = 12003,
@@ -159,6 +160,7 @@ public:
 
 	void SetRSSI(int rssi);
 	virtual bool CheckAddr(uint32_t addr);
+	virtual string GetDeviceKey();
 
 	protocol_e GetProtocol();
 

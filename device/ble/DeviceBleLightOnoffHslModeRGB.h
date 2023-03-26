@@ -15,5 +15,5 @@ private:
 	ModuleHsl *moduleHsl;
 
 public:
-	DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
 };
