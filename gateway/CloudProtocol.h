@@ -17,6 +17,14 @@ private:
 	} request_t;
 	map<string, request_t *> requestList;
 
+	typedef struct
+	{
+		bool status;
+		char *payload;
+		int *payloadLen;
+	} request_bin_t;
+	map<string, request_bin_t *> requestBinList;
+
 	string mac;
 	string subTopicV1;
 	string pubTopicV1;
@@ -26,6 +34,9 @@ private:
 	string pubReqTopicV2;
 	string pubRespTopicV2;
 
+	string subBinRespTopicV2;
+	string pubBinReqTopicV2;
+
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncListV2;
@@ -33,6 +44,7 @@ private:
 	void OnDeviceRpc(string &topic, string &payload);
 	void OnDeviceRpcV2(string &topic, string &payload);
 	void OnServerRespV2(string &topic, string &payload);
+	void OnServerBinRespV2(string &topic, char *payload, int payloadLen);
 
 public:
 	CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
@@ -67,4 +79,6 @@ public:
 	int PublishToGatewayAttributes(Json::Value payloadJson);
 
 	int PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
+	int PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
+	int PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout = 5000);
 };

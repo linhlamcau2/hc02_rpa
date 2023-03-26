@@ -16,6 +16,9 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 	pubReqTopicV2 = "v2/json/req/" + mac + "/server";
 	pubRespTopicV2 = "v2/json/resp/" + mac + "/server";
 
+	subBinRespTopicV2 = "v2/bin/resp/server/" + mac + "/+/+";
+	pubBinReqTopicV2 = "v2/bin/req/" + mac + "/server/";
+
 	Json::Value jsonValue;
 	Json::Value datanValue;
 	datanValue["STATUS_ID"] = 0;
@@ -35,6 +38,7 @@ void CloudProtocol::init()
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopicV1);
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
 	addActionCallback(bind(&CloudProtocol::OnServerRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);
+	addActionCallback(bind(&CloudProtocol::OnServerBinRespV2, this, placeholders::_1, placeholders::_2, placeholders::_3), subBinRespTopicV2);
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -132,14 +136,15 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 	Util::LedServiceLock();
 	if (payloadJson.isObject() &&
 			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
 		if (onRpcCallbackFuncListV2.find(cmd) != onRpcCallbackFuncListV2.end())
 		{
 			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncListV2[cmd];
-			int rs = onRpcCallbackFunc(payloadJson, respValue);
+			int rs = onRpcCallbackFunc(payloadJson["data"], respValue);
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
@@ -201,11 +206,11 @@ void CloudProtocol::OnServerRespV2(string &topic, string &payload)
 			request_t *request = requestList[rqi];
 			if (cmd == request->respCmd)
 			{
-				request->status = true;
 				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
 				{
 					*request->respValue = payloadJson["data"];
 				}
+				request->status = true;
 			}
 		}
 		else
@@ -221,6 +226,31 @@ void CloudProtocol::OnServerRespV2(string &topic, string &payload)
 	}
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
+}
+
+void CloudProtocol::OnServerBinRespV2(string &topic, char *payload, int payloadLen)
+{
+	vector<string> topics = Util::splitString(topic, '/');
+	if (topics.size() != 7)
+		return;
+	string mac = topics[3];
+	string sessionId = topics[5];
+	string index = topics[6];
+	string rqi = sessionId + index;
+	if (requestBinList.find(rqi) != requestBinList.end())
+	{
+		request_bin_t *requestBin = requestBinList[rqi];
+		if (payloadLen <= *requestBin->payloadLen)
+		{
+			memcpy(requestBin->payload, payload, payloadLen);
+			*requestBin->payloadLen = payloadLen;
+		}
+		else
+		{
+			memcpy(requestBin->payload, payload, *requestBin->payloadLen);
+		}
+		requestBin->status = true;
+	}
 }
 
 int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
@@ -325,5 +355,58 @@ int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue,
 	}
 	requestList.erase(rqi);
 	LOGD("PublishToCloudMessageV2 rs: %d", rs);
+	return rs;
+}
+
+int CloudProtocol::PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
+{
+	LOGD("PublishBinToCloudMessageV2");
+	int rs = CODE_OK;
+	request_t request = {
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
+	};
+	string rqi = sessionId + to_string(index);
+	requestList[rqi] = &request;
+	Publish(pubBinReqTopicV2 + sessionId + "/" + to_string(index), payload, payloadLen);
+	while (!request.status && --timeout)
+	{
+		usleep(1000);
+	}
+	if (!request.status)
+	{
+		rs = CODE_ERROR;
+	}
+	requestList.erase(rqi);
+	LOGD("PublishBinToCloudMessageV2 rs: %d", rs);
+	return rs;
+}
+
+int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout)
+{
+	LOGD("PublishToCloudRecieveBinMessageV2");
+	int rs = CODE_OK;
+	request_bin_t requestBin = {
+			.status = false,
+			.payload = payload,
+			.payloadLen = payloadLen,
+	};
+	requestBinList[rqi] = &requestBin;
+	Json::Value sendValue;
+	sendValue["data"] = reqValue;
+	sendValue["rqi"] = rqi;
+	sendValue["cmd"] = reqCmd;
+	Publish(pubReqTopicV2, sendValue.toString());
+	while (!requestBin.status && --timeout)
+	{
+		usleep(1000);
+	}
+	if (!requestBin.status)
+	{
+		rs = CODE_ERROR;
+	}
+	requestBinList.erase(rqi);
+	LOGD("PublishToCloudRecieveBinMessageV2 rs: %d", rs);
 	return rs;
 }

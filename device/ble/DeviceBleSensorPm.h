@@ -12,5 +12,5 @@ private:
 	ModulePmSensor *modulePmSensor;
 
 public:
-	DeviceBleSensorPm(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version);
+	DeviceBleSensorPm(string id, string name, string mac, string data, uint32_t addr, uint16_t version);
 };

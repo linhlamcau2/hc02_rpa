@@ -96,7 +96,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		}
 		break;
 	}
-
 	default:
 		break;
 	}

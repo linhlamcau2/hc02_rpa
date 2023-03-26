@@ -356,7 +356,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 	}
 }
 
-void Mqtt::OnMessage(string topic, char *payload, int payloadlen)
+void Mqtt::OnMessage(string topic, char *payload, int payloadLen)
 {
 	LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), payload);
 	ActionCallback *actionCallback;
@@ -364,21 +364,21 @@ void Mqtt::OnMessage(string topic, char *payload, int payloadlen)
 	{
 		if (actionCallback->getType() == 1)
 		{
-			string payloadStr = string(payload, payloadlen);
+			string payloadStr = string(payload, payloadLen);
 			actionCallback->actionCallbackFuncType1(topic, payloadStr);
 		}
 		else if (actionCallback->getType() == 2)
 		{
-			actionCallback->actionCallbackFuncType2(topic, payload, payloadlen);
+			actionCallback->actionCallbackFuncType2(topic, payload, payloadLen);
 		}
 		else if (actionCallback->getType() == 3)
 		{
-			string payloadStr = string(payload, payloadlen);
+			string payloadStr = string(payload, payloadLen);
 			actionCallback->actionCallbackFuncType3(topic, payloadStr);
 		}
 		else if (actionCallback->getType() == 4)
 		{
-			actionCallback->actionCallbackFuncType4(topic, payload, payloadlen);
+			actionCallback->actionCallbackFuncType4(topic, payload, payloadLen);
 		}
 	}
 	free(payload);

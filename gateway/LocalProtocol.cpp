@@ -113,14 +113,15 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 			Util::LedServiceLock();
 			if (payloadJson.isObject() &&
 					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-					payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+					payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+					payloadJson.isMember("data") && payloadJson["data"].isObject())
 			{
 				string cmd = payloadJson["cmd"].asString();
 				string rqi = payloadJson["rqi"].asString();
 				if (onLocalCallbackFuncListV2.find(cmd) != onLocalCallbackFuncListV2.end())
 				{
 					OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncListV2[cmd];
-					int rs = onLocalCallbackFunc(payloadJson, respValue);
+					int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
 					if (rs == CODE_OK)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);

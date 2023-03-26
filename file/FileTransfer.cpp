@@ -3,6 +3,7 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "File.h"
+#include "Util.h"
 
 FileTransfer *fileTransfer = NULL;
 
@@ -14,24 +15,22 @@ FileTransfer::FileTransfer()
 void FileTransfer::init()
 {
 	LOGD("init");
-	subFwTopic = "/v1/server/hc/" + gateway->getMac() + "/bin/#";
-	pubFwTopic = "/v1/hc/" + gateway->getMac() + "/bin/";
-	gateway->cloudAddActionCallback(bind(&FileTransfer::OnFWMessage, this, placeholders::_1, placeholders::_2, placeholders::_3), subFwTopic);
-
-	gateway->OnDeviceRpcCallbackRegister("UploadFileResp", bind(&FileTransfer::OnRpcUploadFileResp, this, placeholders::_1, placeholders::_2));
-	gateway->OnDeviceRpcCallbackRegister("UploadBinaryResp", bind(&FileTransfer::OnRpcUploadBinaryResp, this, placeholders::_1, placeholders::_2));
-	gateway->OnDeviceRpcCallbackRegister("DownloadFileResp", bind(&FileTransfer::OnRpcDownloadFileResp, this, placeholders::_1, placeholders::_2));
 }
 
 int FileTransfer::uploadFile(string path, string name)
 {
-	LOGD("uploadFile");
-	string filePath = path + "/" + name;
 	File file(path, name);
+	return uploadFile(file);
+}
+
+int FileTransfer::uploadFile(File &file)
+{
+	LOGD("uploadFile");
+	int rs = CODE_ERROR;
+	string filePath = file.path + "/" + file.name;
 	if (file.HaveInfo())
 	{
 		string sessionId = to_string(time(NULL)) + to_string(rand());
-		files[sessionId] = &file;
 		Json::Value jsonValue;
 		Json::Value dataValue;
 		dataValue["name"] = file.name;
@@ -42,156 +41,132 @@ int FileTransfer::uploadFile(string path, string name)
 		dataValue["sum"] = "";
 		dataValue["sumAlg"] = "md5";
 		dataValue["sessionId"] = sessionId;
-		jsonValue["CMD"] = "UploadFile";
-		jsonValue["DATA"] = dataValue;
-		gateway->PublishToDeviceTelemetry(jsonValue);
-
-		int timeout = file.chunkCount;
-		while (file.chunkIndex < file.chunkCount && timeout--)
+		Json::Value respValue;
+		rs = gateway->PublishToCloudMessageV2("UploadFile", dataValue, "UploadFileResp", &respValue);
+		if (rs == CODE_OK)
 		{
-			sleep(1);
+			LOGD("uploadFile respValue: %s", respValue.toString().c_str());
+			file.OpenToRead();
+			if (file.IsOpen())
+			{
+				char fileContent[BIN_PACKAGE_SIZE];
+				file.chunkIndex = 0;
+				while (file.chunkIndex < file.chunkCount)
+				{
+					uint32_t size = file.Read(fileContent, BIN_PACKAGE_SIZE);
+					Json::Value respValue;
+					rs = gateway->PublishBinToCloudMessageV2(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
+					if (rs == CODE_OK)
+					{
+						LOGD("UploadChunk respValue: %s", respValue.toString().c_str());
+						++file.chunkIndex;
+					}
+					else
+					{
+						LOGD("UploadChunk err: %d", rs);
+						rs = CODE_ERROR;
+						break;
+					}
+				}
+				file.Close();
+			}
 		}
-		files.erase(sessionId);
 	}
 	else
 	{
 		LOGW("Open file %s error", filePath.c_str());
 	}
-	if (file.chunkIndex < file.chunkCount)
+	if (rs == CODE_OK)
 	{
-		LOGW("upload file timeout");
+		LOGI("upload file %s done", file.name.c_str());
 	}
 	else
 	{
-		LOGI("upload file %s done", name.c_str());
+		LOGW("upload file %s err: %d", file.name.c_str(), rs);
 	}
-	return CODE_OK;
+	return rs;
 }
 
 int FileTransfer::downloadFile(string path, string name)
 {
-	// isBusy = true;
-	// string filePath = path + "/" + name;
-
-	// isBusy = false;
-	return CODE_OK;
+	File file(path, name);
+	return downloadFile(file);
 }
 
-void FileTransfer::OnFWMessage(string &topic, char *payload, int payloadlen)
+int FileTransfer::downloadFile(File &file)
 {
-}
-
-int FileTransfer::UploadChunk(string sessionId, File *file)
-{
-	string filePath = file->path + "/" + file->name;
-	LOGD("UploadChunk: %d, path: %s", file->chunkIndex * BIN_PACKAGE_SIZE, filePath.c_str());
-	file->OpenToRead();
-	if (file->IsOpen())
+	LOGD("downloadFile");
+	int rs = CODE_ERROR;
+	string sessionId = to_string(time(NULL)) + to_string(rand());
+	Json::Value jsonValue;
+	Json::Value dataValue;
+	dataValue["name"] = file.name;
+	dataValue["path"] = file.path;
+	dataValue["chunkSize"] = BIN_PACKAGE_SIZE;
+	dataValue["sumAlg"] = "md5";
+	dataValue["sessionId"] = sessionId;
+	Json::Value respValue;
+	rs = gateway->PublishToCloudMessageV2("DownloadFile", dataValue, "DownloadFileResp", &respValue);
+	if (rs == CODE_OK)
 	{
-		char *fileContent = (char *)malloc(BIN_PACKAGE_SIZE);
-		if (fileContent)
+		LOGD("DownloadFile respValue: %s", respValue.toString().c_str());
+		if (respValue.isMember("code") && respValue["code"].isInt() &&
+				respValue.isMember("size") && respValue["size"].isInt())
 		{
-			uint32_t size = file->Read(file->chunkIndex * BIN_PACKAGE_SIZE, fileContent, BIN_PACKAGE_SIZE);
-			file->Close();
-			gateway->CloudPublish(pubFwTopic + sessionId + "/" + to_string(file->chunkIndex), fileContent, size);
-			free(fileContent);
-			return CODE_OK;
-		}
-		else
-		{
-			LOGW("malloc err");
-		}
-	}
-	return CODE_ERROR;
-}
-
-int FileTransfer::OnRpcUploadFileResp(Json::Value &reqValue, Json::Value &respValue)
-{
-	LOGD("OnRpcUploadFileResp");
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
-	{
-		Json::Value data = reqValue["DATA"];
-		if (data.isMember("code") && data["code"].isInt() &&
-				data.isMember("state") && data["state"].isInt() &&
-				data.isMember("sessionId") && data["sessionId"].isString())
-		{
-			int code = data["code"].asInt();
-			int state = data["state"].asInt();
-			string sessionId = data["sessionId"].asString();
-			if (files.find(sessionId) != files.end())
+			rs = respValue["code"].asInt();
+			if (rs == CODE_OK)
 			{
-				File *file = files[sessionId];
-				if (code == 0)
+				string cmd = "rm " + file.filePath;
+				Util::ExecuteCMD(cmd.c_str());
+				LOGD("cmd: %s", cmd.c_str());
+
+				file.fileSize = respValue["size"].asInt();
+				file.chunkCount = file.fileSize / BIN_PACKAGE_SIZE;
+				if (file.fileSize % BIN_PACKAGE_SIZE)
+					++file.chunkCount;
+				file.haveInfo = true;
+				LOGD("fileSize: %d, chunkCount: %d", (int)file.fileSize, file.chunkCount);
+				file.OpenToWrite();
+				if (file.IsOpen())
 				{
-					if (state == 0) // start
+					file.chunkIndex = 0;
+					while (file.chunkIndex < file.chunkCount)
 					{
-						file->chunkIndex = 0;
-						UploadChunk(sessionId, file);
+						Json::Value jsonValue;
+						Json::Value dataValue;
+						dataValue["chunk"] = file.chunkIndex;
+						dataValue["sessionId"] = sessionId;
+						string rqi = sessionId + to_string(file.chunkIndex);
+						char payload[BIN_PACKAGE_SIZE];
+						int payloadLen = BIN_PACKAGE_SIZE;
+						rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
+						if (rs == CODE_OK)
+						{
+							file.Write(payload, payloadLen);
+							++file.chunkIndex;
+						}
+						else
+						{
+							LOGW("DownloadBin index %d err: %d", file.chunkIndex, rs);
+						}
 					}
-					else if (state == 1) // done
-					{
-					}
-				}
-				else
-				{
-					LOGW("OnRpcUploadFileResp err: %d", code);
+					file.Close();
 				}
 			}
 			else
 			{
-				LOGW("OnRpcUploadFileResp session not found: %s", sessionId.c_str());
+				LOGW("Cannot download file");
 			}
 		}
 	}
-	return CODE_ERROR;
-}
-
-int FileTransfer::OnRpcUploadBinaryResp(Json::Value &reqValue, Json::Value &respValue)
-{
-	LOGD("OnRpcUploadBinaryResp");
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	if (rs == CODE_OK)
 	{
-		Json::Value data = reqValue["DATA"];
-		if (data.isMember("code") && data["code"].isInt() &&
-				data.isMember("chunk") && data["chunk"].isInt() &&
-				data.isMember("sessionId") && data["sessionId"].isString())
-		{
-			int code = data["code"].asInt();
-			int chunk = data["chunk"].asInt();
-			string sessionId = data["sessionId"].asString();
-			if (files.find(sessionId) != files.end())
-			{
-				File *file = files[sessionId];
-				if (code == 0)
-				{
-					if (chunk == file->chunkIndex)
-					{
-						++file->chunkIndex;
-						if (file->chunkIndex == file->chunkCount)
-						{
-							LOGD("Upload done");
-						}
-						else
-						{
-							UploadChunk(sessionId, file);
-						}
-					}
-				}
-				else
-				{
-					LOGW("OnRpcUploadFileResp err: %d", code);
-				}
-			}
-		}
+		LOGI("Download file %s done", file.name.c_str());
+		LOGW("Need check sum");
 	}
-	return CODE_ERROR;
-}
-
-int FileTransfer::OnRpcDownloadFileResp(Json::Value &reqValue, Json::Value &respValue)
-{
-	LOGD("OnRpcDownloadFileResp");
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	else
 	{
+		LOGW("Download file %s err: %d", file.name.c_str(), rs);
 	}
 	return CODE_ERROR;
 }

@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
 	fileTransfer->init();
 	sleep(2);
 
-	fileTransfer->uploadFile("", "smh.sqlite");
-	fileTransfer->uploadFile("", "readme.txt");
+	fileTransfer->uploadFile(".", "smh.sqlite");
+	fileTransfer->uploadFile(".", "readme.txt");
 
 	// thread sendFile1(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot1.rar"));
 	// sendFile1.detach();

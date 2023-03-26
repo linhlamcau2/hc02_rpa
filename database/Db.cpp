@@ -1,7 +1,8 @@
 #include "Db.h"
+#include <sys/stat.h>
 #include "Log.h"
 #ifdef ESP_PLATFORM
-#include "esp_spiffs.h"
+#include "esp_littlefs.h"
 #endif
 
 #define STRINGIZE_(x) #x
@@ -17,17 +18,18 @@ Db::Db()
 void Db::init(void)
 {
 #ifdef ESP_PLATFORM
-	LOGI("Initializing SPIFFS");
+	LOGI("Initializing LITTLEFS");
 
-	esp_vfs_spiffs_conf_t conf = {
-		.base_path = "/spiffs",
-		.partition_label = NULL,
-		.max_files = 5,
-		.format_if_mount_failed = true};
+	esp_vfs_littlefs_conf_t conf = {
+			.base_path = "/spiffs",
+			.partition_label = "storage",
+			.format_if_mount_failed = true,
+			.dont_mount = false,
+	};
 
-	// Use settings defined above to initialize and mount SPIFFS filesystem.
-	// Note: esp_vfs_spiffs_register is an all-in-one convenience function.
-	esp_err_t ret = esp_vfs_spiffs_register(&conf);
+	// Use settings defined above to initialize and mount LITTLEFS filesystem.
+	// Note: esp_vfs_littlefs_register is an all-in-one convenience function.
+	esp_err_t ret = esp_vfs_littlefs_register(&conf);
 
 	if (ret != ESP_OK)
 	{
@@ -37,20 +39,20 @@ void Db::init(void)
 		}
 		else if (ret == ESP_ERR_NOT_FOUND)
 		{
-			LOGE("Failed to find SPIFFS partition");
+			LOGE("Failed to find LITTLEFS partition");
 		}
 		else
 		{
-			LOGE("Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+			LOGE("Failed to initialize LITTLEFS (%s)", esp_err_to_name(ret));
 		}
 		return;
 	}
 
 	size_t total = 0, used = 0;
-	ret = esp_spiffs_info(conf.partition_label, &total, &used);
+	ret = esp_littlefs_info(conf.partition_label, &total, &used);
 	if (ret != ESP_OK)
 	{
-		LOGE("Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+		LOGE("Failed to get LITTLEFS partition information (%s)", esp_err_to_name(ret));
 	}
 	else
 	{
@@ -59,16 +61,20 @@ void Db::init(void)
 
 	sqlite3_initialize();
 
-// // All done, unmount partition and disable SPIFFS
-// esp_vfs_spiffs_unregister(conf.partition_label);
-// LOGI("SPIFFS unmounted");
+// // All done, unmount partition and disable LITTLEFS
+// esp_vfs_littlefs_unregister(conf.partition_label);
+// LOGI("LITTLEFS unmounted");
 #endif
 
 	if (pthread_mutex_init(&mutex, NULL) != 0)
 	{
 		LOGE("Failed to initialize the mutex");
 	}
-	createTableIfNotExists();
+	struct stat st;
+	if (stat(DB_NAME, &st))
+	{
+		createTableIfNotExists();
+	}
 }
 
 int Db::createTableIfNotExists()

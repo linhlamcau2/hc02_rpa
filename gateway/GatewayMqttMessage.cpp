@@ -1429,7 +1429,6 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					int numDevInScene = sceneOfGw->deviceList.size();
 					for (int m = 0; m < numDevInScene; m++)
 					{
-						LOGE("Del dev %s from scene %s", sceneOfGw->deviceList[m]->device->GetId().c_str(), sceneOfGw->GetId().c_str());
 						if (sceneOfGw->DelDevice(sceneOfGw->deviceList[m]->device) == CODE_OK)
 						{
 							database->DeviceInSceneBleDel(sceneOfGw, sceneOfGw->deviceList[m]->device);

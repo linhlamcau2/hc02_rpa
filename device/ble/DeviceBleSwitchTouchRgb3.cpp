@@ -1,8 +1,8 @@
 #include "DeviceBleSwitchTouchRgb3.h"
 #include "Log.h"
 
-DeviceBleSwitchTouchRgb3::DeviceBleSwitchTouchRgb3(string id, string name, string mac, string device_id, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac, device_id, addr, BLE_SWITCH_RGB_3, version)
+DeviceBleSwitchTouchRgb3::DeviceBleSwitchTouchRgb3(string id, string name, string mac, string data, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, data, addr, BLE_SWITCH_RGB_3, version)
 {
 	for (int i = 0; i < 3; i++)
 	{
