@@ -178,7 +178,7 @@ private:
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
-	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
+	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
 	void init();
 
 	/**

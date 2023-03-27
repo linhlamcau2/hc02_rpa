@@ -40,7 +40,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				gateway->setDormitory(dormitory);
 				gateway->setRefreshToken(refresh);
 
-				LOGI("Gateway mac: %s, id: %s, name: %s, version: %s , ble_netkey: %s,ble_appkey: %s, ble_devicekey: %s, ble_addr: %d, ble_iv_index: %ld, dormitory: %s, refresh_token: %s",
+				LOGI("Gateway mac: %s, id: %s, name: %s, version: %s , ble_netkey: %s,ble_appkey: %s, ble_devicekey: %s, ble_addr: %d, ble_iv_index: %d, dormitory: %s, refresh_token: %s",
 					 gateway->getMac().c_str(), gateway->getId().c_str(), gateway->getName().c_str(), gateway->getVersion().c_str(), gateway->getBleNetKey().c_str(), gateway->getBleAppKey().c_str(),
 					 gateway->getBleDeviceKey().c_str(), gateway->getBleAddr(), gateway->getBleIvIndex(), gateway->getDormitory().c_str(), gateway->getRefreshToken().c_str());
 
