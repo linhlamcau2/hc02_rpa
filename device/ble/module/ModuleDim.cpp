@@ -110,7 +110,7 @@ void ModuleDim::BuildTelemetryValueV2(Json::Value &jsonValue)
 
 int ModuleDim::Do(Json::Value &dataValue)
 {
-	LOGD("Do data: %s", dataValue.toString().c_str());
+	LOGD("ModuleDim Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

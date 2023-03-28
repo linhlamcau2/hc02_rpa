@@ -68,6 +68,7 @@ private:
 	void initMqttMessage();
 	int OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue);

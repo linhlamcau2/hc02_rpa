@@ -8,6 +8,7 @@ class ModuleHsl : public Module
 protected:
 	uint16_t h, s, l;
 	int idH, idS, idL;
+	bool isH, isS, isL;
 
 public:
 	ModuleHsl(Device *device, uint32_t addr);
@@ -77,6 +78,15 @@ public:
 	 * @return false
 	 */
 	int DoJsonArray(Json::Value &dataValue);
+	
+	/**
+	 * @brief Do an action use message format version 2
+	 *
+	 * @param dataValue data of action
+	 * @return true
+	 * @return false
+	 */
+	int Do(Json::Value &dataValue);
 
 	/**
 	 * @brief Do an action use message format version 2
