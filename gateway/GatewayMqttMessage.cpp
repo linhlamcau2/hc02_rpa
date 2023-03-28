@@ -106,7 +106,6 @@ void Gateway::initMqttMessage()
 int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcHcConnectCloud");
-	respValue["CMD"] = "HC_CONNECT_TO_CLOUD";
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -132,7 +131,6 @@ int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("OnRpcHcConnectCloud %s error", reqValue.toString().c_str());
 	}
-	respValue["DATA"]["SUCCESS"] = 0;
 	return CODE_ERROR;
 }
 
