@@ -190,28 +190,23 @@ int ModuleHsl::Do(Json::Value &dataValue)
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
-		LOGE("Id : %d", id);
 		if (this->idH == id || this->idL == id || this->idS == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 			{
 				int value = dataValue["VALUE"].asInt();
-				LOGE("VAlue : %d", value);
 				if (this->idH == id)
 				{
-					LOGE("Has H");
 					isH = true;
 					h = value;
 				}
 				else if (this->idS == id)
 				{
-					LOGE("Has L");
 					isS = true;
 					s = value;
 				}
 				else if (this->idL == id)
 				{
-					LOGE("Has S");
 					isL = true;
 					l = value;
 				}
