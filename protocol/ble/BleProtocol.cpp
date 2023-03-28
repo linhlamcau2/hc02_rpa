@@ -42,12 +42,15 @@ void BleProtocol::init()
 	Uart::init();
 	usleep(100000); // wait uart rx thread start
 	addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
+}
+
+void BleProtocol::InitKey()
+{
 	while (GetNetKey())
 	{
 		sleep(5);
 	}
 	GetAppKey();
-	database->GatewayRead();
 }
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -247,6 +250,8 @@ int BleProtocol::GetAppKey()
 		string appkey = arrayToString844412((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
+		
+		gateway->setBleAppkey(appkey);
 	}
 	else
 	{
@@ -313,6 +318,9 @@ int BleProtocol::GetNetKey()
 			string devicekeyGwStr = arrayToString844412((uint8_t *)gwKey);
 			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
 			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
+
+			gateway->setBleDevicekey(devicekeyGwStr);
+			gateway->setBleNetkey(netkeyStr);
 		}
 	}
 	else

@@ -193,6 +193,8 @@ public:
 	atomic<bool> isAdding;
 	atomic<bool> isProvisioning;
 	void init();
+
+	void InitKey();
 	int GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
