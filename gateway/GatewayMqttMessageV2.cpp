@@ -773,7 +773,7 @@ int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 		ruleList[rule->GetId()] = rule;
 		string ruleStr = reqValue.toString();
 		ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-		database->RuleAdd(rule, ruleStr, true, 1);
+		database->RuleAdd(rule, ruleStr, true);
 		rule->Check();
 		respValue["data"]["code"] = CODE_OK;
 	}
