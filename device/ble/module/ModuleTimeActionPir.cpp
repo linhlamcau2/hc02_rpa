@@ -97,6 +97,7 @@ void ModuleTimeActionPir::BuildTelemetryValueV2(Json::Value &jsonValue)
 
 int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
+	LOGV("ModuleTimeActionPir Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

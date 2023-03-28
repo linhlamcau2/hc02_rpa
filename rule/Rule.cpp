@@ -116,7 +116,28 @@ void Rule::DelAllRuleInput()
 {
 	ruleInputList.clear();
 }
+
 void Rule::DelAllRuleOutput()
 {
 	ruleOutputList.clear();
+}
+
+void Rule::UpdateData(string data)
+{
+	this->data = data;
+}
+
+string Rule::GetData()
+{
+	return data;
+}
+
+bool Rule::GetStatus()
+{
+	return this->isEnable;
+}
+
+void Rule::SetStatus(bool enable)
+{
+	this->isEnable = enable;
 }
