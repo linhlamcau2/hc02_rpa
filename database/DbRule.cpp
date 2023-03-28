@@ -20,6 +20,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int type = sqlite3_column_int(stmt, index++);
 				bool enable = sqlite3_column_blob(stmt, index++);
+				int addr = sqlite3_column_int(stmt, index++);
 				if (enable == true)
 				{
 					LOGE("TRUE");

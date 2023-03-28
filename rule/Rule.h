@@ -27,6 +27,7 @@ private:
 	string type;
 	string name;
 	string data;
+	
 	unsigned char repeater;
 	bool fullDay;
 	int startTime;
@@ -42,8 +43,8 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, string type, unsigned char repeater);
-	Rule(string id, string type, unsigned char repeater, int startTime, int endTime);
+	Rule(string id, string name, int addr, string type, unsigned char repeater);
+	Rule(string id, string name, int addr, string type, unsigned char repeater, int startTime, int endTime);
 	~Rule();
 
 	void AddRuleInput(RuleInput *ruleInput);
