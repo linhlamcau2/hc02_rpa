@@ -21,14 +21,6 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				int type = sqlite3_column_int(stmt, index++);
 				bool enable = sqlite3_column_blob(stmt, index++);
 				int addr = sqlite3_column_int(stmt, index++);
-				if (enable == true)
-				{
-					LOGE("TRUE");
-				} 
-				else if (enable == false)
-				{
-					LOGE("FALSE");
-				}
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);
 				if (decode == "")
@@ -75,9 +67,9 @@ int Db::RuleRead()
 	return ReadAll(TABLE_NAME, NULL, RuleParse);
 }
 
-int Db::RuleAdd(Rule *rule, string data, int type, bool enable)
+int Db::RuleAdd(Rule *rule, string data, int type)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " +to_string(enable)+");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable, rule_addr) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " + to_string(rule->GetStatus()) + ", " + to_string(rule->GetAddr()) + ");";
 	return Sqlite_Exec(sql);
 }
 
@@ -87,9 +79,9 @@ int Db::RuleUpdateData(Rule *rule, string data)
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleUpdateStatus(Rule *rule, bool enable)
+int Db::RuleUpdateStatus(Rule *rule)
 {
-	string sql = "UPDATE " TABLE_NAME " SET enable=" + to_string(enable) + " WHERE rule_id='" + rule->GetId() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET enable=" + to_string(rule->GetStatus()) + " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
@@ -99,7 +91,13 @@ int Db::RuleUpdateType(Rule *rule, int type)
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleDel(Rule *rule)
+int Db::RuleUpdateAddr(Rule *rule)
+{
+	string sql = "UPDATE " TABLE_NAME " SET rule_addr=" + to_string(rule->GetAddr()) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+	
+int	Db::RuleDel(Rule *rule)
 {
 	string sql = "DELETE FROM " TABLE_NAME " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);

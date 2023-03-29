@@ -91,9 +91,10 @@ public:
 	int RoomDelAll();
 
 	int RuleRead();
-	int RuleAdd(Rule *rule, string data, int type, bool enable);
+	int RuleAdd(Rule *rule, string data, int type);
 	int RuleUpdateData(Rule *rule, string data);
-	int RuleUpdateStatus(Rule *rule, bool enable);
+	int RuleUpdateStatus(Rule *rule);
+	int RuleUpdateAddr(Rule *rule);
 	int RuleUpdateType(Rule *rule, int type);
 	int RuleDel(Rule *rule);
 	int RuleDelAll();

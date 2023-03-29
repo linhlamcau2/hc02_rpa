@@ -205,8 +205,8 @@ void Gateway::init()
 
 	database->GatewayRead();
 	database->DeviceRead();
-	
-	//Add device ble all
+
+	// Add device ble all
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
@@ -677,6 +677,14 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
+
+		uint32_t addr;
+		string name;
+		if (ruleValue.isMember("NAME") && ruleValue["NAME"].isString())
+			name = ruleValue["NAME"].asString();
+		else
+			name = id;
+
 		Json::Value repeatDays = ruleValue["EACH_DAY"];
 		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
 		int repeat;
@@ -736,7 +744,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
+				rule = new Rule(id, addr, name, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
 				if (!rule)
 				{
 					LOGW("New rule error");
@@ -757,7 +765,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				type = "and";
 			}
-			rule = new Rule(id, type, repeat);
+			rule = new Rule(id, addr, name, type, repeat);
 			if (!rule)
 			{
 				LOGW("New rule error");
@@ -918,7 +926,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RuleAdd(rule, ruleStr, 1, isEnable);
+				database->RuleAdd(rule, ruleStr, 1);
 			}
 		}
 		return rule;
@@ -1080,6 +1088,13 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValue = ruleValue["output"];
 
+		uint32_t addr;
+		string name;
+		if (ruleValue.isMember("name") && ruleValue["name"].isString())
+			name = ruleValue["name"].asString();
+		else
+			name = id;
+
 		Rule *rule = NULL;
 		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
 		{
@@ -1089,12 +1104,12 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+				rule = new Rule(id, addr, name, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
 			}
 		}
 		if (!rule)
 		{
-			rule = new Rule(id, type, repeat);
+			rule = new Rule(id, addr, name, type, repeat);
 		}
 		if (!rule)
 		{
