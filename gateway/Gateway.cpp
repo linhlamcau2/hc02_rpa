@@ -678,7 +678,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
 
-		int addr;
+		uint32_t addr;
 		string name;
 		if (ruleValue.isMember("NAME") && ruleValue["NAME"].isString())
 			name = ruleValue["NAME"].asString();
@@ -744,7 +744,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, name, addr, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
+				rule = new Rule(id, addr, name, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
 				if (!rule)
 				{
 					LOGW("New rule error");
@@ -765,7 +765,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				type = "and";
 			}
-			rule = new Rule(id, name, addr, type, repeat);
+			rule = new Rule(id, addr, name, type, repeat);
 			if (!rule)
 			{
 				LOGW("New rule error");
@@ -1088,7 +1088,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValue = ruleValue["output"];
 
-		int addr;
+		uint32_t addr;
 		string name;
 		if (ruleValue.isMember("name") && ruleValue["name"].isString())
 			name = ruleValue["name"].asString();
@@ -1104,12 +1104,12 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
-				rule = new Rule(id, name, addr, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+				rule = new Rule(id, addr, name, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
 			}
 		}
 		if (!rule)
 		{
-			rule = new Rule(id, name, addr, type, repeat);
+			rule = new Rule(id, addr, name, type, repeat);
 		}
 		if (!rule)
 		{

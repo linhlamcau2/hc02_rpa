@@ -4,7 +4,7 @@
 #include "Util.h"
 #include "Log.h"
 
-Rule::Rule(string id, string name, int addr, string type, unsigned char repeater) : Object(id, addr, name)
+Rule::Rule(string id, uint32_t addr, string name, string type, unsigned char repeater) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
@@ -15,7 +15,7 @@ Rule::Rule(string id, string name, int addr, string type, unsigned char repeater
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, string name, int addr, string type, unsigned char repeater, int startTime, int endTime) : Object(id, addr, name)
+Rule::Rule(string id, uint32_t addr, string name, string type, unsigned char repeater, int startTime, int endTime) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;

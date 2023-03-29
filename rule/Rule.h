@@ -43,8 +43,8 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, string name, int addr, string type, unsigned char repeater);
-	Rule(string id, string name, int addr, string type, unsigned char repeater, int startTime, int endTime);
+	Rule(string id, uint32_t addr, string name, string type, unsigned char repeater);
+	Rule(string id, uint32_t addr, string name, string type, unsigned char repeater, int startTime, int endTime);
 	~Rule();
 
 	void AddRuleInput(RuleInput *ruleInput);
