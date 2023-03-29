@@ -221,12 +221,7 @@ int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
-		bleProtocol->isAdding = true;
-		bleProtocol->isProvisioning = true;
-		if (bleProtocol->StartScan())
-		{
-			bleProtocol->StopScan();
-		}
+		bleProtocol->StartScan();
 	}
 	else
 		LOGW("BleProtocol null");
@@ -239,8 +234,6 @@ int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 	if (bleProtocol)
 	{
 		bleProtocol->StopScan();
-		bleProtocol->isAdding = false;
-		bleProtocol->isProvisioning = false;
 	}
 	else
 		LOGW("BleProtocol null");

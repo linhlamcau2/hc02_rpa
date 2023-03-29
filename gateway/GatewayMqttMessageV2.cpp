@@ -317,12 +317,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
-		bleProtocol->isAdding = true;
-		bleProtocol->isProvisioning = true;
-		if (bleProtocol->StartScan())
-		{
-			bleProtocol->StopScan();
-		}
+		bleProtocol->StartScan();
 		respValue["data"]["code"] = CODE_OK;
 		respValue["cmd"] = "startScanBleRsp";
 		return CODE_OK;
@@ -337,8 +332,6 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 	if (bleProtocol)
 	{
 		bleProtocol->StopScan();
-		bleProtocol->isAdding = false;
-		bleProtocol->isProvisioning = false;
 		respValue["data"]["code"] = CODE_OK;
 		respValue["cmd"] = "stopScanBleRsp";
 		return CODE_OK;

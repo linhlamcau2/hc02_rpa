@@ -106,7 +106,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 
 int BleProtocol::OnMessage(unsigned char *data, int len)
 {
-	LOGD("OnMessage len: %d", len);
+	// LOGD("OnMessage len: %d", len);
 	uint8_t *d = data;
 	int l = len;
 	message_rsp_st *message_rsp = NULL;
@@ -188,13 +188,13 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	if (pthread_mutex_lock(&mutex) == 0)
 	{
 		message_rsp_list_st message_rsp_list = {
-			.status = false,
-			.opcode = opRsp,
-			.len = lenRsp,
-			.data = dataRsp,
-			.compare_data = compare_data,
-			.compare_position = compare_position,
-			.compare_len = compare_len,
+				.status = false,
+				.opcode = opRsp,
+				.len = lenRsp,
+				.data = dataRsp,
+				.compare_data = compare_data,
+				.compare_position = compare_position,
+				.compare_len = compare_len,
 		};
 		if (opRsp)
 		{
@@ -203,7 +203,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		}
 
 		message_req_st message_req = {
-			.opcode = opReq,
+				.opcode = opReq,
 		};
 		for (int i = 0; i < lenReq; i++)
 		{
@@ -250,7 +250,7 @@ int BleProtocol::GetAppKey()
 		string appkey = arrayToString844412((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
-		
+
 		gateway->setBleAppkey(appkey);
 	}
 	else
@@ -354,7 +354,7 @@ int BleProtocol::SetNetKey()
 	gateway->setBleAddr(0x01);
 	database->GatewayUpdateUnicast(gateway, 0x01);
 	gateway->setBleIvIndex(bswap_32(set_netkey_message.magic));
-	database->GatewayUpdateIvIndex(gateway,bswap_32(set_netkey_message.magic));
+	database->GatewayUpdateIvIndex(gateway, bswap_32(set_netkey_message.magic));
 	return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, sizeof(set_netkey_message_t), HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 }
 
@@ -382,6 +382,8 @@ int BleProtocol::StartScan()
 {
 	LOGD("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
+	isAdding = true;
+	isProvisioning = true;
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
 	if (rs)
 	{
@@ -394,6 +396,8 @@ int BleProtocol::StopScan()
 {
 	LOGD("StopScan");
 	uint8_t d = HCI_GATEWAY_CMD_STOP;
+	isAdding = false;
+	isProvisioning = false;
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 500);
 	if (rs)
 	{
@@ -426,10 +430,10 @@ string BleProtocol::uuidToStr(uuid_t *uuid)
 	char buf[100];
 	uint8_t *u8Uuid = (uint8_t *)uuid;
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
-			u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
-			u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
-			u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
+					u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
+					u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
+					u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
+					u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -438,10 +442,10 @@ string BleProtocol::arrayToString844412(uint8_t *array)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			array[0], array[1], array[2], array[3],
-			array[4], array[5], array[6], array[7],
-			array[8], array[9], array[10], array[11],
-			array[12], array[13], array[14], array[15]);
+					array[0], array[1], array[2], array[3],
+					array[4], array[5], array[6], array[7],
+					array[8], array[9], array[10], array[11],
+					array[12], array[13], array[14], array[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -878,9 +882,9 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 			uint16_t gwAddr;
 			uint16_t opcodeRsp;
 		} turnOnOffHeader = {
-			.devAddr = devAddr,
-			.gwAddr = 0x0001,
-			.opcodeRsp = G_ONOFF_STATUS,
+				.devAddr = devAddr,
+				.gwAddr = 0x0001,
+				.opcodeRsp = G_ONOFF_STATUS,
 		};
 		onoff_message.ble_message_header.devAddr = devAddr;
 		onoff_message.opcode = G_ONOFF_SET;
@@ -1567,7 +1571,7 @@ int BleProtocol::UpdateStatusSensorsPm(uint16_t devAddr)
 	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, 0, 0, 1000);
 	if (rs == CODE_OK)
 	{
-			return CODE_OK;
+		return CODE_OK;
 	}
 	LOGW("update status sensor err");
 	return CODE_ERROR;
@@ -1802,9 +1806,9 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 			uint32_t data;
 			struct
 			{
-				uint32_t store : 8;			 // 8 bit not use
-				uint32_t Lux_hi : 10;		 // 10 bit lux hi
-				uint32_t Lux_low : 10;		 // 10 bit lux low
+				uint32_t store : 8;					 // 8 bit not use
+				uint32_t Lux_hi : 10;				 // 10 bit lux hi
+				uint32_t Lux_low : 10;			 // 10 bit lux low
 				uint32_t Light_Conditon : 3; // 7 bit low
 				uint32_t Pir_Conditon : 1;	 // 1 bit hight
 			};
@@ -2435,7 +2439,7 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 	uint8_t addDevToRoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
-	ble_message_header_t ble_message_header;
+		ble_message_header_t ble_message_header;
 		uint8_t opcodeVendor;
 		uint16_t vendorId;
 		uint8_t opcodeRsp;
@@ -2709,8 +2713,8 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-			.header = 0x12,
-			.devAddr = devAddr};
+				.header = 0x12,
+				.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
 		for (int i = 0; i < 16; i++)
 		{
@@ -2738,8 +2742,8 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-			.header = 0x12,
-			.devAddr = gwAddr};
+				.header = 0x12,
+				.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
 		for (int i = 0; i < 16; i++)
 		{
