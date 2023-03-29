@@ -2923,7 +2923,6 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString() && dataValue.isMember("START_AT") && dataValue["START_AT"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
 		{
 			string name;
-			uint32_t addr;
 			string eventTriggerId = dataValue["EVENT_TRIGGER_ID"].asString();
 			string startAt = dataValue["START_AT"].asString();
 			string sceneId = dataValue["SCENE_ID"].asString();
@@ -2963,7 +2962,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, addr, name, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
+				rule = new Rule(eventTriggerId, 0, name, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleList[eventTriggerId] = rule;
