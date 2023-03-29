@@ -30,9 +30,7 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 					if (decode == "")
 					{
 						Json::Value devInSceneJson;
-						Json::Reader r;
-						r.parse(devInSceneData, devInSceneJson);
-						if (devInSceneJson.isArray())
+						if(devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
 						{
 							int modeRgb = 0;
 							for (Json::ArrayIndex i = 0; i < devInSceneJson.size(); i++)

@@ -98,9 +98,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	LOGD("UdpOnMessage message: %s", message.c_str());
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
-	r.parse(message, payloadJson);
-	if (payloadJson.isObject())
+	if (payloadJson.parse(message) && payloadJson.isObject())
 	{
 		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
@@ -152,8 +150,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 		string decode = macaron::Base64::Decode(message, messageBase64);
 		if (decode == "")
 		{
-			r.parse(messageBase64, payloadJson);
-			if (payloadJson.isObject())
+			if (payloadJson.parse(messageBase64) && payloadJson.isObject())
 			{
 				if (payloadJson.isMember("SSID") && payloadJson["SSID"].isString() &&
 						payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
