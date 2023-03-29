@@ -2923,7 +2923,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString() && dataValue.isMember("START_AT") && dataValue["START_AT"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
 		{
 			string name;
-			uint32_t addr;
+			uint32_t addr = 0;
 			string eventTriggerId = dataValue["EVENT_TRIGGER_ID"].asString();
 			string startAt = dataValue["START_AT"].asString();
 			string sceneId = dataValue["SCENE_ID"].asString();

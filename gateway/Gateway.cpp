@@ -33,6 +33,7 @@
 #include "DeviceBleSwitchTouchRgb3.h"
 #include "DeviceBleSwitchTouchRgb4.h"
 #include "DeviceBleSwitchScene6DC.h"
+#include "DeviceBleSwitchScene6AC.h"
 #include "DeviceBleSensorTempHum.h"
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
@@ -596,6 +597,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_DC_SCENE_CONTACT:
 		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, version);
 		break;
+	case BLE_AC_SCENE_CONTACT:
+		device = new DeviceBleSwitchScene6AC(id, name, mac, data, addr, version);
+		break;
 	case BLE_TEMP_HUM_SENSOR:
 		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, version);
 		break;
@@ -678,7 +682,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
 
-		uint32_t addr;
+		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("NAME") && ruleValue["NAME"].isString())
 			name = ruleValue["NAME"].asString();
@@ -1088,7 +1092,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValue = ruleValue["output"];
 
-		uint32_t addr;
+		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("name") && ruleValue["name"].isString())
 			name = ruleValue["name"].asString();
