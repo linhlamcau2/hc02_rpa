@@ -29,6 +29,13 @@ string Util::genRandRQI(int size)
 	return rqi;
 }
 
+string Util::GenIdDeviceByElement(string id, int element)
+{
+    string strTemp = to_string(element);
+    string tempId = id.substr(strTemp.length(), id.length() - strTemp.length());
+    return (strTemp + tempId);
+}
+
 string getTimeStrFromTime(time_t t)
 {
 	struct tm start;

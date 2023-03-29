@@ -240,9 +240,9 @@ int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
-		bleProtocol->StopScan();
 		bleProtocol->isAdding = false;
 		bleProtocol->isProvisioning = false;
+		bleProtocol->StopScan();
 	}
 	else
 		LOGW("BleProtocol null");
@@ -317,6 +317,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 					LOGW("BleProtocol null");
 				delDevice(device);
 				LOGD("remove deviceId: %s", deviceId.c_str());
+				return CODE_OK;
 			}
 			else
 			{
@@ -328,7 +329,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
@@ -2264,7 +2265,7 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 				for (Json::ArrayIndex i = 0; i < data["LIST_BUTTON_LINK"].size(); i++)
 				{
 					int button = data["LIST_BUTTON_LINK"][i].asInt();
-					string groupRandom = Util::genRandRQI(16);
+					string groupIdRandom = Util::genRandRQI(16);
 					int groupAddr = 1;
 					for (const auto &[id, group] : groupList)
 					{
@@ -2273,7 +2274,7 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 							groupAddr = group->GetAddr() + 1;
 						}
 					}
-					Group *group = new Group(groupRandom, groupAddr, groupRandom);
+					Group *group = new Group(groupIdRandom, groupAddr, groupIdRandom);
 					if (group)
 					{
 						if (AddNewGroup(group, true, true))
@@ -2301,8 +2302,9 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 /**
@@ -2601,6 +2603,8 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				device->DoJsonArray(properties);
+				respValue = reqValue;
+				return CODE_OK;
 			}
 			else
 			{
@@ -2616,8 +2620,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	respValue = reqValue;
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)

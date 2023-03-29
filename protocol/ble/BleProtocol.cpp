@@ -374,7 +374,7 @@ int BleProtocol::StartScan()
 {
 	LOGD("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 1000);
 	if (rs)
 	{
 		LOGE("Send start scan error, rs: %d", rs);
