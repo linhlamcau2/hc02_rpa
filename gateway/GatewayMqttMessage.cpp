@@ -1990,7 +1990,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 						{
 							Json::Value dataCmd;
 							dataCmd["pir"] = pir;
-							dataCmd["scene"] = scene->GetAddr();
+							dataCmd["scene"] = (Json::UInt)scene->GetAddr();
 							dataCmd["lux"] = lux;
 							device->Do(dataCmd);
 						}
@@ -2047,7 +2047,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 						{
 							Json::Value dataCmd;
 							dataCmd["pir"] = pir;
-							dataCmd["scene"] = scene->GetAddr();
+							dataCmd["scene"] = (Json::UInt)scene->GetAddr();
 							dataCmd["lux"] = lux;
 							device->Do(dataCmd);
 						}
@@ -2097,7 +2097,7 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 					if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
 					{
 						Json::Value delscene;
-						delscene["sceneDel"] = scene->GetAddr();
+						delscene["sceneDel"] = (Json::UInt)scene->GetAddr();
 						device->Do(delscene);
 					}
 					else

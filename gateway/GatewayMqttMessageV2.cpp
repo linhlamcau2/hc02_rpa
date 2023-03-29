@@ -287,8 +287,8 @@ int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value deviceValue;
 		deviceValue["id"] = device->GetId();
-		deviceValue["addr"] = device->GetAddr();
-		deviceValue["type"] = device->GetType();
+		deviceValue["addr"] = (Json::UInt)device->GetAddr();
+		deviceValue["type"] = (Json::UInt)device->GetType();
 		deviceValue["mac"] = device->GetMac();
 		deviceValue["ver"] = device->GetVersionStr();
 		devicesData.append(deviceValue);
