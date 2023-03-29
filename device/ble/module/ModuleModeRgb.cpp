@@ -118,7 +118,7 @@ void ModuleModeRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
 
 int ModuleModeRgb::Do(Json::Value &dataValue)
 {
-	LOGD("Do data: %s", dataValue.toString().c_str());
+	LOGD("ModuleModeRgb Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

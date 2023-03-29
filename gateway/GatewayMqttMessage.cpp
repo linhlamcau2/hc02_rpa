@@ -15,6 +15,7 @@ void Gateway::initMqttMessage()
 {
 	OnDeviceRpcCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("VERSION_HC", bind(&Gateway::OnRpcVersionHc, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("SCAN", bind(&Gateway::OnRpcBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("STOP", bind(&Gateway::OnRpcBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("RESET_NODE", bind(&Gateway::OnRpcBleDelDevice, this, placeholders::_1, placeholders::_2));
@@ -42,6 +43,7 @@ void Gateway::initMqttMessage()
 
 	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("VERSION_HC", bind(&Gateway::OnRpcVersionHc, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SCAN", bind(&Gateway::OnRpcBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRpcBleStopScan, this, placeholders::_1, placeholders::_2));
@@ -107,6 +109,7 @@ int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
+		respValue["CMD"] = "HC_CONNECT_TO_CLOUD";
 		if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
 		{
 			string dormitoryId = data["DORMITORY_ID"].asString();
@@ -115,7 +118,14 @@ int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 			gateway->setRefreshToken(refreshToken);
 			database->GatewayUpdateDormitory(gateway, dormitoryId);
 			database->GatewayUpdateRefreshToken(gateway, refreshToken);
+			respValue["DATA"]["SUCCESS"] = true;
 		}
+		else
+		{
+			LOGW("Data error");
+			respValue["DATA"]["SUCCESS"] = false;
+		}
+		return CODE_OK;
 	}
 	else
 	{
@@ -134,6 +144,8 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		if (data.isMember("HC_ID") && data["HC_ID"].isString())
 		{
 			idHc = data["HC_ID"].asString();
+			gateway->setId(idHc);
+			database->GatewayUpdateId(gateway, idHc);
 		}
 
 		respValue["CMD"] = "HC_BACKUP_DATA";
@@ -197,6 +209,14 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnRpcHcBackup %s error", reqValue.toString().c_str());
 	}
 	return CODE_ERROR;
+}
+
+int Gateway::OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue)
+{
+	respValue["CMD"] = "VERSION_HC";
+	respValue["DATA"]["MAC"] = mac;
+	respValue["DATA"]["VERSION"] = STR(VERSION);
+	return CODE_OK;
 }
 
 int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
@@ -393,8 +413,12 @@ int Gateway::OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValu
 			Rule *rule = getRuleFromId(ruleId);
 			if (rule)
 			{
-				rule->isEnable = (status) ? true : false;
-				database->RuleUpdateStatus(rule, status);
+				bool enable = (status) ? true : false;
+				if (rule->GetStatus() != enable)
+				{
+					rule->SetStatus(enable);
+					database->RuleUpdateStatus(rule, enable);
+				}
 			}
 			else
 			{
@@ -2593,7 +2617,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("Format error");
 	}
 	respValue = reqValue;
-	return CODE_ERROR;
+	return CODE_OK;
 }
 
 int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -2628,7 +2652,7 @@ int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue)

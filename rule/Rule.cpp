@@ -4,7 +4,7 @@
 #include "Util.h"
 #include "Log.h"
 
-Rule::Rule(string id, string type, unsigned char repeater) : Object(id, 0, "")
+Rule::Rule(string id, string name, int addr, string type, unsigned char repeater) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
@@ -15,7 +15,7 @@ Rule::Rule(string id, string type, unsigned char repeater) : Object(id, 0, "")
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, string type, unsigned char repeater, int startTime, int endTime) : Object(id, 0, "")
+Rule::Rule(string id, string name, int addr, string type, unsigned char repeater, int startTime, int endTime) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
@@ -116,7 +116,28 @@ void Rule::DelAllRuleInput()
 {
 	ruleInputList.clear();
 }
+
 void Rule::DelAllRuleOutput()
 {
 	ruleOutputList.clear();
+}
+
+void Rule::UpdateData(string data)
+{
+	this->data = data;
+}
+
+string Rule::GetData()
+{
+	return data;
+}
+
+bool Rule::GetStatus()
+{
+	return this->isEnable;
+}
+
+void Rule::SetStatus(bool enable)
+{
+	this->isEnable = enable;
 }

@@ -71,7 +71,8 @@ void Db::init(void)
 		LOGE("Failed to initialize the mutex");
 	}
 	struct stat st;
-	if (stat(DB_NAME, &st))
+	LOGD("%s", string(DB_NAME).c_str());
+	if (stat(DB_NAME, &st) != CODE_OK)
 	{
 		createTableIfNotExists();
 	}
@@ -82,15 +83,14 @@ int Db::createTableIfNotExists()
 	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version VARCHAR, hardware_version VARCHAR, active_time INTEGER, update_time INTEGER, data TEXT, PRIMARY KEY (device_id));"
 				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id));"
 				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element));"
-				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id TEXT NOT NULL, device_id TEXT NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element));"
-				 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id TEXT NOT NULL, device_id TEXT NOT NULL, PRIMARY KEY (room_id, device_id));"
-				 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id TEXT NOT NULL, device_id TEXT NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id));"
-				 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey TEXT, PRIMARY KEY (mac));"
-				 "CREATE TABLE IF NOT EXISTS [Group] (group_id TEXT NOT NULL, group_addr INTEGER, name TEXT, PRIMARY KEY (group_id));"
-				 "CREATE TABLE IF NOT EXISTS Room (room_id TEXT NOT NULL, room_addr INTEGER, name TEXT, data TEXT, PRIMARY KEY (room_id));"
-				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, isEnable INTEGER NOT NULL, type INTEGER, name TEXT, PRIMARY KEY (rule_id));"
-				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id TEXT NOT NULL, scene_ble_addr TEXT, name INTEGER, PRIMARY KEY (scene_ble_id));"
-				 "INSERT OR REPLACE INTO Device (mac, device_id, name, addr, type, firmware_version, data) VALUES ('ble', '', 'all',  65535, 0, '0.0', 'eyJkZXZpY2VrZXkiOiIifQ==');";
+				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element));"
+				 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, PRIMARY KEY (room_id, device_id));"
+				 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id));"
+				 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey VARCHAR, PRIMARY KEY (mac));"
+				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, PRIMARY KEY (group_id));"
+				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (room_id));"
+				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, PRIMARY KEY (rule_id));"
+				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, PRIMARY KEY (scene_ble_id));";
 	return Sqlite_Exec(sql);
 }
 

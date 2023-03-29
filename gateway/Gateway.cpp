@@ -205,6 +205,9 @@ void Gateway::init()
 
 	database->GatewayRead();
 	database->DeviceRead();
+	
+	//Add device ble all
+	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
 	database->GroupRead();
@@ -317,73 +320,76 @@ int Gateway::CheckOnlineThread()
 		for (const auto &[id, device] : deviceList)
 		{
 			deviceStateChange = false;
-			if (device->lastOnlineState) // online
+			if (device->GetAddr() != 65535)
 			{
-				// neu thiet bi ho tro ban tin check trang thai online/offline
-				if (device->isNeedCheckOnline())
+				if (device->lastOnlineState) // online
 				{
-					// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
-					if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+					// neu thiet bi ho tro ban tin check trang thai online/offline
+					if (device->isNeedCheckOnline())
 					{
-						bleProtocol->SendOnlineCheck(device->GetAddr());
-						device->lastTimeCheck = currentTime;
+						// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
+						if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+						{
+							bleProtocol->SendOnlineCheck(device->GetAddr());
+							device->lastTimeCheck = currentTime;
+						}
+						// 2 chu ky khong co ban tin phan hoi thi bao offline
+						if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+						{
+							LOGI("Device 0x%04X offline", device->GetAddr());
+							device->lastOnlineState = false;
+							deviceStateChange = true;
+						}
 					}
-					// 2 chu ky khong co ban tin phan hoi thi bao offline
-					if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+					// neu thiet bi khong ho tro ban tin check trang thai online/offline
+					else
 					{
-						LOGI("Device 0x%04X offline", device->GetAddr());
-						device->lastOnlineState = false;
-						deviceStateChange = true;
-					}
-				}
-				// neu thiet bi khong ho tro ban tin check trang thai online/offline
-				else
-				{
-					// 1 ngay khong co ban tin moi thi bao offline
-					if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
-					{
-						LOGI("Device 0x%04X offline", device->GetAddr());
-						device->lastOnlineState = false;
-						deviceStateChange = true;
-					}
-				}
-			}
-			else
-			{
-				if (device->isNeedCheckOnline())
-				{
-					// thoi gian check qua 1 chu ky thi check lai
-					if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
-					{
-						bleProtocol->SendOnlineCheck(device->GetAddr());
-						device->lastTimeCheck = currentTime;
-					}
-					// neu co ban tin moi trong vong 2 chu ky check thi bao online
-					if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
-					{
-						LOGI("Device 0x%04X online", device->GetAddr());
-						device->lastOnlineState = true;
-						deviceStateChange = true;
+						// 1 ngay khong co ban tin moi thi bao offline
+						if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
+						{
+							LOGI("Device 0x%04X offline", device->GetAddr());
+							device->lastOnlineState = false;
+							deviceStateChange = true;
+						}
 					}
 				}
 				else
 				{
-					// trong ngay co ban tin thi online
-					if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+					if (device->isNeedCheckOnline())
 					{
-						LOGI("Device 0x%04X online", device->GetAddr());
-						device->lastOnlineState = true;
-						deviceStateChange = true;
+						// thoi gian check qua 1 chu ky thi check lai
+						if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
+						{
+							bleProtocol->SendOnlineCheck(device->GetAddr());
+							device->lastTimeCheck = currentTime;
+						}
+						// neu co ban tin moi trong vong 2 chu ky check thi bao online
+						if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
+						{
+							LOGI("Device 0x%04X online", device->GetAddr());
+							device->lastOnlineState = true;
+							deviceStateChange = true;
+						}
+					}
+					else
+					{
+						// trong ngay co ban tin thi online
+						if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+						{
+							LOGI("Device 0x%04X online", device->GetAddr());
+							device->lastOnlineState = true;
+							deviceStateChange = true;
+						}
 					}
 				}
-			}
-			// send device state to server
-			if (deviceStateChange)
-			{
-				onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
-				onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
-				PublishToLocalMessage(onlineValue);
-				PublishToGatewayTelemetry(onlineValue);
+				// send device state to server
+				if (deviceStateChange)
+				{
+					onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
+					onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
+					PublishToLocalMessage(onlineValue);
+					PublishToGatewayTelemetry(onlineValue);
+				}
 			}
 		}
 		sleep(1);
@@ -482,7 +488,7 @@ int Gateway::GatewayConnectToCloudNotice()
 	respValue["CMD"] = "HC_UPDATE";
 	respValue["REQUEST_ID"] = Util::genRandRQI(16);
 	respValue["TIME"] = Util::GetCurrentTimeStr();
-	respValue["CONNECTION_TYPE"] = 3;
+	respValue["CONNECTION_TYPE"] = 3; // Connect mqtt to cloud
 
 	from["TYPE"] = 2;
 	from["DORMITORY_ID"] = dormitoryId;
@@ -760,6 +766,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 
 		if (rule)
 		{
+			bool isEnable = (status) ? true : false;
+			rule->SetStatus(isEnable);
 			if (ruleValue.isMember("INPUT_DEVICES") && ruleValue["INPUT_DEVICES"].isArray())
 			{
 				Json::Value listDevInput = ruleValue["INPUT_DEVICES"];
@@ -910,10 +918,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RuleAdd(rule, ruleStr, status, 1);
+				database->RuleAdd(rule, ruleStr, 1, isEnable);
 			}
-			bool isEnable = (status) ? true : false;
-			rule->isEnable = isEnable;
 		}
 		return rule;
 	}

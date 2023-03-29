@@ -6,6 +6,7 @@
         "**/requirements{/**,*}.{txt,in}": "pip-requirements",
         "iosfwd": "cpp",
         "iostream": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "string": "cpp"
     }
 }

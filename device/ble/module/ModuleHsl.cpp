@@ -14,6 +14,9 @@ ModuleHsl::ModuleHsl(Device *device, uint32_t addr) : Module(device, addr)
 	idH = BLE_ATTRIBUTE_HUE;
 	idS = BLE_ATTRIBUTE_SATURATION;
 	idL = BLE_ATTRIBUTE_LUMINANCE;
+	isH = false;
+	isS = false;
+	isL = false;
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -144,8 +147,6 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
 	if (dataValue.isArray())
 	{
-		bool isH = false, isS = false, isL = false;
-		uint16_t h, s, l;
 		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
 			Json::Value data = dataValue[i];
@@ -178,25 +179,54 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 				LOGW("BleProtocol null");
 		}
 	}
-	// if (dataValue.isObject() &&
-	// 	dataValue.isMember("ID") && dataValue["ID"].isInt())
-	// {
-	// 	int id = dataValue["ID"].asInt();
-	// 	if (this->idH == id || this->idH == id || this->idH == id)
-	// 	{
-	// 		if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-	// 		{
-	// 			int value = dataValue["VALUE"].asInt();
-	// 			if (this->idH == id)
-	// 				bleProtocol->SetHSLLight(addr, value, s, l, 0, true);
-	// 			else if (this->idS == id)
-	// 				bleProtocol->SetHSLLight(addr, h, value, l, 0, true);
-	// 			else if (this->idL == id)
-	// 				bleProtocol->SetHSLLight(addr, h, s, value, 0, true);
-	// 			return CODE_OK;
-	// 		}
-	// 	}
-	// }
+
+	return CODE_ERROR;
+}
+
+int ModuleHsl::Do(Json::Value &dataValue)
+{
+	LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idH == id || this->idL == id || this->idS == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				int value = dataValue["VALUE"].asInt();
+				if (this->idH == id)
+				{
+					isH = true;
+					h = value;
+				}
+				else if (this->idS == id)
+				{
+					isS = true;
+					s = value;
+				}
+				else if (this->idL == id)
+				{
+					isL = true;
+					l = value;
+				}
+				if (isH && isS && isL)
+				{
+					isH = false;
+					isS = false;
+					isL = false;
+					if (bleProtocol)
+					{
+						bleProtocol->SetHSLLight(addr, h, s, l, 0, true);
+					}
+					else
+						LOGW("BleProtocol null");
+					return CODE_OK;
+				}
+			}
+		}
+	}
+
 	return CODE_ERROR;
 }
 

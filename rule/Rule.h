@@ -26,6 +26,8 @@ class Rule : public Object
 private:
 	string type;
 	string name;
+	string data;
+	
 	unsigned char repeater;
 	bool fullDay;
 	int startTime;
@@ -34,21 +36,26 @@ private:
 	time_t lastTimeActive;
 
 	bool isAvailable;
+	bool isEnable;
 	int timerRegisterIndex;
 
 	vector<RuleInput *> ruleInputList;
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, string type, unsigned char repeater);
-	Rule(string id, string type, unsigned char repeater, int startTime, int endTime);
+	Rule(string id, string name, int addr, string type, unsigned char repeater);
+	Rule(string id, string name, int addr, string type, unsigned char repeater, int startTime, int endTime);
 	~Rule();
 
-	bool isEnable;
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();
 	void DelAllRuleOutput();
 	void Check();
 	void RunOutput();
+
+	void UpdateData(string data);
+	string GetData();
+	bool GetStatus();
+	void SetStatus(bool enable);
 };
