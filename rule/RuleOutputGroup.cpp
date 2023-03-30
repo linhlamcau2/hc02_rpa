@@ -1,7 +1,7 @@
 #include "RuleOutputGroup.h"
 #include "Log.h"
 
-RuleOutputGroup::RuleOutputGroup(Group *group, Json::Value data)
+RuleOutputGroup::RuleOutputGroup(Group *group, Json::Value &data)
 {
 	this->group = group;
 	this->data = data;

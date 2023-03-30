@@ -16,6 +16,7 @@ void Gateway::initMqttMessageV2()
 {
 	OnDeviceRpcCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("controlGw", bind(&Gateway::OnControlGw, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
@@ -176,6 +177,23 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 	}
 	respValue["cmd"] = "controlAllDevRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnControlGw(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnControlGw");
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		int rs = Do(reqValue["data"]);
+		respValue["data"]["code"] = rs;
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		LOGW("OnControlGw %s format error", reqValue.toString().c_str());
+	}
+	respValue["cmd"] = "controlGwRsp";
 	return CODE_OK;
 }
 

@@ -2,7 +2,7 @@
 #include "Device.h"
 #include "Log.h"
 
-RuleInputDevice::RuleInputDevice(Rule *rule, Device *device, Json::Value data)
+RuleInputDevice::RuleInputDevice(Rule *rule, Device *device, Json::Value &data)
 {
 	this->rule = rule;
 	this->device = device;

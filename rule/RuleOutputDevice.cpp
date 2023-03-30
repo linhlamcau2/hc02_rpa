@@ -1,7 +1,7 @@
 #include "RuleOutputDevice.h"
 #include "Log.h"
 
-RuleOutputDevice::RuleOutputDevice(Device *device, Json::Value data)
+RuleOutputDevice::RuleOutputDevice(Device *device, Json::Value &data)
 {
 	this->device = device;
 	this->data = data;

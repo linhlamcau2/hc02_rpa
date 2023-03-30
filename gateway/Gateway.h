@@ -148,6 +148,7 @@ private:
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlGw(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
 	// int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
@@ -253,6 +254,8 @@ public:
 
 	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
 	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
+
+	int Do(Json::Value &dataValue);
 };
 
 extern Gateway *gateway;

@@ -1235,3 +1235,40 @@ int Gateway::pushDeviceUpdateCloudV2(Json::Value &dataValue)
 {
 	return PublishToCloudMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
 }
+
+int Gateway::Do(Json::Value &dataValue)
+{
+	LOGV("Do data: %s", dataValue.toString().c_str());
+#ifdef __ANDROID__
+	int onoff = 0;
+	if (dataValue.isObject())
+	{
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "0") && dataValue[KEY_ATTRIBUTE_RELAY "0"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/bin/echo \"1\" > /sys/class/gpio/gpio114/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/bin/echo \"0\" > /sys/class/gpio/gpio114/value");
+			}
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/bin/echo \"1\" > /sys/class/gpio/gpio115/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/bin/echo \"0\" > /sys/class/gpio/gpio115/value");
+			}
+		}
+		return CODE_OK;
+	}
+#endif
+	return CODE_FORMAT_ERROR;
+}

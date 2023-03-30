@@ -17,7 +17,7 @@ private:
 	Json::Value data;
 
 public:
-	RuleInputDevice(Rule *rule, Device *device, Json::Value data);
+	RuleInputDevice(Rule *rule, Device *device, Json::Value &data);
 	~RuleInputDevice();
 	Json::Value *GetData();
 	void Trigger(bool value);
