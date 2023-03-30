@@ -210,9 +210,9 @@ void Gateway::init()
 	database->GatewayRead();
 	database->DeviceRead();
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
-	for (auto i = deviceList.begin(); i != deviceList.end();i++)
+	for (auto i = deviceList.begin(); i != deviceList.end(); i++)
 	{
-		LOGE("%s : %s",i->first.c_str(), i->second->GetId().c_str());
+		LOGE("%s : %s", i->first.c_str(), i->second->GetId().c_str());
 	}
 
 	database->DeviceBleChildRead();
@@ -550,34 +550,28 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 #else
 	PublishToDeviceTelemetry(jsonValue);
 #endif
+
+#ifdef CONFIG_USE_OLD_APP
 	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
 	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE)
 	{
 		dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), (int)scanDevice->GetAddr() + 1);
+		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), 1);
 		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
-		dataValue["BUTTON_ID"] = 11;
+		dataValue["BUTTON_ID"] = 12;
 		jsonValue["DATA"] = dataValue;
-#ifdef CONFIG_USE_OLD_APP
 		PublishToLocalMessage(jsonValue);
-#else
-		PublishToDeviceTelemetry(jsonValue);
-#endif
 	}
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE)
 	{
 		for (int i = 1; i <= 2; i++)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), (int)scanDevice->GetAddr() + i);
+			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
-			dataValue["BUTTON_ID"] = 10 + i;
+			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-#ifdef CONFIG_USE_OLD_APP
 			PublishToLocalMessage(jsonValue);
-#else
-			PublishToDeviceTelemetry(jsonValue);
-#endif
 		}
 	}
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE)
@@ -585,33 +579,26 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		for (int i = 1; i <= 3; i++)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), (int)scanDevice->GetAddr() + i);
+			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
-			dataValue["BUTTON_ID"] = 10 + i;
+			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-#ifdef CONFIG_USE_OLD_APP
 			PublishToLocalMessage(jsonValue);
-#else
-			PublishToDeviceTelemetry(jsonValue);
-#endif
 		}
 	}
 	else if (scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB || scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 	{
-		for (int i = 2; i <= 6; i++)
+		for (int i = 1; i <= 5; i++)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), (int)scanDevice->GetAddr() + i + 11);
+			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
-			dataValue["BUTTON_ID"] = 10 + i;
+			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-#ifdef CONFIG_USE_OLD_APP
 			PublishToLocalMessage(jsonValue);
-#else
-			PublishToDeviceTelemetry(jsonValue);
-#endif
 		}
 	}
+#endif
 }
 
 Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
@@ -717,38 +704,39 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		if (addGateway)
 		{
 			deviceList[id] = device;
+#ifdef CONFIG_USE_OLD_APP
 			Device *deviceChild = NULL;
 			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE)
 			{
-				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1 + addr), name, mac, data, addr + 1, type, version);
-				deviceList[Util::GenIdDeviceByElement(id, 1 + addr)] = deviceChild;
+				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version);
+				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
 			}
 			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE)
 			{
 				for (int i = 1; i <= 2; i++)
 				{
-					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i + addr), name, mac, data, addr + i, type, version);
-					deviceList[Util::GenIdDeviceByElement(id, i + addr)] = deviceChild;
+					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
 			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
 			{
 				for (int i = 1; i <= 3; i++)
 				{
-					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i + addr), name, mac, data, addr + i, type, version);
-					deviceList[Util::GenIdDeviceByElement(id, i + addr)] = deviceChild;
-					cout << Util::GenIdDeviceByElement(id, i + addr) << endl;
+					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+					cout << Util::GenIdDeviceByElement(id, i) << endl;
 				}
 			}
 			else if (device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 			{
-				for (int i = 2; i <= 6; i++)
+				for (int i = 1; i <= 5; i++)
 				{
-					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, 11 + i), name, mac, data, addr, type, version);
-					deviceList[Util::GenIdDeviceByElement(id, 11 + i)] = deviceChild;
+					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
-			// delete (deviceChild);
+#endif
 		}
 		if (addDatabase)
 		{

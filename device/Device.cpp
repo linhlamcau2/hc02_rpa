@@ -221,12 +221,10 @@ int Device::Do(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{
-		LOGE("1");
 		module->Do(dataValue);
 	}
 	for (auto &element : elements)
 	{
-		LOGE("2");
 		element->Do(dataValue);
 	}
 	return CODE_OK;

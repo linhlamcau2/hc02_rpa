@@ -7,12 +7,19 @@ DeviceBleSwitchTouchRgb4::DeviceBleSwitchTouchRgb4(string id, string name, strin
 	for (int i = 0; i < 4; i++)
 	{
 		elementButton[i] = new ElementButton(this, addr + i);
-		elementRgb[i] = new ElementRgb(this, addr + i);
-		elementOnOff[i] = new ElementOnOff(this, addr + i);
 		elements.push_back(elementButton[i]);
+#ifndef CONFIG_USE_OLD_APP
+		elementRgb[i] = new ElementRgb(this, addr + i);
 		elements.push_back(elementRgb[i]);
-		elements.push_back(elementOnOff[i]);
+#endif
 	}
 	countElement = 4;
 	powerSource = POWER_AC;
+
+#ifdef CONFIG_USE_OLD_APP
+	moduleOnOff = new ModuleOnOff(this, addr);
+	modules.push_back(moduleOnOff);
+	moduleRgb = new ModuleRgb(this, addr);
+	modules.push_back(moduleRgb);
+#endif
 }

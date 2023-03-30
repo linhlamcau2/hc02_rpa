@@ -1,9 +1,9 @@
 #pragma once
-#include "Element.h"
+#include "Module.h"
 
 using namespace std;
 
-class ElementRgb : public Element
+class ModuleRgb : public Module
 {
 protected:
 	uint8_t r, g, b, dimOn, dimOff;
@@ -12,7 +12,7 @@ protected:
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
-	ElementRgb(Device *device, uint32_t addr);
+	ModuleRgb(Device *device, uint32_t addr);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
