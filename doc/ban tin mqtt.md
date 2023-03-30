@@ -134,10 +134,8 @@ Request:
     "cmd": "controlGw",
     "rqi": "abc123456",
     "data": {
-        "data": {
-            "rl0": 1,
-						"rl1": 0
-        }
+				"rl0": 1,
+				"rl1": 0
     }
 }
 ```
