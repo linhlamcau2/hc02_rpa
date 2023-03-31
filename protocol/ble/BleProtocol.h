@@ -204,6 +204,7 @@ public:
 	int StopScan();
 	int ResetFactory();
 
+	bool IsProvision();
 	int AddDevice(scan_device_message_t *scan_device_message);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
