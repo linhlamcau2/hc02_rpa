@@ -187,6 +187,8 @@ private:
 	int OnGetGroupList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
@@ -254,7 +256,7 @@ public:
 
 	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
-	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
+	Rule *AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase);
 	Rule *AddRuleV2(Json::Value &ruleValue);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 	Room *AddNewRoom(Room *room);

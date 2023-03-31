@@ -44,7 +44,7 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (roomId, addr) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (roomId, addr) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ");";
 	return Sqlite_Exec(sql);
 }
 

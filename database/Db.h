@@ -82,7 +82,7 @@ public:
 	// int DeviceSceneDel(Device *device, string schedule);
 
 	int RuleRead();
-	int RuleAdd(string id, string rule, int inEnable, int type);
+	int RuleAdd(Rule *rule, string data, int inEnable);
 	int RuleUpdate(string id, string rule);
 	int RuleUpdateStatus(string id, int isEnable);
 	int RuleDel(string id);

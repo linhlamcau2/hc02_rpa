@@ -8,6 +8,7 @@ class ModuleOnOff : public Module
 protected:
 	uint8_t onoff;
 	int id;
+	string code;
 
 public:
 	ModuleOnOff(Device *device, uint32_t addr);
@@ -48,6 +49,8 @@ public:
 	 * @return false if dataValue don't use this module paramter
 	 */
 	bool CheckData(Json::Value &dataValue, bool &rs);
+
+	bool CheckDataV2(Json::Value &dataValue, bool &rs);
 
 	/**
 	 * @brief Check rules related with this module

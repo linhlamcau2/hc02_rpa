@@ -48,9 +48,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+	  LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -597,12 +597,12 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 	return group;
 }
 
-Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
+Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-			ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
-			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+		ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
+		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
@@ -665,7 +665,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
+				rule = new Rule(id, type, repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
 				if (!rule)
 				{
 					LOGW("New rule error");
@@ -686,7 +686,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				type = "and";
 			}
-			rule = new Rule(id, type, repeat);
+			rule = new Rule(id, type, repeat, "", 0, ruleValue);
 			if (!rule)
 			{
 				LOGW("New rule error");
@@ -845,7 +845,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RuleAdd(id, ruleStr, status, 1);
+				database->RuleAdd(rule, ruleStr, status);
 			}
 			bool isEnable = (status) ? true : false;
 			rule->isEnable = isEnable;
@@ -982,13 +982,17 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 {
 	// TODO: Check Rule id exist
+	LOGE("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isObject())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isString() &&
+		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isObject())
 	{
+		LOGE("OnAddRuleV2 TP1");
 		string id = ruleValue["id"].asString();
+		string name = ruleValue["name"].asString();
 		string type = ruleValue["type"].asString();
 		int repeat = ruleValue["repeat"].asInt();
 		Json::Value inputValue = ruleValue["input"];
@@ -999,16 +1003,18 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-					timeValue.isMember("end") && timeValue["end"].isString())
+				timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
-				rule = new Rule(id, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+				rule = new Rule(id, type, repeat, name, 0, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), ruleValue);
+				ruleList[rule->GetId()] = rule;
 			}
 		}
 		if (!rule)
 		{
-			rule = new Rule(id, type, repeat);
+			rule = new Rule(id, type, repeat, name, 0, ruleValue);
+			ruleList[rule->GetId()] = rule;
 		}
 		if (!rule)
 		{
@@ -1020,7 +1026,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+				timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1042,9 +1048,9 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (deviceRuleInputValue.isObject())
 				{
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
-						string mac = deviceRuleInputValue["mac"].asString();
+						string id = deviceRuleInputValue["id"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];
 						Device *device = gateway->getDeviceFromMac(mac);
 						if (device)
@@ -1066,7 +1072,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (deviceRuleOutputValue.isObject())
 				{
 					if (deviceRuleOutputValue.isMember("mac") && deviceRuleOutputValue["mac"].isString() &&
-							deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
+						deviceRuleOutputValue.isMember("data") && deviceRuleOutputValue["data"].isObject())
 					{
 						Json::Value dataValue = deviceRuleOutputValue["data"];
 						string mac = deviceRuleOutputValue["mac"].asString();
@@ -1089,7 +1095,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (groupRuleOutputValue.isObject())
 				{
 					if (groupRuleOutputValue.isMember("id") && groupRuleOutputValue["id"].isInt() &&
-							groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
+						groupRuleOutputValue.isMember("data") && groupRuleOutputValue["data"].isObject())
 					{
 						int addr = groupRuleOutputValue["id"].asInt();
 						Json::Value dataValue = groupRuleOutputValue["data"];
@@ -1098,6 +1104,27 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 						{
 							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
 							rule->AddRuleOutput(ruleOutputGroup);
+						}
+					}
+				}
+			}
+		}
+		if (outputValue.isMember("scene") && outputValue["scene"].isArray())
+		{
+			Json::Value sceneRuleOutputList = outputValue["scene"];
+			for (Json::Value::ArrayIndex i = 0; i < sceneRuleOutputList.size(); i++)
+			{
+				Json::Value sceneRuleOutputValue = sceneRuleOutputList[i];
+				if (sceneRuleOutputValue.isObject())
+				{
+					if (sceneRuleOutputValue.isMember("id") && sceneRuleOutputValue["id"].isInt())
+					{
+						int addr = sceneRuleOutputValue["id"].asInt();
+						SceneBle *scene = gateway->getSceneBleFromAddr(addr);
+						if (scene)
+						{
+							RuleOutputSceneBle *ruleOutputScene = new RuleOutputSceneBle(scene);
+							rule->AddRuleOutput(ruleOutputScene);
 						}
 					}
 				}

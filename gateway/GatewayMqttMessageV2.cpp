@@ -56,19 +56,17 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
-	// OnLocalCallbackRegisterV2("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
 	// OnLocalCallbackRegisterV2("addDevToRoom", bind(&Gateway::OnAddDeviceToRoom, this, placeholders::_1, placeholders::_2));
 	// OnLocalCallbackRegisterV2("delDevFromRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
 	// OnLocalCallbackRegisterV2("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
-	// OnLocalCallbackRegisterV2("getInfoHc", bind(&Gateway::OnGetInfoHC, this, placeholders::_1, placeholders::_2));
-	// OnLocalCallbackRegisterV2("getDeviceStatus", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
-	// OnLocalCallbackRegisterV2("getAllDeviceStatus", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
-	// OnLocalCallbackRegisterV2("getDeviceList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getRoomList", bind(&Gateway::OnGetRoomList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getDevListInRoom", bind(&Gateway::OnGetDevListInRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getGroupList", bind(&Gateway::OnGetGroupList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getRuleList", bind(&Gateway::OnGetRuleList, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("createRoom", bind(&Gateway::OnCreateRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("addDevToRoom", bind(&Gateway::OnAddDeviceToRoom, this, placeholders::_1, placeholders::_2));
@@ -316,6 +314,7 @@ int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value roomValue;
 		roomValue["id"] = room->GetId();
+		roomValue["name"] = room->GetName();
 		roomData.append(roomValue);
 	}
 	respValue["data"]["rooms"] = roomData;
@@ -380,6 +379,7 @@ int Gateway::OnGetGroupList(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value groupValue;
 		groupValue["id"] = group->GetId();
+		groupValue["name"] = group->GetName();
 		groupData.append(groupValue);
 	}
 	respValue["data"]["groups"] = groupData;
@@ -396,6 +396,7 @@ int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value sceneValue;
 		sceneValue["id"] = scene->GetId();
+		sceneValue["name"] = scene->GetName();
 		sceneData.append(sceneValue);
 	}
 	respValue["data"]["scenes"] = sceneData;
@@ -447,6 +448,55 @@ int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getDevListInScene";
+	return CODE_OK;
+}
+
+int Gateway::OnGetRuleList(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetRuleList");
+	Json::Value ruleData;
+	for (const auto &[id, rule] : ruleList)
+	{
+		Json::Value ruleValue;
+		ruleValue["id"] = rule->GetId();
+		ruleValue["name"] = rule->GetName();
+		ruleData.append(ruleValue);
+	}
+	respValue["data"]["rules"] = ruleData;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getRuleListRsp";
+	return CODE_OK;
+}
+int Gateway::OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnOnGetRuleInfo");
+	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	{
+		Json::Value data = reqValue["data"];
+		if (data.isMember("rules") && data["rules"].isArray() && data["rules"].size() > 0)
+		{
+			Json::Value rules = data["rules"];
+			Json::Value ruleData;
+			for (auto &ruleValue : rules)
+			{
+				if (ruleValue.isString())
+				{
+					string ruleId = ruleValue.asString();
+					Rule * temp_rule = getRuleFromId(ruleId);
+					if(temp_rule)
+					{
+						cout << temp_rule->GetRuleData() << endl;
+						ruleData.append(temp_rule->GetRuleData());
+					}
+				}
+				else
+					respValue["data"]["code"] = CODE_FORMAT_ERROR;
+			}
+			respValue["data"]["rules"] = ruleData;
+		}
+		else
+			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
 	return CODE_OK;
 }
 
@@ -969,7 +1019,7 @@ int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 			ruleList[rule->GetId()] = rule;
 			string ruleStr = data.toString();
 			ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-			database->RuleAdd(rule->GetId(), ruleStr, true, 1);
+			database->RuleAdd(rule, ruleStr, true);
 			rule->Check();
 			respValue["data"]["code"] = CODE_OK;
 		}

@@ -19,11 +19,12 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int status = sqlite3_column_int(stmt, index++);
-				int type = sqlite3_column_int(stmt, index++);
+				string type = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string ruledata;
 				LOGW("Rule raw: %s", data.c_str());
 				string decode = macaron::Base64::Decode(data, ruledata);
-				if ((decode == "") && status)
+				if (status)
 				{
 					LOGV("RuleRead rule: %s", ruledata.c_str());
 					Json::Value ruleValue;
@@ -31,7 +32,9 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 					r.parse(ruledata, ruleValue);
 					if (ruleValue.isObject())
 					{
-						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						// Rule *rule = gateway->AddRule(ruleValue, name, true, false);
+						cout << ruleValue << endl;
+						Rule *rule = gateway->AddRuleV2(ruleValue);
 						rule->Check();
 					}
 					else
@@ -63,9 +66,9 @@ int Db::RuleRead()
 	return ReadAll(TABLE_NAME, NULL, RuleParse);
 }
 
-int Db::RuleAdd(string id, string rule, int isEnable, int type)
+int Db::RuleAdd(Rule *rule, string data, int isEnable)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, rule, isEnable, type) VALUES (\"" + id + "\",\"" + macaron::Base64::Encode(rule) + "\"," + to_string(isEnable) + "," + to_string(type) + ");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, rule, isEnable, type, name) VALUES (\"" + rule->GetId() + "\",\"" + macaron::Base64::Encode(data) + "\"," + to_string(isEnable) + ",\"" + rule->GetType() + "\", \"" + rule->GetName() + "\");";
 	return Sqlite_Exec(sql);
 }
 

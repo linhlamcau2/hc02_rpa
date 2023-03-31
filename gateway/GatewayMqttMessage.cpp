@@ -299,7 +299,7 @@ int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			string eventId = dataValue["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = eventId;
-			Rule *rule = AddRule(dataValue, true, true);
+			Rule *rule = AddRule(dataValue, "", true, true);
 			if (rule)
 			{
 				dataJsonRsp["STATUS"] = "SUCCESS";
@@ -331,7 +331,7 @@ int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
 			{
 				rule->DelAllRuleInput();
 				rule->DelAllRuleOutput();
-				rule = AddRule(dataValue, true, true);
+				rule = AddRule(dataValue, "", true, true);
 				if (rule)
 				{
 					dataJsonRsp["STATUS"] = "SUCCESS";
@@ -443,7 +443,7 @@ int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 				outputGroup["GROUP_ID"] = groupId;
 				outputGroup["PROPERTIES"] = properties;
 				dataAddRule["OUTPUT_GROUPS"] = outputGroup;
-				Rule *rule = AddRule(dataAddRule, true, true);
+				Rule *rule = AddRule(dataAddRule, "", true, true);
 				if (rule)
 				{
 					dataJsonRsp["STATUS"] = "SUCCESS";
@@ -502,7 +502,7 @@ int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
 				{
 					rule->DelAllRuleInput();
 					rule->DelAllRuleOutput();
-					rule = AddRule(dataAddRule, true, true);
+					rule = AddRule(dataAddRule, "", true, true);
 					dataJsonRsp["STATUS"] = "SUCCESS";
 				}
 				else
@@ -2834,7 +2834,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
+				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleList[eventTriggerId] = rule;
