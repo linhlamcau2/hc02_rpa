@@ -66,6 +66,11 @@ int main(int argc, char *argv[])
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
+	if(!database->IsHaveDb()) {
+		database->createTableIfNotExists();
+		bleProtocol->ResetFactory();
+	}
+
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac,
