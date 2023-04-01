@@ -26,11 +26,11 @@ BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate
 {
 	nextAddr = 0;
 	isAdding = false;
+	isProvisioning = false;
 }
 
 BleProtocol::~BleProtocol()
 {
-	isAdding = false;
 }
 
 void BleProtocol::init()
@@ -42,12 +42,15 @@ void BleProtocol::init()
 	Uart::init();
 	usleep(100000); // wait uart rx thread start
 	addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
+}
+
+void BleProtocol::InitKey()
+{
 	while (GetNetKey())
 	{
 		sleep(5);
 	}
 	GetAppKey();
-	database->GatewayRead();
 }
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -56,9 +59,9 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (isAdding)
+		if (!isAdding)
 		{
-			isAdding = false;
+			isAdding = true;
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			thread addDeviceThread(addDeviceFunc, &scanDeviceMessage);
 			addDeviceThread.detach();
@@ -103,7 +106,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 
 int BleProtocol::OnMessage(unsigned char *data, int len)
 {
-	LOGD("OnMessage len: %d", len);
+	// LOGD("OnMessage len: %d", len);
 	uint8_t *d = data;
 	int l = len;
 	message_rsp_st *message_rsp = NULL;
@@ -247,6 +250,8 @@ int BleProtocol::GetAppKey()
 		string appkey = arrayToString844412((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
+
+		gateway->setBleAppkey(appkey);
 	}
 	else
 	{
@@ -313,6 +318,9 @@ int BleProtocol::GetNetKey()
 			string devicekeyGwStr = arrayToString844412((uint8_t *)gwKey);
 			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
 			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
+
+			gateway->setBleDevicekey(devicekeyGwStr);
+			gateway->setBleNetkey(netkeyStr);
 		}
 	}
 	else
@@ -346,7 +354,7 @@ int BleProtocol::SetNetKey()
 	gateway->setBleAddr(0x01);
 	database->GatewayUpdateUnicast(gateway, 0x01);
 	gateway->setBleIvIndex(bswap_32(set_netkey_message.magic));
-	database->GatewayUpdateIvIndex(gateway,bswap_32(set_netkey_message.magic));
+	database->GatewayUpdateIvIndex(gateway, bswap_32(set_netkey_message.magic));
 	return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, sizeof(set_netkey_message_t), HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 }
 
@@ -374,7 +382,8 @@ int BleProtocol::StartScan()
 {
 	LOGD("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 1000);
+	isProvisioning = true;
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
 	if (rs)
 	{
 		LOGE("Send start scan error, rs: %d", rs);
@@ -386,6 +395,7 @@ int BleProtocol::StopScan()
 {
 	LOGD("StopScan");
 	uint8_t d = HCI_GATEWAY_CMD_STOP;
+	isProvisioning = false;
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 500);
 	if (rs)
 	{
@@ -444,6 +454,11 @@ static uint32_t convertDeviceType(uint32_t type)
 	return (arr[0] + (arr[1] * 1000) + (arr[2] * 10000));
 }
 
+bool BleProtocol::IsProvision()
+{
+	return isProvisioning;
+}
+
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
@@ -452,6 +467,7 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
 	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
 	LOGI("Scan device mac 0x%s, rssi: %i", mac.c_str(), scan_device_message->rssi);
+	int rs = CODE_ERROR;
 	if (isProvisioning && !SelectMac(scan_device_message->mac))
 	{
 		if (isProvisioning && !GetNetKey())
@@ -471,103 +487,24 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 							if (device)
 							{
 								gateway->AddDeviceToScanList(device);
-								isAdding = true;
-								StartScan();
-								return CODE_OK;
+								rs = CODE_OK;
 							}
-							else
-							{
-								ResetDev(nextAddr);
-								isAdding = true;
-								StartScan();
-							}
-						}
-						else
-						{
-							ResetDev(nextAddr);
-							if (!isProvisioning)
-							{
-								isAdding = false;
-							}
-							else
-							{
-								LOGW("GetDeviceType false");
-								isAdding = true;
-								StartScan();
-							}
-						}
-					}
-					else
-					{
-						ResetDev(nextAddr);
-						if (!isProvisioning)
-						{
-							isAdding = false;
-						}
-						else
-						{
-							LOGW("SetGwAddr false");
-							isAdding = true;
-							StartScan();
 						}
 					}
 				}
-				else
+				if (rs != CODE_OK)
 				{
 					ResetDev(nextAddr);
-					if (!isProvisioning)
-					{
-						isAdding = false;
-					}
-					else
-					{
-						LOGW("BindingAll false");
-						isAdding = true;
-						StartScan();
-					}
 				}
 			}
-			else
-			{
-				ResetDev(nextAddr);
-				if (!isProvisioning)
-				{
-					isAdding = false;
-				}
-				else
-				{
-					LOGW("Provision false");
-					isAdding = true;
-				}
-			}
-		}
-		else
-		{
-			if (!isProvisioning)
-			{
-				isAdding = false;
-			}
-			else
-			{
-				LOGW("Get NWK false");
-				isAdding = true;
-			}
-		}
-	}
-	else
-	{
-		if (!isProvisioning)
-		{
-			isAdding = false;
-		}
-		else
-		{
-			LOGW("Select Mac false");
-			isAdding = true;
 		}
 	}
 	isAdding = false;
-	return CODE_ERROR;
+	if (isProvisioning)
+	{
+		StartScan();
+	}
+	return rs;
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -675,7 +612,7 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	set_gw_addr_message.vendorId = RD_VENDOR_ID;
 	set_gw_addr_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;
 	set_gw_addr_message.header = RD_OPCODE_PROVISION_SET_GW_ADDR;
-	set_gw_addr_message.gwAddr = 0x0002;
+	set_gw_addr_message.gwAddr = gwAddrSet;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
 	if (rs == CODE_OK)
 	{
@@ -1559,7 +1496,7 @@ int BleProtocol::UpdateStatusSensorsPm(uint16_t devAddr)
 	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, 0, 0, 1000);
 	if (rs == CODE_OK)
 	{
-			return CODE_OK;
+		return CODE_OK;
 	}
 	LOGW("update status sensor err");
 	return CODE_ERROR;

@@ -75,11 +75,10 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
-	r.parse(payload, payloadJson);
 	Util::LedInternet(false);
 	Util::LedServiceLock();
-	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string cmd = payloadJson["CMD"].asString();
 		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
@@ -130,11 +129,9 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
-	r.parse(payload, payloadJson);
 	Util::LedInternet(false);
 	Util::LedServiceLock();
-	if (payloadJson.isObject() &&
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
 			payloadJson.isMember("data") && payloadJson["data"].isObject())
@@ -191,11 +188,9 @@ void CloudProtocol::OnServerRespV2(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
-	r.parse(payload, payloadJson);
 	Util::LedInternet(false);
 	Util::LedServiceLock();
-	if (payloadJson.isObject() &&
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{

@@ -26,9 +26,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				if (decode == "")
 				{
 					Json::Value ruleValue;
-					Json::Reader r;
-					r.parse(ruledata, ruleValue);
-					if (ruleValue.isObject())
+					if (ruleValue.parse(ruledata) && ruleValue.isObject())
 					{
 						Rule *rule = gateway->AddRule(ruleValue, true, false);
 						if (rule)
@@ -96,8 +94,8 @@ int Db::RuleUpdateAddr(Rule *rule)
 	string sql = "UPDATE " TABLE_NAME " SET rule_addr=" + to_string(rule->GetAddr()) + " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
-	
-int	Db::RuleDel(Rule *rule)
+
+int Db::RuleDel(Rule *rule)
 {
 	string sql = "DELETE FROM " TABLE_NAME " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);

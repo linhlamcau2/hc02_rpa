@@ -167,6 +167,9 @@ private:
 	// mutex mtxWaitSendUart;
 	pthread_mutex_t mutex;
 
+	atomic<bool> isAdding;
+	atomic<bool> isProvisioning;
+
 	// TODO: Add init state
 	pro_net_info_t pro_net_info;
 	uint8_t netKey[16];
@@ -189,10 +192,9 @@ public:
 	BleProtocol(char *uartPort, int uartBaudrate);
 #endif
 	virtual ~BleProtocol();
-
-	atomic<bool> isAdding;
-	atomic<bool> isProvisioning;
 	void init();
+
+	void InitKey();
 	int GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
@@ -202,6 +204,7 @@ public:
 	int StopScan();
 	int ResetFactory();
 
+	bool IsProvision();
 	int AddDevice(scan_device_message_t *scan_device_message);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);

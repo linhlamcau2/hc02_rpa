@@ -16,6 +16,7 @@ void Gateway::initMqttMessageV2()
 {
 	OnDeviceRpcCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegisterV2("controlGw", bind(&Gateway::OnControlGw, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
@@ -41,6 +42,7 @@ void Gateway::initMqttMessageV2()
 
 	OnLocalCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("controlGw", bind(&Gateway::OnControlGw, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
@@ -69,7 +71,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlDevice");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+			reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		string deviceId = reqValue["id"].asString();
 		Json::Value devData = reqValue["data"];
@@ -98,7 +100,7 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlAllDevice");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+			reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		Json::Value dataValue = reqValue["data"];
 		if (dataValue.isObject())
@@ -123,8 +125,8 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 					bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
 				}
 				if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-					dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-					dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+						dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+						dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 				{
 					int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 					int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
@@ -150,8 +152,8 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 				bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
 			}
 			if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+					dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+					dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 			{
 				int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 				int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
@@ -179,11 +181,20 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnControlGw(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnControlGw");
+	int rs = Do(reqValue);
+	respValue["data"]["code"] = rs;
+	respValue["cmd"] = "controlGwRsp";
+	return CODE_OK;
+}
+
 int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlGroup");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+			reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		string groupId = reqValue["id"].asString();
 		Json::Value devData = reqValue["data"];
@@ -287,8 +298,8 @@ int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value deviceValue;
 		deviceValue["id"] = device->GetId();
-		deviceValue["addr"] = device->GetAddr();
-		deviceValue["type"] = device->GetType();
+		deviceValue["addr"] = (Json::UInt)device->GetAddr();
+		deviceValue["type"] = (Json::UInt)device->GetType();
 		deviceValue["mac"] = device->GetMac();
 		deviceValue["ver"] = device->GetVersionStr();
 		devicesData.append(deviceValue);
@@ -317,12 +328,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
-		bleProtocol->isAdding = true;
-		bleProtocol->isProvisioning = true;
-		if (bleProtocol->StartScan())
-		{
-			bleProtocol->StopScan();
-		}
+		bleProtocol->StartScan();
 		respValue["data"]["code"] = CODE_OK;
 		respValue["cmd"] = "startScanBleRsp";
 		return CODE_OK;
@@ -337,8 +343,6 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 	if (bleProtocol)
 	{
 		bleProtocol->StopScan();
-		bleProtocol->isAdding = false;
-		bleProtocol->isProvisioning = false;
 		respValue["data"]["code"] = CODE_OK;
 		respValue["cmd"] = "stopScanBleRsp";
 		return CODE_OK;
@@ -907,7 +911,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -962,7 +966,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;

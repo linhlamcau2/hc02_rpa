@@ -180,9 +180,7 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 			if (resultUpload != "")
 			{
 				Json::Value payloadJson;
-				Json::Reader r;
-				r.parse(resultUpload, payloadJson);
-				if (payloadJson.isObject() && payloadJson.isMember("url"))
+				if (payloadJson.parse(resultUpload) && payloadJson.isObject() && payloadJson.isMember("url"))
 				{
 					string urlUploadFile = payloadJson["url"].asString().c_str();
 					LOGD("url %s", urlUploadFile.c_str());
@@ -231,12 +229,7 @@ int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
-		bleProtocol->isAdding = true;
-		bleProtocol->isProvisioning = true;
-		if (bleProtocol->StartScan())
-		{
-			bleProtocol->StopScan();
-		}
+		bleProtocol->StartScan();
 	}
 	else
 		LOGW("BleProtocol null");
@@ -248,8 +241,6 @@ int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
-		bleProtocol->isAdding = false;
-		bleProtocol->isProvisioning = false;
 		bleProtocol->StopScan();
 	}
 	else
@@ -310,6 +301,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRpcBleDelDevice");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
 	{
+		respValue["CMD"] = "RESET_NODE";
 		Json::Value dataValue = reqValue["DATA"];
 		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
@@ -319,19 +311,25 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (bleProtocol)
 				{
-					bleProtocol->ResetDev(device->GetAddr());
+					if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+					{
+						delDevice(device);
+						respValue["DATA"]["SUCCESS"].append(device->GetId());
+					}
+					else
+					{
+						respValue["DATA"]["FAILED"].append(device->GetId());
+					}
 				}
 				else
 					LOGW("BleProtocol null");
-				delDevice(device);
-				LOGD("remove deviceId: %s", deviceId.c_str());
-				return CODE_OK;
 			}
 			else
 			{
 				LOGD("deviceId %s dose not exist", deviceId.c_str());
 			}
 		}
+		return CODE_OK;
 	}
 	else
 	{
@@ -1529,9 +1527,7 @@ int Gateway::OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue)
 				{
 					string dataConfig = room->GetDataConfig();
 					Json::Value dataJson;
-					Json::Reader r;
-					r.parse(dataConfig, dataJson);
-					if (dataJson.isObject())
+					if (dataJson.parse(dataConfig) && dataJson.isObject())
 					{
 						respValue = dataJson;
 						return CODE_OK;
@@ -2010,7 +2006,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 						{
 							Json::Value dataCmd;
 							dataCmd["pir"] = pir;
-							dataCmd["scene"] = scene->GetAddr();
+							dataCmd["scene"] = (Json::UInt)scene->GetAddr();
 							dataCmd["lux"] = lux;
 							device->Do(dataCmd);
 						}
@@ -2067,7 +2063,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 						{
 							Json::Value dataCmd;
 							dataCmd["pir"] = pir;
-							dataCmd["scene"] = scene->GetAddr();
+							dataCmd["scene"] = (Json::UInt)scene->GetAddr();
 							dataCmd["lux"] = lux;
 							device->Do(dataCmd);
 						}
@@ -2117,7 +2113,7 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 					if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
 					{
 						Json::Value delscene;
-						delscene["sceneDel"] = scene->GetAddr();
+						delscene["sceneDel"] = (Json::UInt)scene->GetAddr();
 						device->Do(delscene);
 					}
 					else

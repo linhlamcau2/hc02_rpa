@@ -70,12 +70,12 @@ void Db::init(void)
 	{
 		LOGE("Failed to initialize the mutex");
 	}
+}
+
+bool Db::IsHaveDb()
+{
 	struct stat st;
-	LOGD("%s", string(DB_NAME).c_str());
-	if (stat(DB_NAME, &st) != CODE_OK)
-	{
-		createTableIfNotExists();
-	}
+	return !stat(DB_NAME, &st);
 }
 
 int Db::createTableIfNotExists()

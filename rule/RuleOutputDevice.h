@@ -13,7 +13,7 @@ private:
 	Json::Value data;
 
 public:
-	RuleOutputDevice(Device *device, Json::Value data);
+	RuleOutputDevice(Device *device, Json::Value &data);
 	~RuleOutputDevice();
 
 	void RunOutput();

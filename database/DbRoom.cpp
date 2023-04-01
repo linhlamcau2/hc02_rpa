@@ -28,9 +28,7 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 					if (decode == "")
 					{
 						Json::Value roomValue;
-						Json::Reader r;
-						r.parse(roomData, roomValue);
-						if (roomValue.isObject())
+						if(roomValue.parse(roomData) && roomValue.isObject())
 						{
 							room->SetDataConfig(roomValue.toString());
 						}

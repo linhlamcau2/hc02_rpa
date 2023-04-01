@@ -210,11 +210,6 @@ void Gateway::init()
 	database->GatewayRead();
 	database->DeviceRead();
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
-	for (auto i = deviceList.begin(); i != deviceList.end(); i++)
-	{
-		LOGE("%s : %s", i->first.c_str(), i->second->GetId().c_str());
-	}
-
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
 	database->GroupRead();
@@ -324,78 +319,81 @@ int Gateway::CheckOnlineThread()
 	{
 		currentTime = time(NULL);
 		allTimeCheck = deviceList.size() * 4;
-		for (const auto &[id, device] : deviceList)
+		if (!bleProtocol->IsProvision())
 		{
-			deviceStateChange = false;
-			if (device->GetAddr() != 65535)
+			for (const auto &[id, device] : deviceList)
 			{
-				if (device->lastOnlineState) // online
+				deviceStateChange = false;
+				if (device->GetAddr() != 65535)
 				{
-					// neu thiet bi ho tro ban tin check trang thai online/offline
-					if (device->isNeedCheckOnline())
+					if (device->lastOnlineState) // online
 					{
-						// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
-						if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+						// neu thiet bi ho tro ban tin check trang thai online/offline
+						if (device->isNeedCheckOnline())
 						{
-							bleProtocol->SendOnlineCheck(device->GetAddr());
-							device->lastTimeCheck = currentTime;
+							// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
+							if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+							{
+								bleProtocol->SendOnlineCheck(device->GetAddr());
+								device->lastTimeCheck = currentTime;
+							}
+							// 2 chu ky khong co ban tin phan hoi thi bao offline
+							if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+							{
+								LOGI("Device 0x%04X offline", device->GetAddr());
+								device->lastOnlineState = false;
+								deviceStateChange = true;
+							}
 						}
-						// 2 chu ky khong co ban tin phan hoi thi bao offline
-						if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+						// neu thiet bi khong ho tro ban tin check trang thai online/offline
+						else
 						{
-							LOGI("Device 0x%04X offline", device->GetAddr());
-							device->lastOnlineState = false;
-							deviceStateChange = true;
-						}
-					}
-					// neu thiet bi khong ho tro ban tin check trang thai online/offline
-					else
-					{
-						// 1 ngay khong co ban tin moi thi bao offline
-						if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
-						{
-							LOGI("Device 0x%04X offline", device->GetAddr());
-							device->lastOnlineState = false;
-							deviceStateChange = true;
-						}
-					}
-				}
-				else
-				{
-					if (device->isNeedCheckOnline())
-					{
-						// thoi gian check qua 1 chu ky thi check lai
-						if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
-						{
-							bleProtocol->SendOnlineCheck(device->GetAddr());
-							device->lastTimeCheck = currentTime;
-						}
-						// neu co ban tin moi trong vong 2 chu ky check thi bao online
-						if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
-						{
-							LOGI("Device 0x%04X online", device->GetAddr());
-							device->lastOnlineState = true;
-							deviceStateChange = true;
+							// 1 ngay khong co ban tin moi thi bao offline
+							if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
+							{
+								LOGI("Device 0x%04X offline", device->GetAddr());
+								device->lastOnlineState = false;
+								deviceStateChange = true;
+							}
 						}
 					}
 					else
 					{
-						// trong ngay co ban tin thi online
-						if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+						if (device->isNeedCheckOnline())
 						{
-							LOGI("Device 0x%04X online", device->GetAddr());
-							device->lastOnlineState = true;
-							deviceStateChange = true;
+							// thoi gian check qua 1 chu ky thi check lai
+							if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
+							{
+								bleProtocol->SendOnlineCheck(device->GetAddr());
+								device->lastTimeCheck = currentTime;
+							}
+							// neu co ban tin moi trong vong 2 chu ky check thi bao online
+							if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
+							{
+								LOGI("Device 0x%04X online", device->GetAddr());
+								device->lastOnlineState = true;
+								deviceStateChange = true;
+							}
+						}
+						else
+						{
+							// trong ngay co ban tin thi online
+							if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+							{
+								LOGI("Device 0x%04X online", device->GetAddr());
+								device->lastOnlineState = true;
+								deviceStateChange = true;
+							}
 						}
 					}
-				}
-				// send device state to server
-				if (deviceStateChange)
-				{
-					onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
-					onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
-					PublishToLocalMessage(onlineValue);
-					PublishToGatewayTelemetry(onlineValue);
+					// send device state to server
+					if (deviceStateChange)
+					{
+						onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
+						onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
+						PublishToLocalMessage(onlineValue);
+						PublishToGatewayTelemetry(onlineValue);
+					}
 				}
 			}
 		}
@@ -525,9 +523,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	string data = scanDevice->GetData();
 	string devKey = "";
 	Json::Value json;
-	Json::Reader r;
-	r.parse(data, json);
-	if (json.isObject())
+	if (json.parse(data) && json.isObject())
 	{
 		if (json.isMember("devicekey") && json["devicekey"].isString())
 		{
@@ -783,7 +779,6 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
-
 		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("NAME") && ruleValue["NAME"].isString())
@@ -1346,4 +1341,41 @@ int Gateway::pushDeviceUpdateLocalV2(Json::Value &dataValue)
 int Gateway::pushDeviceUpdateCloudV2(Json::Value &dataValue)
 {
 	return PublishToCloudMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+}
+
+int Gateway::Do(Json::Value &dataValue)
+{
+	LOGV("Do data: %s", dataValue.toString().c_str());
+#ifdef __ANDROID__
+	int onoff = 0;
+	if (dataValue.isObject())
+	{
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "0") && dataValue[KEY_ATTRIBUTE_RELAY "0"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio114/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio114/value");
+			}
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio115/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio115/value");
+			}
+		}
+		return CODE_OK;
+	}
+#endif
+	return CODE_FORMAT_ERROR;
 }

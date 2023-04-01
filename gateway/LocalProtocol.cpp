@@ -50,10 +50,9 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
-	r.parse(payload, payloadJson);
 	Util::LedServiceLock();
-	if (payloadJson.isObject() && payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string cmd = payloadJson["CMD"].asString();
 		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
@@ -103,15 +102,13 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
 	vector<string> topics = Util::splitString(topic, '/');
 	if (topics.size() == 5)
 	{
 		if (topics[4] == mac || topics[4] == "all")
 		{
-			r.parse(payload, payloadJson);
 			Util::LedServiceLock();
-			if (payloadJson.isObject() &&
+			if (payloadJson.parse(payload) && payloadJson.isObject() &&
 					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 					payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
 					payloadJson.isMember("data") && payloadJson["data"].isObject())
@@ -170,15 +167,13 @@ void LocalProtocol::OnLocalRespV2(string &topic, string &payload)
 {
 	Json::Value respValue;
 	Json::Value payloadJson;
-	Json::Reader r;
 	vector<string> topics = Util::splitString(topic, '/');
 	if (topics.size() == 5)
 	{
 		if (topics[4] == mac || topics[4] == "all")
 		{
-			r.parse(payload, payloadJson);
 			Util::LedServiceLock();
-			if (payloadJson.isObject() &&
+			if (payloadJson.parse(payload) && payloadJson.isObject() &&
 					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 					payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 			{

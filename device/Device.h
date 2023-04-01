@@ -49,6 +49,7 @@
 #define KEY_ATTRIBUTE_B "b"
 #define KEY_ATTRIBUTE_DIM_ON "dimOn"
 #define KEY_ATTRIBUTE_DIM_OFF "dimOff"
+#define KEY_ATTRIBUTE_RELAY "rl"
 
 using namespace std;
 

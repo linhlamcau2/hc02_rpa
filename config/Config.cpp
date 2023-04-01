@@ -16,7 +16,7 @@ Config *config = NULL;
 /****************************************
  *                  API                 *
  ***************************************/
-static bool get_str_config_entry(char *name, char *value)
+static bool get_str_config_entry(const char *name, char *value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
@@ -38,7 +38,7 @@ static bool get_str_config_entry(char *name, char *value)
 #endif
 }
 
-static bool get_int_config_entry(char *name, int *value)
+static bool get_int_config_entry(const char *name, int *value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
@@ -60,7 +60,7 @@ static bool get_int_config_entry(char *name, int *value)
 #endif
 }
 
-static bool set_str_config_entry(char *name, char *section_name, const char *value)
+static bool set_str_config_entry(const char *name, const char *section_name, const char *value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
@@ -104,14 +104,14 @@ static bool set_str_config_entry(char *name, char *section_name, const char *val
 #endif
 }
 
-static bool set_int_config_entry(char *section, char *name, int value)
+static bool set_int_config_entry(const char *section, const char *name, int value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char strValue[20];
 	ctx = uci_alloc_context();
-	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
+	if ((uci_lookup_ptr(ctx, &ptr, (char *)section, true) != UCI_OK))
 	{
 		uci_perror(ctx, "uci_lookup_ptr Error");
 		uci_free_context(ctx);

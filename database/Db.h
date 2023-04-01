@@ -26,6 +26,7 @@ public:
 	~Db() {}
 
 	void init(void);
+	bool IsHaveDb();
 	int createTableIfNotExists();
 
 	int DeviceRead();
