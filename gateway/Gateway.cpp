@@ -33,6 +33,8 @@
 #include "DeviceBleSwitchTouchRgb3.h"
 #include "DeviceBleSwitchTouchRgb4.h"
 #include "DeviceBleSwitchScene6DC.h"
+#include "DeviceBleSwitchScene6AC.h"
+#include "DeviceBleSwitchScene6ACRgb.h"
 #include "DeviceBleSensorTempHum.h"
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
@@ -92,7 +94,9 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 		{
 			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
 			if (deviceBle)
+			{
 				return deviceBle;
+			}
 		}
 	}
 	return NULL;
@@ -205,8 +209,6 @@ void Gateway::init()
 
 	database->GatewayRead();
 	database->DeviceRead();
-
-	// Add device ble all
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
@@ -228,8 +230,8 @@ void Gateway::init()
 	CloudConnect();
 	LocalConnect();
 
-	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
-	checkOnlineThread.detach();
+	// thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	// checkOnlineThread.detach();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -544,6 +546,55 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 #else
 	PublishToDeviceTelemetry(jsonValue);
 #endif
+
+#ifdef CONFIG_USE_OLD_APP
+	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
+	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE)
+	{
+		dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
+		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), 1);
+		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
+		dataValue["BUTTON_ID"] = 12;
+		jsonValue["DATA"] = dataValue;
+		PublishToLocalMessage(jsonValue);
+	}
+	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+	{
+		for (int i = 1; i <= 2; i++)
+		{
+			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
+			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
+			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
+			dataValue["BUTTON_ID"] = 11 + i;
+			jsonValue["DATA"] = dataValue;
+			PublishToLocalMessage(jsonValue);
+		}
+	}
+	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+	{
+		for (int i = 1; i <= 3; i++)
+		{
+			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
+			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
+			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
+			dataValue["BUTTON_ID"] = 11 + i;
+			jsonValue["DATA"] = dataValue;
+			PublishToLocalMessage(jsonValue);
+		}
+	}
+	else if (scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB || scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+	{
+		for (int i = 1; i <= 5; i++)
+		{
+			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
+			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
+			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
+			dataValue["BUTTON_ID"] = 11 + i;
+			jsonValue["DATA"] = dataValue;
+			PublishToLocalMessage(jsonValue);
+		}
+	}
+#endif
 }
 
 Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
@@ -583,19 +634,31 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_1:
-		device = new DeviceBleSwitchTouchRgb1(id, name, mac, data, addr, version);
+	case BLE_SWITCH_RGB_1_SQUARE:
+	case BLE_SWITCH_RGB_WATER_HEATER:
+		device = new DeviceBleSwitchTouchRgb1(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_2:
-		device = new DeviceBleSwitchTouchRgb2(id, name, mac, data, addr, version);
+	case BLE_SWITCH_RGB_2_SQUARE:
+		device = new DeviceBleSwitchTouchRgb2(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_3:
-		device = new DeviceBleSwitchTouchRgb3(id, name, mac, data, addr, version);
+	case BLE_SWITCH_RGB_3_SQUARE:
+		device = new DeviceBleSwitchTouchRgb3(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_4:
-		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, version);
+	case BLE_SWITCH_RGB_4_SQUARE:
+		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, version);
+		break;
+	case BLE_AC_SCENE_CONTACT:
+		device = new DeviceBleSwitchScene6AC(id, name, mac, data, addr, version);
+		break;
+	case BLE_AC_SCENE_CONTACT_RGB:
+	case BLE_AC_SCENE_CONTACT_RGB_SQUARE:
+		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_TEMP_HUM_SENSOR:
 		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, version);
@@ -635,9 +698,47 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	{
 		device->lastTimeActive = time(NULL);
 		if (addGateway)
+		{
 			deviceList[id] = device;
+#ifdef CONFIG_USE_OLD_APP
+			Device *deviceChild = NULL;
+			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE)
+			{
+				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version);
+				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
+			}
+			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+			{
+				for (int i = 1; i <= 2; i++)
+				{
+					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+				}
+			}
+			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+			{
+				for (int i = 1; i <= 3; i++)
+				{
+					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+					cout << Util::GenIdDeviceByElement(id, i) << endl;
+				}
+			}
+			else if (device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+			{
+				for (int i = 1; i <= 5; i++)
+				{
+					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+				}
+			}
+#endif
+		}
 		if (addDatabase)
+		{
 			database->DeviceAdd(device);
+		}
+
 		// if (connected)
 		// 	device->PushAttributes();
 	}
@@ -678,6 +779,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
+		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("NAME") && ruleValue["NAME"].isString())
 			name = ruleValue["NAME"].asString();
@@ -1086,6 +1188,8 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		int repeat = ruleValue["repeat"].asInt();
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValue = ruleValue["output"];
+
+		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("name") && ruleValue["name"].isString())
 			name = ruleValue["name"].asString();

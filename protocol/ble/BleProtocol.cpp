@@ -612,7 +612,7 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	set_gw_addr_message.vendorId = RD_VENDOR_ID;
 	set_gw_addr_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;
 	set_gw_addr_message.header = RD_OPCODE_PROVISION_SET_GW_ADDR;
-	set_gw_addr_message.gwAddr = 0x0001;
+	set_gw_addr_message.gwAddr = gwAddrSet;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
 	if (rs == CODE_OK)
 	{
