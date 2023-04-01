@@ -11,15 +11,17 @@ DeviceBleSwitchTouchRgb4::DeviceBleSwitchTouchRgb4(string id, string name, strin
 #ifndef CONFIG_USE_OLD_APP
 		elementRgb[i] = new ElementRgb(this, addr + i);
 		elements.push_back(elementRgb[i]);
-		countElement = 4;
 #endif
 	}
+#ifndef CONFIG_USE_OLD_APP
+	countElement = 4;
+#endif
 	powerSource = POWER_AC;
 
 #ifdef CONFIG_USE_OLD_APP
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
-	moduleRgb = new ModuleRgb(this, addr);
+	moduleRgb = new ModuleRgb(this, addr, 0);
 	modules.push_back(moduleRgb);
 #endif
 }

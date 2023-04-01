@@ -1421,17 +1421,18 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					hasDeviceDelGroupFailed = false;
 					int numDeviceInGroup = groupOfGw->deviceList.size();
+					vector<DeviceInGroup *> listGr = groupOfGw->deviceList;
 					for (int j = 0; j < numDeviceInGroup; j++)
 					{
-						if (groupOfGw->DelDevice(groupOfGw->deviceList[j]->device, groupOfGw->deviceList[j]->device->GetAddr()) == CODE_OK)
+						if (groupOfGw->DelDevice(listGr[j]->device, listGr[j]->device->GetAddr()) == CODE_OK)
 						{
-							database->DeviceInGroupDel(groupOfGw, groupOfGw->deviceList[j]->device, groupOfGw->deviceList[j]->device->GetAddr());
-							groupJsonRsp["SUCCESS"].append(groupOfGw->deviceList[j]->device->GetId());
+							database->DeviceInGroupDel(groupOfGw, listGr[j]->device, listGr[j]->device->GetAddr());
+							groupJsonRsp["SUCCESS"].append(listGr[j]->device->GetId());
 						}
 						else
 						{
 							hasDeviceDelGroupFailed = true;
-							groupJsonRsp["FAILED"].append(groupOfGw->deviceList[j]->device->GetId());
+							groupJsonRsp["FAILED"].append(listGr[j]->device->GetId());
 						}
 					}
 					if (!hasDeviceDelGroupFailed)
@@ -1460,17 +1461,18 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				{
 					hasDeviceDelSceneFailed = false;
 					int numDevInScene = sceneOfGw->deviceList.size();
+					vector<DeviceInSceneBle *> listScensBle = sceneOfGw->deviceList;
 					for (int m = 0; m < numDevInScene; m++)
 					{
-						if (sceneOfGw->DelDevice(sceneOfGw->deviceList[m]->device) == CODE_OK)
+						if (sceneOfGw->DelDevice(listScensBle[m]->device) == CODE_OK)
 						{
-							database->DeviceInSceneBleDel(sceneOfGw, sceneOfGw->deviceList[m]->device);
-							sceneJsonRsp["SUCCESS"].append(sceneOfGw->deviceList[m]->device->GetId());
+							database->DeviceInSceneBleDel(sceneOfGw, listScensBle[m]->device);
+							sceneJsonRsp["SUCCESS"].append(listScensBle[m]->device->GetId());
 						}
 						else
 						{
 							hasDeviceDelSceneFailed = true;
-							sceneJsonRsp["FAILED"].append(sceneOfGw->deviceList[m]->device->GetId());
+							sceneJsonRsp["FAILED"].append(listScensBle[m]->device->GetId());
 						}
 					}
 					if (!hasDeviceDelSceneFailed)
@@ -2437,14 +2439,15 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			if (group)
 			{
 				int numDevices = group->deviceList.size();
+				vector <DeviceInGroup *> list = group->deviceList;
 				for (int i = 0; i < numDevices; i++)
 				{
-					if (group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId) == CODE_OK)
+					if (group->DelDevice(list[i]->device, list[i]->epId) == CODE_OK)
 					{
-						database->DeviceInGroupDel(group, group->deviceList[i]->device, group->deviceList[i]->epId);
+						database->DeviceInGroupDel(group, list[i]->device, list[i]->epId);
 						if (bleProtocol)
 						{
-							if (bleProtocol->SetIdCombine(group->deviceList[i]->device->GetAddr(), 0) != CODE_OK)
+							if (bleProtocol->SetIdCombine(list[i]->device->GetAddr(), 0) != CODE_OK)
 								statusRsp = "FAILED";
 						}
 						else
@@ -2453,6 +2456,10 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 							LOGW("BLEProtocol null");
 						}
 					}
+				}
+				if (statusRsp == "SUCCESS")
+				{
+					delGroup(group);
 				}
 			}
 			else

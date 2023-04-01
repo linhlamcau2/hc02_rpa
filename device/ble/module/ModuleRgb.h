@@ -6,13 +6,14 @@ using namespace std;
 class ModuleRgb : public Module
 {
 protected:
+	uint8_t bt;
 	uint8_t r, g, b, dimOn, dimOff;
 	int idR, idG, idB, idDimOn, idDimOff;
 	bool isR, isG, isB, isDimOn, isDimOff;
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
-	ModuleRgb(Device *device, uint32_t addr);
+	ModuleRgb(Device *device, uint32_t addr, uint8_t button);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

@@ -16,7 +16,7 @@ DeviceBleSwitchTouchRgb1::DeviceBleSwitchTouchRgb1(string id, string name, strin
 #ifdef CONFIG_USE_OLD_APP
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
-	moduleRgb = new ModuleRgb(this, addr);
+	moduleRgb = new ModuleRgb(this, addr, 0);
 	modules.push_back(moduleRgb);
 #endif
 }

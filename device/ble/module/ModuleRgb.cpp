@@ -6,8 +6,11 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleRgb::ModuleRgb(Device *device, uint32_t addr) : Module(device, addr)
+ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t button) : Module(device, addr)
 {
+	
+	bt = button;
+	LOGE("BUTTON: %d", bt);
 	r = 0;
 	b = 0;
 	g = 0;
@@ -217,7 +220,7 @@ int ModuleRgb::Do(Json::Value &dataValue)
 		{
 			isR = isB = isG = isDimOff = isDimOn = false;
 			if (bleProtocol)
-				bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
+				bleProtocol->ControlRgbSwitch(addr, bt, b, g, r, dimOn, dimOff);
 			else
 				LOGW("BleProtocol null");
 			return CODE_OK;
