@@ -302,6 +302,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
 	{
 		respValue["CMD"] = "RESET_NODE";
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
@@ -313,12 +314,12 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
 					{
+						dataJsonRsp["SUCCESS"].append(device->GetId());
 						delDevice(device);
-						respValue["DATA"]["SUCCESS"].append(device->GetId());
 					}
 					else
 					{
-						respValue["DATA"]["FAILED"].append(device->GetId());
+						dataJsonRsp["FAILED"].append(device->GetId());
 					}
 				}
 				else
@@ -329,6 +330,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 				LOGD("deviceId %s dose not exist", deviceId.c_str());
 			}
 		}
+		respValue["DATA"] = dataJsonRsp;
 		return CODE_OK;
 	}
 	else
@@ -2429,12 +2431,13 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 
 		if (data.isMember("GROUP_ID") && data["GROUP_ID"].isString())
 		{
-			string groupId = data["ID"].asString();
+			string groupId = data["GROUP_ID"].asString();
 			dataJsonRsp["ID"] = groupId;
 			Group *group = getGroupFromId(groupId);
 			if (group)
 			{
-				for (int i = 0; i < group->deviceList.size(); i++)
+				int numDevices = group->deviceList.size();
+				for (int i = 0; i < numDevices; i++)
 				{
 					if (group->DelDevice(group->deviceList[i]->device, group->deviceList[i]->epId) == CODE_OK)
 					{

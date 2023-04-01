@@ -11,9 +11,9 @@ DeviceBleSwitchTouchRgb2::DeviceBleSwitchTouchRgb2(string id, string name, strin
 #ifndef CONFIG_USE_OLD_APP
 		elementRgb[i] = new ElementRgb(this, addr + i);
 		elements.push_back(elementRgb[i]);
+		countElement = 2;
 #endif
 	}
-	countElement = 2;
 	powerSource = POWER_AC;
 
 #ifdef CONFIG_USE_OLD_APP
