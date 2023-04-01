@@ -49,6 +49,9 @@ namespace Util
 	string ExecuteCMD(char const *command);
 	string GetCurrentTimeStr();
 
+	string uuidToStr(uint8_t *uuid);
+	string arrayToString844412(uint8_t *array);
+
 	void LedInternet(bool value);
 	void LedService(bool value);
 	void LedZigbee(bool value);

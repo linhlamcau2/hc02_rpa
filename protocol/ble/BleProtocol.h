@@ -178,9 +178,6 @@ private:
 	uint8_t deviceKey[16];
 	uint16_t nextAddr;
 
-	string uuidToStr(uuid_t *uuid);
-	string arrayToString844412(uint8_t *array);
-
 	void CheckOpcodeException(message_rsp_st *message);
 	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);

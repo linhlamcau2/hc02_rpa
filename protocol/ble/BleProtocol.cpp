@@ -247,7 +247,7 @@ int BleProtocol::GetAppKey()
 		{
 			appKey[i] = rand() % 256;
 		}
-		string appkey = arrayToString844412((uint8_t *)appKey);
+		string appkey = Util::arrayToString844412((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
 
@@ -311,11 +311,11 @@ int BleProtocol::GetNetKey()
 			}
 			SetNetKey();
 			SetGwKey();
-			string netkeyStr = arrayToString844412((uint8_t *)netKey);
+			string netkeyStr = Util::arrayToString844412((uint8_t *)netKey);
 			LOGD("New ble_netkey: %s", netkeyStr.c_str());
 			database->GatewayUpdateNetKey(gateway, netkeyStr);
 
-			string devicekeyGwStr = arrayToString844412((uint8_t *)gwKey);
+			string devicekeyGwStr = Util::arrayToString844412((uint8_t *)gwKey);
 			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
 			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
 
@@ -423,31 +423,6 @@ int BleProtocol::ResetFactory()
 	return rs;
 }
 
-string BleProtocol::uuidToStr(uuid_t *uuid)
-{
-	char buf[100];
-	uint8_t *u8Uuid = (uint8_t *)uuid;
-	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					u8Uuid[0], u8Uuid[1], u8Uuid[2], u8Uuid[3],
-					u8Uuid[4], u8Uuid[5], u8Uuid[6], u8Uuid[7],
-					u8Uuid[8], u8Uuid[9], u8Uuid[10], u8Uuid[11],
-					u8Uuid[12], u8Uuid[13], u8Uuid[14], u8Uuid[15]);
-	buf[36] = '\0';
-	return string(buf);
-}
-
-string BleProtocol::arrayToString844412(uint8_t *array)
-{
-	char buf[100];
-	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					array[0], array[1], array[2], array[3],
-					array[4], array[5], array[6], array[7],
-					array[8], array[9], array[10], array[11],
-					array[12], array[13], array[14], array[15]);
-	buf[36] = '\0';
-	return string(buf);
-}
-
 static uint32_t convertDeviceType(uint32_t type)
 {
 	uint8_t *arr = (uint8_t *)&type;
@@ -482,8 +457,8 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						{
 							deviceType = convertDeviceType(deviceType);
 							Json::Value devKeyJson;
-							devKeyJson["devicekey"] = arrayToString844412((uint8_t *)deviceKey);
-							Device *device = gateway->AddNewDevice(uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true, true);
+							devKeyJson["devicekey"] = Util::arrayToString844412((uint8_t *)deviceKey);
+							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true, true);
 							if (device)
 							{
 								gateway->AddDeviceToScanList(device);
