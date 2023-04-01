@@ -15,7 +15,6 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
 
     powerSource = POWER_AC;
 #ifdef CONFIG_USE_OLD_APP
-    LOGE("BUTTON Scene 6: %d", button);
     moduleRgb = new ModuleRgb(this, addr, button);
     modules.push_back(moduleRgb);
 #endif

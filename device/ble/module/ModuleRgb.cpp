@@ -10,7 +10,6 @@ ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t button) : Module(dev
 {
 	
 	bt = button;
-	LOGE("BUTTON: %d", bt);
 	r = 0;
 	b = 0;
 	g = 0;

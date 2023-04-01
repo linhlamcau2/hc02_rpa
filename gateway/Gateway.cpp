@@ -25,6 +25,7 @@
 #include "BleDefine.h"
 #include "BleProtocol.h"
 #include "DeviceBleAll.h"
+#include "DeviceBleSwitchOnoff.h"
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "DeviceBleLightOnoffCctDimHslModeRGB.h"
@@ -230,8 +231,8 @@ void Gateway::init()
 	CloudConnect();
 	LocalConnect();
 
-	// thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
-	// checkOnlineThread.detach();
+	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	checkOnlineThread.detach();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -633,6 +634,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_LED_DAY_RGB:
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, data, addr, type, version);
 		break;
+	case BLE_SWITCH_ONOFF:
+		device = new DeviceBleSwitchOnoff(id, name, mac, data, addr, type, version);
+		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
@@ -651,6 +655,8 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
+	case BLE_REMOTE_M3:
+	case BLE_REMOTE_M3_V2:
 		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, version);
 		break;
 	case BLE_AC_SCENE_CONTACT:
@@ -721,7 +727,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
-					cout << Util::GenIdDeviceByElement(id, i) << endl;
 				}
 			}
 			else if (device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)

@@ -1,6 +1,7 @@
 #include "Device.h"
 #include "Gateway.h"
 #include "Log.h"
+#include "BleDefine.h"
 #include <thread>
 #include <functional>
 #include <unistd.h>
@@ -258,6 +259,12 @@ int Device::PushTelemetry(Json::Value jsonValue)
 {
 	if (jsonValue.isNull())
 		return CODE_ERROR;
+#ifdef CONFIG_USE_OLD_APP
+	Json::Value dataValue;
+	dataValue["ID"] = BLE_ATTRIBUTE_ONLINE_OFFLINE;
+	dataValue["VALUE"] = 1;
+	jsonValue.append(dataValue);
+#endif
 	Json::Value pushDataValue;
 	Json::Value deviceData;
 	deviceData["DEVICE_ID"] = id;
