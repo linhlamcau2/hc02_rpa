@@ -1,8 +1,8 @@
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "Log.h"
 
-DeviceBleLightOnoffHslModeRGB::DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version)
-		: DeviceBle(id, name, mac, device_id, addr, type, version)
+DeviceBleLightOnoffHslModeRGB::DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
+		: DeviceBle(id, name, mac, data, addr, type, version)
 {
 	moduleOnOff = new ModuleOnOff(this, addr);
 	moduleModeRgb = new ModuleModeRgb(this, addr);

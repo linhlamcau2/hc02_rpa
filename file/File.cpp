@@ -8,13 +8,13 @@ File::File(string path, string name)
 	this->name = name;
 	haveInfo = false;
 	chunkIndex = 0;
+	filePath = path + "/" + name;
 }
 
 bool File::HaveInfo()
 {
 	if (!haveInfo)
 	{
-		string filePath = path + "/" + name;
 		fstream uploadFile;
 		uploadFile.open(filePath.c_str(), ios::in | ios::binary);
 		if (uploadFile.is_open())
@@ -37,7 +37,6 @@ bool File::HaveInfo()
 
 void File::Open(ios_base::openmode mode)
 {
-	string filePath = path + "/" + name;
 	file.open(filePath.c_str(), mode);
 }
 
@@ -61,14 +60,40 @@ bool File::IsOpen()
 	return file.is_open();
 }
 
-int File::Read(uint32_t position, char *buff, uint32_t size)
+int File::Read(char *buff, uint32_t size)
 {
 	uint32_t rs = size;
-	file.seekg(chunkIndex * BIN_PACKAGE_SIZE, std::ios::beg);
+	streampos position = file.tellg();
 	file.read(buff, size);
 	if (file.eof())
 	{
 		rs = fileSize - position;
 	}
+	return rs;
+}
+
+int File::Read(char *buff, uint32_t size, uint32_t position)
+{
+	uint32_t rs = size;
+	file.seekg(position, std::ios::beg);
+	file.read(buff, size);
+	if (file.eof())
+	{
+		rs = fileSize - position;
+	}
+	return rs;
+}
+
+int File::Write(char *buff, uint32_t size)
+{
+	file.write(buff, size);
+	return size;
+}
+
+int File::Write(char *buff, uint32_t size, uint32_t position)
+{
+	uint32_t rs = size;
+	file.seekg(position, std::ios::beg);
+	file.write(buff, size);
 	return rs;
 }

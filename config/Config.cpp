@@ -16,7 +16,7 @@ Config *config = NULL;
 /****************************************
  *                  API                 *
  ***************************************/
-static bool get_str_config_entry(char *name, char *value)
+static bool get_str_config_entry(const char *name, char *value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
@@ -38,7 +38,7 @@ static bool get_str_config_entry(char *name, char *value)
 #endif
 }
 
-static bool get_int_config_entry(char *name, int *value)
+static bool get_int_config_entry(const char *name, int *value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
@@ -60,7 +60,7 @@ static bool get_int_config_entry(char *name, int *value)
 #endif
 }
 
-static bool set_str_config_entry(char *name, char *section_name, const char *value)
+static bool set_str_config_entry(const char *name, const char *section_name, const char *value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
@@ -104,14 +104,14 @@ static bool set_str_config_entry(char *name, char *section_name, const char *val
 #endif
 }
 
-static bool set_int_config_entry(char *section, char *name, int value)
+static bool set_int_config_entry(const char *section, const char *name, int value)
 {
 #ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char strValue[20];
 	ctx = uci_alloc_context();
-	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
+	if ((uci_lookup_ptr(ctx, &ptr, (char *)section, true) != UCI_OK))
 	{
 		uci_perror(ctx, "uci_lookup_ptr Error");
 		uci_free_context(ctx);
@@ -223,32 +223,32 @@ void Config::ReadConfig()
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL HOST_KEY, str_temp))
 		localHost = string(str_temp);
 	else
-		localHost = HOST_DEFAULT;
+		localHost = "localhost";
 
 	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL PORT_KEY, &int_temp))
 		localPort = int_temp;
 	else
-		localPort = PORT_DEFAULT;
+		localPort = 1883;
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL CLIENT_ID_KEY, str_temp))
 		localClientId = string(str_temp);
 	else
-		localClientId = CLIENT_ID_DEFAULT;
+		localClientId = "";
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL USERNAME_KEY, str_temp))
 		localUsername = string(str_temp);
 	else
-		localUsername = USERNAME_DEFAULT;
+		localUsername = "";
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL PASSWORD_KEY, str_temp))
 		localPassword = string(str_temp);
 	else
-		localPassword = PASSWORD_DEFAULT;
+		localPassword = "";
 
 	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL KEEP_ALIVE_KEY, &int_temp))
 		localKeepAlive = int_temp;
 	else
-		localKeepAlive = KEEP_ALIVE_DEFAULT;
+		localKeepAlive = 10;
 
 	Print();
 }

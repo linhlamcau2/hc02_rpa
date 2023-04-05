@@ -32,9 +32,9 @@ bool ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue, J
 		pin = data[4];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)

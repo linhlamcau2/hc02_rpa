@@ -1,7 +1,8 @@
 #include "Db.h"
+#include <sys/stat.h>
 #include "Log.h"
 #ifdef ESP_PLATFORM
-#include "esp_spiffs.h"
+#include "esp_littlefs.h"
 #endif
 
 #define STRINGIZE_(x) #x
@@ -11,26 +12,24 @@ Db *database = NULL;
 
 Db::Db()
 {
+	LOGI("Init db");
 }
 
 void Db::init(void)
 {
-	if (pthread_mutex_init(&mutex, NULL) != 0)
-	{
-		LOGE("Failed to initialize the mutex");
-	}
 #ifdef ESP_PLATFORM
-	LOGI("Initializing SPIFFS");
+	LOGI("Initializing LITTLEFS");
 
-	esp_vfs_spiffs_conf_t conf = {
+	esp_vfs_littlefs_conf_t conf = {
 			.base_path = "/spiffs",
-			.partition_label = NULL,
-			.max_files = 5,
-			.format_if_mount_failed = true};
+			.partition_label = "storage",
+			.format_if_mount_failed = true,
+			.dont_mount = false,
+	};
 
-	// Use settings defined above to initialize and mount SPIFFS filesystem.
-	// Note: esp_vfs_spiffs_register is an all-in-one convenience function.
-	esp_err_t ret = esp_vfs_spiffs_register(&conf);
+	// Use settings defined above to initialize and mount LITTLEFS filesystem.
+	// Note: esp_vfs_littlefs_register is an all-in-one convenience function.
+	esp_err_t ret = esp_vfs_littlefs_register(&conf);
 
 	if (ret != ESP_OK)
 	{
@@ -40,20 +39,20 @@ void Db::init(void)
 		}
 		else if (ret == ESP_ERR_NOT_FOUND)
 		{
-			LOGE("Failed to find SPIFFS partition");
+			LOGE("Failed to find LITTLEFS partition");
 		}
 		else
 		{
-			LOGE("Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+			LOGE("Failed to initialize LITTLEFS (%s)", esp_err_to_name(ret));
 		}
 		return;
 	}
 
 	size_t total = 0, used = 0;
-	ret = esp_spiffs_info(conf.partition_label, &total, &used);
+	ret = esp_littlefs_info(conf.partition_label, &total, &used);
 	if (ret != ESP_OK)
 	{
-		LOGE("Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+		LOGE("Failed to get LITTLEFS partition information (%s)", esp_err_to_name(ret));
 	}
 	else
 	{
@@ -62,10 +61,37 @@ void Db::init(void)
 
 	sqlite3_initialize();
 
-// // All done, unmount partition and disable SPIFFS
-// esp_vfs_spiffs_unregister(conf.partition_label);
-// LOGI("SPIFFS unmounted");
+// // All done, unmount partition and disable LITTLEFS
+// esp_vfs_littlefs_unregister(conf.partition_label);
+// LOGI("LITTLEFS unmounted");
 #endif
+
+	if (pthread_mutex_init(&mutex, NULL) != 0)
+	{
+		LOGE("Failed to initialize the mutex");
+	}
+}
+
+bool Db::IsHaveDb()
+{
+	struct stat st;
+	return !stat(DB_NAME, &st);
+}
+
+int Db::createTableIfNotExists()
+{
+	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version VARCHAR, hardware_version VARCHAR, active_time INTEGER, update_time INTEGER, data TEXT, PRIMARY KEY (device_id));"
+				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id));"
+				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element));"
+				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element));"
+				 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, PRIMARY KEY (room_id, device_id));"
+				 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id));"
+				 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey VARCHAR, PRIMARY KEY (mac));"
+				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, PRIMARY KEY (group_id));"
+				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (room_id));"
+				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, PRIMARY KEY (rule_id));"
+				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, PRIMARY KEY (scene_ble_id));";
+	return Sqlite_Exec(sql);
 }
 
 static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColName)

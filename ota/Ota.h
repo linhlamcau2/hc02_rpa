@@ -7,5 +7,5 @@ using namespace std;
 namespace Ota
 {
 	void init();
-	bool startOta(string name, string url, string sum);
+	int startOta(string name, string url, string sum);
 }

@@ -6,11 +6,11 @@
 #include <unistd.h>
 #include <Util.h>
 
-Device::Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
+Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
 	this->mac = mac;
 	this->type = type;
-	this->device_id = device_id;
+	this->data = data;
 	this->version = version;
 	countElement = 1;
 	powerSource = POWER_UNKNOWN;
@@ -29,14 +29,19 @@ string Device::GetMac()
 	return mac;
 }
 
-string Device::GetDeviceId()
+string Device::GetData()
 {
-	return device_id;
+	return data;
 }
 
 bool Device::CheckAddr(uint32_t addr)
 {
 	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
+}
+
+string Device::GetDeviceKey()
+{
+	return "";
 }
 
 uint32_t Device::GetType()
@@ -181,7 +186,7 @@ void Device::CheckTrigger()
 	}
 }
 
-bool Device::DoJsonArray(Json::Value &dataValue)
+int Device::DoJsonArray(Json::Value &dataValue)
 {
 	if (dataValue.isArray())
 	{
@@ -194,10 +199,10 @@ bool Device::DoJsonArray(Json::Value &dataValue)
 	{
 		Do(dataValue);
 	}
-	return true;
+	return CODE_OK;
 }
 
-bool Device::DoJsonArrayV2(Json::Value &dataValue)
+int Device::DoJsonArrayV2(Json::Value &dataValue)
 {
 	if (dataValue.isArray())
 	{
@@ -210,10 +215,10 @@ bool Device::DoJsonArrayV2(Json::Value &dataValue)
 	{
 		DoV2(dataValue);
 	}
-	return true;
+	return CODE_OK;
 }
 
-bool Device::Do(Json::Value &dataValue)
+int Device::Do(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{
@@ -226,7 +231,7 @@ bool Device::Do(Json::Value &dataValue)
 	return CODE_OK;
 }
 
-bool Device::DoV2(Json::Value &dataValue)
+int Device::DoV2(Json::Value &dataValue)
 {
 	for (auto &module : modules)
 	{

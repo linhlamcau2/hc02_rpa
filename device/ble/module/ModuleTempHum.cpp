@@ -44,9 +44,9 @@ bool ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Js
 		hum = bswap_16(data_message->hum);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)

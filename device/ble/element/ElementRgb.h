@@ -8,6 +8,7 @@ class ElementRgb : public Element
 protected:
 	uint8_t r, g, b, dimOn, dimOff;
 	int idR, idG, idB, idDimOn, idDimOff;
+	bool isR, isG, isB, isDimOn, isDimOff;
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
@@ -77,7 +78,7 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	bool DoJsonArray(Json::Value &dataValue);
+	int Do(Json::Value &dataValue);
 
 	/**
 	 * @brief Do an action use message format version 2
@@ -86,5 +87,5 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	bool DoV2(Json::Value &dataValue);
+	int DoV2(Json::Value &dataValue);
 };

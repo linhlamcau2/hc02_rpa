@@ -44,9 +44,9 @@ bool ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json
 		power = (data_message->power);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModuleSmoke::CheckData(Json::Value &dataValue, bool &rs)

@@ -13,7 +13,7 @@ private:
 	Json::Value data;
 
 public:
-	RuleOutputGroup(Group *group, Json::Value data);
+	RuleOutputGroup(Group *group, Json::Value &data);
 	~RuleOutputGroup();
 
 	void RunOutput();

@@ -32,11 +32,11 @@ public:
 
 	int GetPositionDevice(Device *device);
 
-	bool AddDevice(Device *device, int epId, bool sendBle);
-	bool DelDevice(Device *device, int epId);
+	int AddDevice(Device *device, int epId, bool sendBle);
+	int DelDevice(Device *device, int epId);
 
-	bool Do(Json::Value &dataValue);
-	bool DoV2(Json::Value &dataValue);
+	int Do(Json::Value &dataValue);
+	int DoV2(Json::Value &dataValue);
 	void DoBle();
 	void DoBleV2();
 	void DoZigbee();

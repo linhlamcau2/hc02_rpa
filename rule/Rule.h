@@ -27,6 +27,9 @@ class Rule : public Object
 private:
 	Json::Value ruleData;
 	string type;
+	string name;
+	string data;
+	
 	unsigned char repeater;
 	bool fullDay;
 	int startTime;
@@ -35,6 +38,7 @@ private:
 	time_t lastTimeActive;
 
 	bool isAvailable;
+	bool isEnable;
 	int timerRegisterIndex;
 
 	vector<RuleInput *> ruleInputList;
@@ -54,4 +58,9 @@ public:
 	void DelAllRuleOutput();
 	void Check();
 	void RunOutput();
+
+	void UpdateData(string data);
+	string GetData();
+	bool GetStatus();
+	void SetStatus(bool enable);
 };

@@ -1,4 +1,4 @@
-VERSION = 2.0.0
+VERSION = 1.2.12
 
 ZIGBEE = OFF
 
@@ -12,7 +12,7 @@ CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
 INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Ifile -Iota
-DEFINES = -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
+DEFINES += -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP
 # DEFINES += -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
 

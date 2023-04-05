@@ -2,9 +2,9 @@
 #include "Log.h"
 #include "Util.h"
 
-#define TABLE_NAME "[DeviceChild]"
+#define TABLE_NAME "[DeviceBleChild]"
 
-static int DeviceChildParse(sqlite3_stmt *stmt, void *ptr)
+static int DeviceBleChildParse(sqlite3_stmt *stmt, void *ptr)
 {
 	int s, index;
 	if (stmt)
@@ -32,30 +32,30 @@ static int DeviceChildParse(sqlite3_stmt *stmt, void *ptr)
 	return CODE_OK;
 }
 
-int Db::DeviceChildRead()
+int Db::DeviceBleChildRead()
 {
-	return ReadAll(TABLE_NAME, NULL, DeviceChildParse);
+	return ReadAll(TABLE_NAME, NULL, DeviceBleChildParse);
 }
 
-int Db::DeviceChildAdd(string deviceId, int element)
+int Db::DeviceBleChildAdd(string deviceId, int element)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (deviceId, element) VALUES (\"" + deviceId + "\"," + to_string(element) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, element) VALUES ('" + deviceId + "'," + to_string(element) + ")";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceChildUpdate(string deviceId, int element)
+int Db::DeviceBleChildUpdate(string deviceId, int element)
 {
-	string sql = "UPDATE " TABLE_NAME " SET deviceId=\"" + deviceId + "\", element=" + to_string(element) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET device_id='" + deviceId + "', element=" + to_string(element) + ";";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceChildDel(string deviceId)
+int Db::DeviceBleChildDel(string deviceId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id = \"" + deviceId + "\";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id = '" + deviceId + "';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceChildDelAll()
+int Db::DeviceBleChildDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME ";";
 	return Sqlite_Exec(sql);

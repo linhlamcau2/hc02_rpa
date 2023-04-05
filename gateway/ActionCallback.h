@@ -7,9 +7,9 @@
 using namespace std;
 
 typedef void (*ActionCallbackFuncType1)(string &topic, string &payload);
-typedef void (*ActionCallbackFuncType2)(string &topic, char *payload, int payloadlen);
+typedef void (*ActionCallbackFuncType2)(string &topic, char *payload, int payloadLen);
 typedef function<void(string &topic, string &payload)> ActionCallbackFuncType3;
-typedef function<void(string &topic, char *payload, int payloadlen)> ActionCallbackFuncType4;
+typedef function<void(string &topic, char *payload, int payloadLen)> ActionCallbackFuncType4;
 
 class ActionCallback
 {

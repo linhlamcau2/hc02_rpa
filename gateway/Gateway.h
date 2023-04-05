@@ -5,6 +5,8 @@
 #include <functional>
 #include <thread>
 #include "json.h"
+#include "Define.h"
+#include "ErrorCode.h"
 #include "CloudProtocol.h"
 #include "LocalProtocol.h"
 #include "Udp.h"
@@ -15,18 +17,9 @@
 #include "SceneBle.h"
 #include "RuleOutputSceneBle.h"
 #include "Room.h"
-#include "ErrorCode.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
-#endif
-
-#ifndef MODEL
-#define MODEL "RD_HC"
-#endif
-
-#ifndef VERSION
-#define VERSION "0.0.1"
 #endif
 
 #define STR_(x) #x
@@ -39,13 +32,14 @@ class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 private:
 	string id;
 	string mac;
-	string dormitoryId;
+	string version;
 	string ble_netkey;
 	string ble_appkey;
 	string ble_devicekey;
+	uint16_t ble_addr;
+	uint32_t ble_iv_index;
+	string dormitoryId;
 	string refresh_token;
-	uint16_t ble_unicast;
-	string version;
 	thread *udpBroadcastThread;
 	bool isUdpBroadcasting;
 
@@ -74,6 +68,7 @@ private:
 	void initMqttMessage();
 	int OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue);
@@ -105,6 +100,7 @@ private:
 	int OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue);
 
@@ -152,6 +148,7 @@ private:
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnControlGw(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
 	// int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
@@ -196,8 +193,12 @@ private:
 	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
 
+	// Cấu hình HC
+	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
+	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
+
 public:
-	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive);
+	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
 	void init();
 
 	/**
@@ -218,19 +219,25 @@ public:
 	Device *getDeviceFromMac(string mac);
 	Device *getDeviceFromId(string id);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
+	void delDevice(Device *device);
 
 	Group *getGroupFromId(string id);
 	Group *getGroupFromAddr(int addr);
+	void delGroup(Group *group);
 
 	SceneBle *getSceneBleFromId(string id);
 	SceneBle *getSceneBleFromAddr(int addr);
+	void delSceneBle(SceneBle *sceneBle);
 
 	Rule *getRuleFromId(string id);
+	void delRule(Rule *rule);
 
 	Room *getRoomFromId(string id);
+	void delRoom(Room *room);
 
-	uint16_t getBleUnicast();
-	string getBleNetkey();
+	uint16_t getBleAddr();
+	uint32_t getBleIvIndex();
+	string getBleNetKey();
 	string getBleAppKey();
 	string getBleDeviceKey();
 	string getDormitory();
@@ -240,12 +247,14 @@ public:
 	string getRefreshToken();
 	string getMac();
 
-	void setBleUnicast(uint16_t unicast);
+	void setBleAddr(uint16_t addr);
+	void setBleIvIndex(uint32_t ivIndex);
 	void setBleNetkey(string netkey);
 	void setBleAppkey(string appkey);
 	void setBleDevicekey(string devicekey);
 	void setDormitory(string dormitory);
 	void setId(string id);
+	void setMac(string mac);
 	void setVersion(string version);
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
@@ -260,6 +269,11 @@ public:
 	Rule *AddRuleV2(Json::Value &ruleValue);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 	Room *AddNewRoom(Room *room);
+
+	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
+	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
+
+	int Do(Json::Value &dataValue);
 };
 
 extern Gateway *gateway;

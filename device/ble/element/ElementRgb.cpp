@@ -18,6 +18,7 @@ ElementRgb::ElementRgb(Device *device, uint32_t addr) : Element(device, addr)
 	idB = BLE_ATTRIBUTE_B;
 	idDimOn = BLE_ATTRIBUTE_DIM_ON;
 	idDimOff = BLE_ATTRIBUTE_DIM_OFF;
+	isR = isG = isB = isDimOn = isDimOff = false;
 	keyR = KEY_ATTRIBUTE_R + to_string(addr - device->GetAddr());
 	keyG = KEY_ATTRIBUTE_G + to_string(addr - device->GetAddr());
 	keyB = KEY_ATTRIBUTE_B + to_string(addr - device->GetAddr());
@@ -87,9 +88,9 @@ bool ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ElementRgb::CheckData(Json::Value &dataValue, bool &rs)
@@ -179,57 +180,53 @@ void ElementRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
 }
 
 // TODO: viet anh recheck DoJsonArray
-bool ElementRgb::DoJsonArray(Json::Value &dataValue)
+int ElementRgb::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
-	if (dataValue.isArray())
+	if (dataValue.isObject())
 	{
-		bool isR = false, isG = false, isB = false, isDimOn = false, isDimOff = false;
-		uint8_t r, g, b, dimOff, dimOn;
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		if (dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
-			Json::Value data = dataValue[i];
-			if (data.isObject())
+			if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_B)
 			{
-				if (data.isMember("ID") && data["ID"].isInt() && data.isMember("VALUE") && data["VALUE"].isInt())
-				{
-					if (data["ID"].asInt() == BLE_ATTRIBUTE_B)
-					{
-						isB = true;
-						b = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_G)
-					{
-						isG = true;
-						g = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_R)
-					{
-						isR = true;
-						r = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
-					{
-						isDimOn = true;
-						dimOn = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF)
-					{
-						isDimOff = true;
-						dimOff = data["VALUE"].asInt();
-					}
-				}
+				isB = true;
+				b = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_G)
+			{
+				isG = true;
+				g = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_R)
+			{
+				isR = true;
+				r = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
+			{
+				isDimOn = true;
+				dimOn = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF)
+			{
+				isDimOff = true;
+				dimOff = dataValue["VALUE"].asInt();
 			}
 		}
 		if (isDimOn && isDimOff && isR && isB && isG)
 		{
-			bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
+			isR = isB = isG = isDimOff = isDimOn = false;
+			if (bleProtocol)
+				bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
+			else
+				LOGW("BleProtocol null");
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ElementRgb::DoV2(Json::Value &dataValue)
+int ElementRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -244,15 +241,20 @@ bool ElementRgb::DoV2(Json::Value &dataValue)
 		int b = dataValue[keyB].asInt();
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->r = r;
-			this->g = g;
-			this->b = b;
-			this->dimOn = dimOn;
-			this->dimOff = dimOff;
+			if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+			{
+				this->r = r;
+				this->g = g;
+				this->b = b;
+				this->dimOn = dimOn;
+				this->dimOff = dimOff;
+			}
 		}
-		return true;
+		else
+			LOGW("BleProtocol null");
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

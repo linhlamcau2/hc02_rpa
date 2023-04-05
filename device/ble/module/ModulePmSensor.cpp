@@ -51,9 +51,9 @@ bool ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, J
 		pm1_0 = bswap_16(data_message->pm1_0);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)

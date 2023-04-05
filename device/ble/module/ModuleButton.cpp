@@ -37,22 +37,22 @@ bool ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Jso
 		bt = data[4];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t bt = 0, mode = 0;
 				string op = dataValue["OP"].asString();
@@ -104,34 +104,42 @@ void ModuleButton::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[key] = bt;
 }
 
-bool ModuleButton::Do(Json::Value &dataValue)
+int ModuleButton::Do(Json::Value &dataValue)
 {
-	// LOGD("Do data: %s", dataValue.toString().c_str());
+	LOGD("ModuleButton Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
-			bleProtocol->SetOnOffLight(addr, value, 0, true);
-			return true;
+			if (bleProtocol)
+				bleProtocol->SetOnOffLight(addr, value, 0, true);
+			else
+				LOGW("BleProtocol null");
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleButton::DoV2(Json::Value &dataValue)
+int ModuleButton::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		int bt = dataValue[key].asInt();
-		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->bt = bt;
+			if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
+			{
+				this->bt = bt;
+			}
 		}
-		return true;
+		else
+			LOGW("BleProtocol null");
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

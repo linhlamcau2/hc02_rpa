@@ -11,7 +11,7 @@
 
 static void HandleInMessage(Uart *uart);
 
-Uart::Uart(char *port, int timeout) : port(port), timeout(timeout)
+Uart::Uart(char *port, int baudrate, int timeout) : port(port), baudrate(baudrate), timeout(timeout)
 {
 }
 
@@ -28,6 +28,11 @@ Uart::~Uart()
 
 void Uart::init()
 {
+	if (Open(baudrate) < 0)
+	{
+		LOGE("Open uart error")
+		exit(1);
+	}
 }
 
 int Uart::Open(int baudrate)

@@ -41,32 +41,37 @@ int Group::GetPositionDevice(Device *device)
  * @return true success
  * @return false fail
  */
-bool Group::AddDevice(Device *device, int epId, bool sendBle)
+int Group::AddDevice(Device *device, int epId, bool sendBle)
 {
 	// TODO: Check exsit
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
-	// 	return false;
+	// 	return CODE_ERROR;
 	if (!device)
-		return false;
+		return CODE_ERROR;
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 		if (sendBle)
 		{
-			if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == 0)
+			if (bleProtocol)
 			{
-				if (deviceInGroup)
+				if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 				{
-					deviceList.push_back(deviceInGroup);
-					numberOfBleDevice++;
-					return true;
+					if (deviceInGroup)
+					{
+						deviceList.push_back(deviceInGroup);
+						numberOfBleDevice++;
+						return CODE_OK;
+					}
+				}
+				else
+				{
+					LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), addr);
 				}
 			}
 			else
-			{
-				LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), addr);
-			}
+				LOGW("BleProtocol null");
 		}
 		else
 		{
@@ -74,7 +79,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 			{
 				deviceList.push_back(deviceInGroup);
 				numberOfBleDevice++;
-				return true;
+				return CODE_OK;
 			}
 		}
 	}
@@ -90,7 +95,7 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 				deviceList.push_back(deviceInGroup);
 				numberOfZigbeeDevice++;
 			}
-			return true;
+			return CODE_OK;
 		}
 		else
 		{
@@ -98,22 +103,27 @@ bool Group::AddDevice(Device *device, int epId, bool sendBle)
 		}
 	}
 #endif
-	return false;
+	return CODE_ERROR;
 }
 
-bool Group::DelDevice(Device *device, int epId)
+int Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == 0)
+		if (bleProtocol)
 		{
-			int deviceIndex = GetPositionDevice(device);
-			if (deviceIndex > -1)
+			if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 			{
-				deviceList.erase(deviceList.begin() + deviceIndex);
+				int deviceIndex = GetPositionDevice(device);
+				if (deviceIndex > -1)
+				{
+					deviceList.erase(deviceList.begin() + deviceIndex);
+				}
+				return CODE_OK;
 			}
-			return true;
 		}
+		else
+			LOGW("BleProtocol null");
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -127,10 +137,10 @@ bool Group::DelDevice(Device *device, int epId)
 	// TODO: remove from list
 	// if (device)
 	// 	deviceList.erase(remove(deviceList.begin(), deviceList.end(), device), deviceList.end());
-	return false;
+	return CODE_ERROR;
 }
 
-bool Group::Do(Json::Value &dataValue)
+int Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBle();
@@ -141,10 +151,10 @@ bool Group::Do(Json::Value &dataValue)
 	doZigbeeThread.detach();
 #endif
 
-	return true;
+	return CODE_OK;
 }
 
-bool Group::DoV2(Json::Value &dataValue)
+int Group::DoV2(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBleV2();
@@ -155,7 +165,7 @@ bool Group::DoV2(Json::Value &dataValue)
 	doZigbeeThread.detach();
 #endif
 
-	return true;
+	return CODE_OK;
 }
 
 void Group::DoBle()
@@ -164,97 +174,107 @@ void Group::DoBle()
 	bool isIdSaturation = false;
 	bool isIdLuminance = false;
 	uint16_t valueHue, valueSaturation, valueLuminance;
-	for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+	if (bleProtocol)
 	{
-		Json::Value property = dataValue[i];
-		if (property.isMember("ID") && property["ID"].isInt() &&
-				property.isMember("VALUE") && property["VALUE"].isInt())
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
-			int idProperty = property["ID"].asInt();
-			unsigned int value = property["VALUE"].asInt();
-			LOGD("id: %d, value: %d", idProperty, value);
-			if (idProperty == 0)
+			Json::Value property = dataValue[i];
+			if (property.isMember("ID") && property["ID"].isInt() &&
+				property.isMember("VALUE") && property["VALUE"].isInt())
 			{
-				bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
-			}
-			else if (idProperty == 1)
-			{
-				bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, 0, true);
-			}
-			else if (idProperty == 2)
-			{
-				bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, 0, true);
-			}
-			else if (idProperty == 3)
-			{
-				isIdHue = true;
-				valueHue = value;
-			}
-			else if (idProperty == 4)
-			{
-				isIdSaturation = true;
-				valueSaturation = value;
-			}
-			else if (idProperty == 5)
-			{
-				isIdLuminance = true;
-				valueLuminance = value;
-			}
-			else if (idProperty == 23)
-			{
-				bleProtocol->CallModeRgb(addr + ID_START, value);
+				int idProperty = property["ID"].asInt();
+				unsigned int value = property["VALUE"].asInt();
+
+				if (idProperty == 0)
+				{
+					bleProtocol->SetOnOffLight(addr + ID_START, value, 5, false);
+				}
+				else if (idProperty == 1)
+				{
+					bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, 5, false);
+				}
+				else if (idProperty == 2)
+				{
+					bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, 5, false);
+				}
+				else if (idProperty == 3)
+				{
+					isIdHue = true;
+					valueHue = value;
+				}
+				else if (idProperty == 4)
+				{
+					isIdSaturation = true;
+					valueSaturation = value;
+				}
+				else if (idProperty == 5)
+				{
+					isIdLuminance = true;
+					valueLuminance = value;
+				}
+				else if (idProperty == 23)
+				{
+					bleProtocol->CallModeRgb(addr + ID_START, value);
+				}
+				else
+				{
+					LOGW("DoTrigger addr: %d don't support", addr);
+				}
 			}
 			else
 			{
-				LOGW("DoTrigger addr: %d don't support", addr);
+				LOGW("data format err: %s", property.toString().c_str());
 			}
 		}
-		else
+		if (isIdHue && isIdLuminance && isIdSaturation)
 		{
-			LOGW("data format err: %s", property.toString().c_str());
+			bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, 5, false);
 		}
 	}
-	if (isIdHue && isIdLuminance && isIdSaturation)
-	{
-		bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, 0, true);
-	}
+	else
+		LOGW("BleProtocol null");
 }
 
 void Group::DoBleV2()
 {
 	if (dataValue.isObject())
 	{
-		if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		if (bleProtocol)
 		{
-			int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-			bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
-		}
-		if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
-		{
-			int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-			uint16_t dim = (value * 65535) / 100;
-			bleProtocol->SetDimmingLight(addr + ID_START, dim, 0, true);
-		}
-		if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
-		{
-			int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-			uint16_t cct = (value * 192) + 800;
-			bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
-		}
-		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+			{
+				int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+				bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
+			}
+			if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+			{
+				int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+				uint16_t dim = (value * 65535) / 100;
+				bleProtocol->SetDimmingLight(addr + ID_START, dim, 0, true);
+			}
+			if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+			{
+				int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+				uint16_t cct = (value * 192) + 800;
+				bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
+			}
+			if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
 				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
 				dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
-		{
-			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-			int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-			bleProtocol->SetHSLLight(addr + ID_START, h, s, l, 0, true);
+			{
+				int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+				int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+				int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+				bleProtocol->SetHSLLight(addr + ID_START, h, s, l, 0, true);
+			}
+			if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+			{
+				int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+				bleProtocol->CallModeRgb(addr + ID_START, value);
+			}
 		}
-		if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
-		{
-			int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-			bleProtocol->CallModeRgb(addr + ID_START, value);
-		}
+		else
+			LOGW("BleProtocol null");
 	}
 }
 

@@ -61,21 +61,21 @@ bool ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 #endif
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t cct1 = 0, cct2 = 0;
 			string op = dataValue["OP"].asString();
@@ -125,39 +125,46 @@ void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
 }
 
-bool ElementCct::Do(Json::Value &dataValue)
+int ElementCct::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t cct = (value * 192) + 800;
-			LOGD("Do cct: %d", cct);
-			bleProtocol->SetCctLight(addr, cct, 0, true);
-			return true;
+			if (bleProtocol)
+				bleProtocol->SetCctLight(addr, cct, 0, true);
+			else
+				LOGW("Bleprotocol null");
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ElementCct::DoV2(Json::Value &dataValue)
+int ElementCct::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
 		uint16_t value = (cct * 192) + 800;
-		if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->cct = cct;
+			if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
+			{
+				this->cct = cct;
+			}
 		}
-		return true;
+		else
+			LOGW("Bleprotocol null");
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

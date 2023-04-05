@@ -15,10 +15,10 @@ static int DeviceAttributeParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				string deviceMac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int attributeId = sqlite3_column_int(stmt, index++);
 				double value = sqlite3_column_double(stmt, index++);
-				Device *device = gateway->getDeviceFromMac(deviceMac);
+				Device *device = gateway->getDeviceFromId(deviceId);
 				if (device)
 				{
 					device->InitAttribute(attributeId, value);
@@ -45,26 +45,26 @@ int Db::DeviceAttributeRead()
 
 int Db::DeviceAttributeAdd(Device *device, int attributeId, double value)
 {
-	string sql = "INSERT INTO " TABLE_NAME " (mac, attribute_id, value) VALUES (\"" + device->GetMac() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, attribute_id, value) VALUES ('" + device->GetId() + "', " + to_string(attributeId) + ", " + to_string(value) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceAttributeUpdate(Device *device, int attributeId, double value)
 {
-	string sql = "UPDATE " TABLE_NAME " SET value=" + to_string(value) + " WHERE mac=\"" + device->GetMac() + "\" AND attribute_id=" + to_string(attributeId) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET value=" + to_string(value) + " WHERE device_id='" + device->GetId() + "' AND attribute_id=" + to_string(attributeId) + ";";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceAttributeAddOrReplace(Device *device, int attributeId, double value)
 {
-	// string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES (\"" + device->GetMac() + "\", " + to_string(attributeId) + ", " + to_string(value) + ")";
+	// string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, attribute_id, value) VALUES ('" + device->GetMac() + "', " + to_string(attributeId) + ", " + to_string(value) + ")";
 	// return Sqlite_Exec(sql);
 	return CODE_OK;
 }
 
 int Db::DeviceAttributeDel(Device *device, int attributeId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE mac=\"" + device->GetMac() + "\" AND attribute_id=" + to_string(attributeId) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "' AND attribute_id=" + to_string(attributeId) + ";";
 	return Sqlite_Exec(sql);
 }
 

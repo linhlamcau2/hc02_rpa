@@ -79,7 +79,7 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	bool Do(Json::Value &dataValue);
+	int Do(Json::Value &dataValue);
 
 	/**
 	 * @brief Do an action use message format version 2
@@ -88,5 +88,5 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	bool DoV2(Json::Value &dataValue);
+	int DoV2(Json::Value &dataValue);
 };

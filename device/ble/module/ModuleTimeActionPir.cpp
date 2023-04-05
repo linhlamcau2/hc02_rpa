@@ -32,21 +32,21 @@ bool ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonVal
 		time = data[5] | (data[6] << 8);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -95,34 +95,45 @@ void ModuleTimeActionPir::BuildTelemetryValueV2(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
 }
 
-bool ModuleTimeActionPir::Do(Json::Value &dataValue)
+int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
+	LOGV("ModuleTimeActionPir Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
-			bleProtocol->TimeActionPirLightSensor(addr, value);
-			return true;
+			if (bleProtocol)
+			{
+				bleProtocol->TimeActionPirLightSensor(addr, value);
+			}
+			else
+				LOGW("BleProtocol null");
+			return CODE_OK;
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }
 
-bool ModuleTimeActionPir::DoV2(Json::Value &dataValue)
+int ModuleTimeActionPir::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
 		int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
-		if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)
+		if (bleProtocol)
 		{
-			this->time = time;
+			if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)
+			{
+				this->time = time;
+			}
 		}
-		return true;
+		else
+			LOGW("BleProtocol null");
+		return CODE_OK;
 	}
-	return false;
+	return CODE_ERROR;
 }

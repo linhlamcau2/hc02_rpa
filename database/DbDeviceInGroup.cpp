@@ -15,23 +15,18 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				string deviceMac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string groupId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int epId = sqlite3_column_int(stmt, index++);
-				LOGI("Mac: %s, groupId: %s", deviceMac.c_str(), groupId.c_str());
+				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				int element = sqlite3_column_int(stmt, index++);
 				Group *group = gateway->getGroupFromId(groupId);
-				Device *device = gateway->getDeviceBleFromAddr(epId);
-				if (!group)
-				{
-					LOGE("group dose not exist");
-				}
-				if (!device)
-				{
-					LOGE("device dose not exist");
-				}
+				Device *device = gateway->getDeviceFromId(deviceId);
 				if (group && device)
 				{
 					group->AddDevice(device, device->GetAddr(), false);
+				}
+				else
+				{
+					LOGW("Group or Device not found");
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -56,13 +51,13 @@ int Db::DeviceInGroupRead()
 // TODO: add epId to db
 int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (groupId, mac, epId) VALUES (\"" + group->GetId() + "\",\"" + device->GetMac() + "\"," + to_string(epId) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, device_id, element) VALUES ('" + group->GetId() + "','" + device->GetId() + "'," + to_string(epId) + ")";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceInGroupDel(Group *group, Device *device, int epId)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE groupId= \"" + group->GetId() + "\" AND mac=\"" + device->GetMac() + "\" AND epId = " + to_string(epId) + ";";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id= '" + group->GetId() + "' AND device_id='" + device->GetId() + "' AND element = " + to_string(epId) + ";";
 	return Sqlite_Exec(sql);
 }
 

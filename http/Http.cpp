@@ -56,9 +56,7 @@ string HTTPRequest::GetToken(string refreshToken, string dormitory)
 		curl_getToken = NULL;
 	}
 	Json::Value payloadJson;
-	Json::Reader r;
-	r.parse(readBuffer, payloadJson);
-	if (payloadJson.isObject() && payloadJson.isMember("token"))
+	if (payloadJson.parse(readBuffer) && payloadJson.isObject() && payloadJson.isMember("token"))
 	{
 		access_token = payloadJson["token"].asString();
 		LOGD("Access token %s", access_token.c_str());

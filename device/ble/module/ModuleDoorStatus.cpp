@@ -32,9 +32,9 @@ bool ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue,
 		status = data[3];
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)

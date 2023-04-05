@@ -46,7 +46,7 @@ bool DeviceZigbeeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-bool DeviceZigbeeOnoff::Do(Json::Value &dataValue)
+int DeviceZigbeeOnoff::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isMember("method") && dataValue["method"].isString())
@@ -55,22 +55,22 @@ bool DeviceZigbeeOnoff::Do(Json::Value &dataValue)
 		if (method == "TurnOn")
 		{
 			zigbeeProtocol->ZCLOnoffDevice(addr, 0);
-			return true;
+			return CODE_OK;
 		}
 		else if (method == "TurnOff")
 		{
 			zigbeeProtocol->ZCLOnoffDevice(addr, 1);
-			return true;
+			return CODE_OK;
 		}
 		else if (method == "Toggle")
 		{
 			zigbeeProtocol->ZCLOnoffDevice(addr, 2);
-			return true;
+			return CODE_OK;
 		}
 		else
 		{
 			LOGW("DeviceZigbeeOnoff not handle method %s", method.c_str());
 		}
 	}
-	return false;
+	return CODE_ERROR;
 }

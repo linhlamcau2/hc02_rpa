@@ -18,24 +18,23 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int status = sqlite3_column_int(stmt, index++);
-				string type = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				int type = sqlite3_column_int(stmt, index++);
+				bool enable = sqlite3_column_blob(stmt, index++);
+				int addr = sqlite3_column_int(stmt, index++);
 				string ruledata;
-				LOGW("Rule raw: %s", data.c_str());
 				string decode = macaron::Base64::Decode(data, ruledata);
-				if (status)
+				if (decode == "")
 				{
-					LOGV("RuleRead rule: %s", ruledata.c_str());
 					Json::Value ruleValue;
-					Json::Reader r;
-					r.parse(ruledata, ruleValue);
-					if (ruleValue.isObject())
+					if (ruleValue.parse(ruledata) && ruleValue.isObject())
 					{
-						// Rule *rule = gateway->AddRule(ruleValue, name, true, false);
-						cout << ruleValue << endl;
-						Rule *rule = gateway->AddRuleV2(ruleValue);
-						rule->Check();
+						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						if (rule)
+						{
+							rule->SetStatus(enable);
+							rule->UpdateData(ruledata);
+							rule->Check();
+						}
 					}
 					else
 					{
@@ -66,25 +65,44 @@ int Db::RuleRead()
 	return ReadAll(TABLE_NAME, NULL, RuleParse);
 }
 
-int Db::RuleAdd(Rule *rule, string data, int isEnable)
+int Db::RuleAdd(Rule *rule, string data, int type)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, rule, isEnable, type, name) VALUES (\"" + rule->GetId() + "\",\"" + macaron::Base64::Encode(data) + "\"," + to_string(isEnable) + ",\"" + rule->GetType() + "\", \"" + rule->GetName() + "\");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable, rule_addr) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " + to_string(rule->GetStatus()) + ", " + to_string(rule->GetAddr()) + ");";
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleUpdate(string id, string rule)
+int Db::RuleUpdateData(Rule *rule, string data)
 {
-	string sql = "UPDATE " TABLE_NAME " SET rule=\"" + rule + "\" WHERE id=\"" + id + "\";";
-	return Sqlite_Exec(sql);
-}
-int Db::RuleUpdateStatus(string id, int isEnable)
-{
-	string sql = "UPDATE " TABLE_NAME "SET isEnable=" + to_string(isEnable) + " WHERE id=\"" + id + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + data + "' WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::RuleDel(string id)
+int Db::RuleUpdateStatus(Rule *rule)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE id=\"" + id + "\";";
+	string sql = "UPDATE " TABLE_NAME " SET enable=" + to_string(rule->GetStatus()) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleUpdateType(Rule *rule, int type)
+{
+	string sql = "UPDATE " TABLE_NAME " SET type=" + to_string(type) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleUpdateAddr(Rule *rule)
+{
+	string sql = "UPDATE " TABLE_NAME " SET rule_addr=" + to_string(rule->GetAddr()) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleDel(Rule *rule)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleDelAll()
+{
+	string sql = "DELETE FROM " TABLE_NAME ";";
 	return Sqlite_Exec(sql);
 }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include "json.h"
+#include "ErrorCode.h"
 
 using namespace std;
 
@@ -50,7 +51,7 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	virtual bool Do(Json::Value &dataValue) { return false; }
+	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
 
 	/**
 	 * @brief Do an action use message format version 2
@@ -59,5 +60,5 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	virtual bool DoV2(Json::Value &dataValue) { return false; }
+	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
 };

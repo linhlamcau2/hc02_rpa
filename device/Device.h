@@ -49,6 +49,7 @@
 #define KEY_ATTRIBUTE_B "b"
 #define KEY_ATTRIBUTE_DIM_ON "dimOn"
 #define KEY_ATTRIBUTE_DIM_OFF "dimOff"
+#define KEY_ATTRIBUTE_RELAY "rl"
 
 using namespace std;
 
@@ -60,6 +61,7 @@ typedef enum
 
 enum
 {
+	BLE_ALL = 0,
 	BLE_DOWNLIGHT_SMT = 12001, // 0x010201,
 	BLE_DOWNLIGHT_COB_GOC_RONG = 12002,
 	BLE_DOWNLIGHT_COB_GOC_HEP = 12003,
@@ -87,17 +89,25 @@ enum
 	BLE_SWITCH_3 = 22003,
 	BLE_SWITCH_4 = 22004,
 	BLE_SWITCH_WATER_HEATER = 22005,
-	BLE_SWITCH_CURTAIN = 22006,
+	BLE_SWITCH_CURTAIN = 22006,    
 	BLE_SWITCH_RGB_1 = 22012,
 	BLE_SWITCH_RGB_2 = 22013,
 	BLE_SWITCH_RGB_3 = 22014,
 	BLE_SWITCH_RGB_4 = 22015,
 	BLE_SWITCH_RGB_WATER_HEATER = 22016,
-	CONG_TAC_CUA_CUON = 22018,
+	BLE_SWITCH_RGB_CURTAIN = 22017,
+	BLE_SWITCH_RGB_1_SQUARE = 22019,
+	BLE_SWITCH_RGB_2_SQUARE = 22020,
+	BLE_SWITCH_RGB_3_SQUARE = 22021,
+	BLE_SWITCH_RGB_4_SQUARE = 22022,
+	BLE_SWITCH_RGB_CURTAIN_SQUARE = 22024,
+
+	BLE_SWITCH_ROOLING_DOOR = 22018,
 
 	BLE_DC_SCENE_CONTACT = 23001, // 0x020301,
 	BLE_AC_SCENE_CONTACT = 23002, // 0x020302,
 	BLE_AC_SCENE_CONTACT_RGB = 23006,
+	BLE_AC_SCENE_CONTACT_RGB_SQUARE = 23008,
 	BLE_AC_SCENE_SCREEN_TOUCH = 23003,
 	BLE_REMOTE_M3_V2 = 23004,
 	BLE_REMOTE_M4 = 23005,
@@ -131,7 +141,7 @@ protected:
 	uint16_t version;
 	int rssi;
 	protocol_e protocol;
-	string device_id;
+	string data;
 	int countElement;
 	Json::Value values; // telemetry data
 
@@ -149,18 +159,19 @@ public:
 	time_t lastTimeCheck;
 
 public:
-	Device(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version);
+	Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
 	string GetMac();
 	uint32_t GetType();
 	uint16_t GetVersion();
 	string GetVersionStr();
-	string GetDeviceId();
+	string GetData();
 	int GetRSSI();
 
 	void SetRSSI(int rssi);
 	virtual bool CheckAddr(uint32_t addr);
+	virtual string GetDeviceKey();
 
 	protocol_e GetProtocol();
 
@@ -180,10 +191,10 @@ public:
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 	virtual void CheckTrigger();
-	virtual bool Do(Json::Value &dataValue);
-	virtual bool DoV2(Json::Value &dataValue);
-	virtual bool DoJsonArray(Json::Value &dataValue);
-	virtual bool DoJsonArrayV2(Json::Value &dataValue);
+	virtual int Do(Json::Value &dataValue);
+	virtual int DoV2(Json::Value &dataValue);
+	virtual int DoJsonArray(Json::Value &dataValue);
+	virtual int DoJsonArrayV2(Json::Value &dataValue);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2);

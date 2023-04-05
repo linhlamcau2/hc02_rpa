@@ -80,7 +80,7 @@ public:
 	int removeObjectFromVector(vector<MQTTPubSub *> *mqttPubSubs, MQTTPubSub *mqttPubSub);
 
 	virtual void OnConnect(bool isConnected, bool isReconnect) {}
-	virtual void OnMessage(string topic, char *payload, int payloadlen);
+	virtual void OnMessage(string topic, char *payload, int payloadLen);
 
 	void addActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
 	void addActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);

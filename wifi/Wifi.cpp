@@ -25,13 +25,17 @@ string Wifi::GetMacAddress()
 	unsigned char *mac = NULL;
 	char uc_Mac[100];
 	int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+#if defined(__ANDROID__) || defined(__OPENWRT__)
 	strcpy(s.ifr_name, "eth0");
+#else
+	strcpy(s.ifr_name, "enp1s0");
+#endif
 	if (0 == ioctl(fd, SIOCGIFHWADDR, &s))
 	{
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
 	sprintf((char *)uc_Mac, (const char *)"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return string(uc_Mac);
 }
 
@@ -175,9 +179,9 @@ int Wifi::ConnectToWifi(string ssid, string password, string encryption)
 		system("uci commit network");
 		system("wifi");
 		system("/etc/init.d/network restart");
-		return -1;
+		return CODE_ERROR;
 	}
-	return 0;
+	return CODE_OK;
 }
 
 int Wifi::SetModeApWifi()
@@ -189,7 +193,7 @@ int Wifi::SetModeApWifi()
 	system("uci del wireless.wifinet1 >> /output.txt 2>&1");
 	system("uci commit wireless >> /output.txt 2>&1");
 	system("wifi >> /output.txt 2>&1");
-	return 0;
+	return CODE_OK;
 }
 
 bool Wifi::WifiIsAPMode(void)

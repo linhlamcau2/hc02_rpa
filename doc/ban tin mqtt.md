@@ -1,3 +1,13 @@
+Thiết bị gửi lên server, server phản hồi:
+- v1/json/req/<mac>/server -> v1/json/resp/server/<mac>
+
+Server gửi xuống thiết bị, thiết bị phản hồi:
+- v1/json/req/server/<mac> -> v1/json/resp/<mac>/server
+
+*note:
+- req, resp: loại bản tin
+- <mac>/server, server/<mac>: chiều đi của bản tin
+
 # Bản tin MQTT
 
 ## I. Bản tin điều khiển
@@ -117,7 +127,36 @@ Response:
 }
 ```
 
-### 4. Điều khiển Group: server->HC
+### 4. Bản tin điều khiển Gw: server->HC
+Request:
+```json
+{
+    "cmd": "controlGw",
+    "rqi": "abc123456",
+    "data": {
+				"rl0": 1,
+				"rl1": 0
+    }
+}
+```
+
+Response:
+```json
+{
+    "cmd": "controlGwRsp",
+    "rqi": "abc123456",
+    "data": {
+        "code": 0
+    }
+}
+```
+
+* Note:
+```
+- Sau khi điều khiển xong, thiết bị phản hồi trạng thái mới, HC sẽ gửi thêm bản tin báo trạng thái (bản tin số 1)
+```
+
+### 5. Điều khiển Group: server->HC
 Request:
 ```json
 {
@@ -152,7 +191,7 @@ Response:
 - Sau khi điều khiển xong, thiết bị phản hồi trạng thái mới, HC sẽ gửi thêm bản tin báo trạng thái (bản tin số 1)
 ```
 
-### 5. Kích hoạt Scene: server->HC
+### 6. Kích hoạt Scene: server->HC
 Request:
 ```json
 {
@@ -180,7 +219,7 @@ Response:
 - Sau khi điều khiển xong, thiết bị phản hồi trạng thái mới, HC sẽ gửi thêm bản tin báo trạng thái (bản tin số 1)
 ```
 
-### 6. Bản tin device update: app->HC
+### 7. Bản tin device update: app->HC
 Request:
 ```json
 {

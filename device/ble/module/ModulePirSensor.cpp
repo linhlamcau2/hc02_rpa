@@ -38,9 +38,9 @@ bool ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, 
 		pir = (data_message->pir);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
-		return false;
+		return CODE_OK;
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModulePirSensor::CheckData(Json::Value &dataValue, bool &rs)

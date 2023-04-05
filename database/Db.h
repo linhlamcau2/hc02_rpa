@@ -4,19 +4,11 @@
 #include <sqlite3.h>
 #include <vector>
 #include <mutex>
-#include <Device.h>
-#include <Group.h>
-#include <Gateway.h>
+#include "Device.h"
+#include "Group.h"
+#include "Gateway.h"
 #include "SceneBle.h"
 #include "Room.h"
-
-#ifdef ESP_PLATFORM
-#define DB_NAME "/spiffs/smh.sqlite"
-#elif defined(__ANDROID__)
-#define DB_NAME "/etc/smh/smh.sqlite"
-#else
-#define DB_NAME "/home/rd/Desktop/smarthome/iotgw/smh_HC/smh.sqlite"
-#endif
 
 using namespace std;
 
@@ -34,6 +26,8 @@ public:
 	~Db() {}
 
 	void init(void);
+	bool IsHaveDb();
+	int createTableIfNotExists();
 
 	int DeviceRead();
 	int DeviceAdd(Device *device);
@@ -42,26 +36,47 @@ public:
 	int DeviceDel(string mac);
 	int DeviceDelAll();
 
-	int GatewayRead();
-	int GatewayAdd(Gateway *gateway);
-	int GatewayUpdate(Gateway *gateway);
-	int GatewayUpdateId(Gateway *gateway, string id);
-	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
-	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
-	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
-	int GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast);
-	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
-	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
-	int GatewayDel(Gateway *gateway);
-	int GatewayDel(string id);
-	int GatewayDelAll();
-
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
 	int DeviceAttributeUpdate(Device *device, int attributeId, double value);
 	int DeviceAttributeAddOrReplace(Device *device, int attributeId, double value);
 	int DeviceAttributeDel(Device *device, int attributeId);
 	int DeviceAttributeDelAll();
+
+	int DeviceBleChildRead();
+	int DeviceBleChildAdd(string deviceId, int element);
+	int DeviceBleChildUpdate(string deviceId, int element);
+	int DeviceBleChildDel(string deviceId);
+	int DeviceBleChildDelAll();
+
+	int DeviceInGroupRead();
+	int DeviceInGroupAdd(Group *group, Device *device, int epId);
+	int DeviceInGroupDel(Group *group, Device *device, int epId);
+	int DeviceInGroupDelAll();
+
+	int DeviceInRoomRead();
+	int DeviceInRoomAdd(Room *room, Device *device);
+	int DeviceInRoomDel(Room *room, Device *device);
+	int DeviceInRoomDelAll();
+
+	int DeviceInSceneBleRead();
+	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data);
+	int DeviceInSceneBleDel(SceneBle *scene, Device *device);
+	int DeviceInSceneBleDelAll();
+
+	int GatewayRead();
+	int GatewayAdd(Gateway *gateway);
+	int GatewayUpdateId(Gateway *gateway, string id);
+	int GatewayUpdateNetKey(Gateway *gateway, string netkey);
+	int GatewayUpdateAppKey(Gateway *gateway, string appkey);
+	int GatewayUpdateDeviceKey(Gateway *gateway, string devicekey);
+	int GatewayUpdateUnicast(Gateway *gateway, uint16_t unicast);
+	int GatewayUpdateIvIndex(Gateway *gateway, uint32_t iv_index);
+	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
+	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
+	int GatewayDel(Gateway *gateway);
+	int GatewayDel(string id);
+	int GatewayDelAll();
 
 	int GroupRead();
 	int GroupAdd(Group *group);
@@ -70,50 +85,26 @@ public:
 	int GroupDel(string id);
 	int GroupDelAll();
 
-	int DeviceInGroupRead();
-	int DeviceInGroupAdd(Group *group, Device *device, int epId);
-	int DeviceInGroupDel(Group *group, Device *device, int epId);
-	int DeviceInGroupDelAll();
-
-	// int DeviceSceneRead();
-	// int DeviceSceneAdd(string mac, string schedule);
-	// int DeviceSceneAdd(Device *device, string schedule);
-	// int DeviceSceneDel(string mac, string schedule);
-	// int DeviceSceneDel(Device *device, string schedule);
-
-	int RuleRead();
-	int RuleAdd(Rule *rule, string data, int inEnable);
-	int RuleUpdate(string id, string rule);
-	int RuleUpdateStatus(string id, int isEnable);
-	int RuleDel(string id);
-
-	int SceneBleRead();
-	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, Json::Value data);
-	int DeviceInSceneBleDel(SceneBle *scene, Device *device, int epId);
-	int SceneBleDel(SceneBle *scene);
-
 	int RoomRead();
 	int RoomAdd(Room *room);
 	int RoomUpdate(Room *room, int id);
 	int RoomDel(Room *room);
 	int RoomDelAll();
 
-	int DeviceInRoomRead();
-	int DeviceInRoomAdd(Room *room, Device *device);
-	int DeviceInRoomDel(Room *room, Device *device);
-	int DeviceInRoomDel(Room *room);
+	int RuleRead();
+	int RuleAdd(Rule *rule, string data, int type);
+	int RuleUpdateData(Rule *rule, string data);
+	int RuleUpdateStatus(Rule *rule);
+	int RuleUpdateAddr(Rule *rule);
+	int RuleUpdateType(Rule *rule, int type);
+	int RuleDel(Rule *rule);
+	int RuleDelAll();
 
-	int DataRoomRead();
-	int DataRoomAdd(string id, string data);
-	int DataRoomUpdate(string id, string data);
-	int DataRoomDel(string id, string data);
-	int DataRoomDelAll();
-
-	int DeviceChildRead();
-	int DeviceChildAdd(string deviceId, int element);
-	int DeviceChildUpdate(string deviceId, int element);
-	int DeviceChildDel(string deviceId);
-	int DeviceChildDelAll();
+	int SceneBleRead();
+	int SceneBleAdd(SceneBle *scene);
+	int SceneBleUpdate(SceneBle *scene);
+	int SceneBleDel(SceneBle *scene);
+	int SceneBleDelAll();
 };
 
 extern Db *database;
