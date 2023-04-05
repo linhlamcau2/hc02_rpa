@@ -17,6 +17,8 @@
         "array": "cpp",
         "tuple": "cpp",
         "type_traits": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "unordered_map": "cpp",
+        "string_view": "cpp"
     }
 }

@@ -46,22 +46,6 @@ public:
     int InputData(uint8_t *data, int len, Json::Value &jsonValue);
 
     /**
-     * @brief Check rule input
-     *
-     * @param dataValue json rule data input
-     * @param rs result of checking
-     * @return true if dataValue uses this module paramter
-     * @return false if dataValue don't use this module paramter
-     */
-    bool CheckData(Json::Value &dataValue, bool &rs);
-
-    /**
-     * @brief Check rules related with this module
-     *
-     */
-    void CheckTrigger();
-
-    /**
      * @brief Build telemetry message with this module
      *
      * @param jsonValue
