@@ -190,6 +190,7 @@ public:
 
 	virtual void InitAttribute(int attributeId, double value) {}
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
+	virtual void InputData(Json::Value &dataValue, uint32_t addr = 0);
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 	virtual void CheckTrigger();
 	virtual int Do(Json::Value &dataValue);

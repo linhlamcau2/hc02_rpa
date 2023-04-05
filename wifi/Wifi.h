@@ -11,12 +11,12 @@ using namespace std;
 
 namespace Wifi
 {
-// private:
-// 	wifi_mode_t wifiMode;
+	// private:
+	// 	wifi_mode_t wifiMode;
 
-// public:
+	// public:
 	void init();
-	void ScanWifi(Json::Value &jsonValue);
+	void ScanWifi(Json::Value & jsonValue);
 	int ConnectToWifi(string ssid, string password, string encryption);
 	int SetModeApWifi();
 	void WifiStartAP(void);
