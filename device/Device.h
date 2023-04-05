@@ -145,11 +145,7 @@ protected:
 	int rssi;
 	protocol_e protocol;
 	string data;
-	int countElement;
 	Json::Value values; // telemetry data
-
-	vector<Module *> modules;
-	vector<Element *> elements;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -171,7 +167,7 @@ public:
 	int GetRSSI();
 
 	void SetRSSI(int rssi);
-	virtual bool CheckAddr(uint32_t addr);
+	virtual bool CheckAddr(uint32_t addr) { return false; }
 	virtual string GetDeviceKey();
 
 	protocol_e GetProtocol();
@@ -182,19 +178,12 @@ public:
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);
 
-	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
-	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue);
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
 
 	void DeviceInputData(uint8_t *data, int len, uint32_t addr);
 
 	virtual void InitAttribute(int attributeId, double value) {}
-	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
-	virtual void InputData(Json::Value &dataValue, uint32_t addr = 0);
-	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 	virtual void CheckTrigger();
-	virtual int Do(Json::Value &dataValue);
-	virtual int DoV2(Json::Value &dataValue);
 	virtual int DoJsonArray(Json::Value &dataValue);
 	virtual int DoJsonArrayV2(Json::Value &dataValue);
 
@@ -207,4 +196,14 @@ public:
 	static void RegisterDeviceModel(uint32_t type, string model, string name);
 	static uint32_t ConvertModelToDeviceType(string model);
 	static string ConvertDeviceTypeToName(uint32_t type);
+
+	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
+	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
+
+	virtual void InputData(Json::Value &dataValue){};
+	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0){};
+	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
+
+	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
+	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
 };

@@ -1,7 +1,6 @@
 #include "Device.h"
 #include "Gateway.h"
 #include "Log.h"
-#include "BleDefine.h"
 #include <thread>
 #include <functional>
 #include <unistd.h>
@@ -12,7 +11,6 @@ Device::Device(string id, string name, string mac, string data, uint32_t addr, u
 	this->type = type;
 	this->data = data;
 	this->version = version;
-	countElement = 1;
 	powerSource = POWER_UNKNOWN;
 
 	lastOnlineState = false;
@@ -32,11 +30,6 @@ string Device::GetMac()
 string Device::GetData()
 {
 	return data;
-}
-
-bool Device::CheckAddr(uint32_t addr)
-{
-	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
 }
 
 string Device::GetDeviceKey()
@@ -96,32 +89,6 @@ void Device::UnregisterTrigger(RuleInputDevice *ruleInputDevice)
 	deviceRuleInputList.erase(remove(deviceRuleInputList.begin(), deviceRuleInputList.end(), ruleInputDevice), deviceRuleInputList.end());
 }
 
-int Device::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	for (auto &module : modules)
-	{
-		module->BuildTelemetryValue(pushDataValue);
-	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValue(pushDataValue);
-	}
-	return CODE_OK;
-}
-
-int Device::BuildTelemetryValueV2(Json::Value &pushDataValue)
-{
-	for (auto &module : modules)
-	{
-		module->BuildTelemetryValueV2(pushDataValue);
-	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValueV2(pushDataValue);
-	}
-	return CODE_OK;
-}
-
 int Device::BuildAttributesValue(Json::Value &pushDataValue)
 {
 	Json::Value deviceData;
@@ -137,41 +104,6 @@ void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
 {
 	lastTimeActive = time(NULL);
 	InputData(data, len, addr);
-}
-
-void Device::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	for (auto &module : modules)
-	{
-		if (module->InputData(data, len, values) == CODE_OK)
-			break;
-	}
-	for (auto &element : elements)
-	{
-		if (element->CheckAddr(addr))
-		{
-			if (element->InputData(data, len, values) == CODE_OK)
-				break;
-		}
-	}
-	PushTelemetry(values);
-}
-
-bool Device::CheckData(Json::Value &dataValue, bool &rs)
-{
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	for (auto &module : modules)
-	{
-		if (module->CheckData(dataValue, rs) == CODE_OK)
-			return true;
-	}
-	for (auto &element : elements)
-	{
-		if (element->CheckData(dataValue, rs) == CODE_OK)
-			return true;
-	}
-	return false;
 }
 
 void Device::CheckTrigger()
@@ -218,32 +150,6 @@ int Device::DoJsonArrayV2(Json::Value &dataValue)
 	return CODE_OK;
 }
 
-int Device::Do(Json::Value &dataValue)
-{
-	for (auto &module : modules)
-	{
-		module->Do(dataValue);
-	}
-	for (auto &element : elements)
-	{
-		element->Do(dataValue);
-	}
-	return CODE_OK;
-}
-
-int Device::DoV2(Json::Value &dataValue)
-{
-	for (auto &module : modules)
-	{
-		module->DoV2(dataValue);
-	}
-	for (auto &element : elements)
-	{
-		element->DoV2(dataValue);
-	}
-	return CODE_OK;
-}
-
 int Device::PushTelemetry()
 {
 	Json::Value pushData;
@@ -259,12 +165,6 @@ int Device::PushTelemetry(Json::Value jsonValue)
 {
 	if (jsonValue.isNull())
 		return CODE_ERROR;
-#ifdef CONFIG_USE_OLD_APP
-	Json::Value dataValue;
-	dataValue["ID"] = BLE_ATTRIBUTE_ONLINE_OFFLINE;
-	dataValue["VALUE"] = 1;
-	jsonValue.append(dataValue);
-#endif
 	Json::Value pushDataValue;
 	Json::Value deviceData;
 	deviceData["DEVICE_ID"] = id;

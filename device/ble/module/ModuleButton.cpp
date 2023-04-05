@@ -30,6 +30,19 @@ void ModuleButton::SaveAttribute()
 }
 #endif
 
+int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
+	{
+		bt = dataValue[key].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
 int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00 && data[3] + 10 == id)
