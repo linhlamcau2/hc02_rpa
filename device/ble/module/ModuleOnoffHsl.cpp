@@ -41,6 +41,28 @@ void ModuleOnoffHsl::SaveAttribute()
 }
 #endif
 
+int ModuleOnoffHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+    if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+    {
+        int id = dataValue["ID"].asInt();
+        if (this->idOnoff == id || this->idH == id || this->idS == id || this->idL == id)
+        {
+            if (this->idOnoff == id)
+                onoff = dataValue["VALUE"].asInt();
+            else if (this->idH == id)
+                h = dataValue["VALUE"].asInt();
+            else if (this->idS == id)
+                s = dataValue["VALUE"].asInt();
+            else if (this->idL == id)
+                l = dataValue["VALUE"].asInt();
+            BuildTelemetryValue(jsonValue);
+            return CODE_OK;
+        }
+    }
+    return CODE_ERROR;
+}
+
 int ModuleOnoffHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
     typedef struct __attribute__((packed))

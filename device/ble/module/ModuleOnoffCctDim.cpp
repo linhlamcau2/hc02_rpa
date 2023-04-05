@@ -36,6 +36,26 @@ void ModuleOnoffCctDim::SaveAttribute()
 }
 #endif
 
+int ModuleOnoffCctDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+    if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+    {
+        int id = dataValue["ID"].asInt();
+        if (this->idOnoff == id || this->idCct == id || this->idDim == id)
+        {
+            if (this->idOnoff == id)
+                onoff = dataValue["VALUE"].asInt();
+            else if (this->idCct == id)
+                cct = dataValue["VALUE"].asInt();
+            else if (this->idDim == id)
+                dim = dataValue["VALUE"].asInt();
+            BuildTelemetryValue(jsonValue);
+            return CODE_OK;
+        }
+    }
+    return CODE_ERROR;
+}
+
 int ModuleOnoffCctDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
     typedef struct __attribute__((packed))

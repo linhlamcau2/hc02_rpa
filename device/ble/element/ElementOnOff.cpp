@@ -26,6 +26,22 @@ void ElementOnOff::SaveAttribute()
 }
 #endif
 
+int ElementOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+    if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+    {
+        int id = dataValue["ID"].asInt();
+        if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+        {
+            onoff = dataValue["VALUE"].asInt();
+            BuildTelemetryValue(jsonValue);
+            CheckTrigger();
+            return CODE_OK;
+        }
+    }
+    return CODE_ERROR;
+}
+
 int ElementOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
     typedef struct

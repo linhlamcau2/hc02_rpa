@@ -34,6 +34,8 @@ public:
     void SaveAttribute();
 #endif
 
+	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
+
     /**
      * @brief Parse raw data to module parameter value
      *

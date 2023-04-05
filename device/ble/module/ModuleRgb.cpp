@@ -8,7 +8,7 @@
 
 ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t button) : Module(device, addr)
 {
-	
+
 	bt = button;
 	r = 0;
 	b = 0;
@@ -62,6 +62,34 @@ void ModuleRgb::SaveAttribute()
 	database->DeviceAttributeAddOrReplace(device, idDimOff, dimOff);
 }
 #endif
+
+int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idB == id || this->idG == id || this->idR == id || this->idDimOff == id || this->idDimOn == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				if (this->idB == id)
+					b = dataValue["VALUE"].asInt();
+				else if (this->idG == id)
+					g = dataValue["VALUE"].asInt();
+				else if (this->idR == id)
+					r = dataValue["VALUE"].asInt();
+				else if (this->idDimOff == id)
+					dimOff = dataValue["VALUE"].asInt();
+				else if (this->idDimOn == id)
+					dimOn = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+		}
+	}
+	return CODE_ERROR;
+}
 
 int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
