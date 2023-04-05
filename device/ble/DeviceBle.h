@@ -23,6 +23,7 @@ public:
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
 	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue);
 
+	virtual void InputData(Json::Value &dataValue);
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0);
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 

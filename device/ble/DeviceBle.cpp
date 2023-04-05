@@ -53,6 +53,21 @@ int DeviceBle::BuildTelemetryValueV2(Json::Value &pushDataValue)
 	return CODE_OK;
 }
 
+void DeviceBle::InputData(Json::Value &dataValue)
+{
+	values = Json::Value::null;
+	for (auto &module : modules)
+	{
+		module->InputData(dataValue, values);
+	}
+	for (auto &element : elements)
+	{
+		element->InputData(dataValue, values);
+	}
+	if (!values.isNull())
+		PushTelemetry(values);
+}
+
 void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
