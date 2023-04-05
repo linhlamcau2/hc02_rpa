@@ -780,7 +780,7 @@ int BleProtocol::ResetDelAll()
 int BleProtocol::SendOnlineCheck(uint16_t devAddr)
 {
 	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	BleProtocol::GetOnoffLight(devAddr);
+	BleProtocol::UpdateLights(devAddr);
 	return CODE_OK;
 }
 

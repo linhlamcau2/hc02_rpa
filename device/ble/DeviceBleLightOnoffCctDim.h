@@ -3,6 +3,7 @@
 #include "DeviceBle.h"
 #include "module/ModuleOnOff.h"
 #include "module/ModuleDim.h"
+#include "module/ModuleOnoffCctDim.h"
 #include "element/ElementCct.h"
 
 using namespace std;
@@ -12,6 +13,7 @@ class DeviceBleLightOnoffCctDim : public DeviceBle
 private:
 	ModuleOnOff *moduleOnOff;
 	ModuleDim *moduleDim;
+	ModuleOnoffCctDim *moduleOnoffCctDim;
 	ElementCct *elementCct;
 
 public:

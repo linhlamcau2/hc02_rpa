@@ -1,0 +1,77 @@
+#pragma once
+#include "Module.h"
+
+using namespace std;
+
+class ModuleOnoffHsl : public Module
+{
+protected:
+    uint8_t onoff;
+    uint16_t h;
+    uint16_t s;
+    uint16_t l;
+    int idOnoff;
+    int idH;
+    int idS;
+    int idL;
+
+public:
+    ModuleOnoffHsl(Device *device, uint32_t addr);
+
+#ifdef CONFIG_SAVE_ATTRIBUTE
+    /**
+     * @brief Init parameter value from database after system start
+     *
+     * @param attributeId id of attribute
+     * @param value value of attribute
+     */
+    void InitAttribute(int attributeId, double value);
+
+    /**
+     * @brief Save parameter value to database
+     *
+     */
+    void SaveAttribute();
+#endif
+
+    /**
+     * @brief Parse raw data to module parameter value
+     *
+     * @param data data from device driver (uart)
+     * @param len length of data
+     * @param jsonValue json value to put parameter after parsing
+     * @return true if data include this module opcode
+     * @return false
+     */
+    int InputData(uint8_t *data, int len, Json::Value &jsonValue);
+
+    /**
+     * @brief Check rule input
+     *
+     * @param dataValue json rule data input
+     * @param rs result of checking
+     * @return true if dataValue uses this module paramter
+     * @return false if dataValue don't use this module paramter
+     */
+    bool CheckData(Json::Value &dataValue, bool &rs);
+
+    /**
+     * @brief Check rules related with this module
+     *
+     */
+    void CheckTrigger();
+
+    /**
+     * @brief Build telemetry message with this module
+     *
+     * @param jsonValue
+     */
+    void BuildTelemetryValue(Json::Value &jsonValue);
+
+    /**
+     * @brief Build telemetry message with this module use message format version 2
+     *
+     * @param jsonValue
+     */
+    void BuildTelemetryValueV2(Json::Value &jsonValue);
+};
