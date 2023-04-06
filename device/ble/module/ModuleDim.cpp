@@ -32,7 +32,7 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
-			dim = dataValue["VALUE"].asInt();
+			dim = (dataValue["VALUE"].asInt() * 65535) / 100;
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			return CODE_OK;

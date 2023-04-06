@@ -32,7 +32,7 @@ int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
-			cct = dataValue["VALUE"].asInt();
+			cct = (dataValue["VALUE"].asInt() * 192) + 800;
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			return CODE_OK;

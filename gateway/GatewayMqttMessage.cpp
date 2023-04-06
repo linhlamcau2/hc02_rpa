@@ -2679,7 +2679,7 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return CODE_OK;
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)

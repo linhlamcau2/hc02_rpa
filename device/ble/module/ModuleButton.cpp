@@ -4,7 +4,8 @@
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
-#include "Db.h"
+#include "Gateway.h"
+#include "SceneBle.h"
 
 ModuleButton::ModuleButton(Device *device, uint32_t addr) : ModuleButton(device, addr, 0)
 {
@@ -30,30 +31,78 @@ void ModuleButton::SaveAttribute()
 }
 #endif
 
-int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-{
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			bt = dataValue["VALUE"].asInt();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
-	}
-	return CODE_ERROR;
-}
+// int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+// {
+// 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+// 	{
+// 		int id = dataValue["ID"].asInt();
+// 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+// 		{
+// 			bt = dataValue["VALUE"].asInt();
+// 			BuildTelemetryValue(jsonValue);
+// 			CheckTrigger();
+// 			return CODE_OK;
+// 		}
+// 	}
+// 	return CODE_ERROR;
+// }
 
 int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x02 && data[2] == 0x00 && data[3] + 10 == id)
+	typedef struct __attribute__((packed))
 	{
-		bt = data[4];
-		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
-		return CODE_OK;
+		uint8_t opcode;
+		uint16_t header;
+		uint8_t btId;
+		uint8_t mode;
+		uint16_t scene;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == 0x52)
+	{
+		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE)
+		{
+			bt = data_message->btId;
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			if (data_message->scene > 0)
+			{
+				SceneBle *scene = gateway->getSceneBleFromAddr(data_message->scene);
+				if (scene)
+				{
+					for (int i = 0; i < scene->deviceList.size(); i++)
+					{
+						DeviceBle *dev = (DeviceBle *)scene->deviceList[i]->device;
+						if (dev)
+						{
+							if (scene->deviceList[i]->data.isArray())
+							{
+								for (Json::ArrayIndex j = 0; j < scene->deviceList[i]->data.size(); j++)
+								{
+									if (scene->deviceList[i]->data[j].isObject())
+									{
+										LOGE("Input data json1");
+										dev->InputData(scene->deviceList[i]->data[j]);
+									}
+								}
+							}
+							else if (scene->deviceList[i]->data.isObject())
+							{
+								LOGE("Input data json2");
+								dev->InputData(scene->deviceList[i]->data);
+							}
+						}
+						else
+						{
+							LOGW("DeviceBle error");
+						}
+					}
+				}
+				else
+					LOGW("Scene not found");
+			}
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }

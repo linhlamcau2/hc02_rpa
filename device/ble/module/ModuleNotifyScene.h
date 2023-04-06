@@ -1,20 +1,16 @@
 #pragma once
+
 #include "Module.h"
 
 using namespace std;
 
-class ModuleOnoffCctDim : public Module
+class ModuleNotifyScene : public Module
 {
 protected:
-	uint8_t onoff;
-    uint16_t dim;
-    uint16_t cct;
-	int idOnoff;
-    int idCct;
-    int idDim;
+	uint16_t idScene;
 
 public:
-	ModuleOnoffCctDim(Device *device, uint32_t addr);
+	ModuleNotifyScene(Device *device, uint32_t addr);
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
@@ -44,18 +40,4 @@ public:
 	 * @return false
 	 */
 	int InputData(uint8_t *data, int len, Json::Value &jsonValue);
-
-	/**
-	 * @brief Build telemetry message with this module
-	 *
-	 * @param jsonValue
-	 */
-	void BuildTelemetryValue(Json::Value &jsonValue);
-
-	/**
-	 * @brief Build telemetry message with this module use message format version 2
-	 *
-	 * @param jsonValue
-	 */
-	void BuildTelemetryValueV2(Json::Value &jsonValue);
 };

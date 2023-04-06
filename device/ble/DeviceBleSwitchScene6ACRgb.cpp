@@ -18,4 +18,5 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
     moduleRgb = new ModuleRgb(this, addr, button);
     modules.push_back(moduleRgb);
 #endif
+
 }

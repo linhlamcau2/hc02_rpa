@@ -30,15 +30,7 @@ public:
 	void SaveAttribute();
 #endif
 
-	/**
-	 * @brief Parse raw data to element parameter value
-	 *
-	 * @param dataValue json data input
-	 * @param jsonValue json value to put parameter after parsing
-	 * @return true if data include this element opcode
-	 * @return false
-	 */
-	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
+	// int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
 	/**
 	 * @brief Parse raw data to element parameter value

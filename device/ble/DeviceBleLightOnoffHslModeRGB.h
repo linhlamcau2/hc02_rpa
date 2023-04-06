@@ -5,6 +5,7 @@
 #include "module/ModuleHsl.h"
 #include "module/ModuleModeRgb.h"
 #include "module/ModuleOnoffHsl.h"
+#include "module/ModuleCallScene.h"
 
 using namespace std;
 
@@ -15,6 +16,7 @@ private:
 	ModuleModeRgb *moduleModeRgb;
 	ModuleHsl *moduleHsl;
 	ModuleOnoffHsl *moduleOnoffHsl;
+	ModuleCallScene *moduleCallScene;
 
 public:
 	DeviceBleLightOnoffHslModeRGB(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);

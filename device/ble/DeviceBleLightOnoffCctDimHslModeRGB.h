@@ -7,6 +7,7 @@
 #include "module/ModuleModeRgb.h"
 #include "module/ModuleOnoffCctDim.h"
 #include "module/ModuleOnoffHsl.h"
+#include "module/ModuleCallScene.h"
 #include "element/ElementCct.h"
 
 using namespace std;
@@ -20,6 +21,7 @@ private:
 	ModuleHsl *moduleHsl;
 	ModuleOnoffCctDim *moduleOnoffCctDim;
 	ModuleOnoffHsl *moduleOnoffHsl;
+	ModuleCallScene *moduleCallScene;
 	ElementCct *elementCct;
 
 public:
