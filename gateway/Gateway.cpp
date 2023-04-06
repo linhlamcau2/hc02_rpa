@@ -335,7 +335,7 @@ int Gateway::CheckOnlineThread()
 							// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
 							if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
 							{
-								bleProtocol->SendOnlineCheck(device->GetAddr());
+								bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
 								device->lastTimeCheck = currentTime;
 							}
 							// 2 chu ky khong co ban tin phan hoi thi bao offline
@@ -365,7 +365,7 @@ int Gateway::CheckOnlineThread()
 							// thoi gian check qua 1 chu ky thi check lai
 							if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
 							{
-								bleProtocol->SendOnlineCheck(device->GetAddr());
+								bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
 								device->lastTimeCheck = currentTime;
 							}
 							// neu co ban tin moi trong vong 2 chu ky check thi bao online

@@ -81,14 +81,12 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 								{
 									if (scene->deviceList[i]->data[j].isObject())
 									{
-										LOGE("Input data json1");
 										dev->InputData(scene->deviceList[i]->data[j]);
 									}
 								}
 							}
 							else if (scene->deviceList[i]->data.isObject())
 							{
-								LOGE("Input data json2");
 								dev->InputData(scene->deviceList[i]->data);
 							}
 						}

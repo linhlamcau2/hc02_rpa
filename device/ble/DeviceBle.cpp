@@ -66,7 +66,6 @@ void DeviceBle::InputData(Json::Value &dataValue)
 	}
 	for (auto &element : elements)
 	{
-		LOGE("Element input data");
 		element->InputData(dataValue, values);
 	}
 	if (!values.isNull())

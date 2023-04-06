@@ -14,7 +14,6 @@ ModuleNotifyScene::ModuleNotifyScene(Device *device, uint32_t addr) : Module(dev
 
 int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-    LOGE("InputData module notify scene");
     typedef struct __attribute__((packed))
     {
         uint8_t opcode;
@@ -29,7 +28,6 @@ int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         {
             idScene = data_message->idSceneScreenTouch;
         }
-        LOGE("REMOTR ID SCENE: %d", idScene);
         if (idScene > 0)
         {
             SceneBle *scene = gateway->getSceneBleFromAddr(idScene);
@@ -46,14 +44,12 @@ int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
                             {
                                 if (scene->deviceList[i]->data[j].isObject())
                                 {
-                                    LOGE("Input data json1");
                                     dev->InputData(scene->deviceList[i]->data[j]);
                                 }
                             }
                         }
                         else if (scene->deviceList[i]->data.isObject())
                         {
-                            LOGE("Input data json2");
                             dev->InputData(scene->deviceList[i]->data);
                         }
                     }
