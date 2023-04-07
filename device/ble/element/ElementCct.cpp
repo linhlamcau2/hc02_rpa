@@ -25,6 +25,22 @@ void ElementCct::SaveAttribute()
 }
 #endif
 
+int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			cct = (dataValue["VALUE"].asInt() * 192) + 800;
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			return CODE_OK;
+		}
+	}
+	return CODE_ERROR;
+}
+
 int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct

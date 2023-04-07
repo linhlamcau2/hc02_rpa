@@ -41,6 +41,7 @@
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
 #define RD_OPCODE_CONFIG_SET_TIMER 0x070B
+#define RD_OPCODE_REQUEST_STATUS_SWITCH 0x090B
 
 enum
 {
@@ -212,7 +213,7 @@ public:
 	int ResetDev(uint16_t devAddr);
 	int ResetDelAll();
 
-	int SendOnlineCheck(uint16_t devAddr);
+	int SendOnlineCheck(uint16_t devAddr, uint32_t typeDev);
 
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);
@@ -254,6 +255,7 @@ public:
 	int ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value);
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
+	int UpdateStatusRelaySwitch(uint16_t devAddr);
 
 	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);

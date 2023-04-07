@@ -137,18 +137,32 @@ void Wifi::ScanWifi(Json::Value &data)
 int Wifi::ConnectToWifi(string ssid, string password, string encryption)
 {
 	LOGD("Connect to Wifi");
-	if (encryption == "WPA2 PSK (CCMP)")
-	{
-		encryption = "psk2";
-	}
-	else if (encryption == "none")
-	{
-		encryption = "psk2";
-	}
-	else if (encryption == "WPA PSK")
-	{
-		encryption = "psk";
-	}
+    string encry = "none";
+	if (encryption.find("OWE") != string::npos)
+    {
+        encry = "owe";
+    }
+    if (encryption.find("none") != string::npos)
+    {
+        encry = "none";
+    }
+    if (encryption.find("WPA")!= string::npos && encryption.find("PSK")!= string::npos)
+    {
+        encry = "psk";
+    }
+    if (encryption.find("WPA2")!= string::npos && encryption.find("PSK")!= string::npos)
+    {
+        encry = "psk2";
+    }
+    if (encryption.find("WPA3")!= string::npos && encryption.find("SAE")!= string::npos)
+    {
+        encry = "sae";
+    }
+    if (encryption.find("mixed")!= string::npos && encryption.find("WPA/WPA2")!= string::npos && encryption.find("PSK")!= string::npos)
+    {
+        encry = "psk-mixed";
+    }
+	LOGD("Encryption: %s", encry.c_str());
 	try
 	{
 		system("rm /output.txt");
@@ -157,10 +171,10 @@ int Wifi::ConnectToWifi(string ssid, string password, string encryption)
 		system("uci set wireless.wifinet1=wifi-iface >> /output.txt 2>&1");
 		system(string("uci set wireless.wifinet1.ssid=\"" + ssid + "\" >> /output.txt 2>&1").c_str());
 		system("uci set wireless.wifinet1.mode='sta' >> /output.txt 2>&1");
-		system("uci set wireless.wifinet1.network='wan' >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1.network='wwan' >> /output.txt 2>&1");
 		system("uci set wireless.wifinet1.device='radio0' >> /output.txt 2>&1");
 		system(string("uci set wireless.wifinet1.key='" + password + "' >> /output.txt 2>&1").c_str());
-		system(string("uci set wireless.wifinet1.encryption='" + encryption + "' >> /output.txt 2>&1").c_str());
+		system(string("uci set wireless.wifinet1.encryption='" + encry + "' >> /output.txt 2>&1").c_str());
 		system("uci commit wireless");
 		system("wifi");
 	}

@@ -5,6 +5,9 @@
 #include "module/ModuleDim.h"
 #include "module/ModuleHsl.h"
 #include "module/ModuleModeRgb.h"
+#include "module/ModuleOnoffCctDim.h"
+#include "module/ModuleOnoffHsl.h"
+#include "module/ModuleCallScene.h"
 #include "element/ElementCct.h"
 
 using namespace std;
@@ -16,6 +19,9 @@ private:
 	ModuleDim *moduleDim;
 	ModuleModeRgb *moduleModeRgb;
 	ModuleHsl *moduleHsl;
+	ModuleOnoffCctDim *moduleOnoffCctDim;
+	ModuleOnoffHsl *moduleOnoffHsl;
+	ModuleCallScene *moduleCallScene;
 	ElementCct *elementCct;
 
 public:

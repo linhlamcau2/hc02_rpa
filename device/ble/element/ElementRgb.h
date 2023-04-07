@@ -8,6 +8,7 @@ class ElementRgb : public Element
 protected:
 	uint8_t r, g, b, dimOn, dimOff;
 	int idR, idG, idB, idDimOn, idDimOff;
+	bool isR, isG, isB, isDimOn, isDimOff;
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
@@ -28,6 +29,8 @@ public:
 	 */
 	void SaveAttribute();
 #endif
+
+	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
 	/**
 	 * @brief Parse raw data to element parameter value
@@ -77,7 +80,7 @@ public:
 	 * @return true
 	 * @return false
 	 */
-	int DoJsonArray(Json::Value &dataValue);
+	int Do(Json::Value &dataValue);
 
 	/**
 	 * @brief Do an action use message format version 2

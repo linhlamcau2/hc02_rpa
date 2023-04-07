@@ -1,12 +1,14 @@
 #pragma once
 
 #include "DeviceBle.h"
+#include "module/ModuleNotifyScene.h"
 
 using namespace std;
 
 class DeviceBleScreenTouch : public DeviceBle
 {
 private:
+	ModuleNotifyScene *moduleNotifyScene;
 	void SendDatetime();
 
 public:

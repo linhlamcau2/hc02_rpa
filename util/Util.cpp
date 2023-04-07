@@ -29,6 +29,14 @@ string Util::genRandRQI(int size)
 	return rqi;
 }
 
+string Util::GenIdDeviceByElement(string id, int element)
+{
+    int c = id[0] - 48 + element;
+    string strTemp = to_string(c);
+    string tempId = id.substr(strTemp.length(), id.length() - strTemp.length());
+    return (strTemp + tempId);
+}
+
 string getTimeStrFromTime(time_t t)
 {
 	struct tm start;
@@ -261,10 +269,10 @@ string Util::uuidToStr(uint8_t *uuid)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					uuid[0], uuid[1], uuid[2], uuid[3],
-					uuid[4], uuid[5], uuid[6], uuid[7],
-					uuid[8], uuid[9], uuid[10], uuid[11],
-					uuid[12], uuid[13], uuid[14], uuid[15]);
+			uuid[0], uuid[1], uuid[2], uuid[3],
+			uuid[4], uuid[5], uuid[6], uuid[7],
+			uuid[8], uuid[9], uuid[10], uuid[11],
+			uuid[12], uuid[13], uuid[14], uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -273,10 +281,10 @@ string Util::arrayToString844412(uint8_t *array)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					array[0], array[1], array[2], array[3],
-					array[4], array[5], array[6], array[7],
-					array[8], array[9], array[10], array[11],
-					array[12], array[13], array[14], array[15]);
+			array[0], array[1], array[2], array[3],
+			array[4], array[5], array[6], array[7],
+			array[8], array[9], array[10], array[11],
+			array[12], array[13], array[14], array[15]);
 	buf[36] = '\0';
 	return string(buf);
 }

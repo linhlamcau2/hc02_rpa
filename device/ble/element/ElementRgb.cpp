@@ -18,6 +18,7 @@ ElementRgb::ElementRgb(Device *device, uint32_t addr) : Element(device, addr)
 	idB = BLE_ATTRIBUTE_B;
 	idDimOn = BLE_ATTRIBUTE_DIM_ON;
 	idDimOff = BLE_ATTRIBUTE_DIM_OFF;
+	isR = isG = isB = isDimOn = isDimOff = false;
 	keyR = KEY_ATTRIBUTE_R + to_string(addr - device->GetAddr());
 	keyG = KEY_ATTRIBUTE_G + to_string(addr - device->GetAddr());
 	keyB = KEY_ATTRIBUTE_B + to_string(addr - device->GetAddr());
@@ -59,6 +60,34 @@ void ElementRgb::SaveAttribute()
 	database->DeviceAttributeAddOrReplace(device, idDimOff, dimOff);
 }
 #endif
+
+int ElementRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idB == id || this->idG == id || this->idR == id || this->idDimOff == id || this->idDimOn == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				if (this->idB == id)
+					b = dataValue["VALUE"].asInt();
+				else if (this->idG == id)
+					g = dataValue["VALUE"].asInt();
+				else if (this->idR == id)
+					r = dataValue["VALUE"].asInt();
+				else if (this->idDimOff == id)
+					dimOff = dataValue["VALUE"].asInt();
+				else if (this->idDimOn == id)
+					dimOn = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+		}
+	}
+	return CODE_ERROR;
+}
 
 int ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
@@ -179,54 +208,47 @@ void ElementRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
 }
 
 // TODO: viet anh recheck DoJsonArray
-int ElementRgb::DoJsonArray(Json::Value &dataValue)
+int ElementRgb::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
-	if (dataValue.isArray())
+	if (dataValue.isObject())
 	{
-		bool isR = false, isG = false, isB = false, isDimOn = false, isDimOff = false;
-		uint8_t r = 0, g = 0, b = 0, dimOff = 0, dimOn = 0;
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		if (dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
-			Json::Value data = dataValue[i];
-			if (data.isObject())
+			if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_B)
 			{
-				if (data.isMember("ID") && data["ID"].isInt() && data.isMember("VALUE") && data["VALUE"].isInt())
-				{
-					if (data["ID"].asInt() == BLE_ATTRIBUTE_B)
-					{
-						isB = true;
-						b = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_G)
-					{
-						isG = true;
-						g = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_R)
-					{
-						isR = true;
-						r = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
-					{
-						isDimOn = true;
-						dimOn = data["VALUE"].asInt();
-					}
-					else if (data["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF)
-					{
-						isDimOff = true;
-						dimOff = data["VALUE"].asInt();
-					}
-				}
+				isB = true;
+				b = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_G)
+			{
+				isG = true;
+				g = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_R)
+			{
+				isR = true;
+				r = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
+			{
+				isDimOn = true;
+				dimOn = dataValue["VALUE"].asInt();
+			}
+			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF)
+			{
+				isDimOff = true;
+				dimOff = dataValue["VALUE"].asInt();
 			}
 		}
 		if (isDimOn && isDimOff && isR && isB && isG)
 		{
+			isR = isB = isG = isDimOff = isDimOn = false;
 			if (bleProtocol)
 				bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff);
 			else
 				LOGW("BleProtocol null");
+			return CODE_OK;
 		}
 	}
 	return CODE_ERROR;

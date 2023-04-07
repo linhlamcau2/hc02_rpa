@@ -35,6 +35,7 @@ namespace Util
 	double millis();
 
 	string genRandRQI(int size);
+	string GenIdDeviceByElement(string id, int element);
 
 	int GetCurrentWeekDay();
 	int ConvertStrTimeToInt(string time);

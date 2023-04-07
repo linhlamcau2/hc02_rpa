@@ -25,6 +25,25 @@ void ModuleLightSensor::SaveAttribute()
 }
 #endif
 
+int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				lux = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+		}
+	}
+	return CODE_ERROR;
+}
+
 int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52)

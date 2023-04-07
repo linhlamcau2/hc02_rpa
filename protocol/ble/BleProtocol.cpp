@@ -188,13 +188,13 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	if (pthread_mutex_lock(&mutex) == 0)
 	{
 		message_rsp_list_st message_rsp_list = {
-				.status = false,
-				.opcode = opRsp,
-				.len = lenRsp,
-				.data = dataRsp,
-				.compare_data = compare_data,
-				.compare_position = compare_position,
-				.compare_len = compare_len,
+			.status = false,
+			.opcode = opRsp,
+			.len = lenRsp,
+			.data = dataRsp,
+			.compare_data = compare_data,
+			.compare_position = compare_position,
+			.compare_len = compare_len,
 		};
 		if (opRsp)
 		{
@@ -203,7 +203,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		}
 
 		message_req_st message_req = {
-				.opcode = opReq,
+			.opcode = opReq,
 		};
 		for (int i = 0; i < lenReq; i++)
 		{
@@ -587,7 +587,7 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	set_gw_addr_message.vendorId = RD_VENDOR_ID;
 	set_gw_addr_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;
 	set_gw_addr_message.header = RD_OPCODE_PROVISION_SET_GW_ADDR;
-	set_gw_addr_message.gwAddr = 0x0001;
+	set_gw_addr_message.gwAddr = gwAddrSet;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
 	if (rs == CODE_OK)
 	{
@@ -752,10 +752,48 @@ int BleProtocol::ResetDelAll()
 	return CODE_ERROR;
 }
 
-int BleProtocol::SendOnlineCheck(uint16_t devAddr)
+int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev)
 {
 	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	BleProtocol::GetOnoffLight(devAddr);
+	switch (typeDev)
+	{
+	case BLE_LED_CHIEU_TRANH:
+	case BLE_LED_CHIEU_GUONG:
+	case BLE_DEN_BAN:
+	case BLE_DOWNLIGHT_SMT:
+	case BLE_DOWNLIGHT_COB_GOC_HEP:
+	case BLE_DOWNLIGHT_COB_GOC_RONG:
+	case BLE_DOWNLIGHT_COB_TRANG_TRI:
+	case BLE_LED_FLOOD:
+	case BLE_LED_DAY_LINEAR:
+	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TUONG:
+	case BLE_LED_OP_TRAN_LOA:
+	case BLE_PANEL_TRON:
+	case BLE_PANEL_VUONG:
+	case BLE_TRACKLIGHT:
+	case BLE_LED_THA_TRAN:
+	case BLE_LED_TUBE_M16:
+	case BLE_DOWNLIGHT_RGBCW:
+	case BLE_LED_DAY_RGBCW:
+	case BLE_LED_BULB:
+	case BLE_LED_DAY_RGB:
+	case BLE_SWITCH_ONOFF:
+		BleProtocol::UpdateLights(devAddr);
+		break;
+	case BLE_SWITCH_RGB_1:
+	case BLE_SWITCH_RGB_1_SQUARE:
+	case BLE_SWITCH_RGB_WATER_HEATER:
+	case BLE_SWITCH_RGB_2:
+	case BLE_SWITCH_RGB_2_SQUARE:
+	case BLE_SWITCH_RGB_3:
+	case BLE_SWITCH_RGB_3_SQUARE:
+	case BLE_SWITCH_RGB_4:
+	case BLE_SWITCH_RGB_4_SQUARE:
+		BleProtocol::GetOnoffLight(devAddr);
+		break;
+	}
+
 	return CODE_OK;
 }
 
@@ -782,9 +820,9 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 			uint16_t gwAddr;
 			uint16_t opcodeRsp;
 		} turnOnOffHeader = {
-				.devAddr = devAddr,
-				.gwAddr = 0x0001,
-				.opcodeRsp = G_ONOFF_STATUS,
+			.devAddr = devAddr,
+			.gwAddr = 0x0001,
+			.opcodeRsp = G_ONOFF_STATUS,
 		};
 		onoff_message.ble_message_header.devAddr = devAddr;
 		onoff_message.opcode = G_ONOFF_SET;
@@ -1706,9 +1744,9 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 			uint32_t data;
 			struct
 			{
-				uint32_t store : 8;					 // 8 bit not use
-				uint32_t Lux_hi : 10;				 // 10 bit lux hi
-				uint32_t Lux_low : 10;			 // 10 bit lux low
+				uint32_t store : 8;			 // 8 bit not use
+				uint32_t Lux_hi : 10;		 // 10 bit lux hi
+				uint32_t Lux_low : 10;		 // 10 bit lux low
 				uint32_t Light_Conditon : 3; // 7 bit low
 				uint32_t Pir_Conditon : 1;	 // 1 bit hight
 			};
@@ -2582,6 +2620,37 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	return CODE_ERROR;
 }
 
+int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr)
+{
+	LOGD("Update status Relay Switch 0x%04x", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+	} request_status_message_t;
+	request_status_message_t request_status_message = {0};
+	memset(&request_status_message, 0x00, sizeof(request_status_message));
+	request_status_message.ble_message_header.devAddr = devAddr;
+	request_status_message.opcodeVendor = RD_OPCODE_CONFIG;
+	request_status_message.vendorId = RD_VENDOR_ID;
+	request_status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	request_status_message.header = RD_OPCODE_REQUEST_STATUS_SWITCH;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&request_status_message, sizeof(request_status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	LOGW("request status switch err");
+	return CODE_ERROR;
+}
+
 int BleProtocol::GetInfogw()
 {
 	LOGD("GetInfogw");
@@ -2613,8 +2682,8 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = devAddr};
+			.header = 0x12,
+			.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
 		for (int i = 0; i < 16; i++)
 		{
@@ -2642,8 +2711,8 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = gwAddr};
+			.header = 0x12,
+			.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
 		for (int i = 0; i < 16; i++)
 		{

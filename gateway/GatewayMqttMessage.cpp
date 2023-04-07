@@ -27,6 +27,10 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRpcAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_DEVICE_FROM_GROUP", bind(&Gateway::OnRpcDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
 
+	OnDeviceRpcCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRpcStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
+
 	OnDeviceRpcCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRpcAddSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRpcEditSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRpcDeleteSceneBle, this, placeholders::_1, placeholders::_2));
@@ -97,6 +101,10 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("CREATE_HCL", bind(&Gateway::OnRpcCreateHCL, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_HCL", bind(&Gateway::OnRpcEditHCL, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HCL_RULE_STATUS", bind(&Gateway::OnRpcSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRpcStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
 
@@ -293,6 +301,8 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRpcBleDelDevice");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
 	{
+		respValue["CMD"] = "RESET_NODE";
+		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
 		{
@@ -302,24 +312,32 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (bleProtocol)
 				{
-					bleProtocol->ResetDev(device->GetAddr());
+					if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+					{
+						dataJsonRsp["SUCCESS"].append(device->GetId());
+						delDevice(device);
+					}
+					else
+					{
+						dataJsonRsp["FAILED"].append(device->GetId());
+					}
 				}
 				else
 					LOGW("BleProtocol null");
-				delDevice(device);
-				LOGD("remove deviceId: %s", deviceId.c_str());
 			}
 			else
 			{
 				LOGD("deviceId %s dose not exist", deviceId.c_str());
 			}
 		}
+		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
 	}
 	else
 	{
 		LOGW("Format error");
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
@@ -1403,17 +1421,18 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					hasDeviceDelGroupFailed = false;
 					int numDeviceInGroup = groupOfGw->deviceList.size();
+					vector<DeviceInGroup *> listGr = groupOfGw->deviceList;
 					for (int j = 0; j < numDeviceInGroup; j++)
 					{
-						if (groupOfGw->DelDevice(groupOfGw->deviceList[j]->device, groupOfGw->deviceList[j]->device->GetAddr()) == CODE_OK)
+						if (groupOfGw->DelDevice(listGr[j]->device, listGr[j]->device->GetAddr()) == CODE_OK)
 						{
-							database->DeviceInGroupDel(groupOfGw, groupOfGw->deviceList[j]->device, groupOfGw->deviceList[j]->device->GetAddr());
-							groupJsonRsp["SUCCESS"].append(groupOfGw->deviceList[j]->device->GetId());
+							database->DeviceInGroupDel(groupOfGw, listGr[j]->device, listGr[j]->device->GetAddr());
+							groupJsonRsp["SUCCESS"].append(listGr[j]->device->GetId());
 						}
 						else
 						{
 							hasDeviceDelGroupFailed = true;
-							groupJsonRsp["FAILED"].append(groupOfGw->deviceList[j]->device->GetId());
+							groupJsonRsp["FAILED"].append(listGr[j]->device->GetId());
 						}
 					}
 					if (!hasDeviceDelGroupFailed)
@@ -1442,17 +1461,18 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				{
 					hasDeviceDelSceneFailed = false;
 					int numDevInScene = sceneOfGw->deviceList.size();
+					vector<DeviceInSceneBle *> listScensBle = sceneOfGw->deviceList;
 					for (int m = 0; m < numDevInScene; m++)
 					{
-						if (sceneOfGw->DelDevice(sceneOfGw->deviceList[m]->device) == CODE_OK)
+						if (sceneOfGw->DelDevice(listScensBle[m]->device) == CODE_OK)
 						{
-							database->DeviceInSceneBleDel(sceneOfGw, sceneOfGw->deviceList[m]->device);
-							sceneJsonRsp["SUCCESS"].append(sceneOfGw->deviceList[m]->device->GetId());
+							database->DeviceInSceneBleDel(sceneOfGw, listScensBle[m]->device);
+							sceneJsonRsp["SUCCESS"].append(listScensBle[m]->device->GetId());
 						}
 						else
 						{
 							hasDeviceDelSceneFailed = true;
-							sceneJsonRsp["FAILED"].append(sceneOfGw->deviceList[m]->device->GetId());
+							sceneJsonRsp["FAILED"].append(listScensBle[m]->device->GetId());
 						}
 					}
 					if (!hasDeviceDelSceneFailed)
@@ -2207,214 +2227,201 @@ int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_ERROR;
 }
 
-/*
-{
-	"CMD" : "STAIRS_SWITCH",
-	"DATA":
-	{
-		"DEVICE_ID" : "aaaaaaa-6f18-43c0-ae46-69c32998f653",
-		"LIST_BUTTON_LINK" : [
-			1,
-			2,
-			3,
-			4
-		]
-	}
-}
-
-{
-	"CMD": "STAIRS_SWITCH",
-	"DATA": {
-	"DEVICE_ID": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-	"SUCCESS": [
-		1,
-		2
-	],
-	"FAILED": [
-		3,
-		4
-	]
-	}
-}
-*/
 int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "STAIRS_SWITCH";
 		Json::Value dataJsonRsp = Json::objectValue;
+		string statusRsp = "SUCCESS";
+
 		Json::Value data = reqValue["DATA"];
-		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("LIST_BUTTON_LINK") && data["LIST_BUTTON_LINK"].isArray())
+		if (data.isMember("ID") && data["ID"].isString() && data.isMember("LIST_BUTTON_LINK") && data["LIST_BUTTON_LINK"].isArray())
 		{
-			string deviceId = data["DEVICE_ID"].asString();
-			Device *device = getDeviceFromId(deviceId);
-			if (device)
+			string groupId = data["ID"].asString();
+			dataJsonRsp["ID"] = groupId;
+			Group *group = getGroupFromId(groupId);
+			if (group == NULL)
+			{
+				int groupAddr = 1;
+				for (auto id = groupList.begin(); id != groupList.end(); ++id)
+				{
+					if (id->second->GetAddr() > groupAddr)
+						groupAddr = id->second->GetAddr() + 1;
+				}
+				group = new Group(groupId, groupAddr, groupId);
+				group = AddNewGroup(group, true, true);
+			}
+			if (group)
 			{
 				for (Json::ArrayIndex i = 0; i < data["LIST_BUTTON_LINK"].size(); i++)
 				{
-					int button = data["LIST_BUTTON_LINK"][i].asInt();
-					string groupRandom = Util::genRandRQI(16);
-					int groupAddr = 1;
-					for (const auto &[id, group] : groupList)
+					Json::Value deviceLink = data["LIST_BUTTON_LINK"][i];
+					if (deviceLink.isMember("DEVICE_ID") && deviceLink["DEVICE_ID"].isString() && deviceLink.isMember("BUTTON_ID") && deviceLink["BUTTON_ID"].isInt())
 					{
-						if (group->GetAddr() >= groupAddr)
+						string deviceLinkId = deviceLink["DEVICE_ID"].asString();
+						int buttonId = deviceLink["BUTTON_ID"].asInt();
+						Device *deviceParent = getDeviceFromId(deviceLinkId);
+						if (deviceParent)
 						{
-							groupAddr = group->GetAddr() + 1;
-						}
-					}
-					Group *group = new Group(groupRandom, groupAddr, groupRandom);
-					if (group)
-					{
-						if (AddNewGroup(group, true, true))
-						{
-							if (group->AddDevice(device, device->GetAddr() + button, true) == CODE_OK)
+							uint32_t addrParent = deviceParent->GetAddr();
+							Device *deviceChild = getDeviceBleFromAddr(addrParent + (buttonId - 11));
+							if (deviceChild)
 							{
-								database->DeviceInGroupAdd(group, device, device->GetAddr() + (button - 1));
-								dataJsonRsp["SUCCESS"].append(button);
+								uint32_t addrChild = deviceChild->GetAddr();
+								if (group->AddDevice(deviceParent, addrChild, true) == CODE_OK)
+								{
+									database->DeviceInGroupAdd(group, deviceParent, addrChild);
+									if (bleProtocol)
+									{
+										if (bleProtocol->SetIdCombine(addrChild, group->GetAddr() + 49152) != CODE_OK)
+											statusRsp = "FAILED";
+									}
+									else
+									{
+										statusRsp = "FAILED";
+										LOGW("BLEProtocol null");
+									}
+								}
+								else
+									statusRsp = "FAILED";
 							}
 							else
-							{
-								dataJsonRsp["FAILED"].append(button);
-							}
+								LOGW("Device %s not found", deviceChild->GetId().c_str());
 						}
 						else
-						{
-							delete group;
-						}
+							LOGW("Device %s not found", deviceLinkId.c_str());
 					}
 				}
 			}
 			else
 			{
-				LOGW("Device %s not found", deviceId.c_str());
+				LOGW("Group %s not found", groupId.c_str());
+				statusRsp = "FAILED";
 			}
 		}
+		dataJsonRsp["STATUS"] = statusRsp;
 		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
-/**
- *
-{
-	"CMD": "EDIT_STAIRS_SWITCH",
-	"DATA": {
-	"DEVICE_ID": "aaaaaaa-6f18-43c0-ae46-69c32998f653",
-	"ADD_BUTTON": [
-		1,
-		2
-	],
-	"REMOVE_BUTTON": [
-		3,
-		4
-	]
-	}
-}
-
-{
-	"CMD": "EDIT_STAIRS_SWITCH",
-	"DATA": {
-	"DEVICE_ID": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-	"SUCCESS": [
-		1,
-		2
-	],
-	"FAILED": [
-		3,
-		4
-	]
-	}
-}
-*/
 int Gateway::OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
-		Json::Value &data = reqValue["DATA"];
 		respValue["CMD"] = "EDIT_STAIRS_SWITCH";
 		Json::Value dataJsonRsp = Json::objectValue;
-		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() && data.isMember("ADD_BUTTON") && data["ADD_BUTTON"].isArray() && data.isMember("REMOVE_BUTTON") && data["REMOVE_BUTTON"].isArray())
+		string statusRsp = "SUCESS";
+
+		Json::Value &data = reqValue["DATA"];
+		if (data.isMember("ID") && data["ID"].isString())
 		{
-			string deviceId = data["DEVICE_ID"].asString();
-			uint16_t groupMesh;
-			Device *device = getDeviceFromId(deviceId);
-			Group *group = NULL;
-			if (device)
+			string groupId = data["ID"].asString();
+			dataJsonRsp["ID"] = groupId;
+			Group *group = getGroupFromId(groupId);
+			if (group)
 			{
-				for (const auto &[id, groupPtr] : groupList)
+				if (data.isMember("ADD_BUTTON") && data["ADD_BUTTON"].isArray())
 				{
-					for (const auto &deviceInGroup : groupPtr->deviceList)
+					for (Json::ArrayIndex i = 0; i < data["ADD_BUTTON"].size(); i++)
 					{
-						if (deviceInGroup->device->GetId() == deviceId)
+						Json::Value deviceAdd = data["ADD_BUTTON"][i];
+						if (deviceAdd.isMember("DEVICE_ID") && deviceAdd["DEVICE_ID"].isString() && deviceAdd.isMember("BUTTON_ID") && deviceAdd["BUTTON_ID"].isInt())
 						{
-							group = groupPtr;
-							groupMesh = groupPtr->GetAddr();
-							break;
+							string deviceAddId = deviceAdd["DEVICE_ID"].asString();
+							int buttonId = deviceAdd["BUTTON_ID"].asInt();
+							Device *deviceAddParent = getDeviceFromId(deviceAddId);
+							if (deviceAddParent)
+							{
+								uint32_t addrParent = deviceAddParent->GetAddr();
+								Device *deviceAddChild = getDeviceBleFromAddr(addrParent + (buttonId - 11));
+								if (deviceAddChild)
+								{
+									uint32_t addrChild = deviceAddChild->GetAddr();
+									if (group->AddDevice(deviceAddParent, addrChild, true) == CODE_OK)
+									{
+										database->DeviceInGroupAdd(group, deviceAddParent, addrChild);
+										if (bleProtocol)
+										{
+											if (bleProtocol->SetIdCombine(addrChild, group->GetAddr() + 49152) != CODE_OK)
+												statusRsp = "FAILED";
+										}
+										else
+										{
+											statusRsp = "FAILED";
+											LOGW("BLEProtocol null");
+										}
+									}
+									else
+										statusRsp = "FAILED";
+								}
+								else
+									LOGW("Device %s not found", deviceAddChild->GetId().c_str());
+							}
+							else
+								LOGW("Device %s not found", deviceAddId.c_str());
 						}
 					}
 				}
-				Json::Value buttonsAdd = data["ADD_BUTTON"];
-				for (int n = 0; n < buttonsAdd.size(); n++)
+
+				if (data.isMember("REMOVE_BUTTON") && data["REMOVE_BUTTON"].isArray())
 				{
-					if (buttonsAdd[n].isInt())
+					for (Json::ArrayIndex i = 0; i < data["REMOVE_BUTTON"].size(); i++)
 					{
-						int button = buttonsAdd[n].asInt();
-						if (group->AddDevice(device, device->GetAddr() + button, true) == CODE_OK)
+						Json::Value deviceRemove = data["REMOVE_BUTTON"][i];
+						if (deviceRemove.isMember("DEVICE_ID") && deviceRemove["DEVICE_ID"].isString() && deviceRemove.isMember("BUTTON_ID") && deviceRemove["BUTTON_ID"].isInt())
 						{
-							database->DeviceInGroupAdd(group, device, device->GetAddr() + (button - 1));
-							dataJsonRsp["SUCCESS"].append(button);
-						}
-						else
-						{
-							dataJsonRsp["FAILED"].append(button);
-						}
-					}
-				}
-				Json::Value buttonsRemove = data["REMOVE_BUTTON"];
-				for (int m = 0; m < buttonsRemove.size(); m++)
-				{
-					if (buttonsRemove[m].isInt())
-					{
-						int buttonRv = buttonsRemove[m].asInt();
-						if (group->DelDevice(device, device->GetAddr() + buttonRv) == CODE_OK)
-						{
-							database->DeviceInGroupDel(group, device, device->GetAddr() + (buttonRv - 1));
-							dataJsonRsp["SUCCESS"].append(buttonRv);
-						}
-						else
-						{
-							dataJsonRsp["FAILED"].append(buttonRv);
+							string deviceRemoveId = deviceRemove["DEVICE_ID"].asString();
+							int buttonId = deviceRemove["BUTTON_ID"].asInt();
+							Device *deviceRemoveParent = getDeviceFromId(deviceRemoveId);
+							if (deviceRemoveParent)
+							{
+								uint32_t addrParent = deviceRemoveParent->GetAddr();
+								Device *deviceRemoveChild = getDeviceBleFromAddr(addrParent + (buttonId - 11));
+								if (deviceRemoveChild)
+								{
+									uint32_t addrChild = deviceRemoveChild->GetAddr();
+									if (group->DelDevice(deviceRemoveParent, addrChild) == CODE_OK)
+									{
+										database->DeviceInGroupDel(group, deviceRemoveParent, addrChild);
+										if (bleProtocol)
+										{
+											if (bleProtocol->SetIdCombine(addrChild, 0) != CODE_OK)
+												statusRsp = "FAILED";
+										}
+										else
+										{
+											statusRsp = "FAILED";
+											LOGW("BLEProtocol null");
+										}
+									}
+									else
+										statusRsp = "FAILED";
+								}
+								else
+									LOGW("Device %s not found", deviceRemoveChild->GetId().c_str());
+							}
+							else
+								LOGW("Device %s not found", deviceRemoveId.c_str());
 						}
 					}
 				}
 			}
 			else
 			{
-				LOGW("Device %s not found", deviceId.c_str());
+				LOGW("Group %s not found", groupId.c_str());
+				statusRsp = "FAILED";
 			}
 		}
+		dataJsonRsp["STATUS"] = statusRsp;
 		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
-/**
-{
-	"CMD": "DELETE_STAIRS_SWITCH",
-	"DATA": {
-	"DEVICE_ID": "aaaaaaa-6f18-43c0-ae46-69c32998f653"
-	}
-}
-
-{
-	"CMD": "DELETE_STAIRS_SWITCH",
-	"DATA": {
-	"DEVICE_ID": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-	"STATUS": "SUCCESS"
-	}
-}
-
-*/
 int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
@@ -2422,62 +2429,50 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value &data = reqValue["DATA"];
 		respValue["CMD"] = "DELETE_STAIRS_SWITCH";
 		Json::Value dataJsonRsp = Json::objectValue;
-		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		string statusRsp = "SUCCESS";
+
+		if (data.isMember("GROUP_ID") && data["GROUP_ID"].isString())
 		{
-			string deviceId = data["DEVICE_ID"].asString();
-			dataJsonRsp["DEVICE_ID"] = deviceId;
-			Device *device = getDeviceFromId(deviceId);
-			uint16_t groupMesh;
-			Group *group = NULL;
-			for (const auto &[id, groupPtr] : groupList)
+			string groupId = data["GROUP_ID"].asString();
+			dataJsonRsp["ID"] = groupId;
+			Group *group = getGroupFromId(groupId);
+			if (group)
 			{
-				for (const auto &deviceInGroup : groupPtr->deviceList)
+				int numDevices = group->deviceList.size();
+				vector <DeviceInGroup *> list = group->deviceList;
+				for (int i = 0; i < numDevices; i++)
 				{
-					if (deviceInGroup->device->GetId() == deviceId)
+					if (group->DelDevice(list[i]->device, list[i]->epId) == CODE_OK)
 					{
-						group = groupPtr;
-						groupMesh = groupPtr->GetAddr();
-						break;
+						database->DeviceInGroupDel(group, list[i]->device, list[i]->epId);
+						if (bleProtocol)
+						{
+							if (bleProtocol->SetIdCombine(list[i]->device->GetAddr(), 0) != CODE_OK)
+								statusRsp = "FAILED";
+						}
+						else
+						{
+							statusRsp = "FAILED";
+							LOGW("BLEProtocol null");
+						}
 					}
 				}
-			}
-			// TODO: Check group NULL
-			if (device)
-			{
-				int numberButtons = 0;
-				uint16_t type = device->GetType();
-				switch (type)
+				if (statusRsp == "SUCCESS")
 				{
-				case BLE_SWITCH_RGB_1:
-					numberButtons = 1;
-					break;
-				case BLE_SWITCH_RGB_2:
-					numberButtons = 2;
-					break;
-				case BLE_SWITCH_RGB_3:
-					numberButtons = 3;
-					break;
-				case BLE_SWITCH_RGB_4:
-					numberButtons = 4;
-					break;
-				}
-				for (int i = 0; i < numberButtons; i++)
-				{
-					if (group->DelDevice(device, device->GetAddr() - i) == CODE_OK)
-					{
-						database->DeviceInGroupDel(group, device, device->GetAddr() - i);
-					}
+					delGroup(group);
 				}
 			}
 			else
 			{
-				LOGW("Device %s not found", deviceId.c_str());
+				LOGW("Group %s not found", groupId.c_str());
+				statusRsp = "FAILED";
 			}
 		}
-		dataJsonRsp["STATUS"] = "SUCCESS";
+		dataJsonRsp["STATUS"] = statusRsp;
 		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
 	}
-	return CODE_OK;
+	return CODE_ERROR;
 }
 /**
  * @brief
@@ -2591,6 +2586,8 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				device->DoJsonArray(properties);
+				// respValue = reqValue;
+				// return CODE_OK;
 			}
 			else
 			{
@@ -2606,8 +2603,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	respValue = reqValue;
-	return CODE_OK;
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
@@ -2642,7 +2638,7 @@ int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		LOGW("Format error");
 	}
-	return CODE_ERROR;
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue)
@@ -2683,7 +2679,7 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return CODE_OK;
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
@@ -2913,6 +2909,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString() && dataValue.isMember("START_AT") && dataValue["START_AT"].isString() && dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString())
 		{
 			string name;
+			uint32_t addr = 0;
 			string eventTriggerId = dataValue["EVENT_TRIGGER_ID"].asString();
 			string startAt = dataValue["START_AT"].asString();
 			string sceneId = dataValue["SCENE_ID"].asString();
@@ -2952,7 +2949,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, 0, name, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
+				rule = new Rule(eventTriggerId, addr, name, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleList[eventTriggerId] = rule;

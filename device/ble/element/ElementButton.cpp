@@ -26,6 +26,22 @@ void ElementButton::SaveAttribute()
 }
 #endif
 
+int ElementButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			bt = dataValue["VALUE"].asInt();
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			return CODE_OK;
+		}
+	}
+	return CODE_ERROR;
+}
+
 int ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct

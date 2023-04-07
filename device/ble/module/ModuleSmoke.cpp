@@ -17,18 +17,38 @@ ModuleSmoke::ModuleSmoke(Device *device, uint32_t addr) : Module(device, addr)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleSmoke::InitAttribute(int id, double value)
 {
-	if (this->id == idTemp)
-		temp = value;
-	else if (this->id == idHum)
-		hum = value;
+	if (this->id == idSmoke)
+		smoke = value;
+	else if (this->id == idPower)
+		power = value;
 }
 
 void ModuleSmoke::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, idTemp, temp);
-	database->DeviceAttributeAddOrReplace(device, idHum, hum);
+	database->DeviceAttributeAddOrReplace(device, idSmoke, smoke);
+	database->DeviceAttributeAddOrReplace(device, idPower, power);
 }
 #endif
+
+int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idSmoke == id || this->idPower == id)
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				if (this->idSmoke == id)
+					smoke = dataValue["VALUE"].asInt();
+				else if (this->idPower == id)
+					power = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+	}
+	return CODE_ERROR;
+}
 
 int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
@@ -53,12 +73,12 @@ bool ModuleSmoke::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idSmoke == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
