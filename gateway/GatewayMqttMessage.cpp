@@ -1849,7 +1849,7 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 								return CODE_OK;
 							}
 						}
-						else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+						else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 						{
 							if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
 							{
@@ -1905,7 +1905,7 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 							return CODE_OK;
 						}
 					}
-					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+					else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 					{
 						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue) == 0)
 						{
@@ -1956,7 +1956,7 @@ int Gateway::OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue)
 							}
 						}
 					}
-					else if (device->GetType() == BLE_AC_SCENE_CONTACT)
+					else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 					{
 						for (int j = 1; j <= 6; j++)
 						{
@@ -2720,7 +2720,7 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 				}
 				dataJsonRsp["STATUS"] = status;
 				respValue["DATA"] = dataJsonRsp;
-				return -10;
+				return CODE_EXIT;
 			}
 			else
 			{
