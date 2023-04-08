@@ -51,7 +51,6 @@ public:
 
 	Json::Value GetRuleData();
 	string GetType();
-	bool isEnable;
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();

@@ -626,8 +626,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleLightOnoffCctDim(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
-		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, device_id, addr, type, version);
-		break;
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
 		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, data, addr, type, version);
@@ -1189,12 +1187,10 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 	{
 		LOGE("OnAddRuleV2 TP1");
 		string id = ruleValue["id"].asString();
-		string name = ruleValue["name"].asString();
 		string type = ruleValue["type"].asString();
 		int repeat = ruleValue["repeat"].asInt();
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValue = ruleValue["output"];
-
 		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("name") && ruleValue["name"].isString())

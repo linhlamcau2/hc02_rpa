@@ -173,9 +173,6 @@ private:
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 
-	// Cấu hình HC
-	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
-
 	// int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	// int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	// int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);

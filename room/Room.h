@@ -26,7 +26,6 @@ public:
 	vector<DeviceInRoom *> deviceList;
 	vector<SceneBle *> sceneBleList;
 	vector<Group *> groupList;
-	vector<string> dataConfig;
 
 	Room(string id, uint32_t addr, string name);
 

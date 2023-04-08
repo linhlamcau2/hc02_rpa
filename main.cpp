@@ -71,7 +71,8 @@ int main(int argc, char *argv[])
 		bleProtocol->ResetFactory();
 	}
 
-	string mac = Wifi::GetMacAddress();
+	// string mac = Wifi::GetMacAddress();
+	string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
 		config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());

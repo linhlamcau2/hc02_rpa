@@ -15,7 +15,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 			if (s == SQLITE_ROW)
 			{
 				index = 0;
-				string mac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				// string mac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
@@ -28,7 +28,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string refresh = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
-				gateway->setMac(mac);
+				// gateway->setMac(mac);
 				gateway->setId(id);
 				gateway->setName(name);
 				gateway->setVersion(version);
