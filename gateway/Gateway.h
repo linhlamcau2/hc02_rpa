@@ -189,6 +189,7 @@ private:
 	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
@@ -265,7 +266,7 @@ public:
 	Rule *AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase);
 	Rule *AddRuleV2(Json::Value &ruleValue);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
-	Room *AddNewRoom(Room *room);
+	Room *AddNewRoom(Room *room, bool addGateway, bool addDatabase);
 
 	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
 	int pushDeviceUpdateCloudV2(Json::Value &dataValue);

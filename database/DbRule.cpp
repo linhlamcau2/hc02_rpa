@@ -36,6 +36,13 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 							rule->UpdateData(ruledata);
 							rule->Check();
 						}
+						rule = gateway->AddRuleV2(ruleValue);
+						if (rule)
+						{
+							rule->SetStatus(enable);
+							rule->UpdateData(ruledata);
+							rule->Check();
+						}
 					}
 					else
 					{

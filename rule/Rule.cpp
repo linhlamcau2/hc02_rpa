@@ -136,12 +136,9 @@ void Rule::DelAllRuleOutput()
 
 void Rule::UpdateData(string data)
 {
-	this->data = data;
-}
-
-string Rule::GetData()
-{
-	return data;
+	Json::Value ruleValue;
+	ruleValue.parse(data);
+	this->ruleData = ruleValue;
 }
 
 bool Rule::GetStatus()

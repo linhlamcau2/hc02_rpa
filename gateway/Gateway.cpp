@@ -212,11 +212,11 @@ void Gateway::init()
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
+	database->RoomRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
 	database->SceneBleRead();
 	database->DeviceInSceneBleRead();
-	database->RoomRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
 	if (gateway->getId().compare("") == 0)
@@ -1062,11 +1062,18 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 	return sceneBle;
 }
 
-Room *Gateway::AddNewRoom(Room *room)
+Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
 {
 	if (room)
 	{
-		roomList[room->GetId()] = room;
+		if (addGateway)
+		{
+			roomList[room->GetId()] = room;
+		}
+		if (addDatabase)
+		{
+			database->RoomAdd(room);
+		}
 	}
 	return room;
 }
@@ -1177,7 +1184,7 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 {
 	// TODO: Check Rule id exist
-	LOGE("OnAddRuleV2");
+	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
 		ruleValue.isMember("name") && ruleValue["name"].isString() &&
 		ruleValue.isMember("type") && ruleValue["type"].isString() &&
@@ -1185,7 +1192,6 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
 		ruleValue.isMember("output") && ruleValue["output"].isObject())
 	{
-		LOGE("OnAddRuleV2 TP1");
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
 		int repeat = ruleValue["repeat"].asInt();

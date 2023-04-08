@@ -28,7 +28,6 @@ private:
 	Json::Value ruleData;
 	string type;
 	string name;
-	string data;
 	
 	unsigned char repeater;
 	bool fullDay;
@@ -59,7 +58,6 @@ public:
 	void RunOutput();
 
 	void UpdateData(string data);
-	string GetData();
 	bool GetStatus();
 	void SetStatus(bool enable);
 };
