@@ -8,8 +8,8 @@
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
 	this->mac = mac;
-	subTopicV1 = "v1/server/hc/" + mac + "/json";
-	pubTopicV1 = "v1/hc/" + mac + "/server/json";
+	subTopicV1 = "/v1/server/hc/" + mac + "/json";
+	pubTopicV1 = "/v1/hc/" + mac + "/server/json";
 
 	subReqTopicV2 = "v2/json/req/server/" + mac;
 	subRespTopicV2 = "v2/json/resp/server/" + mac;
