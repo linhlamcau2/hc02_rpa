@@ -35,13 +35,13 @@ BleProtocol::~BleProtocol()
 
 void BleProtocol::init()
 {
+	addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
 	if (pthread_mutex_init(&mutex, NULL) != 0)
 	{
 		LOGE("Failed to initialize the mutex");
 	}
 	Uart::init();
 	usleep(100000); // wait uart rx thread start
-	addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
 }
 
 void BleProtocol::InitKey()

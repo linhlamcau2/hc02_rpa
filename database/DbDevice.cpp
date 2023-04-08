@@ -31,9 +31,7 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				if (decode == "")
 				{
 					Json::Value devDataJson;
-					Json::Reader r;
-					r.parse(devData, devDataJson);
-					if (devDataJson.isObject())
+					if (devDataJson.parse(devData) && devDataJson.isObject())
 					{
 						uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
 						gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false);
