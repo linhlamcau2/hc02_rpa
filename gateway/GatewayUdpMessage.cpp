@@ -19,10 +19,10 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DORMITORY_ID") && reqValue["DORMITORY_ID"].isString())
 	{
 		string dormitoryId = reqValue["DORMITORY_ID"].asString();
-		if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
-		{
-			return CODE_ERROR;
-		}
+		// if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
+		// {
+		// 	return CODE_ERROR;
+		// }
 		string macGw = mac;
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c) { return c == ':'; }), macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";

@@ -36,8 +36,8 @@ public:
 	int AddDevice2(Device *device, bool sendBle);
 	int DelDevice(Device *device);
 	int DelDevice2(Device *device);
-	int AddGroup(Group *group);	
-	int AddSceneBle(SceneBle *sceneBle);	
+	int AddGroup(Group *group, bool isAddGateway, bool isAddDatabase);	
+	int AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase);	
 
 	string GetDataConfig();
 	void SetDataConfig(string dataConfig);

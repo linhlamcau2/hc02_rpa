@@ -171,22 +171,34 @@ void Room::SetDataConfig(string dataConfig)
 	this->dataConfig = dataConfig;
 }
 
-int Room::AddGroup(Group *group)
+int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
 {
-	if(GetPositionGroup(group) < 0)
+	if (GetPositionGroup(group) < 0)
 	{
-		groupList.push_back(group);
-		database->GroupUpdateRoom(group, id);
+		if (isAddGateway)
+		{
+			groupList.push_back(group);
+		}
+		if (isAddDatabase)
+		{
+			database->GroupUpdateRoom(group, id);
+		}		
 		return CODE_OK;
 	}
 	return CODE_ERROR;
 }
-int Room::AddSceneBle(SceneBle *sceneBle)
+int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 {
-	if(GetPositionSceneBle(sceneBle) < 0)
+	if (GetPositionSceneBle(sceneBle) < 0)
 	{
-		sceneBleList.push_back(sceneBle);
-		database->SceneBleUpdateRoom(sceneBle, id);
+		if (isAddGateway)
+		{
+			sceneBleList.push_back(sceneBle);
+		}
+		if (isAddDatabase)
+		{
+			database->SceneBleUpdateRoom(sceneBle, id);
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;

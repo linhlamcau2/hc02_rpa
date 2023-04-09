@@ -31,7 +31,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 							Room *room = gateway->getRoomFromId(roomId);
 							if (room)
 							{
-								room->AddSceneBle(sceneBle);
+								room->AddSceneBle(sceneBle, true, false);
 							}
 						}
 					}

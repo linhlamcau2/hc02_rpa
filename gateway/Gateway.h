@@ -190,6 +190,8 @@ private:
 	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);

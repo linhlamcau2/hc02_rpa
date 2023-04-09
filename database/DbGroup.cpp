@@ -29,7 +29,7 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 						Room *room = gateway->getRoomFromId(roomId);
 						if (room)
 						{
-							room->AddGroup(group);
+							room->AddGroup(group, true, false);
 						}
 					}
 				}

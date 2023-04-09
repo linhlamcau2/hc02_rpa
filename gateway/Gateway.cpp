@@ -199,7 +199,7 @@ void Gateway::delRoom(Room *room)
 
 void Gateway::init()
 {
-	CloudProtocol::init();
+	// CloudProtocol::init();
 	LocalProtocol::init();
 	Udp::init();
 
@@ -227,7 +227,7 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 
-	CloudConnect();
+	// CloudConnect();
 	LocalConnect();
 
 	// thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));

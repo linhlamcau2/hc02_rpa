@@ -77,6 +77,8 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("SSHRemote", bind(&Gateway::OnSSHRemote, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("getSceneIntoRoom", bind(&Gateway::OnGetSceneIntoRoom, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -631,7 +633,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 				Room *room = getRoomFromId(roomId);
 				if (room)
 				{
-					room->AddGroup(group);
+					room->AddGroup(group, true, true);
 				}
 			}
 			if (AddNewGroup(group, true, true))
@@ -900,7 +902,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				Room *room = getRoomFromId(roomId);
 				if (room)
 				{
-					room->AddSceneBle(scene);
+					room->AddSceneBle(scene, true, true);
 				}
 			}
 			if (AddNewSceneBle(scene, true, true))
@@ -1101,7 +1103,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			if (AddNewRoom(room, true, true))
 				if (group)
 					if (AddNewGroup(group, true, true))
-						room->AddGroup(group);
+						room->AddGroup(group, true, true);
 
 			for (auto &deviceValue : devices)
 			{
@@ -1404,5 +1406,75 @@ int Gateway::OnActionRule(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "actionRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("rooms") && reqValue["rooms"].isArray())
+	{
+		Json::Value rooms = reqValue["rooms"];
+		Json::Value roomsRsp;
+		for (auto &room : rooms)
+		{
+			if (room.isString())
+			{
+				string roomId = room.asString();
+				Room *temp_room = getRoomFromId(roomId);
+				if (temp_room)
+				{
+					Json::Value roomRsp;
+					roomRsp["id"] = roomId;
+					for (unsigned int i = 0; i < temp_room->groupList.size(); i++)
+					{
+						Json::Value groupRsp;
+						groupRsp["id"] = temp_room->groupList[i]->GetId();
+						groupRsp["name"] = temp_room->groupList[i]->GetName();
+						roomRsp["groups"].append(groupRsp);
+					}
+					respValue["data"]["rooms"].append(roomRsp);
+					respValue["data"]["code"] = CODE_OK;
+				}
+			}
+		}
+	}
+	else
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	respValue["cmd"] = "getGroupIntoRoomRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("rooms") && reqValue["rooms"].isArray())
+	{
+		Json::Value rooms = reqValue["rooms"];
+		Json::Value roomsRsp;
+		for (auto &room : rooms)
+		{
+			if (room.isString())
+			{
+				string roomId = room.asString();
+				Room *temp_room = getRoomFromId(roomId);
+				if (temp_room)
+				{
+					Json::Value roomRsp;
+					roomRsp["id"] = roomId;
+					for (unsigned int i = 0; i < temp_room->sceneBleList.size(); i++)
+					{
+						Json::Value sceneRsp;
+						sceneRsp["id"] = temp_room->sceneBleList[i]->GetId();
+						sceneRsp["name"] = temp_room->sceneBleList[i]->GetName();
+						roomRsp["scenes"].append(sceneRsp);
+					}
+					respValue["data"]["rooms"].append(roomRsp);
+					respValue["data"]["code"] = CODE_OK;
+				}
+			}
+		}
+	}
+	else
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	respValue["cmd"] = "getSceneIntoRoomRsp";
 	return CODE_OK;
 }

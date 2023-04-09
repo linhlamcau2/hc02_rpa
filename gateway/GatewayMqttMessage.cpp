@@ -618,7 +618,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 						Room *room = getRoomFromId(roomId);
 						if (room)
 						{
-							room->AddSceneBle(scene);
+							room->AddSceneBle(scene, true, true);
 						}
 					}
 					Json::Value groupList = dataValue["DEVICES"];
@@ -877,7 +877,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						jsonGroupRsp["GROUP_UNICAST_ID"] = groupAddr + 49152;
 						if (AddNewGroup(newGroup, true, true))
 						{
-							room->AddGroup(newGroup);
+							room->AddGroup(newGroup, true, true);
 							Json::Value data;
 							if (group.isMember("DEVICES") && group["DEVICES"].isArray())
 							{
@@ -941,7 +941,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						jsonSceneRsp["SCENE_UNICAST_ID"] = sceneAddr;
 						sceneInRoom = AddNewSceneBle(sceneInRoom, true, true);
-						room->AddScene(sceneInRoom);
+						room->AddSceneBle(sceneInRoom, true, true);
 					}
 
 					Json::Value groupsOfScene = scene["GROUPS"];
@@ -1593,7 +1593,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 						Room *room = getRoomFromId(roomId);
 						if (room)
 						{
-							room->AddGroup(group);
+							room->AddGroup(group, true, true);
 						}
 					}
 					respValue["CMD"] = "CREATE_GROUP";
