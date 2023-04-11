@@ -16,26 +16,27 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("VERSION_HC", bind(&Gateway::OnRpcVersionHc, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("SCAN", bind(&Gateway::OnRpcBleStartScan, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("STOP", bind(&Gateway::OnRpcBleStopScan, this, placeholders::_1, placeholders::_2));
+
+	// OnDeviceRpcCallbackRegister("SCAN", bind(&Gateway::OnRpcBleStartScan, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("STOP", bind(&Gateway::OnRpcBleStopScan, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("RESET_NODE", bind(&Gateway::OnRpcBleDelDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("RESET_BLE", bind(&Gateway::OnRpcBleReset, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("RESET_HC", bind(&Gateway::OnRpcResetFactory, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("RESET_HC", bind(&Gateway::OnRpcResetFactory, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("CREATE_ROOM", bind(&Gateway::OnRpcCreateRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRpcAddDevToRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("REMOVE_DEVICE_FROM_ROOM", bind(&Gateway::OnRpcRemoveDevFromRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_ROOM", bind(&Gateway::OnRpcDeleteRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("CHECK_ROOM", bind(&Gateway::OnRpcCheckRoom, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRpcAddGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_GROUP", bind(&Gateway::OnRpcDelGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_TO_GROUP", bind(&Gateway::OnRpcAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_DEVICE_FROM_GROUP", bind(&Gateway::OnRpcDelDeviceFromGroup, this, placeholders::_1, placeholders::_2));
 
-	OnDeviceRpcCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRpcStairsSwitch, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
-
 	OnDeviceRpcCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRpcAddSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRpcEditSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRpcDeleteSceneBle, this, placeholders::_1, placeholders::_2));
-
-	OnDeviceRpcCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRpcAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DelAllDevice", bind(&Gateway::OnRpcDelAllDevice, this, placeholders::_1, placeholders::_2));
@@ -43,7 +44,36 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("GROUP", bind(&Gateway::OnRpcControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("SCENE", bind(&Gateway::OnRpcControlSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRpcUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("SSHRemote", bind(&Gateway::OnRpcSSHRemote, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("REMOTE_SSH", bind(&Gateway::OnRpcSSHRemote, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("UPDATE_FIRMWARE", bind(&Gateway::OnRpcUpdateFirmware, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("SCENE_FOR_REMOTE", bind(&Gateway::OnRpcSetSceneForRemote, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_SCENE_FOR_REMOTE", bind(&Gateway::OnRpcDelSceneForRemote, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("RESET_REMOTE", bind(&Gateway::OnRpcResetRemote, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("CREATE_EVENT_TRIGGER", bind(&Gateway::OnRpcAddRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_EVENT_TRIGGER", bind(&Gateway::OnRpcEditRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EVENT_TRIGGER_STATUS", bind(&Gateway::OnRpcSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_EVENT_TRIGGER", bind(&Gateway::OnRpcDeleteRule, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("COUNTDOWN", bind(&Gateway::OnRpcCreateCountDown, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_COUNTDOWN", bind(&Gateway::OnRpcDelCountDown, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("CREATE_HCL", bind(&Gateway::OnRpcCreateHCL, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_HCL", bind(&Gateway::OnRpcEditHCL, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("HCL_RULE_STATUS", bind(&Gateway::OnRpcSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRpcStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
+
+	OnDeviceRpcCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
+
 
 	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
@@ -76,7 +106,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("GROUP", bind(&Gateway::OnRpcControlGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SCENE", bind(&Gateway::OnRpcControlSceneBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRpcUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnRpcSSHRemote, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("REMOTE_SSH", bind(&Gateway::OnRpcSSHRemote, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("UPDATE_FIRMWARE", bind(&Gateway::OnRpcUpdateFirmware, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SCENE_FOR_REMOTE", bind(&Gateway::OnRpcSetSceneForRemote, this, placeholders::_1, placeholders::_2));
@@ -106,9 +136,9 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
-
 	OnLocalCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
