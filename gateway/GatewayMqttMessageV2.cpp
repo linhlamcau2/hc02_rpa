@@ -316,43 +316,37 @@ int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetDeviceStatus");
-	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	if (reqValue.isMember("rooms") && reqValue["rooms"].isArray() && reqValue["rooms"].size() > 0)
 	{
-		Json::Value data = reqValue["data"];
-		if (data.isMember("rooms") && data["rooms"].isArray() && data["rooms"].size() > 0)
+		Json::Value roomsData;
+		Json::Value rooms = reqValue["rooms"];
+		for (auto &roomValue : rooms)
 		{
-			Json::Value roomsData;
-			Json::Value rooms = data["rooms"];
-			for (auto &roomValue : rooms)
+			Json::Value temp_roomsData;
+			if (roomValue.isString())
 			{
-				Json::Value temp_roomsData;
-				if (roomValue.isString())
+				string roomId = roomValue.asString();
+				temp_roomsData["id"] = roomId;
+				Room *temp_room = getRoomFromId(roomId);
+				if (temp_room)
 				{
-					string roomId = roomValue.asString();
-					temp_roomsData["id"] = roomId;
-					Room *temp_room = getRoomFromId(roomId);
-					if (temp_room)
+					Json::Value temp_devicesList;
+					for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
 					{
-						Json::Value temp_devicesList;
-						for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
-						{
-							DeviceInRoom *deviceInRoom = temp_room->deviceList[i];
-							string deviceId = deviceInRoom->device->GetId();
-							temp_devicesList.append(deviceId);
-						}
-						temp_roomsData["devices"] = temp_devicesList;
-						roomsData.append(temp_roomsData);
+						DeviceInRoom *deviceInRoom = temp_room->deviceList[i];
+						string deviceId = deviceInRoom->device->GetId();
+						temp_devicesList.append(deviceId);
 					}
-					else
-						respValue["data"]["code"] = CODE_NOT_FOUND_ROOM;
+					temp_roomsData["devices"] = temp_devicesList;
+					roomsData.append(temp_roomsData);
 				}
 				else
-					respValue["data"]["code"] = CODE_FORMAT_ERROR;
+					respValue["data"]["code"] = CODE_NOT_FOUND_ROOM;
 			}
-			respValue["data"]["rooms"] = roomsData;
+			else
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
 		}
-		else
-			respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		respValue["data"]["rooms"] = roomsData;
 	}
 	else
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
@@ -398,44 +392,38 @@ int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetDevListInScene");
-	if (reqValue.isMember("data") && reqValue["data"].isObject())
+	if (reqValue.isMember("scenes") && reqValue["scenes"].isArray() && reqValue["scenes"].size() > 0)
 	{
-		Json::Value data = reqValue["data"];
-		if (data.isMember("scenes") && data["scenes"].isArray() && data["scenes"].size() > 0)
+		Json::Value scenesList;
+		Json::Value scenes = reqValue["scenes"];
+		for (auto &sceneValue : scenes)
 		{
-			Json::Value scenesList;
-			Json::Value scenes = data["scenes"];
-			for (auto &sceneValue : scenes)
+			Json::Value scenesData;
+			if (sceneValue.isString())
 			{
-				Json::Value scenesData;
-				if (sceneValue.isString())
+				string sceneId = sceneValue.asString();
+				scenesData["id"] = sceneId;
+				SceneBle *temp_scene = getSceneBleFromId(sceneId);
+				if (temp_scene)
 				{
-					string sceneId = sceneValue.asString();
-					scenesData["id"] = sceneId;
-					SceneBle *temp_scene = getSceneBleFromId(sceneId);
-					if (temp_scene)
+					Json::Value temp_devicesList;
+					for (unsigned int i = 0; i < temp_scene->deviceList.size(); i++)
 					{
-						Json::Value temp_devicesList;
-						for (unsigned int i = 0; i < temp_scene->deviceList.size(); i++)
-						{
-							DeviceInSceneBle *deviceInSceneBle = temp_scene->deviceList[i];
-							string deviceId = deviceInSceneBle->device->GetId();
-							temp_devicesList.append(deviceId);
-						}
-						scenesData["devices"] = temp_devicesList;
+						DeviceInSceneBle *deviceInSceneBle = temp_scene->deviceList[i];
+						string deviceId = deviceInSceneBle->device->GetId();
+						temp_devicesList.append(deviceId);
 					}
-					else
-						respValue["data"]["code"] = CODE_NOT_FOUND_ROOM;
+					scenesData["devices"] = temp_devicesList;
 				}
 				else
-					respValue["data"]["code"] = CODE_FORMAT_ERROR;
-				scenesList.append(scenesData);
+					respValue["data"]["code"] = CODE_NOT_FOUND_ROOM;
 			}
-			respValue["data"]["scenes"] = scenesList;
+			else
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
+			scenesList.append(scenesData);
 		}
+		respValue["data"]["scenes"] = scenesList;
 	}
-	else
-		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getDevListInScene";
 	return CODE_OK;
