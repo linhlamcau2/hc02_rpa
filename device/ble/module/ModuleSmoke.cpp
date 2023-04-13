@@ -30,27 +30,7 @@ void ModuleSmoke::SaveAttribute()
 }
 #endif
 
-int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-{
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->idSmoke == id || this->idPower == id)
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				if (this->idSmoke == id)
-					smoke = dataValue["VALUE"].asInt();
-				else if (this->idPower == id)
-					power = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-	}
-	return CODE_ERROR;
-}
-
-int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52 && data[1] == 0x08 && data[2] == 0x01)
 	{

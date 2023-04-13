@@ -37,7 +37,7 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 					{
 						LOGW("Decode data error: %s", data.c_str());
 					}
-					if (!gateway->AddNewRoom(room))
+					if (!gateway->AddNewRoom(room, true, false))
 					{
 						LOGE("Add new room failed");
 					}
@@ -64,7 +64,7 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','');";
 	return Sqlite_Exec(sql);
 }
 

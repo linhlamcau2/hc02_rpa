@@ -4,23 +4,25 @@
 #include "Util.h"
 #include "Log.h"
 
-Rule::Rule(string id, uint32_t addr, string name, string type, unsigned char repeater) : Object(id, addr, name)
+Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
 	this->endTime = -1;
+	this->ruleData = ruleData;
 	count = 0;
 	lastTimeActive = 0;
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, uint32_t addr, string name, string type, unsigned char repeater, int startTime, int endTime) : Object(id, addr, name)
+Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
+	this->ruleData = ruleData;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
 	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
 	count = 0;
@@ -42,6 +44,16 @@ Rule::~Rule()
 		timerSchedule->UnregisterTimer(timerRegisterIndex);
 }
 
+Json::Value Rule::GetRuleData()
+{
+	return ruleData;
+}
+
+string Rule::GetType()
+{
+	return type;
+}
+
 void Rule::Check()
 {
 	if (isEnable)
@@ -55,7 +67,7 @@ void Rule::Check()
 		if (Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater)
 		{
 			LOGI("Check repeater day OK");
-			if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (endTime <= startTime && currentTimer <= endTime) || (endTime <= startTime && startTime <= currentTimer))
+			if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime))
 			{
 				LOGI("Check time OK");
 				if (type == "or")
@@ -124,12 +136,9 @@ void Rule::DelAllRuleOutput()
 
 void Rule::UpdateData(string data)
 {
-	this->data = data;
-}
-
-string Rule::GetData()
-{
-	return data;
+	Json::Value ruleValue;
+	ruleValue.parse(data);
+	this->ruleData = ruleValue;
 }
 
 bool Rule::GetStatus()

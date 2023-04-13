@@ -19,13 +19,21 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				string sceneId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneId);
 				if (!sceneBle)
 				{
 					sceneBle = new SceneBle(sceneId, addr, name);
 					if (sceneBle)
 					{
-						gateway->AddNewSceneBle(sceneBle, true, false);
+						if (gateway->AddNewSceneBle(sceneBle, true, false))
+						{
+							Room *room = gateway->getRoomFromId(roomId);
+							if (room)
+							{
+								room->AddSceneBle(sceneBle, true, false);
+							}
+						}
 					}
 				}
 			}
@@ -57,6 +65,12 @@ int Db::SceneBleAdd(SceneBle *scene)
 int Db::SceneBleUpdate(SceneBle *scene)
 {
 	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(scene->GetAddr()) + " AND name='" + scene->GetName() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::SceneBleUpdateRoom(SceneBle *scene, string roomId)
+{
+	string sql = "UPDATE " TABLE_NAME " SET room_id='" + roomId + "' WHERE scene_ble_id ='" + scene->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
