@@ -12,7 +12,7 @@ ModuleNotifyScene::ModuleNotifyScene(Device *device, uint32_t addr) : Module(dev
     idScene = 0;
 }
 
-int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     typedef struct __attribute__((packed))
     {

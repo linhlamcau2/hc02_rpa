@@ -57,19 +57,32 @@ int DeviceBle::BuildTelemetryValueV2(Json::Value &pushDataValue)
 	return CODE_OK;
 }
 
-void DeviceBle::InputData(Json::Value &dataValue)
+void DeviceBle::Getstatus(Json::Value &jsonValue)
 {
-	values = Json::Value::null;
 	for (auto &module : modules)
 	{
-		module->InputData(dataValue, values);
+		module->BuildTelemetryValueV2(jsonValue);
 	}
 	for (auto &element : elements)
 	{
-		element->InputData(dataValue, values);
+		element->BuildTelemetryValueV2(jsonValue);
+	}
+}
+
+void DeviceBle::InputData(Json::Value &dataValue)
+{
+	values = Json::Value::null;
+	valuesV2 = Json::Value::null;
+	for (auto &module : modules)
+	{
+		module->InputData(dataValue, values, valuesV2);
+	}
+	for (auto &element : elements)
+	{
+		element->InputData(dataValue, values, valuesV2);
 	}
 	if (!values.isNull())
-		PushTelemetry(values);
+		PushTelemetry(values, valuesV2);
 }
 
 void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
@@ -77,18 +90,18 @@ void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 	values = Json::Value::null;
 	for (auto &module : modules)
 	{
-		if (module->InputData(data, len, values) == CODE_OK)
+		if (module->InputData(data, len, values, valuesV2) == CODE_OK)
 			break;
 	}
 	for (auto &element : elements)
 	{
 		if (element->CheckAddr(addr))
 		{
-			if (element->InputData(data, len, values) == CODE_OK)
+			if (element->InputData(data, len, values, valuesV2) == CODE_OK)
 				break;
 		}
 	}
-	PushTelemetry(values);
+	PushTelemetry(values, valuesV2);
 }
 
 bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)

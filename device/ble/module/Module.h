@@ -24,7 +24,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	virtual int InputData(Json::Value &dataValue, Json::Value &jsonValue) { return CODE_ERROR; }
+	virtual int InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2) { return CODE_ERROR; }
 
 	/**
 	 * @brief Parse raw data to element parameter value
@@ -35,7 +35,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	virtual int InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2) { return false; }
+	virtual int InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2) { return CODE_ERROR; }
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	/**

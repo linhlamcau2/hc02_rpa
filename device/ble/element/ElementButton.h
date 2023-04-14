@@ -40,7 +40,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	bool InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2);
+	int InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2);
 
 	/**
 	 * @brief Check rule input

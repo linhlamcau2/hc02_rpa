@@ -107,41 +107,6 @@ void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
 	InputData(data, len, addr);
 }
 
-void Device::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	valuesV2 = Json::Value::null;
-	for (auto &module : modules)
-	{
-		if (module->InputData(data, len, values, valuesV2) == CODE_OK)
-		{
-			break;
-		}
-	}
-	for (auto &element : elements)
-	{
-		if (element->InputData(data, len, values, valuesV2) == CODE_OK)
-			break;
-	}
-	PushTelemetry(values, valuesV2);
-}
-
-bool Device::CheckData(Json::Value &dataValue, bool &rs)
-{
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	for (auto &module : modules)
-	{
-		if (module->CheckData(dataValue, rs) == CODE_OK)
-			return true;
-	}
-	for (auto &element : elements)
-	{
-		if (element->CheckData(dataValue, rs) == CODE_OK)
-			return true;
-	}
-	return false;
-}
-
 void Device::CheckTrigger()
 {
 	LOGD("CheckTrigger");
@@ -246,18 +211,6 @@ int Device::PushAttributes(Json::Value jsonValue)
 	if (jsonValue.isNull())
 		return CODE_ERROR;
 	return gateway->PublishToGatewayAttributes(jsonValue);
-}
-
-void Device::Getstatus(Json::Value &jsonValue)
-{
-	for (auto &module : modules)
-	{
-		module->BuildTelemetryValueV2(jsonValue);
-	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValueV2(jsonValue);
-	}
 }
 
 // TODO: remove

@@ -146,11 +146,7 @@ protected:
 	protocol_e protocol;
 	string data;
 	Json::Value values; // telemetry data
-
 	Json::Value valuesV2;
-
-	vector<Module *> modules;
-	vector<Element *> elements;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -197,8 +193,6 @@ public:
 	int PushAttributes();
 	int PushAttributes(Json::Value jsonValue);
 
-	void Getstatus(Json::Value &jsonValue);
-
 	static void InitDeviceModelList();
 	static void RegisterDeviceModel(uint32_t type, string model, string name);
 	static uint32_t ConvertModelToDeviceType(string model);
@@ -206,8 +200,9 @@ public:
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
 	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
+	virtual void Getstatus(Json::Value &jsonValue){}
 
-	virtual void InputData(Json::Value &dataValue){};
+	virtual void InputData(Json::Value &dataValue){}
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0){};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 

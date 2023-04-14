@@ -56,7 +56,7 @@ void ModuleOnoffCctDim::SaveAttribute()
 //     return CODE_ERROR;
 // }
 
-int ModuleOnoffCctDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleOnoffCctDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     typedef struct __attribute__((packed))
     {

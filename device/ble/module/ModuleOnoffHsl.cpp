@@ -63,7 +63,7 @@ void ModuleOnoffHsl::SaveAttribute()
 //     return CODE_ERROR;
 // }
 
-int ModuleOnoffHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleOnoffHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     typedef struct __attribute__((packed))
     {
