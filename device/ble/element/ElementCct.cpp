@@ -25,23 +25,7 @@ void ElementCct::SaveAttribute()
 }
 #endif
 
-int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-{
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			cct = (dataValue["VALUE"].asInt() * 192) + 800;
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
-	}
-	return CODE_ERROR;
-}
-
-int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -54,8 +38,23 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data_message->opcode == BLE_MESH_OPCODE_CCT)
 	{
 		if (len <= 6)
-			cct = data_message->cct_first;
+		{
+			if(cct != data_message->cct_first)
+			{
+				cct = data_message->cct_first;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
+		}
 		else
+		{
+			if(cct != data_message->cct)
+			{
+				cct = data_message->cct;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
+		}
 			cct = data_message->cct;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
@@ -123,7 +122,7 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 
 void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_CCT] = cct;
+	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
 }
 
 int ElementCct::Do(Json::Value &dataValue)

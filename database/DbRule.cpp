@@ -21,6 +21,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				int type = sqlite3_column_int(stmt, index++);
 				bool enable = sqlite3_column_blob(stmt, index++);
 				int addr = sqlite3_column_int(stmt, index++);
+				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);
 				if (decode == "")
@@ -28,7 +29,14 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 					Json::Value ruleValue;
 					if (ruleValue.parse(ruledata) && ruleValue.isObject())
 					{
-						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						Rule *rule = gateway->AddRule(ruleValue, name, true, false);
+						if (rule)
+						{
+							rule->SetStatus(enable);
+							rule->UpdateData(ruledata);
+							rule->Check();
+						}
+						rule = gateway->AddRuleV2(ruleValue);
 						if (rule)
 						{
 							rule->SetStatus(enable);

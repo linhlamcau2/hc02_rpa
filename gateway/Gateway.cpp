@@ -213,11 +213,11 @@ void Gateway::init()
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
+	database->RoomRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
 	database->SceneBleRead();
 	database->DeviceInSceneBleRead();
-	database->RoomRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
 	if (gateway->getId().compare("") == 0)
@@ -775,7 +775,7 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 	return group;
 }
 
-Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
+Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
 		ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
@@ -850,7 +850,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, 0, name, type, repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt));
+				rule = new Rule(id, type, repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
 				if (!rule)
 				{
 					LOGW("New rule error");
@@ -871,7 +871,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				type = "and";
 			}
-			rule = new Rule(id, 0, name, type, repeat);
+			rule = new Rule(id, type, repeat, "", 0, ruleValue);
 			if (!rule)
 			{
 				LOGW("New rule error");
@@ -1032,7 +1032,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RuleAdd(rule, ruleStr, 1);
+				database->RuleAdd(rule, ruleStr, status);
 			}
 		}
 		return rule;
@@ -1067,11 +1067,18 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 	return sceneBle;
 }
 
-Room *Gateway::AddNewRoom(Room *room)
+Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
 {
 	if (room)
 	{
-		roomList[room->GetId()] = room;
+		if (addGateway)
+		{
+			roomList[room->GetId()] = room;
+		}
+		if (addDatabase)
+		{
+			database->RoomAdd(room);
+		}
 	}
 	return room;
 }
@@ -1182,7 +1189,9 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 {
 	// TODO: Check Rule id exist
+	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
 		ruleValue.isMember("type") && ruleValue["type"].isString() &&
 		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
 		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
@@ -1193,7 +1202,6 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		int repeat = ruleValue["repeat"].asInt();
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValue = ruleValue["output"];
-
 		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("name") && ruleValue["name"].isString())
@@ -1210,12 +1218,14 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
-				rule = new Rule(id, 0, name, type, repeat, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime));
+				rule = new Rule(id, type, repeat, name, 0, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), ruleValue);
+				ruleList[rule->GetId()] = rule;
 			}
 		}
 		if (!rule)
 		{
-			rule = new Rule(id, 0, name, type, repeat);
+			rule = new Rule(id, type, repeat, name, 0, ruleValue);
+			ruleList[rule->GetId()] = rule;
 		}
 		if (!rule)
 		{
@@ -1251,7 +1261,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
 						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
-						string mac = deviceRuleInputValue["mac"].asString();
+						string id = deviceRuleInputValue["id"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];
 						Device *device = gateway->getDeviceFromMac(mac);
 						if (device)
@@ -1305,6 +1315,27 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 						{
 							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
 							rule->AddRuleOutput(ruleOutputGroup);
+						}
+					}
+				}
+			}
+		}
+		if (outputValue.isMember("scene") && outputValue["scene"].isArray())
+		{
+			Json::Value sceneRuleOutputList = outputValue["scene"];
+			for (Json::Value::ArrayIndex i = 0; i < sceneRuleOutputList.size(); i++)
+			{
+				Json::Value sceneRuleOutputValue = sceneRuleOutputList[i];
+				if (sceneRuleOutputValue.isObject())
+				{
+					if (sceneRuleOutputValue.isMember("id") && sceneRuleOutputValue["id"].isInt())
+					{
+						int addr = sceneRuleOutputValue["id"].asInt();
+						SceneBle *scene = gateway->getSceneBleFromAddr(addr);
+						if (scene)
+						{
+							RuleOutputSceneBle *ruleOutputScene = new RuleOutputSceneBle(scene);
+							rule->AddRuleOutput(ruleOutputScene);
 						}
 					}
 				}

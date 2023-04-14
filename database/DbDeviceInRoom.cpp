@@ -19,9 +19,12 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				Room *room = gateway->getRoomFromId(roomId);
 				Device *device = gateway->getDeviceFromId(deviceId);
-				if (room && device)
+				if (room)
 				{
-					room->AddDevice(device, false);
+					if (device)
+					{
+						room->AddDevice(device, false);
+					}
 				}
 			}
 			else if (s == SQLITE_DONE)

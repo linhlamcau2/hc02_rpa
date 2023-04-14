@@ -25,26 +25,7 @@ void ModuleLightSensor::SaveAttribute()
 }
 #endif
 
-int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-{
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				lux = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-		}
-	}
-	return CODE_ERROR;
-}
-
-int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52)
 	{
@@ -59,10 +40,27 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			lux = (data_message->lux);
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
-			return CODE_OK;
+			return false;
+		}
+		else if (data[1] == 0x05 && data[2] == 0x00)
+		{
+			typedef struct __attribute__((packed))
+			{
+				uint16_t pir;
+				uint16_t scene;
+				uint16_t lux;
+			} data_message_t;
+			data_message_t *data_message = (data_message_t *)&data[3];
+			lux = (data_message->lux);
+			if (lux > 0)
+			{
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return false;
+			}
 		}
 	}
-	return CODE_ERROR;
+	return true;
 }
 
 bool ModuleLightSensor::CheckData(Json::Value &dataValue, bool &rs)

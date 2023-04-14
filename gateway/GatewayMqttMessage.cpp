@@ -382,7 +382,7 @@ int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			string eventId = dataValue["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = eventId;
-			Rule *rule = AddRule(dataValue, true, true);
+			Rule *rule = AddRule(dataValue, "", true, true);
 			if (rule)
 			{
 				dataJsonRsp["STATUS"] = "SUCCESS";
@@ -414,7 +414,7 @@ int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
 			{
 				rule->DelAllRuleInput();
 				rule->DelAllRuleOutput();
-				rule = AddRule(dataValue, true, true);
+				rule = AddRule(dataValue, "", true, true);
 				if (rule)
 				{
 					dataJsonRsp["STATUS"] = "SUCCESS";
@@ -535,7 +535,7 @@ int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 				outputGroup["GROUP_ID"] = groupId;
 				outputGroup["PROPERTIES"] = properties;
 				dataAddRule["OUTPUT_GROUPS"] = outputGroup;
-				Rule *rule = AddRule(dataAddRule, true, true);
+				Rule *rule = AddRule(dataAddRule, "", true, true);
 				if (rule)
 				{
 					dataJsonRsp["STATUS"] = "SUCCESS";
@@ -594,7 +594,7 @@ int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
 				{
 					rule->DelAllRuleInput();
 					rule->DelAllRuleOutput();
-					rule = AddRule(dataAddRule, true, true);
+					rule = AddRule(dataAddRule, "", true, true);
 					dataJsonRsp["STATUS"] = "SUCCESS";
 				}
 				else
@@ -642,6 +642,15 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 				scene = AddNewSceneBle(scene, true, true);
 				if (scene)
 				{
+					if (dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
+					{
+						string roomId = dataValue["ROOM_ID"].asString();
+						Room *room = getRoomFromId(roomId);
+						if (room)
+						{
+							room->AddSceneBle(scene, true, true);
+						}
+					}
 					Json::Value groupList = dataValue["DEVICES"];
 					for (Json::ArrayIndex i = 0; i < groupList.size(); i++)
 					{
@@ -849,6 +858,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value data = reqValue["DATA"];
 		if (data.isMember("GROUPS") && data["GROUPS"].isArray() && data.isMember("SCENES") && data["SCENES"].isArray())
 		{
+			Room *room = NULL;
 			Json::Value groups = data["GROUPS"];
 			respValue["CMD"] = "CREATE_ROOM";
 			Json::Value jsonDataRsp;
@@ -876,6 +886,20 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						isRoom = true;
 						roomId = groupId;
 						roomUnicast = groupAddr;
+						if (roomId != "")
+						{
+							room = getRoomFromId(roomId);
+							if (!room)
+							{
+								room = new Room(roomId, roomUnicast, "");
+								room = gateway->AddNewRoom(room, true, true);
+								// database->RoomAdd(room);
+							}
+							room->SetDataConfig(respValue.toString());
+							string ruleStr = respValue.toString();
+							ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+							database->RoomAdd(room);
+						}
 					}
 					Group *newGroup = new Group(groupId, groupAddr, groupName);
 					if (newGroup)
@@ -883,6 +907,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						jsonGroupRsp["GROUP_UNICAST_ID"] = groupAddr + 49152;
 						if (AddNewGroup(newGroup, true, true))
 						{
+							room->AddGroup(newGroup, true, true);
 							Json::Value data;
 							if (group.isMember("DEVICES") && group["DEVICES"].isArray())
 							{
@@ -946,6 +971,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						jsonSceneRsp["SCENE_UNICAST_ID"] = sceneAddr;
 						sceneInRoom = AddNewSceneBle(sceneInRoom, true, true);
+						room->AddSceneBle(sceneInRoom, true, true);
 					}
 
 					Json::Value groupsOfScene = scene["GROUPS"];
@@ -1011,20 +1037,6 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			respValue["DATA"] = jsonDataRsp;
-			if (roomId != "")
-			{
-				Room *room = getRoomFromId(roomId);
-				if (!room)
-				{
-					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
-					// database->RoomAdd(room);
-				}
-				room->SetDataConfig(respValue.toString());
-				string ruleStr = respValue.toString();
-				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RoomAdd(room);
-			}
 		}
 		else
 		{
@@ -1247,7 +1259,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 				if (!room)
 				{
 					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
+					room = gateway->AddNewRoom(room, true, true);
 					// database->RoomAdd(room);
 				}
 				room->SetDataConfig(respValue.toString());
@@ -1396,7 +1408,7 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 				if (!room)
 				{
 					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
+					room = gateway->AddNewRoom(room, true, true);
 					// database->RoomAdd(room);
 				}
 				room->SetDataConfig(respValue.toString());
@@ -1528,7 +1540,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				if (!room)
 				{
 					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
+					room = gateway->AddNewRoom(room, true, true);
 					// database->RoomAdd(room);
 				}
 				room->SetDataConfig(respValue.toString());
@@ -1605,6 +1617,15 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (AddNewGroup(group, true, true))
 				{
+					if (dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
+					{
+						string roomId = dataValue["ROOM_ID"].asString();
+						Room *room = getRoomFromId(roomId);
+						if (room)
+						{
+							room->AddGroup(group, true, true);
+						}
+					}
 					respValue["CMD"] = "CREATE_GROUP";
 					Json::Value data;
 					data["GROUP_ID"] = groupId;
@@ -2894,7 +2915,7 @@ int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 					room = new Room(roomId, group->GetAddr(), "");
 					if (room)
 					{
-						Room *roomAddGw = AddNewRoom(room);
+						Room *roomAddGw = AddNewRoom(room, true, true);
 						if (roomAddGw)
 						{
 							if (device)
@@ -2979,7 +3000,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, addr, name, "and", repeat, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""));
+				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleList[eventTriggerId] = rule;

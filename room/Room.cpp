@@ -1,6 +1,7 @@
 #include "Room.h"
 #include "Log.h"
 #include "BleProtocol.h"
+#include "Db.h"
 
 DeviceInRoom::DeviceInRoom(Device *device)
 {
@@ -21,7 +22,33 @@ int Room::GetPositionDevice(Device *device)
 			return i;
 		}
 	}
-	return -1;
+	return CODE_ERROR;
+}
+
+int Room::GetPositionGroup(Group *group)
+{
+	string id = group->GetId();
+	for (uint32_t i = 0; i < groupList.size(); i++)
+	{
+		if (id.compare(groupList[i]->GetId()) == CODE_OK)
+		{
+			return i;
+		}
+	}
+	return CODE_ERROR;
+}
+
+int Room::GetPositionSceneBle(SceneBle *sceneBle)
+{
+	string id = sceneBle->GetId();
+	for (uint32_t i = 0; i < sceneBleList.size(); i++)
+	{
+		if (id.compare(sceneBleList[i]->GetId()) == CODE_OK)
+		{
+			return i;
+		}
+	}
+	return CODE_ERROR;
 }
 
 /**
@@ -142,4 +169,37 @@ string Room::GetDataConfig()
 void Room::SetDataConfig(string dataConfig)
 {
 	this->dataConfig = dataConfig;
+}
+
+int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
+{
+	if (GetPositionGroup(group) < 0)
+	{
+		if (isAddGateway)
+		{
+			groupList.push_back(group);
+		}
+		if (isAddDatabase)
+		{
+			database->GroupUpdateRoom(group, id);
+		}		
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
+{
+	if (GetPositionSceneBle(sceneBle) < 0)
+	{
+		if (isAddGateway)
+		{
+			sceneBleList.push_back(sceneBle);
+		}
+		if (isAddDatabase)
+		{
+			database->SceneBleUpdateRoom(sceneBle, id);
+		}
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }

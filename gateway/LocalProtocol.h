@@ -54,5 +54,9 @@ public:
 	int PublishToLocalMessage(string &payload);
 	int PublishToLocalMessage(Json::Value &payloadJson);
 
+	int PublishToLocalMessageV2(string payload);
+	int PublishToLocalMessageV2(Json::Value payloadJson);
+
+    vector <string> listMsgPush;
 	int PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 1000);
 };

@@ -4,6 +4,7 @@
 #include <thread>
 #include <functional>
 #include <unistd.h>
+#include <Util.h>
 
 Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
@@ -106,6 +107,41 @@ void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
 	InputData(data, len, addr);
 }
 
+void Device::InputData(uint8_t *data, int len, uint32_t addr)
+{
+	values = Json::Value::null;
+	valuesV2 = Json::Value::null;
+	for (auto &module : modules)
+	{
+		if (module->InputData(data, len, values, valuesV2) == CODE_OK)
+		{
+			break;
+		}
+	}
+	for (auto &element : elements)
+	{
+		if (element->InputData(data, len, values, valuesV2) == CODE_OK)
+			break;
+	}
+	PushTelemetry(values, valuesV2);
+}
+
+bool Device::CheckData(Json::Value &dataValue, bool &rs)
+{
+	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	for (auto &module : modules)
+	{
+		if (module->CheckData(dataValue, rs) == CODE_OK)
+			return true;
+	}
+	for (auto &element : elements)
+	{
+		if (element->CheckData(dataValue, rs) == CODE_OK)
+			return true;
+	}
+	return false;
+}
+
 void Device::CheckTrigger()
 {
 	LOGD("CheckTrigger");
@@ -161,18 +197,36 @@ int Device::PushTelemetry()
 	return CODE_ERROR;
 }
 
-int Device::PushTelemetry(Json::Value jsonValue)
+int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 {
-	if (jsonValue.isNull())
-		return CODE_ERROR;
-	Json::Value pushDataValue;
-	Json::Value deviceData;
-	deviceData["DEVICE_ID"] = id;
-	deviceData["PROPERTIES"] = jsonValue;
-	pushDataValue["CMD"] = "DEVICE";
-	pushDataValue["DATA"].append(deviceData);
-	gateway->PublishToLocalMessage(pushDataValue);
-	return gateway->PublishToGatewayTelemetry(pushDataValue);
+	if (jsonValue.isNull() && jsonValueV2.isNull())
+		return -1;
+	if (jsonValue.isNull() == 0)
+	{
+		Json::Value pushDataValue;
+		Json::Value deviceData;
+		deviceData["DEVICE_ID"] = id;
+		deviceData["PROPERTIES"] = jsonValue;
+		pushDataValue["CMD"] = "DEVICE";
+		pushDataValue["DATA"].append(deviceData);
+		gateway->PublishToLocalMessage(pushDataValue);
+		gateway->PublishToGatewayTelemetry(pushDataValue);
+	}
+	if (jsonValueV2.isNull() == 0)
+	{
+		Json::Value pushDataValue;
+		Json::Value deviceData;
+		Json::Value devices;
+		Json::Value device;
+		deviceData["id"] = id;
+		deviceData["data"] = jsonValueV2;
+		devices["device"].append(deviceData);
+		pushDataValue["cmd"] = "deviceUpdate";
+		pushDataValue["rqi"] = Util::genRandRQI(16);
+		pushDataValue["data"] = devices;
+		gateway->PublishToLocalMessageV2(pushDataValue);
+	}
+	return 1;
 }
 
 int Device::PushAttributes()
@@ -192,6 +246,18 @@ int Device::PushAttributes(Json::Value jsonValue)
 	if (jsonValue.isNull())
 		return CODE_ERROR;
 	return gateway->PublishToGatewayAttributes(jsonValue);
+}
+
+void Device::Getstatus(Json::Value &jsonValue)
+{
+	for (auto &module : modules)
+	{
+		module->BuildTelemetryValueV2(jsonValue);
+	}
+	for (auto &element : elements)
+	{
+		element->BuildTelemetryValueV2(jsonValue);
+	}
 }
 
 // TODO: remove
