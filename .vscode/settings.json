@@ -7,6 +7,12 @@
         "iosfwd": "cpp",
         "iostream": "cpp",
         "functional": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "array": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp"
     }
 }

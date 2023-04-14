@@ -74,7 +74,6 @@ void Gateway::initMqttMessage()
 
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
 
-
 	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("VERSION_HC", bind(&Gateway::OnRpcVersionHc, this, placeholders::_1, placeholders::_2));
@@ -510,10 +509,10 @@ int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 		respValue["CMD"] = "EVENT_TRIGGER";
 		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
-				data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
-				data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
-				data.isMember("STATUS") && data["STATUS"].isInt() &&
-				data.isMember("STATES") && data["STATES"].isArray())
+			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
+			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
+			data.isMember("STATUS") && data["STATUS"].isInt() &&
+			data.isMember("STATES") && data["STATES"].isArray())
 		{
 			string evevtId = data["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
@@ -564,10 +563,10 @@ int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
 		respValue["CMD"] = "EDIT_EVENT_TRIGGER";
 		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
-				data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
-				data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
-				data.isMember("STATUS") && data["STATUS"].isInt() &&
-				data.isMember("STATES") && data["STATES"].isArray())
+			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
+			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
+			data.isMember("STATUS") && data["STATUS"].isInt() &&
+			data.isMember("STATES") && data["STATES"].isArray())
 		{
 			string evevtId = data["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
@@ -624,7 +623,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			string sceneId = dataValue["SCENE_ID"].asString();
 			dataJsonRsp["SCENE_ID"] = sceneId;
@@ -843,10 +842,16 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRpcCreateRoom %s", reqValue.toString().c_str());
 	bool isRoom = false;
 	string roomId = "";
+	string roomName = "";
 	int roomUnicast = 0;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
+		Room *room = NULL;
+		if (data.isMember("NAME") && data["NAME"].isString())
+		{
+			roomName = data["NAME"].asString();
+		}
 		if (data.isMember("GROUPS") && data["GROUPS"].isArray() && data.isMember("SCENES") && data["SCENES"].isArray())
 		{
 			Json::Value groups = data["GROUPS"];
@@ -876,6 +881,12 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						isRoom = true;
 						roomId = groupId;
 						roomUnicast = groupAddr;
+						room = getRoomFromId(roomId);
+						if (!room)
+						{
+							room = new Room(roomId, roomUnicast, roomName);
+							room = gateway->AddNewRoom(room);
+						}
 					}
 					Group *newGroup = new Group(groupId, groupAddr, groupName);
 					if (newGroup)
@@ -893,6 +904,11 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									Device *device = getDeviceFromId(deviceId);
 									if (device)
 									{
+										if (room)
+										{
+											room->AddDevice(device, false);
+											database->DeviceInRoomAdd(room, device);
+										}
 										int tempDeviceAddr = device->GetAddr();
 										if (newGroup->AddDevice(device, tempDeviceAddr, true) == CODE_OK)
 										{
@@ -1011,15 +1027,8 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			respValue["DATA"] = jsonDataRsp;
-			if (roomId != "")
+			if (room)
 			{
-				Room *room = getRoomFromId(roomId);
-				if (!room)
-				{
-					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
-					// database->RoomAdd(room);
-				}
 				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
@@ -1043,9 +1052,16 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 	bool isRoom = false;
 	string roomId = "";
 	int roomUnicast = 0;
+	Room *room = NULL;
+	string roomName = "";
+
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
+		if (data.isMember("NAME") && data["NAME"].isString())
+		{
+			roomName = data["NAME"].asString();
+		}
 		if (data.isMember("GROUPS") && data["GROUPS"].isArray() && data.isMember("SCENES") && data["SCENES"].isArray())
 		{
 			respValue["CMD"] = "ADD_DEVICE_TO_ROOM";
@@ -1072,6 +1088,12 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							isRoom = true;
 							roomId = groupId;
 							roomUnicast = groupOfGw->GetAddr();
+							room = getRoomFromId(roomId);
+							if (!room)
+							{
+								room = new Room(roomId, roomUnicast, roomName);
+								room = gateway->AddNewRoom(room);
+							}
 						}
 						for (Json::ArrayIndex j = 0; j < devicesInGroupAddRoom.size(); j++)
 						{
@@ -1079,6 +1101,11 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							Device *deviceAddtoRoom = gateway->getDeviceFromId(deviceIdGroup);
 							if (deviceAddtoRoom)
 							{
+								if (room)
+								{
+									room->AddDevice(deviceAddtoRoom, false);
+									database->DeviceInRoomAdd(room, deviceAddtoRoom);
+								}
 								int devAddr = deviceAddtoRoom->GetAddr();
 								listDevAddGroup.push_back(deviceIdGroup);
 								if (groupOfGw->AddDevice(deviceAddtoRoom, devAddr, true) == CODE_OK)
@@ -1135,6 +1162,11 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 									Device *device = getDeviceFromId(deviceIdScene);
 									if (device)
 									{
+										if (room)
+										{
+											room->AddDevice(device, false);
+											database->DeviceInRoomAdd(room, device);
+										}
 										int tempDeviceAddr = device->GetAddr();
 										listDevAddGroup.push_back(deviceIdScene);
 										if (newGroup->AddDevice(device, tempDeviceAddr, true) == CODE_OK)
@@ -1241,15 +1273,8 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			respValue["DATA"] = dataJsonRsp;
-			if (roomId != "" && roomUnicast != 0)
+			if (room)
 			{
-				Room *room = getRoomFromId(roomId);
-				if (!room)
-				{
-					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
-					// database->RoomAdd(room);
-				}
 				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
@@ -1270,6 +1295,7 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 	bool isRoom = false;
 	string roomId = "";
 	int roomUnicast = 0;
+	Room *room = NULL;
 
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
@@ -1300,6 +1326,13 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 							isRoom = true;
 							roomId = groupId;
 							roomUnicast = groupOfGw->GetAddr();
+							room = getRoomFromId(roomId);
+							if (!room)
+							{
+								room = new Room(roomId, roomUnicast, "");
+								room = gateway->AddNewRoom(room);
+								// database->RoomAdd(room);
+							}
 						}
 						if (groupDelRoom.isMember("DEVICES") && groupDelRoom["DEVICES"].isArray())
 						{
@@ -1310,6 +1343,11 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 								Device *deviceDelGroup = getDeviceFromId(deviceId);
 								if (deviceDelGroup)
 								{
+									if (room)
+									{
+										room->DelDevice(deviceDelGroup);
+										database->DeviceInRoomDel(room, deviceDelGroup);
+									}
 									int adrDev = deviceDelGroup->GetAddr();
 									if (groupOfGw->DelDevice(deviceDelGroup, adrDev) == CODE_OK)
 									{
@@ -1390,15 +1428,8 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 				sceneJsonRsp["FAILED"] = Json::arrayValue;
 			}
 			respValue["DATA"] = dataJsonRsp;
-			if (roomId != "" && roomUnicast != 0)
+			if (room)
 			{
-				Room *room = getRoomFromId(roomId);
-				if (!room)
-				{
-					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
-					// database->RoomAdd(room);
-				}
 				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
@@ -1419,6 +1450,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 	bool isRoom = false;
 	string roomId = "";
 	int roomUnicast = 0;
+	Room *room = NULL;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
@@ -1448,12 +1480,23 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 						isRoom = true;
 						roomId = groupId;
 						roomUnicast = groupOfGw->GetAddr();
+						room = getRoomFromId(roomId);
+						if (!room)
+						{
+							room = new Room(roomId, roomUnicast, "");
+							room = gateway->AddNewRoom(room);
+						}
 					}
 					hasDeviceDelGroupFailed = false;
 					int numDeviceInGroup = groupOfGw->deviceList.size();
 					vector<DeviceInGroup *> listGr = groupOfGw->deviceList;
 					for (int j = 0; j < numDeviceInGroup; j++)
 					{
+						if (room)
+						{
+							room->DelDevice(listGr[j]->device);
+							database->DeviceInRoomDel(room, listGr[j]->device);
+						}
 						if (groupOfGw->DelDevice(listGr[j]->device, listGr[j]->device->GetAddr()) == CODE_OK)
 						{
 							database->DeviceInGroupDel(groupOfGw, listGr[j]->device, listGr[j]->device->GetAddr());
@@ -1522,15 +1565,8 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				sceneJsonRsp["FAILED"] = Json::arrayValue;
 			}
 			respValue["DATA"] = dataJsonRsp;
-			if (roomId != "" && roomUnicast != 0)
+			if (room)
 			{
-				Room *room = getRoomFromId(roomId);
-				if (!room)
-				{
-					room = new Room(roomId, roomUnicast, "");
-					room = gateway->AddNewRoom(room);
-					// database->RoomAdd(room);
-				}
 				room->SetDataConfig(respValue.toString());
 				string ruleStr = respValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
@@ -1588,7 +1624,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("NAME") && dataValue["NAME"].isString())
+			dataValue.isMember("NAME") && dataValue["NAME"].isString())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
@@ -1653,7 +1689,7 @@ int Gateway::OnRpcUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt() &&
-				dataValue.isMember("name") && dataValue["name"].isString())
+			dataValue.isMember("name") && dataValue["name"].isString())
 		{
 			int addr = dataValue["id"].asInt();
 			string name = dataValue["name"].asString();
@@ -1727,7 +1763,7 @@ int Gateway::OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 		{
 			Json::Value dataValue = reqValue["DATA"];
 			if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-					dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 			{
 				respValue["CMD"] = "ADD_DEVICE_TO_GROUP";
 				Json::Value data;
@@ -1790,7 +1826,7 @@ int Gateway::OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			respValue["CMD"] = "DELETE_DEVICE_FROM_GROUP";
 			Json::Value data;
@@ -2469,7 +2505,7 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			if (group)
 			{
 				int numDevices = group->deviceList.size();
-				vector <DeviceInGroup *> list = group->deviceList;
+				vector<DeviceInGroup *> list = group->deviceList;
 				for (int i = 0; i < numDevices; i++)
 				{
 					if (group->DelDevice(list[i]->device, list[i]->epId) == CODE_OK)
@@ -2517,12 +2553,12 @@ int Gateway::OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isString() &&
-				dataValue.isMember("name") && dataValue["name"].isString() &&
-				dataValue.isMember("mac") && dataValue["mac"].isString() &&
-				dataValue.isMember("addr") && dataValue["addr"].isInt() &&
-				dataValue.isMember("type") && dataValue["type"].isInt() &&
-				dataValue.isMember("devicekey") && dataValue["devicekey"].isString() &&
-				dataValue.isMember("version") && dataValue["version"].isInt())
+			dataValue.isMember("name") && dataValue["name"].isString() &&
+			dataValue.isMember("mac") && dataValue["mac"].isString() &&
+			dataValue.isMember("addr") && dataValue["addr"].isInt() &&
+			dataValue.isMember("type") && dataValue["type"].isInt() &&
+			dataValue.isMember("devicekey") && dataValue["devicekey"].isString() &&
+			dataValue.isMember("version") && dataValue["version"].isInt())
 		{
 			string deviceId = dataValue["id"].asString();
 			string name = dataValue["name"].asString();
@@ -2547,7 +2583,7 @@ int Gateway::OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -2608,7 +2644,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -2642,7 +2678,7 @@ int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -2770,11 +2806,11 @@ int Gateway::OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("type") && dataValue["type"].isString() &&
-				dataValue.isMember("key") && dataValue["key"].isString() &&
-				dataValue.isMember("user") && dataValue["user"].isString() &&
-				dataValue.isMember("host") && dataValue["host"].isString() &&
-				dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
-				dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
+			dataValue.isMember("key") && dataValue["key"].isString() &&
+			dataValue.isMember("user") && dataValue["user"].isString() &&
+			dataValue.isMember("host") && dataValue["host"].isString() &&
+			dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
+			dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = dataValue["type"].asString();
@@ -2857,7 +2893,7 @@ int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
+			dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
 		{
 			int deviceType;
 			string deviceId = dataValue["DEVICE_ID"].asString();
@@ -3030,8 +3066,8 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		{
 			Json::Value dataValue = datasValue[0];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
-					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
-					dataValue.isMember("URL") && dataValue["URL"].isString())
+				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+				dataValue.isMember("URL") && dataValue["URL"].isString())
 			{
 				name = dataValue["NAME"].asString();
 				sum = dataValue["CHECK_SUM"].asString();

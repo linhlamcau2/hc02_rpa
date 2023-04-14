@@ -42,6 +42,8 @@
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
+#include "DeviceBleCurtain.h"
+#include "DeviceBleRoolDoor.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -280,6 +282,8 @@ void Gateway::ResetFactory()
 	database->DeviceInSceneBleDelAll();
 
 	database->GatewayUpdateId(gateway, "");
+	database->GatewayUpdateDormitory(gateway, "");
+	gateway->setDormitory("");
 	gateway->setId("");
 	gateway->setBleAppkey("");
 	if (bleProtocol)
@@ -683,6 +687,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
 		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
+		break;
+	case BLE_SWITCH_RGB_CURTAIN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
+		device = new DeviceBleCurtain(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_SWITCH_ROOLING_DOOR:
+		device = new DeviceBleRoolDoor(id, name, mac, data, addr, type, version);
 		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
