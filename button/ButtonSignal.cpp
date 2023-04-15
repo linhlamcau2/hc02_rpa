@@ -61,7 +61,13 @@ void ButtonSignal::OnRelease()
 	{
 		if (releaseTime - pressTime > 5000 && releaseTime - pressTime < 8000)
 		{
-			LOGI("set AP mode wifi");
+			LOGW("set AP mode wifi");
+			Wifi::SetModeApWifi();
+		}
+		else if (releaseTime - pressTime > 15000 && releaseTime - pressTime < 20000)
+		{
+			LOGW("Reset HC");
+			gateway->ResetFactory();
 			Wifi::SetModeApWifi();
 		}
 	}

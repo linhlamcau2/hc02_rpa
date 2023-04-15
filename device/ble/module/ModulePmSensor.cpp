@@ -35,6 +35,30 @@ void ModulePmSensor::SaveAttribute()
 }
 #endif
 
+int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idPm25 == id || this->idPm10 == id || this->idPm1_0 == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				if (this->idPm25 == id)
+					pm25 = dataValue["VALUE"].asInt();
+				else if (this->idPm10 == id)
+					pm10 = dataValue["VALUE"].asInt();
+				else if (this->idPm1_0 == id)
+					pm1_0 = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+		}
+	}
+	return CODE_ERROR;
+}
+
 int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52 && data[1] == 0x07 && data[2] == 0x02)

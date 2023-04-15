@@ -143,6 +143,10 @@ int Room::AddDevice2(Device *device, bool sendBle)
 
 int Room::DelDevice(Device *device)
 {
+	if (!device)
+	{
+		return CODE_ERROR;
+	}
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		int deviceIndex = GetPositionDevice(device);

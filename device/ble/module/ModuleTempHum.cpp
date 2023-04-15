@@ -30,6 +30,26 @@ void ModuleTempHum::SaveAttribute()
 }
 #endif
 
+int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idTemp == id || this->idHum == id)
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				if (this->idTemp == id)
+					temp = dataValue["VALUE"].asInt();
+				else if (this->idHum == id)
+					hum = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+	}
+	return CODE_ERROR;
+}
+
 int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)

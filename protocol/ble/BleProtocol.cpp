@@ -2370,6 +2370,196 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 	return CODE_ERROR;
 }
 
+int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, uint8_t percent)
+{
+	LOGD("ControlOpenClosePausePercent 0x%04x, type %d, percent %d", devAddr, type, percent);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t controlHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t type;
+		uint8_t percent;
+		uint8_t future[4];
+	} control_message_t;
+	control_message_t control_message = {0};
+	memset(&control_message, 0x00, sizeof(control_message));
+	control_message.ble_message_header.devAddr = devAddr;
+	control_message.opcodeVendor = RD_OPCODE_CONFIG;
+	control_message.vendorId = RD_VENDOR_ID;
+	control_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	control_message.header = RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE;
+	control_message.type = type;
+	control_message.percent = percent;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_message, sizeof(control_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t type;
+			uint8_t percent;
+		} control_rsp_message_t;
+		control_rsp_message_t *control_rsp_message = (control_rsp_message_t *)dataRsp;
+		if (control_rsp_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && control_rsp_message->type == type && control_rsp_message->percent == percent)
+		{
+			return CODE_OK;
+		}
+		LOGW("control resp state not match with input control");
+	}
+	LOGW("control err");
+	return CODE_ERROR;
+}
+int BleProtocol::ConfigMotor(uint16_t devAddr, uint8_t typeMotor)
+{
+	LOGD("ConfigMotor 0x%04x, typeMotor %d", devAddr, typeMotor);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t configHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t type;
+		uint8_t future[5];
+	} config_message_t;
+	config_message_t config_message = {0};
+	memset(&config_message, 0x00, sizeof(config_message));
+	config_message.ble_message_header.devAddr = devAddr;
+	config_message.opcodeVendor = RD_OPCODE_CONFIG;
+	config_message.vendorId = RD_VENDOR_ID;
+	config_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	config_message.header = RD_OPCODE_CONFIG_MOTOR;
+	config_message.type = typeMotor;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&config_message, sizeof(config_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, configHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t type;
+		} config_rsp_message_t;
+		config_rsp_message_t *config_rsp_message = (config_rsp_message_t *)dataRsp;
+		if (config_rsp_message->header == RD_OPCODE_CONFIG_MOTOR && config_rsp_message->type == typeMotor)
+		{
+			return CODE_OK;
+		}
+		LOGW("config resp state not match with input control");
+	}
+	LOGW("config err");
+	return CODE_ERROR;
+}
+int BleProtocol::CalibCurtain(uint16_t devAddr, uint8_t status)
+{
+	LOGD("CalibCurtain 0x%04x, status %d", devAddr, status);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t calibHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t status;
+		uint8_t future[5];
+	} calib_message_t;
+	calib_message_t calib_message = {0};
+	memset(&calib_message, 0x00, sizeof(calib_message));
+	calib_message.ble_message_header.devAddr = devAddr;
+	calib_message.opcodeVendor = RD_OPCODE_CONFIG;
+	calib_message.vendorId = RD_VENDOR_ID;
+	calib_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	calib_message.header = RD_OPCODE_CALIB;
+	calib_message.status = status;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&calib_message, sizeof(calib_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, calibHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t status;
+		} calib_rsp_message_t;
+		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
+		if (calib_rsp_message->header == RD_OPCODE_CALIB && calib_rsp_message->status == status)
+		{
+			return CODE_OK;
+		}
+		LOGW("calib resp state not match with input control");
+	}
+	LOGW("calib err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
+{
+	LOGD("UpdateStatusCurtain 0x%04x", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t updateHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t future[6];
+	} update_message_t;
+	update_message_t update_message = {0};
+	memset(&update_message, 0x00, sizeof(update_message));
+	update_message.ble_message_header.devAddr = devAddr;
+	update_message.opcodeVendor = RD_OPCODE_CONFIG;
+	update_message.vendorId = RD_VENDOR_ID;
+	update_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	update_message.header = RD_OPCODE_REQUEST_STATUS_CURTAIN;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, updateHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+		} calib_rsp_message_t;
+		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
+		if (calib_rsp_message->header == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+		{
+			return CODE_OK;
+		}
+		LOGW("update resp state not match with input control");
+	}
+	LOGW("update err");
+	return CODE_ERROR;
+}
+
 int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 {
 	LOGD("AddDeviceToRoom 0x%04x, roomAddr %d", devAddr, roomAddr);

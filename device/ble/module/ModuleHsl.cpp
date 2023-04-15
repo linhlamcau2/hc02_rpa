@@ -44,6 +44,30 @@ void ModuleHsl::SaveAttribute()
 }
 #endif
 
+int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->idH == id || this->idL == id || this->idS == id)
+		{
+			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			{
+				if (this->idH == id)
+					h = dataValue["VALUE"].asInt();
+				else if (this->idL == id)
+					l = dataValue["VALUE"].asInt();
+				else if (this->idS == id)
+					s = dataValue["VALUE"].asInt();
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+		}
+	}
+	return CODE_ERROR;
+}
+
 int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct

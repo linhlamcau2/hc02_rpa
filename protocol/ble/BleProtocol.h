@@ -42,6 +42,18 @@
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
 #define RD_OPCODE_CONFIG_SET_TIMER 0x070B
 #define RD_OPCODE_REQUEST_STATUS_SWITCH 0x090B
+#define RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE 0x0011
+#define RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING 0x0611
+#define RD_OPCODE_CONFIG_MOTOR 0x0511
+#define RD_OPCODE_CALIB 0x0411
+#define RD_OPCODE_REQUEST_STATUS_CURTAIN 0x0311
+
+enum{
+	CLOSE,
+	OPEN,
+	PAUSE,
+	PERCENT,
+};
 
 enum
 {
@@ -267,6 +279,13 @@ public:
 	int SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8_t date, uint8_t day);
 	int SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second);
 	int SetGroup(uint16_t devAddr, uint16_t group);
+
+	//Rooling door, curtain
+	int ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, uint8_t percent = 0);
+	int ConfigMotor(uint16_t devAddr, uint8_t typeMotor);
+	int CalibCurtain(uint16_t devAddr, uint8_t status);
+	int UpdateStatusCurtain(uint16_t devAddr);
+
 	// Optimize add device to Room
 	int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
 
