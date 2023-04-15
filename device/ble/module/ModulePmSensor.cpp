@@ -59,7 +59,7 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
-int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52 && data[1] == 0x07 && data[2] == 0x02)
 	{

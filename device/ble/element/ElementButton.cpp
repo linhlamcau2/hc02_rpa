@@ -42,7 +42,7 @@ int ElementButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
-int ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{

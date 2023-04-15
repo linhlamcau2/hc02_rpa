@@ -44,7 +44,7 @@ int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
-int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0x52)
 	{

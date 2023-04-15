@@ -40,6 +40,7 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
+	bool firstStart = false;
 	log_set_level(LOG_VERBOSE);
 	LOGI("Start");
 
@@ -68,8 +69,8 @@ int main(int argc, char *argv[])
 
 	if (!database->IsHaveDb())
 	{
+		firstStart = true;
 		database->createTableIfNotExists();
-		bleProtocol->ResetFactory();
 	}
 
 	string mac = Wifi::GetMacAddress();
@@ -78,6 +79,8 @@ int main(int argc, char *argv[])
 						  config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 
+	if(firstStart)
+		bleProtocol->ResetFactory();
 	bleProtocol->InitKey();
 
 	Util::LedService(true);

@@ -42,7 +42,7 @@ void ModModuleCallSceneuleDim::SaveAttribute()
 //     return CODE_ERROR;
 // }
 
-int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     typedef struct
     {

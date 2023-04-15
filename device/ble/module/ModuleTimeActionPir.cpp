@@ -41,7 +41,7 @@ int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValu
 	return CODE_ERROR;
 }
 
-int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x03)
 	{

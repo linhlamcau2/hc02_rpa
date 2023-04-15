@@ -47,7 +47,7 @@ void ModuleButton::SaveAttribute()
 // 	return CODE_ERROR;
 // }
 
-int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct __attribute__((packed))
 	{

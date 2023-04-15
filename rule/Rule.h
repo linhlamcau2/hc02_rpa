@@ -5,6 +5,7 @@
 #include "Object.h"
 #include "RuleInput.h"
 #include "RuleOutput.h"
+#include "json.h"
 
 using namespace std;
 
@@ -24,9 +25,9 @@ typedef enum
 class Rule : public Object
 {
 private:
+	Json::Value ruleData;
 	string type;
 	string name;
-	string data;
 	
 	unsigned char repeater;
 	bool fullDay;
@@ -43,10 +44,12 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, uint32_t addr, string name, string type, unsigned char repeater);
-	Rule(string id, uint32_t addr, string name, string type, unsigned char repeater, int startTime, int endTime);
+	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData);
+	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData);
 	~Rule();
 
+	Json::Value GetRuleData();
+	string GetType();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();
@@ -55,7 +58,6 @@ public:
 	void RunOutput();
 
 	void UpdateData(string data);
-	string GetData();
 	bool GetStatus();
 	void SetStatus(bool enable);
 };

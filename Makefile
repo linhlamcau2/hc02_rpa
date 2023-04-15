@@ -29,8 +29,8 @@ endif
 
 DEVICESRC += $(wildcard button/*.cpp)
 DEVICESRC += $(wildcard config/*.cpp)
-DEVICESRC += $(wildcard database/*.cpp)
 DEVICESRC += $(wildcard object/*.cpp)
+DEVICESRC += $(wildcard database/*.cpp)
 DEVICESRC += $(wildcard device/*.cpp)
 DEVICESRC += $(wildcard device/ble/*.cpp)
 DEVICESRC += $(wildcard device/ble/module/*.cpp)

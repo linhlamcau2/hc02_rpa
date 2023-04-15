@@ -10,6 +10,7 @@ ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr) : Module(device, addr)
 {
 	onoff = 0;
 	id = BLE_ATTRIBUTE_ONOFF;
+	code  = KEY_ATTRIBUTE_ONOFF;
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -41,7 +42,7 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
-int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	typedef struct
 	{
@@ -53,13 +54,22 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
 		if (len == 3)
-			onoff = data_message->state;
+			if(onoff != data_message->state)
+			{
+				onoff = data_message->state;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
 		else
-			onoff = data_message->onoff;
+			if(onoff != data_message->state)
+			{
+				onoff = data_message->onoff;
+				BuildTelemetryValue(jsonValue);
+				BuildTelemetryValueV2(jsonValueV2);
+			}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
 		return CODE_OK;
 	}
@@ -99,6 +109,21 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
+bool ModuleOnOff::CheckDataV2(Json::Value &dataValue, bool &rs)
+{
+	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	if (dataValue.isObject() &&
+			dataValue.isMember("op") && dataValue["op"].isString() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
+	{
+		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		string op = dataValue["op"].asString();
+		rs = Util::CompareNumber(this->onoff, value, value, op);
+		return true;
+	}
+	return false;
+}
+
 // TODO: can nhac di chuyen den Module.cpp
 void ModuleOnOff::CheckTrigger()
 {
@@ -108,6 +133,8 @@ void ModuleOnOff::CheckTrigger()
 	{
 		rs = false;
 		if (CheckData(*ruleInputDevice->GetData(), rs))
+			ruleInputDevice->Trigger(rs);
+		else if (CheckDataV2(*ruleInputDevice->GetData(), rs))
 			ruleInputDevice->Trigger(rs);
 	}
 }

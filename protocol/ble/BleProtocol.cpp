@@ -161,7 +161,8 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 						}
 					}
 				}
-				CheckOpcodeException(message_rsp);
+				if (gateway)
+					CheckOpcodeException(message_rsp);
 			}
 			else
 			{

@@ -81,6 +81,7 @@ public:
 	int GroupRead();
 	int GroupAdd(Group *group);
 	int GroupUpdate(Group *group);
+	int GroupUpdateRoom(Group *group, string roomId);
 	int GroupDel(Group *group);
 	int GroupDel(string id);
 	int GroupDelAll();
@@ -103,6 +104,7 @@ public:
 	int SceneBleRead();
 	int SceneBleAdd(SceneBle *scene);
 	int SceneBleUpdate(SceneBle *scene);
+	int SceneBleUpdateRoom(SceneBle *scene, string roomId);
 	int SceneBleDel(SceneBle *scene);
 	int SceneBleDelAll();
 };

@@ -41,7 +41,7 @@ int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue
     return CODE_ERROR;
 }
 
-int ModuleControlClose::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleControlClose::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     typedef struct
     {

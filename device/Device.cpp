@@ -4,6 +4,7 @@
 #include <thread>
 #include <functional>
 #include <unistd.h>
+#include <Util.h>
 
 Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
@@ -161,18 +162,36 @@ int Device::PushTelemetry()
 	return CODE_ERROR;
 }
 
-int Device::PushTelemetry(Json::Value jsonValue)
+int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 {
-	if (jsonValue.isNull())
-		return CODE_ERROR;
-	Json::Value pushDataValue;
-	Json::Value deviceData;
-	deviceData["DEVICE_ID"] = id;
-	deviceData["PROPERTIES"] = jsonValue;
-	pushDataValue["CMD"] = "DEVICE";
-	pushDataValue["DATA"].append(deviceData);
-	gateway->PublishToLocalMessage(pushDataValue);
-	return gateway->PublishToGatewayTelemetry(pushDataValue);
+	if (jsonValue.isNull() && jsonValueV2.isNull())
+		return -1;
+	if (jsonValue.isNull() == 0)
+	{
+		Json::Value pushDataValue;
+		Json::Value deviceData;
+		deviceData["DEVICE_ID"] = id;
+		deviceData["PROPERTIES"] = jsonValue;
+		pushDataValue["CMD"] = "DEVICE";
+		pushDataValue["DATA"].append(deviceData);
+		gateway->PublishToLocalMessage(pushDataValue);
+		gateway->PublishToGatewayTelemetry(pushDataValue);
+	}
+	if (jsonValueV2.isNull() == 0)
+	{
+		Json::Value pushDataValue;
+		Json::Value deviceData;
+		Json::Value devices;
+		Json::Value device;
+		deviceData["id"] = id;
+		deviceData["data"] = jsonValueV2;
+		devices["device"].append(deviceData);
+		pushDataValue["cmd"] = "deviceUpdate";
+		pushDataValue["rqi"] = Util::genRandRQI(16);
+		pushDataValue["data"] = devices;
+		gateway->PublishToLocalMessageV2(pushDataValue);
+	}
+	return 1;
 }
 
 int Device::PushAttributes()
