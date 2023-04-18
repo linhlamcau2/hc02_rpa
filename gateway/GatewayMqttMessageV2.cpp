@@ -79,6 +79,7 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getSceneIntoRoom", bind(&Gateway::OnGetSceneIntoRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegisterV2("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -113,55 +114,40 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlAllDevice");
-	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+	if (bleProtocol)
 	{
-		Json::Value dataValue = reqValue["data"];
-		if (dataValue.isObject())
+		if (reqValue.isMember(KEY_ATTRIBUTE_ONOFF) && reqValue[KEY_ATTRIBUTE_ONOFF].isInt())
 		{
-			if (bleProtocol)
-			{
-				if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-					bleProtocol->SetOnOffLight(0xFFFF, value, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-					uint16_t dim = (value * 65535) / 100;
-					bleProtocol->SetDimmingLight(0xFFFF, dim, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-					uint16_t cct = (value * 192) + 800;
-					bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-					dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-					dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
-				{
-					int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-					int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-					int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-					bleProtocol->SetHSLLight(0xFFFF, h, s, l, 0, true);
-				}
-				if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
-				{
-					int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-					bleProtocol->CallModeRgb(0xFFFF, value);
-				}
-				respValue["data"]["code"] = CODE_OK;
-			}
-			respValue["data"]["code"] = 0;
+			int value = reqValue[KEY_ATTRIBUTE_ONOFF].asInt();
+			bleProtocol->SetOnOffLight(0xFFFF, value, 0, true);
 		}
-		respValue["data"]["code"] = 0;
-	}
-	else
-	{
-		respValue["data"]["code"] = CODE_FORMAT_ERROR;
-		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
+		if (reqValue.isMember(KEY_ATTRIBUTE_DIM) && reqValue[KEY_ATTRIBUTE_DIM].isInt())
+		{
+			int value = reqValue[KEY_ATTRIBUTE_DIM].asInt();
+			uint16_t dim = (value * 65535) / 100;
+			bleProtocol->SetDimmingLight(0xFFFF, dim, 0, true);
+		}
+		if (reqValue.isMember(KEY_ATTRIBUTE_CCT) && reqValue[KEY_ATTRIBUTE_CCT].isInt())
+		{
+			int value = reqValue[KEY_ATTRIBUTE_CCT].asInt();
+			uint16_t cct = (value * 192) + 800;
+			bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
+		}
+		if (reqValue.isMember(KEY_ATTRIBUTE_HUE) && reqValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			reqValue.isMember(KEY_ATTRIBUTE_SATURATION) && reqValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			reqValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && reqValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+		{
+			int h = reqValue[KEY_ATTRIBUTE_HUE].asInt();
+			int s = reqValue[KEY_ATTRIBUTE_SATURATION].asInt();
+			int l = reqValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+			bleProtocol->SetHSLLight(0xFFFF, h, s, l, 0, true);
+		}
+		if (reqValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && reqValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+		{
+			int value = reqValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+			bleProtocol->CallModeRgb(0xFFFF, value);
+		}
+		respValue["data"]["code"] = CODE_OK;
 	}
 	respValue["cmd"] = "controlAllDevRsp";
 	return CODE_OK;
@@ -518,11 +504,11 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 {
-	if (reqValue.isMember("devices") && reqValue["devices"].isArray())
+	if (reqValue.isMember("device") && reqValue["device"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
-		Json::Value devices = reqValue["devices"];
+		Json::Value devices = reqValue["device"];
 		for (auto &deviceValue : devices)
 		{
 			if (deviceValue.isString())
@@ -533,6 +519,7 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					if (bleProtocol)
 					{
+						bleProtocol->ResetDev(device->GetAddr());
 						database->DeviceDel(device->GetMac());
 						LOGD("remove deviceId: %s", deviceId.c_str());
 						successList.append(deviceId);
@@ -635,7 +622,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 						if (device)
 						{
 							int deviceAddr = device->GetAddr();
-							if (group->AddDevice(device, deviceAddr, true))
+							if (group->AddDevice(device, deviceAddr, true) == CODE_OK)
 							{
 								database->DeviceInGroupAdd(group, device, deviceAddr);
 								successList.append(deviceId);
@@ -697,7 +684,7 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 					if (device)
 					{
 						int deviceAddr = device->GetAddr();
-						if (group->AddDevice(device, deviceAddr, true))
+						if (group->AddDevice(device, deviceAddr, true) == CODE_OK)
 						{
 							database->DeviceInGroupAdd(group, device, deviceAddr);
 							successList.append(deviceId);
@@ -743,7 +730,7 @@ int Gateway::OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSucce
 			if (device)
 			{
 				int deviceAddr = device->GetAddr();
-				if (group->DelDevice(device, deviceAddr))
+				if (group->DelDevice(device, deviceAddr) == CODE_OK)
 				{
 					database->DeviceInGroupDel(group, device, deviceAddr);
 					respSuccessList.append(deviceId);
@@ -895,33 +882,26 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 			}
 			if (AddNewSceneBle(scene, true, true))
 			{
-				Json::Value groupList = reqValue["devices"];
-				for (auto &groupValue : groupList)
+				Json::Value deviceList = reqValue["devices"];
+				for (auto &deviceValue : deviceList)
 				{
-					if (groupValue.isObject() &&
-						groupValue.isMember("id") && groupValue["id"].isArray() &&
-						groupValue.isMember("data") && groupValue["data"].isObject())
+					if (deviceValue.isObject() &&
+						deviceValue.isMember("id") && deviceValue["id"].isString() &&
+						deviceValue.isMember("data") && deviceValue["data"].isObject())
 					{
-						Json::Value deviceList = groupValue["id"];
-						Json::Value deviceProperties = groupValue["data"];
-						for (auto &deviceValue : deviceList)
+						Json::Value deviceProperties = deviceValue["data"];
+						string deviceId = deviceValue["id"].asString();
+						Device *device = getDeviceFromId(deviceId);
+						if (device)
 						{
-							if (deviceValue.isString())
+							if (scene->AddDeviceV2(device, deviceProperties, false) == CODE_OK)
 							{
-								string deviceId = deviceValue.asString();
-								Device *device = getDeviceFromId(deviceId);
-								if (device)
-								{
-									if (scene->AddDeviceV2(device, deviceProperties, false))
-									{
-										database->DeviceInSceneBleAdd(scene, device, deviceProperties.toString());
-										successList.append(device->GetId());
-									}
-									else
-									{
-										failedList.append(device->GetId());
-									}
-								}
+								database->DeviceInSceneBleAdd(scene, device, deviceProperties.toString());
+								successList.append(device->GetId());
+							}
+							else
+							{
+								failedList.append(device->GetId());
 							}
 						}
 					}
@@ -961,7 +941,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 		{
 			for (auto &deviceInScene : scene->deviceList)
 			{
-				if (scene->DelDevice(deviceInScene->device))
+				if (scene->DelDevice(deviceInScene->device) == CODE_OK)
 				{
 					database->DeviceInSceneBleDel(scene, deviceInScene->device);
 					successList.append(deviceInScene->device->GetId());
@@ -1085,7 +1065,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		}
 		LOGD("roomAddr: %d", roomAddr);
 		Room *room = new Room(roomId, roomAddr, roomName);
-		Group *group = new Group(roomId, roomAddr, roomName);
+		Group *group = new Group(roomId, roomAddr-ROOM_START_ADDR, roomName);
 		if (room)
 		{
 			if (AddNewRoom(room, true, true))

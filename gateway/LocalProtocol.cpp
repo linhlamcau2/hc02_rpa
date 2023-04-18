@@ -274,12 +274,12 @@ int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue,
 	return rs;
 }
 
-int LocalProtocol::PublishToLocalMessageV2(string payload)
+int LocalProtocol::PublishToLocalMessageV2(string &payload)
 {
-	return Publish("HC_RESPONSE_TOPIC_V2", payload);
+	return Publish("HC.CONTROL.RESPONSE.V2", payload);
 }
 
-int LocalProtocol::PublishToLocalMessageV2(Json::Value payloadJson)
+int LocalProtocol::PublishToLocalMessageV2(Json::Value &payloadJson)
 {
-	return PublishToLocalMessageV2(payloadJson.toString());
+	return Publish("HC.CONTROL.RESPONSE.V2", payloadJson.toString());
 }

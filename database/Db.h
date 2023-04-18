@@ -35,6 +35,7 @@ public:
 	int DeviceDel(Device *device);
 	int DeviceDel(string mac);
 	int DeviceDelAll();
+	int DelDevExist(Device *device);
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);

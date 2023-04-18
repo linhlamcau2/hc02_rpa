@@ -6,6 +6,7 @@
 #include "RuleInput.h"
 #include "RuleOutput.h"
 #include "json.h"
+#include <unistd.h>
 
 using namespace std;
 

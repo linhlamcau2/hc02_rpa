@@ -3038,7 +3038,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
 				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
-				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene);
+				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene, 0);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleList[eventTriggerId] = rule;
 			}

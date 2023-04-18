@@ -10,10 +10,11 @@ class RuleOutputDevice : public RuleOutput
 {
 private:
 	Device *device;
+	int delayTime;
 	Json::Value data;
 
 public:
-	RuleOutputDevice(Device *device, Json::Value &data);
+	RuleOutputDevice(Device *device, Json::Value &data, int delayTime);
 	~RuleOutputDevice();
 
 	void RunOutput();
