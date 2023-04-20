@@ -54,19 +54,23 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
 		if (len == 3)
+		{
 			if(onoff != data_message->state)
 			{
 				onoff = data_message->state;
 				BuildTelemetryValue(jsonValue);
 				BuildTelemetryValueV2(jsonValueV2);
 			}
+		}
 		else
-			if(onoff != data_message->state)
+		{
+			if(onoff != data_message->onoff)
 			{
 				onoff = data_message->onoff;
 				BuildTelemetryValue(jsonValue);
 				BuildTelemetryValueV2(jsonValueV2);
 			}
+		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif

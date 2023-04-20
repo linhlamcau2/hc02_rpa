@@ -170,6 +170,10 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 	{
 		Json::Value pushDataValue;
 		Json::Value deviceData;
+		Json::Value onLine;
+		onLine["ID"] = 62;
+		onLine["VALUE"] = 1;
+		jsonValue.append(onLine);
 		deviceData["DEVICE_ID"] = id;
 		deviceData["PROPERTIES"] = jsonValue;
 		pushDataValue["CMD"] = "DEVICE";
