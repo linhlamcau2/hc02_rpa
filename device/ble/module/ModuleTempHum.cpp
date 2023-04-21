@@ -30,7 +30,7 @@ void ModuleTempHum::SaveAttribute()
 }
 #endif
 
-int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

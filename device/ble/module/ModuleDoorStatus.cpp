@@ -25,7 +25,7 @@ void ModuleDoorStatus::SaveAttribute()
 }
 #endif
 
-int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

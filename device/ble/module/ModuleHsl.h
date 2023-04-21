@@ -29,7 +29,7 @@ public:
 	void SaveAttribute();
 #endif
 
-	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
+	int InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2);
 
 	/**
 	 * @brief Parse raw data to module parameter value

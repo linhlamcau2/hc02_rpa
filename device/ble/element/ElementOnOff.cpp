@@ -26,7 +26,7 @@ void ElementOnOff::SaveAttribute()
 }
 #endif
 
-int ElementOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ElementOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {

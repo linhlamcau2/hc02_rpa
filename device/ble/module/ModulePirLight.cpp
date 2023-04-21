@@ -30,7 +30,7 @@ void ModulePirLight::SaveAttribute()
 }
 #endif
 
-int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

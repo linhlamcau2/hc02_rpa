@@ -25,7 +25,7 @@ void ModuleControlClose::SaveAttribute()
 }
 #endif
 
-int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {

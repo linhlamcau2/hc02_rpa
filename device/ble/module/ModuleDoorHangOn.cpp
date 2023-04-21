@@ -25,7 +25,7 @@ void ModuleDoorHangOn::SaveAttribute()
 }
 #endif
 
-int ModuleDoorHangOn::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleDoorHangOn::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
