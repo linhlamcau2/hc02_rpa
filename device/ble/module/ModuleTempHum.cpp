@@ -79,7 +79,6 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Jso
 
 	if (data_message->opcode == 0x52)
 	{
-		LOGE("header: %d", data_message->header);
 		if (data_message->header == 0x0006)
 		{
 			temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
