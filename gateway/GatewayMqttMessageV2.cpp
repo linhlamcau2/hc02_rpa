@@ -235,7 +235,9 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 				{
 					Json::Value deviceValue;
 					deviceValue["id"] = device->GetId();
-					device->BuildTelemetryValueV2(deviceValue);
+					Json::Value deviceAttbute;
+					device->BuildTelemetryValueV2(deviceAttbute);
+					deviceValue["data"] = deviceAttbute;
 					devicesData.append(deviceValue);
 				}
 			}
@@ -247,7 +249,7 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 	{
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
-	respValue["cmd"] = "getDevSttRsp";
+	respValue["cmd"] = "deviceUpdate";
 	return CODE_OK;
 }
 
@@ -258,7 +260,7 @@ int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 	AddAllDeviceStatusV2(devicesData);
 	respValue["data"]["code"] = CODE_OK;
 	respValue["data"]["devices"] = devicesData;
-	respValue["cmd"] = "getAllDevSttRsp";
+	respValue["cmd"] = "deviceUpdate";
 	return CODE_OK;
 }
 

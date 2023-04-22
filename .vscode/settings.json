@@ -10,6 +10,7 @@
         "string": "cpp",
         "array": "cpp",
         "string_view": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "condition_variable": "cpp"
     }
 }

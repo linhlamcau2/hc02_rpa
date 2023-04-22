@@ -32,8 +32,8 @@ void LocalProtocol::init()
 	Mqtt::init();
 #endif
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
-	// addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
-	addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), "HC.CONTROL.V2");
+	addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
+	// addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), "HC.CONTROL.V2");
 	addActionCallback(bind(&LocalProtocol::OnLocalRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);
 }
 
@@ -110,10 +110,10 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	// if (topics.size() == 5)
-	// {
-	// 	if (topics[4] == mac || topics[4] == "all")
-	// 	{
+	if (topics.size() == 5)
+	{
+		if (topics[4] == mac || topics[4] == "all")
+		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
 					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
@@ -130,8 +130,8 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
-						// Publish(pubRespTopicV2 + topics[3], respValue.toString());
-						Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
+						Publish(pubRespTopicV2 + topics[3], respValue.toString());
+						// Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
 					}
 					else if (rs == CODE_DATA_ARRAY)
 					{
@@ -141,8 +141,8 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 							for (auto &respV : respValue)
 							{
 								respV["rqi"] = rqi;
-								// Publish(pubRespTopicV2 + topics[3], respV.toString());
-								Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
+								Publish(pubRespTopicV2 + topics[3], respV.toString());
+								// Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
 							}
 						}
 					}
@@ -166,8 +166,8 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 				LOGW("OnLocalMessage topic: %s", topic.c_str());
 				LOGW("OnLocalMessage payload: %s", payload.c_str());
 			}
-	// 	}
-	// }
+		}
+	}
 
 	Util::LedServiceUnlock();
 }

@@ -138,7 +138,14 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 
 void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
+	if(cct >= 800)
+	{
+		jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
+	}
+	else
+	{
+		jsonValue[KEY_ATTRIBUTE_CCT] = cct;
+	}
 }
 
 int ElementCct::Do(Json::Value &dataValue)

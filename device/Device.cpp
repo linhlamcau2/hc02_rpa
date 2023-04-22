@@ -186,10 +186,8 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		deviceData["id"] = id;
 		deviceData["data"] = jsonValueV2;
 		devices["device"].append(deviceData);
-		pushDataValue["cmd"] = "deviceUpdate";
-		pushDataValue["rqi"] = Util::genRandRQI(16);
-		pushDataValue["data"] = devices;
-		gateway->PublishToLocalMessageV2(pushDataValue);
+		pushDataValue["data"] = devices;		
+		gateway->pushDeviceUpdateLocalV2(devices);
 	}
 	return 1;
 }

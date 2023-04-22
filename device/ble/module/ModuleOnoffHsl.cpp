@@ -114,6 +114,6 @@ void ModuleOnoffHsl::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
     jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
     jsonValue[KEY_ATTRIBUTE_HUE] = h;
-    jsonValue[BLE_ATTRIBUTE_SATURATION] = s;
-    jsonValue[BLE_ATTRIBUTE_LUMINANCE] = l;
+    jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
+    jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
 }

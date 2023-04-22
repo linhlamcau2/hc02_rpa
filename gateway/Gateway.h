@@ -273,6 +273,9 @@ public:
 	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
 	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
 
+	int pushNewDeviceCloudV2(Json::Value &dataValue);
+	int pushNewDeviceLocalV2(Json::Value &dataValue);
+
 	int Do(Json::Value &dataValue);
 };
 

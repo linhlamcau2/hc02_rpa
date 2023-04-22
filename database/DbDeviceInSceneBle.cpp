@@ -23,39 +23,42 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneBleId);
 				Device *device = gateway->getDeviceFromId(deviceId);
-				if (sceneBle && device)
+				if (sceneBle)
 				{
-					string devInSceneData;
-					string decode = macaron::Base64::Decode(data, devInSceneData);
-					if (decode == "")
+					if (device)
 					{
-						Json::Value devInSceneJson;
-						if(devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
+						string devInSceneData;
+						string decode = macaron::Base64::Decode(data, devInSceneData);
+						if (decode == "")
 						{
-							int modeRgb = 0;
-							for (Json::ArrayIndex i = 0; i < devInSceneJson.size(); i++)
+							Json::Value devInSceneJson;
+							if(devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
 							{
-								Json::Value property = devInSceneJson[i];
-								if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
+								int modeRgb = 0;
+								for (Json::ArrayIndex i = 0; i < devInSceneJson.size(); i++)
 								{
-									if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
+									Json::Value property = devInSceneJson[i];
+									if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
 									{
-										modeRgb = property["VALUE"].asInt();
-										break;
+										if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
+										{
+											modeRgb = property["VALUE"].asInt();
+											break;
+										}
 									}
 								}
+								sceneBle->AddDevice(device, devInSceneJson, modeRgb, true);
 							}
-							sceneBle->AddDevice(device, devInSceneJson, modeRgb, true);
+							else
+							{
+								LOGE("data json is not array");
+							}
+							// TODO: Check cho du lieu V2
 						}
 						else
 						{
-							LOGE("data json is not array");
+							LOGW("Decode data error");
 						}
-						// TODO: Check cho du lieu V2
-					}
-					else
-					{
-						LOGW("Decode data error");
 					}
 				}
 				else

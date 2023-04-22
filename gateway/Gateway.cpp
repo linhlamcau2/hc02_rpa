@@ -516,24 +516,22 @@ int Gateway::GatewayConnectToCloudNotice()
 	return CloudPublish("HC.CONTROL.RESPONSE", respValue.toString());
 }
 
-static string PushNewDevMqttV2(Device *newDev)
+static Json::Value PushNewDevMqttV2(Device *newDev)
 {
 	Json::Value jsonValue;
-	Json::Value dataValue;
 	Json::Value devValue;
-	jsonValue["cmd"] = "newDev";
-	jsonValue["rpi"] = Util::genRandRQI(10);
 	devValue["id"] = newDev->GetId();
 	devValue["addr"] = newDev->GetAddr();
 	devValue["type"] = newDev->GetType();
 	devValue["ver"] = newDev->GetVersionStr();
+	devValue["mac"] = newDev->GetMac();
 	string data = newDev->GetData();
 	string devKey = "";
 	Json::Value json;
 	json.parse(data);
 	devValue["data"] = json;
-	jsonValue["data"]["device"].append(devValue);
-	return jsonValue.toString();
+	jsonValue["device"].append(devValue);
+	return jsonValue;
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)
@@ -626,8 +624,8 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 #endif
 #ifdef CONFIG_USE_MQTT_V2
-	string jsonData = PushNewDevMqttV2(scanDevice);
-	PublishToLocalMessageV2(jsonData);
+	Json::Value jsonData = PushNewDevMqttV2(scanDevice);
+	pushNewDeviceLocalV2(jsonData);
 #endif
 }
 
@@ -1221,7 +1219,9 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 	{
 		Json::Value deviceValue;
 		deviceValue["id"] = device->GetId();
-		device->BuildTelemetryValueV2(deviceValue);
+		Json::Value deviceAttbute;
+		device->BuildTelemetryValueV2(deviceAttbute);
+		deviceValue["data"] = deviceAttbute;
 		dataValue.append(deviceValue);
 	}
 }
@@ -1384,6 +1384,15 @@ int Gateway::pushDeviceUpdateLocalV2(Json::Value &dataValue)
 int Gateway::pushDeviceUpdateCloudV2(Json::Value &dataValue)
 {
 	return PublishToCloudMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+}
+
+int Gateway::pushNewDeviceCloudV2(Json::Value &dataValue)
+{
+	return PublishToCloudMessageV2("newDev", dataValue, "newDevRsp", NULL);
+}
+int Gateway::pushNewDeviceLocalV2(Json::Value &dataValue)
+{
+	return PublishToLocalMessageV2("newDev", dataValue, "newDevRsp", NULL);
 }
 
 int Gateway::Do(Json::Value &dataValue)
