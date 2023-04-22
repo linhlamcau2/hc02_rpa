@@ -67,24 +67,25 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Jso
 	// 	return CODE_OK;
 	// }
 	// return CODE_ERROR;
-	typedef struct
+
+	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
 		uint16_t header;
 		uint8_t value1[2];
 		uint8_t value2[2];
 	} data_message_t;
-	data_message_t *data_message = (data_message_t *)&data;
+	data_message_t *data_message = (data_message_t *)data;
+
 	if (data_message->opcode == 0x52)
 	{
+		LOGE("header: %d", data_message->header);
 		if (data_message->header == 0x0006)
 		{
 			temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
 			if (data_message->value1[0] & 0x80)
 				temp = (-1) * temp;
 			hum = (data_message->value2[0] << 8) | data_message->value2[1];
-			LOGE("temp = %d", temp);
-			LOGE("hum = %d", hum);
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			return CODE_OK;
@@ -95,8 +96,6 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Jso
 			temp = (data[7] << 8) | data[8];
 			if (data[5] == 0xff)
 				temp = (-1) * temp;
-			LOGE("temp = %d", temp);
-			LOGE("hum = %d", hum);
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			return CODE_OK;
