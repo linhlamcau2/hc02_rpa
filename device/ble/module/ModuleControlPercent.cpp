@@ -25,7 +25,7 @@ void ModuleControlPercent::SaveAttribute()
 }
 #endif
 
-int ModuleControlPercent::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleControlPercent::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {

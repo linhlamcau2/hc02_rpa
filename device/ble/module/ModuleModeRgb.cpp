@@ -25,7 +25,7 @@ void ModuleModeRgb::SaveAttribute()
 }
 #endif
 
-int ModuleModeRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleModeRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

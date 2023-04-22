@@ -26,7 +26,7 @@ void ModuleOnOff::SaveAttribute()
 }
 #endif
 
-int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValue2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

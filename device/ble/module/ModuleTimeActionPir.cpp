@@ -25,7 +25,7 @@ void ModuleTimeActionPir::SaveAttribute()
 }
 #endif
 
-int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

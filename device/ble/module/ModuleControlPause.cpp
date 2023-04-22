@@ -25,7 +25,7 @@ void ModuleControlPause::SaveAttribute()
 }
 #endif
 
-int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {
