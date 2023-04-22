@@ -6,8 +6,8 @@ using namespace std;
 class ModuleTempHum : public Module
 {
 protected:
-	uint16_t temp;
-	uint16_t hum;
+	int temp;
+	int hum;
 	int idTemp;
 	int idHum;
 
