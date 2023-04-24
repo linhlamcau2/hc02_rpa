@@ -1787,7 +1787,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 	scene_light_pir_message.infoScene[0] = (data_scene_pir_light.data >> 24) & 0xFF;
 	scene_light_pir_message.infoScene[1] = (data_scene_pir_light.data >> 16) & 0xFF;
 	scene_light_pir_message.infoScene[2] = (data_scene_pir_light.data >> 8) & 0xFF;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneLightPirHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, sceneLightPirHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -1840,7 +1840,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 	scene_light_pir_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	scene_light_pir_message.header = RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR;
 	scene_light_pir_message.sceneId = scene;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneLightPirHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, sceneLightPirHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
