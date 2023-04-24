@@ -233,6 +233,7 @@ void Gateway::init()
 	CloudConnect();
 	LocalConnect();
 
+	isCheckingOnline = true;
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
 }
@@ -266,6 +267,8 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
+	isCheckingOnline = false;
+	sleep(1);
 	deviceList.clear();
 	groupList.clear();
 	ruleList.clear();
@@ -293,6 +296,7 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
+	isCheckingOnline = true;
 }
 
 int Gateway::CheckOnlineThread()
@@ -324,7 +328,7 @@ int Gateway::CheckOnlineThread()
 	{
 		currentTime = time(NULL);
 		allTimeCheck = deviceList.size() * 4;
-		if (!bleProtocol->IsProvision())
+		if (!bleProtocol->IsProvision() && isCheckingOnline)
 		{
 			for (const auto &[id, device] : deviceList)
 			{

@@ -35,7 +35,6 @@ BleProtocol::~BleProtocol()
 
 void BleProtocol::init()
 {
-	addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
 	if (pthread_mutex_init(&mutex, NULL) != 0)
 	{
 		LOGE("Failed to initialize the mutex");
@@ -63,6 +62,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		{
 			isAdding = true;
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
+			AddDeviceFunc addDeviceFunc = bind(&BleProtocol::AddDevice, this, placeholders::_1);
 			thread addDeviceThread(addDeviceFunc, &scanDeviceMessage);
 			addDeviceThread.detach();
 		}
@@ -478,6 +478,7 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	isAdding = false;
 	if (isProvisioning)
 	{
+		sleep(1);
 		StartScan();
 	}
 	return rs;

@@ -173,7 +173,7 @@ private:
 	} ble_message_header_t;
 
 	typedef function<int(scan_device_message_t *scan_device_message)> AddDeviceFunc;
-	AddDeviceFunc addDeviceFunc;
+	// AddDeviceFunc addDeviceFunc;
 	scan_device_message_t scanDeviceMessage;
 
 	vector<message_rsp_list_st *> messageRespList;

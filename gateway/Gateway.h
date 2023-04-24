@@ -42,6 +42,7 @@ private:
 	string refresh_token;
 	thread *udpBroadcastThread;
 	bool isUdpBroadcasting;
+	volatile bool isCheckingOnline;
 
 	map<string, Device *> deviceList;
 	map<string, Group *> groupList;
