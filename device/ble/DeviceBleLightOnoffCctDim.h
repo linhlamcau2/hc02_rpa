@@ -3,7 +3,6 @@
 #include "DeviceBle.h"
 #include "module/ModuleOnOff.h"
 #include "module/ModuleDim.h"
-#include "module/ModuleOnoffCctDim.h"
 #include "module/ModuleCallScene.h"
 #include "element/ElementCct.h"
 
@@ -14,7 +13,6 @@ class DeviceBleLightOnoffCctDim : public DeviceBle
 private:
 	ModuleOnOff *moduleOnOff;
 	ModuleDim *moduleDim;
-	ModuleOnoffCctDim *moduleOnoffCctDim;
 	ModuleCallScene *moduleCallScene;
 	ElementCct *elementCct;
 
