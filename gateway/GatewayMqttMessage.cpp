@@ -3010,7 +3010,10 @@ int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 						}
 						else
 						{
-							LOGW("Device type does not support add room");
+							if (room->AddDevice(device, false) == CODE_OK)
+							{
+								database->DeviceInRoomAdd(room, device);
+							}
 						}
 					}
 					else
