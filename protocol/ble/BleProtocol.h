@@ -172,7 +172,7 @@ private:
 		uint16_t devAddr;
 	} ble_message_header_t;
 
-	typedef function<int(scan_device_message_t *scan_device_message)> AddDeviceFunc;
+	// typedef function<int()> AddDeviceFunc;
 	// AddDeviceFunc addDeviceFunc;
 	scan_device_message_t scanDeviceMessage;
 
@@ -215,7 +215,7 @@ public:
 	int ResetFactory();
 
 	bool IsProvision();
-	int AddDevice(scan_device_message_t *scan_device_message);
+	int AddDevice();
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();

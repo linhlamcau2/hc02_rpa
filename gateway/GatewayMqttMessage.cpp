@@ -2135,7 +2135,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 					{
 						if (bleProtocol)
 						{
-							if (!bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
+							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
 							{
 								statusRsp = CODE_ERROR;
 							}
@@ -2221,7 +2221,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 					{
 						if (bleProtocol)
 						{
-							if (!bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
+							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
 							{
 								statusRsp = CODE_ERROR;
 							}
