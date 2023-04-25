@@ -200,6 +200,15 @@ void Gateway::delRoom(Room *room)
 	delete room;
 }
 
+#ifdef ESP_PLATFORM
+static void startUdpThread(void *data)
+{
+	Gateway *gateway = (Gateway *)data;
+	gateway->CheckOnlineThread();
+	vTaskDelete(NULL);
+}
+#endif
+
 void Gateway::init()
 {
 	CloudProtocol::init();
@@ -234,8 +243,12 @@ void Gateway::init()
 	LocalConnect();
 
 	isCheckingOnline = true;
+#ifdef ESP_PLATFORM
+	xTaskCreate(startUdpThread, "startUdpThread", 5120, this, 7, NULL);
+#else
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
+#endif
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)

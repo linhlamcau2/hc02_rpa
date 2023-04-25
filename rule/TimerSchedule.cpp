@@ -4,7 +4,12 @@
 #include "Log.h"
 #include "ErrorCode.h"
 
-static void run(TimerSchedule *timerSchedule);
+#ifdef ESP_PLATFORM
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#else
+#include <thread>
+#endif
 
 TimerSchedule *timerSchedule = NULL;
 
@@ -27,39 +32,44 @@ bool Timer::IsAtTime(int time)
 	return false;
 }
 
-void Timer::run()
+static void TimerDoThread(void *data)
 {
-	LOGD("run");
+	LOGI("TimerDoThread Start");
+	Timer *timer = (Timer *)data;
 	try
 	{
-		thread runThread(timerCallbackFunc);
-		runThread.detach();
+		timer->timerCallbackFunc();
 	}
 	catch (...)
 	{
 		LOGE("Timer run error");
 	}
+#ifdef ESP_PLATFORM
+	vTaskDelete(NULL);
+#endif
+}
+
+void Timer::run()
+{
+	LOGD("run");
+#ifdef ESP_PLATFORM
+	xTaskCreate(TimerDoThread, "TimerDoThread", 5120, this, 10, NULL);
+	vTaskDelay(10);
+#else
+	thread timerDoThread(TimerDoThread, this);
+	timerDoThread.detach();
+#endif
 }
 
 TimerSchedule::TimerSchedule()
 {
 	index = 0;
-	runThread = NULL;
 }
 
-void TimerSchedule::init()
+static void TimerThread(void *data)
 {
-	LOGI("Start Timer init");
-	if (!runThread)
-	{
-		runThread = new thread(run, this);
-		runThread->detach();
-	}
-}
-
-static void run(TimerSchedule *timerSchedule)
-{
-	LOGI("Start Timer run");
+	LOGI("Start Timer Thread");
+	TimerSchedule *timerSchedule = (TimerSchedule *)data;
 	int currentTimer, oldTimer = 0;
 	while (1)
 	{
@@ -80,6 +90,18 @@ static void run(TimerSchedule *timerSchedule)
 		}
 		usleep(500000);
 	}
+}
+
+void TimerSchedule::init()
+{
+	LOGI("Start Timer init");
+#ifdef ESP_PLATFORM
+	xTaskCreate(TimerThread, "TimerThread", 2048, this, 10, NULL);
+	vTaskDelay(10);
+#else
+	thread timerThread(TimerThread, this);
+	timerThread.detach();
+#endif
 }
 
 int TimerSchedule::RegisterTimer(string timerStr, TimerCallbackFunc timerCallbackFunc)

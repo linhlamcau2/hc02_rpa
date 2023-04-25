@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <mutex>
-#include <thread>
 #include <functional>
 
 using namespace std;
@@ -14,9 +13,9 @@ class Timer
 private:
 	int index;
 	int time;
-	TimerCallbackFunc timerCallbackFunc;
 
 public:
+	TimerCallbackFunc timerCallbackFunc;
 	Timer(int index, int time, TimerCallbackFunc timerCallbackFunc);
 
 	int GetIndex();
@@ -27,7 +26,6 @@ public:
 class TimerSchedule
 {
 private:
-	thread *runThread;
 	int index;
 
 public:
