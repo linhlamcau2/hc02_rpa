@@ -1,7 +1,6 @@
 #include "Device.h"
 #include "Gateway.h"
 #include "Log.h"
-#include <thread>
 #include <functional>
 #include <unistd.h>
 #include <Util.h>

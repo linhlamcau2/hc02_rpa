@@ -48,7 +48,8 @@
 #define RD_OPCODE_CALIB 0x0411
 #define RD_OPCODE_REQUEST_STATUS_CURTAIN 0x0311
 
-enum{
+enum
+{
 	CLOSE,
 	OPEN,
 	PAUSE,
@@ -105,6 +106,19 @@ enum
 
 using namespace std;
 
+typedef struct __attribute__((packed))
+{
+	uint8_t mac[6];
+	uint8_t len;
+	uint8_t header_type;
+	uint8_t beacon_type;
+	uint8_t uuid[16];
+	uint32_t uri_hash;
+	uint16_t obb_info;
+	int8_t rssi;
+	uint16_t dc;
+} scan_device_message_t;
+
 class BleProtocol : public Uart
 {
 private:
@@ -143,19 +157,6 @@ private:
 
 	typedef struct __attribute__((packed))
 	{
-		uint8_t mac[6];
-		uint8_t len;
-		uint8_t header_type;
-		uint8_t beacon_type;
-		uint8_t uuid[16];
-		uint32_t uri_hash;
-		uint16_t obb_info;
-		int8_t rssi;
-		uint16_t dc;
-	} scan_device_message_t;
-
-	typedef struct __attribute__((packed))
-	{
 		uint8_t netKey[16];
 		uint16_t key_index;
 		uint8_t flag;
@@ -172,16 +173,9 @@ private:
 		uint16_t devAddr;
 	} ble_message_header_t;
 
-	// typedef function<int()> AddDeviceFunc;
-	// AddDeviceFunc addDeviceFunc;
-	scan_device_message_t scanDeviceMessage;
-
 	vector<message_rsp_list_st *> messageRespList;
 	// mutex mtxWaitSendUart;
 	pthread_mutex_t mutex;
-
-	atomic<bool> isAdding;
-	atomic<bool> isProvisioning;
 
 	// TODO: Add init state
 	pro_net_info_t pro_net_info;
@@ -196,6 +190,10 @@ private:
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
+	atomic<bool> haveNewMac;
+	atomic<bool> isProvisioning;
+	scan_device_message_t scanDeviceMessage;
+
 #ifdef ESP_PLATFORM
 	BleProtocol(int num, int txPin, int rxPin, int baudrate);
 #else
@@ -215,7 +213,7 @@ public:
 	int ResetFactory();
 
 	bool IsProvision();
-	int AddDevice();
+	int AddDevice(scan_device_message_t *scan_device_message);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
@@ -280,7 +278,7 @@ public:
 	int SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8_t second);
 	int SetGroup(uint16_t devAddr, uint16_t group);
 
-	//Rooling door, curtain
+	// Rooling door, curtain
 	int ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, uint8_t percent = 0);
 	int ConfigMotor(uint16_t devAddr, uint8_t typeMotor);
 	int CalibCurtain(uint16_t devAddr, uint8_t status);

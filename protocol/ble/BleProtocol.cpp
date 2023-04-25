@@ -25,12 +25,32 @@ BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate
 #endif
 {
 	nextAddr = 0;
-	isAdding = false;
+	haveNewMac = false;
 	isProvisioning = false;
 }
 
 BleProtocol::~BleProtocol()
 {
+}
+
+static void AddDeviceThread(void *data)
+{
+	LOGI("AddDeviceThread Start");
+	BleProtocol *bleProtocol = (BleProtocol *)data;
+	scan_device_message_t scan_device_message;
+	while (1)
+	{
+		if (bleProtocol->haveNewMac)
+		{
+			memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
+			bleProtocol->AddDevice(&scan_device_message);
+			bleProtocol->haveNewMac = false;
+		}
+		else
+		{
+			sleep(1);
+		}
+	}
 }
 
 void BleProtocol::init()
@@ -41,6 +61,14 @@ void BleProtocol::init()
 	}
 	Uart::init();
 	usleep(100000); // wait uart rx thread start
+
+#ifdef ESP_PLATFORM
+	xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, this, 10, NULL);
+	vTaskDelay(10);
+#else
+	thread addDeviceThread(AddDeviceThread, this);
+	addDeviceThread.detach();
+#endif
 }
 
 void BleProtocol::InitKey()
@@ -95,36 +123,16 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 	}
 }
 
-#ifdef ESP_PLATFORM
-static void startAddDeviceThread(void *data)
-{
-	LOGI("startAddDeviceThread");
-	BleProtocol *bleProtocol = (BleProtocol *)data;
-	bleProtocol->AddDevice();
-	vTaskDelete(NULL);
-}
-#endif
-
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
 	// LOGD("CheckOpcodeException");
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (!isAdding)
+		if (!haveNewMac)
 		{
-			isAdding = true;
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
-#ifdef ESP_PLATFORM
-			LOGI("xTaskCreate startAddDeviceThread");
-			if (xTaskCreate(startAddDeviceThread, "AddDeviceThread", 10240, this, 7, NULL) != pdTRUE)
-			{
-				LOGE("xTaskCreate startAddDeviceThread err");
-			}
-#else
-			thread addDeviceThread(bind(&BleProtocol::AddDevice, this));
-			addDeviceThread.detach();
-#endif
+			haveNewMac = true;
 		}
 		break;
 
@@ -511,10 +519,9 @@ bool BleProtocol::IsProvision()
 	return isProvisioning;
 }
 
-int BleProtocol::AddDevice()
+int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
-	scan_device_message_t *scan_device_message = &scanDeviceMessage;
 	uint16_t version = 0;
 	uint32_t deviceType = 0;
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
@@ -552,7 +559,6 @@ int BleProtocol::AddDevice()
 			}
 		}
 	}
-	isAdding = false;
 	if (isProvisioning)
 	{
 		sleep(1);

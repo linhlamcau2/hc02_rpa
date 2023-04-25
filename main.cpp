@@ -61,9 +61,6 @@ int main(int argc, char *argv[])
 	database = new Db();
 	database->init();
 
-	fileTransfer = new FileTransfer();
-	fileTransfer->init();
-
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
@@ -85,6 +82,8 @@ int main(int argc, char *argv[])
 
 	Util::LedService(true);
 
+	// fileTransfer = new FileTransfer();
+	// fileTransfer->init();
 	// fileTransfer->uploadFile(".", "smh.sqlite");
 	// fileTransfer->uploadFile(".", "readme.txt");
 	// thread sendFile1(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot1.rar"));
