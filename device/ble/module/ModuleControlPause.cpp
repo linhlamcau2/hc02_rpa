@@ -25,7 +25,7 @@ void ModuleControlPause::SaveAttribute()
 }
 #endif
 
-int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {
@@ -51,7 +51,7 @@ int ModuleControlPause::InputData(uint8_t *data, int len, Json::Value &jsonValue
         uint8_t type;
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
-    if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && (data_message->header & 0xFF == PAUSE)) || (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PAUSE))
+    if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == PAUSE)) || (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PAUSE))
     {
         value = 1;
 #ifdef CONFIG_SAVE_ATTRIBUTE

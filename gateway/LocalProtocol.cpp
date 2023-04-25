@@ -90,6 +90,9 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
+#ifdef ESP_PATFORM
+			vTaskDelay(1);
+#endif
 		}
 		else
 		{
@@ -120,13 +123,17 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 					payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
 					payloadJson.isMember("data") && payloadJson["data"].isObject())
 			{
-				string cmd = payloadJson["cmd"].asString();
-				string rqi = payloadJson["rqi"].asString();
-				if (onLocalCallbackFuncListV2.find(cmd) != onLocalCallbackFuncListV2.end())
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				// Publish(pubRespTopicV2 + topics[3], respValue.toString());
+				Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
+			}
+			else if (rs == CODE_DATA_ARRAY)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				if (respValue.isArray())
 				{
-					OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncListV2[cmd];
-					int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
-					if (rs == CODE_OK)
+					for (auto &respV : respValue)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
@@ -161,10 +168,13 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 					LOGW("OnLocalMessage payload: %s", payload.c_str());
 				}
 			}
+			else if (rs == CODE_NOT_RESPONSE)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+			}
 			else
 			{
-				LOGW("OnLocalMessage topic: %s", topic.c_str());
-				LOGW("OnLocalMessage payload: %s", payload.c_str());
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
 		}
 	}

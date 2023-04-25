@@ -109,6 +109,9 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
+#ifdef ESP_PATFORM
+			vTaskDelay(1);
+#endif
 		}
 		else
 		{
@@ -168,6 +171,9 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
+#ifdef ESP_PATFORM
+			vTaskDelay(1);
+#endif
 		}
 		else
 		{

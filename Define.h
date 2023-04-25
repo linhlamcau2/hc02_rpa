@@ -13,7 +13,7 @@
 #endif
 
 #ifndef VERSION
-#define VERSION 0.0.1
+#define VERSION 1.2.12
 #endif
 
 #ifndef DB_NAME

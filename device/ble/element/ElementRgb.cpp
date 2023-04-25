@@ -61,7 +61,7 @@ void ElementRgb::SaveAttribute()
 }
 #endif
 
-int ElementRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ElementRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

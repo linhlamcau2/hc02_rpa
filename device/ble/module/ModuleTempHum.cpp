@@ -30,7 +30,7 @@ void ModuleTempHum::SaveAttribute()
 }
 #endif
 
-int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -52,19 +52,53 @@ int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
-	if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
+	// if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
+	// {
+	// 	typedef struct
+	// 	{
+	// 		uint16_t temp;
+	// 		uint16_t hum;
+	// 	} data_message_t;
+	// 	data_message_t *data_message = (data_message_t *)&data[3];
+	// 	temp = bswap_16(data_message->temp);
+	// 	hum = bswap_16(data_message->hum);
+	// 	BuildTelemetryValue(jsonValue);
+	// 	CheckTrigger();
+	// 	return CODE_OK;
+	// }
+	// return CODE_ERROR;
+
+	typedef struct __attribute__((packed))
 	{
-		typedef struct
+		uint8_t opcode;
+		uint16_t header;
+		uint8_t value1[2];
+		uint8_t value2[2];
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+
+	if (data_message->opcode == 0x52)
+	{
+		if (data_message->header == 0x0006)
 		{
-			uint16_t temp;
-			uint16_t hum;
-		} data_message_t;
-		data_message_t *data_message = (data_message_t *)&data[3];
-		temp = bswap_16(data_message->temp);
-		hum = bswap_16(data_message->hum);
-		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
-		return CODE_OK;
+			temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
+			if (data_message->value1[0] & 0x80)
+				temp = (-1) * temp;
+			hum = (data_message->value2[0] << 8) | data_message->value2[1];
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			return CODE_OK;
+		}
+		else if (data_message->header == 0x0107 && len >= 9)
+		{
+			hum = (data_message->value1[0] << 8) | data_message->value1[1];
+			temp = (data[7] << 8) | data[8];
+			if (data[5] == 0xff)
+				temp = (-1) * temp;
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }
@@ -73,13 +107,13 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idTemp == id || this->idHum == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				Json::Value listValue = dataValue["VALUE"];

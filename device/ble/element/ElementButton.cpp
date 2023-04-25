@@ -26,7 +26,7 @@ void ElementButton::SaveAttribute()
 }
 #endif
 
-int ElementButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ElementButton::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

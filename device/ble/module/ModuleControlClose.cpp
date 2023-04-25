@@ -25,7 +25,7 @@ void ModuleControlClose::SaveAttribute()
 }
 #endif
 
-int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {
@@ -51,7 +51,7 @@ int ModuleControlClose::InputData(uint8_t *data, int len, Json::Value &jsonValue
         uint8_t type;
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
-    if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && (data_message->header & 0xFF == CLOSE)) || (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CLOSE))
+    if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == CLOSE)) || (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CLOSE))
     {
         value = 1;
 #ifdef CONFIG_SAVE_ATTRIBUTE

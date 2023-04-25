@@ -202,7 +202,7 @@ void Gateway::delRoom(Room *room)
 
 void Gateway::init()
 {
-	// CloudProtocol::init();
+	CloudProtocol::init();
 	LocalProtocol::init();
 	Udp::init();
 
@@ -230,11 +230,12 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 
-	// CloudConnect();
+	CloudConnect();
 	LocalConnect();
 
-	// thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
-	// checkOnlineThread.detach();
+	isCheckingOnline = true;
+	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	checkOnlineThread.detach();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -266,6 +267,8 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
+	isCheckingOnline = false;
+	sleep(1);
 	deviceList.clear();
 	groupList.clear();
 	ruleList.clear();
@@ -293,6 +296,7 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
+	isCheckingOnline = true;
 }
 
 int Gateway::CheckOnlineThread()
@@ -324,7 +328,7 @@ int Gateway::CheckOnlineThread()
 	{
 		currentTime = time(NULL);
 		allTimeCheck = deviceList.size() * 4;
-		if (!bleProtocol->IsProvision())
+		if (!bleProtocol->IsProvision() && isCheckingOnline)
 		{
 			for (const auto &[id, device] : deviceList)
 			{

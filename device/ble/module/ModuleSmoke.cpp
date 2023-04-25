@@ -30,7 +30,7 @@ void ModuleSmoke::SaveAttribute()
 }
 #endif
 
-int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

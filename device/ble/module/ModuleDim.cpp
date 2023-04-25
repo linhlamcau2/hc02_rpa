@@ -25,7 +25,7 @@ void ModuleDim::SaveAttribute()
 }
 #endif
 
-int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

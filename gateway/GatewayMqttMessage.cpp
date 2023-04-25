@@ -52,7 +52,7 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("RESET_REMOTE", bind(&Gateway::OnRpcResetRemote, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcEditScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
 
@@ -73,7 +73,6 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
-
 
 	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
@@ -114,7 +113,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("RESET_REMOTE", bind(&Gateway::OnRpcResetRemote, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcScenePirLigtSensor, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcEditScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
 
@@ -510,10 +509,10 @@ int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 		respValue["CMD"] = "EVENT_TRIGGER";
 		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
-				data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
-				data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
-				data.isMember("STATUS") && data["STATUS"].isInt() &&
-				data.isMember("STATES") && data["STATES"].isArray())
+			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
+			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
+			data.isMember("STATUS") && data["STATUS"].isInt() &&
+			data.isMember("STATES") && data["STATES"].isArray())
 		{
 			string evevtId = data["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
@@ -564,10 +563,10 @@ int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
 		respValue["CMD"] = "EDIT_EVENT_TRIGGER";
 		Json::Value dataJsonRsp = Json::objectValue;
 		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
-				data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
-				data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
-				data.isMember("STATUS") && data["STATUS"].isInt() &&
-				data.isMember("STATES") && data["STATES"].isArray())
+			data.isMember("EACH_DAY") && data["EACH_DAY"].isArray() &&
+			data.isMember("GROUP_ID") && data["GROUP_ID"].isString() &&
+			data.isMember("STATUS") && data["STATUS"].isInt() &&
+			data.isMember("STATES") && data["STATES"].isArray())
 		{
 			string evevtId = data["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
@@ -624,7 +623,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("SCENE_ID") && dataValue["SCENE_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			string sceneId = dataValue["SCENE_ID"].asString();
 			dataJsonRsp["SCENE_ID"] = sceneId;
@@ -1711,7 +1710,7 @@ int Gateway::OnRpcUpdateGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isInt() &&
-				dataValue.isMember("name") && dataValue["name"].isString())
+			dataValue.isMember("name") && dataValue["name"].isString())
 		{
 			int addr = dataValue["id"].asInt();
 			string name = dataValue["name"].asString();
@@ -1785,7 +1784,7 @@ int Gateway::OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue
 		{
 			Json::Value dataValue = reqValue["DATA"];
 			if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-					dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 			{
 				respValue["CMD"] = "ADD_DEVICE_TO_GROUP";
 				Json::Value data;
@@ -1848,7 +1847,7 @@ int Gateway::OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
+			dataValue.isMember("DEVICES") && dataValue["DEVICES"].isArray())
 		{
 			respValue["CMD"] = "DELETE_DEVICE_FROM_GROUP";
 			Json::Value data;
@@ -2074,8 +2073,12 @@ int Gateway::OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcScenePirLigtSensor");
+	int statusRsp = CODE_OK;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
+		uint16_t luxLow = 0;
+		uint16_t luxHigh = 0;
+		uint8_t pir = 0;
 		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["CMD"] = "SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
@@ -2085,38 +2088,63 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
+				if (data.isMember("HANG_ON_TIME") && data["HANG_ON_TIME"].isInt())
 				{
-					if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString() && data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
+					if (bleProtocol)
 					{
-						string sceneId = data["SCENE_ID"].asString();
-						uint8_t pir = data["PIR_VALUE"].asInt();
-						data["EVENT_TRIGGER_ID"] = sceneId;
-						Json::Value lux = data["LUX"];
-						SceneBle *scene = getSceneBleFromId(sceneId);
-						if (scene)
+						if (bleProtocol->TimeActionPirLightSensor(device->GetAddr(), data["HANG_ON_TIME"].asInt()) != CODE_OK)
 						{
-							Json::Value dataCmd;
-							dataCmd["pir"] = pir;
-							dataCmd["scene"] = (Json::UInt)scene->GetAddr();
-							dataCmd["lux"] = lux;
-							device->Do(dataCmd);
+							statusRsp = CODE_ERROR;
 						}
-						else
-						{
-							LOGW("Scene %s does not exsit", sceneId.c_str());
-						}
-					}
-					if (data.isMember("HANG_ON_TIME") && data["HANG_ON_TIME"].isInt())
-					{
-						Json::Value configTime;
-						configTime["time"] = data["HANG_ON_TIME"].asInt();
-						device->Do(configTime);
 					}
 				}
-				else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
+				if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString())
 				{
-					device->Do(data);
+					string sceneId = data["SCENE_ID"].asString();
+					data["EVENT_TRIGGER_ID"] = sceneId;
+					SceneBle *sceneBle = getSceneBleFromId(sceneId);
+					if (sceneBle)
+					{
+						if (data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
+						{
+							pir = data["PIR_VALUE"].asInt();
+							if (data["LUX"].size() == 2 && data["LUX"][0].isInt() && data["LUX"][1].isInt())
+							{
+								luxLow = data["LUX"][0].asInt();
+								luxHigh = data["LUX"][1].asInt();
+								if (bleProtocol)
+								{
+									if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, luxLow, luxHigh, sceneBle->GetAddr(), 0) != CODE_OK)
+									{
+										statusRsp = CODE_ERROR;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						LOGW("Scene %s does not exsit", sceneId.c_str());
+					}
+				}
+				if (data.isMember("AFTER_PIR_SCENE_ID") && data["AFTER_PIR_SCENE_ID"].isString())
+				{
+					string sceneAfterId = data["AFTER_PIR_SCENE_ID"].asString();
+					SceneBle *sceneAfter = getSceneBleFromId(sceneAfterId);
+					if (sceneAfter)
+					{
+						if (bleProtocol)
+						{
+							if (!bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
+							{
+								statusRsp = CODE_ERROR;
+							}
+						}
+					}
+					else
+					{
+						LOGW("Scene %s does not exsit", sceneAfterId.c_str());
+					}
 				}
 			}
 			else
@@ -2126,13 +2154,17 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 		}
 		dataJsonRsp["DATA"] = data;
 	}
-	return CODE_ERROR;
+	return statusRsp;
 }
 int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnRpcEditScenePirLightSensor");
+	LOGD("OnRpcScenePirLigtSensor");
+	int statusRsp = CODE_OK;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
+		uint16_t luxLow = 0;
+		uint16_t luxHigh = 0;
+		uint8_t pir = 0;
 		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["CMD"] = "EDIT_SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
@@ -2142,36 +2174,62 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString() && data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
+				if (data.isMember("HANG_ON_TIME") && data["HANG_ON_TIME"].isInt())
+				{
+					if (bleProtocol)
+					{
+						if (bleProtocol->TimeActionPirLightSensor(device->GetAddr(), data["HANG_ON_TIME"].asInt()) != CODE_OK)
+						{
+							statusRsp = CODE_ERROR;
+						}
+					}
+				}
+				if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString())
 				{
 					string sceneId = data["SCENE_ID"].asString();
-					uint8_t pir = data["PIR_VALUE"].asInt();
 					data["EVENT_TRIGGER_ID"] = sceneId;
-					Json::Value lux = data["LUX"];
-					SceneBle *scene = getSceneBleFromId(sceneId);
-					if (scene)
+					SceneBle *sceneBle = getSceneBleFromId(sceneId);
+					if (sceneBle)
 					{
-						if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
+						if (data.isMember("LUX") && data["LUX"].isArray() && data.isMember("PIR_VALUE") && data["PIR_VALUE"].isInt())
 						{
-							Json::Value dataCmd;
-							dataCmd["pir"] = pir;
-							dataCmd["scene"] = (Json::UInt)scene->GetAddr();
-							dataCmd["lux"] = lux;
-							device->Do(dataCmd);
-						}
-						else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
-						{
-							if (bleProtocol)
+							pir = data["PIR_VALUE"].asInt();
+							if (data["LUX"].size() == 2 && data["LUX"][0].isInt() && data["LUX"][1].isInt())
 							{
-								bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, lux[0].asInt(), lux[1].asInt(), scene->GetAddr(), 1);
+								luxLow = data["LUX"][0].asInt();
+								luxHigh = data["LUX"][1].asInt();
+								if (bleProtocol)
+								{
+									if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, luxLow, luxHigh, sceneBle->GetAddr(), 0) != CODE_OK)
+									{
+										statusRsp = CODE_ERROR;
+									}
+								}
 							}
-							else
-								LOGW("BleProtocol null");
 						}
 					}
 					else
 					{
 						LOGW("Scene %s does not exsit", sceneId.c_str());
+					}
+				}
+				if (data.isMember("AFTER_PIR_SCENE_ID") && data["AFTER_PIR_SCENE_ID"].isString())
+				{
+					string sceneAfterId = data["AFTER_PIR_SCENE_ID"].asString();
+					SceneBle *sceneAfter = getSceneBleFromId(sceneAfterId);
+					if (sceneAfter)
+					{
+						if (bleProtocol)
+						{
+							if (!bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
+							{
+								statusRsp = CODE_ERROR;
+							}
+						}
+					}
+					else
+					{
+						LOGW("Scene %s does not exsit", sceneAfterId.c_str());
 					}
 				}
 			}
@@ -2182,48 +2240,54 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 		}
 		dataJsonRsp["DATA"] = data;
 	}
-	return CODE_ERROR;
+	return statusRsp;
 }
 int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcRemoveScenePirLightSensor");
+	int status = CODE_OK;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray() && reqValue.isMember("DEVICE_ID") && reqValue["DEVICE_ID"].isString())
 	{
 		respValue["CMD"] = "REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
 		string deviceId = reqValue["DEVICE_ID"].asString();
-		for (Json::ArrayIndex i = 0; i < data.size(); i++)
+		int pirValue = 0;
+		string sceneId = "";
+		SceneBle *scene = NULL;
+
+		Device *device = getDeviceFromId(deviceId);
+		if (device)
 		{
-			Json::Value dataValue = data[i];
-			if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+			for (Json::ArrayIndex i = 0; i < data.size(); i++)
 			{
-				string eventId = dataValue["EVENT_TRIGGER_ID"].asString();
-				Device *device = getDeviceFromId(deviceId);
-				SceneBle *scene = getSceneBleFromId(eventId);
-				if (device && scene)
+				Json::Value dataValue = data[i];
+				if (dataValue.isMember("PIR_VALUE") && dataValue["PIR_VALUE"].isInt())
 				{
-					if (device->GetType() == BLE_PIR_LIGHT_SENSOR_DC)
-					{
-						Json::Value delscene;
-						delscene["sceneDel"] = (Json::UInt)scene->GetAddr();
-						device->Do(delscene);
-					}
-					else
-					{
-						device->Do(data);
-					}
+					pirValue = dataValue["PIR_VALUE"].asInt();
 				}
-				else
+				if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 				{
-					LOGW("Device or scene does exsit");
+					sceneId = dataValue["EVENT_TRIGGER_ID"].asString();
+					scene = getSceneBleFromId(sceneId);
+					if (scene)
+					{
+						if (bleProtocol)
+						{
+							if (bleProtocol->DelScenePirLightSensor(device->GetAddr(), scene->GetAddr()) != CODE_OK)
+								status = CODE_ERROR;
+						}
+					}
 				}
 			}
 		}
 		respValue["DATA"] = data;
-		return CODE_OK;
 	}
-	LOGW("OnRpcRemoveScenePirLightSensor error: %s", reqValue.toString().c_str());
-	return CODE_ERROR;
+	else
+	{
+		status = CODE_ERROR;
+		LOGW("OnRpcRemoveScenePirLightSensor error: %s", reqValue.toString().c_str());
+	}
+	return status;
 }
 
 int Gateway::OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue)
@@ -2527,7 +2591,7 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			if (group)
 			{
 				int numDevices = group->deviceList.size();
-				vector <DeviceInGroup *> list = group->deviceList;
+				vector<DeviceInGroup *> list = group->deviceList;
 				for (int i = 0; i < numDevices; i++)
 				{
 					if (group->DelDevice(list[i]->device, list[i]->epId) == CODE_OK)
@@ -2575,12 +2639,12 @@ int Gateway::OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("id") && dataValue["id"].isString() &&
-				dataValue.isMember("name") && dataValue["name"].isString() &&
-				dataValue.isMember("mac") && dataValue["mac"].isString() &&
-				dataValue.isMember("addr") && dataValue["addr"].isInt() &&
-				dataValue.isMember("type") && dataValue["type"].isInt() &&
-				dataValue.isMember("devicekey") && dataValue["devicekey"].isString() &&
-				dataValue.isMember("version") && dataValue["version"].isInt())
+			dataValue.isMember("name") && dataValue["name"].isString() &&
+			dataValue.isMember("mac") && dataValue["mac"].isString() &&
+			dataValue.isMember("addr") && dataValue["addr"].isInt() &&
+			dataValue.isMember("type") && dataValue["type"].isInt() &&
+			dataValue.isMember("devicekey") && dataValue["devicekey"].isString() &&
+			dataValue.isMember("version") && dataValue["version"].isInt())
 		{
 			string deviceId = dataValue["id"].asString();
 			string name = dataValue["name"].asString();
@@ -2605,7 +2669,7 @@ int Gateway::OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -2666,7 +2730,7 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -2700,7 +2764,7 @@ int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("GROUP_ID") && dataValue["GROUP_ID"].isString() &&
-				dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
 		{
 			string groupId = dataValue["GROUP_ID"].asString();
 			Json::Value properties = dataValue["PROPERTIES"];
@@ -2788,9 +2852,16 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 				{
 					if (config->SetUsername(user))
 					{
-						if (config->SetPassword(password))
+						if (config->SetPort(1884))
 						{
-							status = 1;
+							if (config->SetPassword(password))
+							{
+								status = 1;
+							}
+							else
+							{
+								status = 0;
+							}
 						}
 						else
 						{
@@ -2828,11 +2899,11 @@ int Gateway::OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value dataValue = reqValue["params"];
 		if (dataValue.isMember("type") && dataValue["type"].isString() &&
-				dataValue.isMember("key") && dataValue["key"].isString() &&
-				dataValue.isMember("user") && dataValue["user"].isString() &&
-				dataValue.isMember("host") && dataValue["host"].isString() &&
-				dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
-				dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
+			dataValue.isMember("key") && dataValue["key"].isString() &&
+			dataValue.isMember("user") && dataValue["user"].isString() &&
+			dataValue.isMember("host") && dataValue["host"].isString() &&
+			dataValue.isMember("serverPort") && dataValue["serverPort"].isInt() &&
+			dataValue.isMember("forwardPort") && dataValue["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = dataValue["type"].asString();
@@ -2915,7 +2986,7 @@ int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 	{
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
-				dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
+			dataValue.isMember("ROOM_ID") && dataValue["ROOM_ID"].isString())
 		{
 			int deviceType;
 			string deviceId = dataValue["DEVICE_ID"].asString();
@@ -2939,7 +3010,10 @@ int Gateway::OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &r
 						}
 						else
 						{
-							LOGW("Device type does not support add room");
+							if (room->AddDevice(device, false) == CODE_OK)
+							{
+								database->DeviceInRoomAdd(room, device);
+							}
 						}
 					}
 					else
@@ -3088,8 +3162,8 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		{
 			Json::Value dataValue = datasValue[0];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
-					dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
-					dataValue.isMember("URL") && dataValue["URL"].isString())
+				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+				dataValue.isMember("URL") && dataValue["URL"].isString())
 			{
 				name = dataValue["NAME"].asString();
 				sum = dataValue["CHECK_SUM"].asString();

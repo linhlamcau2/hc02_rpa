@@ -25,7 +25,7 @@ void ModuleControlPercent::SaveAttribute()
 }
 #endif
 
-int ModuleControlPercent::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleControlPercent::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {
@@ -53,7 +53,7 @@ int ModuleControlPercent::InputData(uint8_t *data, int len, Json::Value &jsonVal
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
 
-    if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN) && (data_message->header & 0xFF == PERCENT)) ||
+    if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN) && ((data_message->header & 0x00FF) == PERCENT)) ||
         (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PERCENT))
     {
         if (data_message->opcode == 0x52)

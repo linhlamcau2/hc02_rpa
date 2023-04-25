@@ -25,7 +25,7 @@ void ElementCct::SaveAttribute()
 }
 #endif
 
-int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -33,6 +33,7 @@ int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			cct = (dataValue["VALUE"].asInt() * 192) + 800;
+
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			return CODE_OK;
@@ -55,7 +56,7 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 	{
 		if (len <= 6)
 		{
-			if(cct != data_message->cct_first)
+			if (cct != data_message->cct_first)
 			{
 				cct = data_message->cct_first;
 				BuildTelemetryValue(jsonValue);
@@ -64,18 +65,16 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 		}
 		else
 		{
-			if(cct != data_message->cct)
+			if (cct != data_message->cct)
 			{
 				cct = data_message->cct;
 				BuildTelemetryValue(jsonValue);
 				BuildTelemetryValueV2(jsonValueV2);
 			}
 		}
-			cct = data_message->cct;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
 		return CODE_OK;
 	}

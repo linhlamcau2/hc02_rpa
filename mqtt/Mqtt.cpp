@@ -358,7 +358,7 @@ void Mqtt::on_message(const struct mosquitto_message *message)
 
 void Mqtt::OnMessage(string topic, char *payload, int payloadLen)
 {
-	string msg = string(payload);
+	string msg = string(payload, payloadLen);
 	LOGD("OnMessage topic: %s, payload: %s", topic.c_str(), msg.c_str());
 	ActionCallback *actionCallback;
 	if (findActionCallbackFuncFromTopic(topic, &actionCallback) == CODE_OK)

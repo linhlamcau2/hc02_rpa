@@ -7,12 +7,10 @@ DeviceBleLightOnoffHslModeRGB::DeviceBleLightOnoffHslModeRGB(string id, string n
 	moduleOnOff = new ModuleOnOff(this, addr);
 	moduleModeRgb = new ModuleModeRgb(this, addr);
 	moduleHsl = new ModuleHsl(this, addr);
-	moduleOnoffHsl = new ModuleOnoffHsl(this, addr);
 	moduleCallScene = new ModuleCallScene(this, addr);
 	modules.push_back(moduleOnOff);
 	modules.push_back(moduleModeRgb);
 	modules.push_back(moduleHsl);
-	modules.push_back(moduleOnoffHsl);
 	modules.push_back(moduleCallScene);
 	countElement = 2;
 	powerSource = POWER_AC;
