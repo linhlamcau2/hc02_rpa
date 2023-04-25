@@ -25,10 +25,19 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 			return CODE_ERROR;
 		}
 		string macGw = mac;
-		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c) { return c == ':'; }), macGw.end());
+		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
+													{ return c == ':'; }),
+								macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
-		respValue["HOSTNAME"] = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+#ifdef ESP_PLATFORM
+		string hostName = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
+#else
+		string hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+#endif
+		for (auto &c : hostName)
+			c = toupper(c);
+		respValue["HOSTNAME"] = hostName;
 		respValue["MAC"] = mac;
 		respValue["TLS"] = false;
 		respValue["MQTT_PORT"] = 1883;
