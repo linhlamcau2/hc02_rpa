@@ -2423,22 +2423,21 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 							if (deviceChild)
 							{
 								uint32_t addrChild = deviceChild->GetAddr();
-								if (group->AddDevice(deviceParent, addrChild, true) == CODE_OK)
+								if (group->AddDevice(deviceParent, addrChild, true) != CODE_OK)
 								{
-									database->DeviceInGroupAdd(group, deviceParent, addrChild);
-									if (bleProtocol)
-									{
-										if (bleProtocol->SetIdCombine(addrChild, group->GetAddr() + 49152) != CODE_OK)
-											statusRsp = "FAILED";
-									}
-									else
-									{
+									statusRsp = "FAILED";
+								}
+								database->DeviceInGroupAdd(group, deviceParent, addrChild);
+								if (bleProtocol)
+								{
+									if (bleProtocol->SetIdCombine(addrChild, group->GetAddr() + 49152) != CODE_OK)
 										statusRsp = "FAILED";
-										LOGW("BLEProtocol null");
-									}
 								}
 								else
+								{
 									statusRsp = "FAILED";
+									LOGW("BLEProtocol null");
+								}
 							}
 							else
 								LOGW("Device %s not found", deviceChild->GetId().c_str());
@@ -2494,22 +2493,22 @@ int Gateway::OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue
 								if (deviceAddChild)
 								{
 									uint32_t addrChild = deviceAddChild->GetAddr();
-									if (group->AddDevice(deviceAddParent, addrChild, true) == CODE_OK)
+									if (group->AddDevice(deviceAddParent, addrChild, true) != CODE_OK)
 									{
-										database->DeviceInGroupAdd(group, deviceAddParent, addrChild);
-										if (bleProtocol)
-										{
-											if (bleProtocol->SetIdCombine(addrChild, group->GetAddr() + 49152) != CODE_OK)
-												statusRsp = "FAILED";
-										}
-										else
-										{
+										statusRsp = "FAILED";
+									}
+									database->DeviceInGroupAdd(group, deviceAddParent, addrChild);
+
+									if (bleProtocol)
+									{
+										if (bleProtocol->SetIdCombine(addrChild, group->GetAddr() + 49152) != CODE_OK)
 											statusRsp = "FAILED";
-											LOGW("BLEProtocol null");
-										}
 									}
 									else
+									{
 										statusRsp = "FAILED";
+										LOGW("BLEProtocol null");
+									}
 								}
 								else
 									LOGW("Device %s not found", deviceAddChild->GetId().c_str());
@@ -2537,22 +2536,22 @@ int Gateway::OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue
 								if (deviceRemoveChild)
 								{
 									uint32_t addrChild = deviceRemoveChild->GetAddr();
-									if (group->DelDevice(deviceRemoveParent, addrChild) == CODE_OK)
+									if (group->DelDevice(deviceRemoveParent, addrChild) != CODE_OK)
 									{
-										database->DeviceInGroupDel(group, deviceRemoveParent, addrChild);
-										if (bleProtocol)
-										{
-											if (bleProtocol->SetIdCombine(addrChild, 0) != CODE_OK)
-												statusRsp = "FAILED";
-										}
-										else
-										{
+										statusRsp = "FAILED";
+									}
+									database->DeviceInGroupDel(group, deviceRemoveParent, addrChild);
+
+									if (bleProtocol)
+									{
+										if (bleProtocol->SetIdCombine(addrChild, 0) != CODE_OK)
 											statusRsp = "FAILED";
-											LOGW("BLEProtocol null");
-										}
 									}
 									else
+									{
 										statusRsp = "FAILED";
+										LOGW("BLEProtocol null");
+									}
 								}
 								else
 									LOGW("Device %s not found", deviceRemoveChild->GetId().c_str());
@@ -2594,27 +2593,31 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			{
 				int numDevices = group->deviceList.size();
 				vector<DeviceInGroup *> list = group->deviceList;
+				// for (int j = 0; j < numDevices; j++)
+				// {
+				// 	LOGE("Device %s, epid: %d", list[j]->device->GetId(), list[j]->epId);
+				// }
 				for (int i = 0; i < numDevices; i++)
 				{
-					if (group->DelDevice(list[i]->device, list[i]->epId) == CODE_OK)
+					if (group->DelDevice(list[i]->device, list[i]->epId) != CODE_OK)
 					{
-						database->DeviceInGroupDel(group, list[i]->device, list[i]->epId);
-						if (bleProtocol)
-						{
-							if (bleProtocol->SetIdCombine(list[i]->device->GetAddr(), 0) != CODE_OK)
-								statusRsp = "FAILED";
-						}
-						else
-						{
+						statusRsp = "FAILED";
+					}
+					database->DeviceInGroupDel(group, list[i]->device, list[i]->epId);
+						
+
+					if (bleProtocol)
+					{
+						if (bleProtocol->SetIdCombine(list[i]->device->GetAddr(), 0) != CODE_OK)
 							statusRsp = "FAILED";
-							LOGW("BLEProtocol null");
-						}
+					}
+					else
+					{
+						statusRsp = "FAILED";
+						LOGW("BLEProtocol null");
 					}
 				}
-				if (statusRsp == "SUCCESS")
-				{
-					delGroup(group);
-				}
+				delGroup(group);
 			}
 			else
 			{

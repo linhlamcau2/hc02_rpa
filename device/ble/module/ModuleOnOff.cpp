@@ -55,25 +55,17 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 	{
 		if (len == 3)
 		{
-			if (onoff != data_message->state)
-			{
-				onoff = data_message->state;
-				BuildTelemetryValue(jsonValue);
-				BuildTelemetryValueV2(jsonValueV2);
-			}
+			onoff = data_message->state;
 		}
 		else
 		{
-			if (onoff != data_message->onoff)
-			{
-				onoff = data_message->onoff;
-				BuildTelemetryValue(jsonValue);
-				BuildTelemetryValueV2(jsonValueV2);
-			}
+			onoff = data_message->onoff;
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
+		BuildTelemetryValue(jsonValue);
+		BuildTelemetryValueV2(jsonValueV2);
 		CheckTrigger();
 		return CODE_OK;
 	}
@@ -84,12 +76,12 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -117,8 +109,8 @@ bool ModuleOnOff::CheckDataV2(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
+		dataValue.isMember("op") && dataValue["op"].isString() &&
+		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
@@ -160,11 +152,11 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			if (bleProtocol)
@@ -183,7 +175,7 @@ int ModuleOnOff::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
 		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
