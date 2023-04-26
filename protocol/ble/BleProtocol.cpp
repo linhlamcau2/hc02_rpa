@@ -129,7 +129,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (!haveNewMac)
+		if (isProvisioning && !haveNewMac)
 		{
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			haveNewMac = true;
@@ -249,10 +249,14 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 				if (gateway)
 					CheckOpcodeException(message_rsp);
 			}
-			else
+			else if (message_rsp->len < 2 && message_rsp->len > 36)
 			{
 				LOGW("Wrong uart data");
 				l = 0;
+				break;
+			}
+			else
+			{
 				break;
 			}
 		}

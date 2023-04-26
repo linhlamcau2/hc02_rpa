@@ -56,6 +56,8 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR", bind(&Gateway::OnRpcRemoveScenePirLightSensor, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("SENSOR_UPDATE", bind(&Gateway::OnRpcSensorUpdate, this, placeholders::_1, placeholders::_2));
 
+	OnDeviceRpcCallbackRegister("SCENE_FOR_SCREEN", bind(&Gateway::OnRpcSceneScreen, this, placeholders::_1, placeholders::_2));
+
 	OnDeviceRpcCallbackRegister("CREATE_EVENT_TRIGGER", bind(&Gateway::OnRpcAddRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("EDIT_EVENT_TRIGGER", bind(&Gateway::OnRpcEditRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("EVENT_TRIGGER_STATUS", bind(&Gateway::OnRpcSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
@@ -372,7 +374,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcAddRule");
-	respValue["CMD"] = "CREATE_EVENT_TRIGGER";
+	respValue["CMD"] = "EVENT_TRIGGER";
 	Json::Value dataJsonRsp = Json::objectValue;
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
@@ -401,7 +403,7 @@ int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRpcEditRule");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
-		respValue["CMD"] = "EDIT_EVENT_TRIGGER";
+		respValue["CMD"] = "EVENT_TRIGGER";
 		Json::Value dataJsonRsp = Json::objectValue;
 		Json::Value dataValue = reqValue["DATA"];
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())

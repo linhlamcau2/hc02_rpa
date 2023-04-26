@@ -3,13 +3,7 @@
 #include "Util.h"
 #include "Log.h"
 #include "ErrorCode.h"
-
-#ifdef ESP_PLATFORM
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#else
 #include <thread>
-#endif
 
 TimerSchedule *timerSchedule = NULL;
 
@@ -44,21 +38,13 @@ static void TimerDoThread(void *data)
 	{
 		LOGE("Timer run error");
 	}
-#ifdef ESP_PLATFORM
-	vTaskDelete(NULL);
-#endif
 }
 
 void Timer::run()
 {
 	LOGD("run");
-#ifdef ESP_PLATFORM
-	xTaskCreate(TimerDoThread, "TimerDoThread", 5120, this, 10, NULL);
-	vTaskDelay(10);
-#else
 	thread timerDoThread(TimerDoThread, this);
 	timerDoThread.detach();
-#endif
 }
 
 TimerSchedule::TimerSchedule()
@@ -95,13 +81,8 @@ static void TimerThread(void *data)
 void TimerSchedule::init()
 {
 	LOGI("Start Timer init");
-#ifdef ESP_PLATFORM
-	xTaskCreate(TimerThread, "TimerThread", 2048, this, 10, NULL);
-	vTaskDelay(10);
-#else
 	thread timerThread(TimerThread, this);
 	timerThread.detach();
-#endif
 }
 
 int TimerSchedule::RegisterTimer(string timerStr, TimerCallbackFunc timerCallbackFunc)

@@ -421,15 +421,6 @@ int Gateway::CheckOnlineThread()
 				}
 			}
 		}
-		else
-		{
-			if (isBusy)
-				LOGD("isBusy");
-			if (LocalProtocol::IsBusy())
-				LOGD("LocalProtocol::IsBusy()");
-			if (CloudProtocol::IsBusy())
-				LOGD("CloudProtocol::IsBusy()");
-		}
 		sleep(1);
 	}
 	return CODE_OK;
