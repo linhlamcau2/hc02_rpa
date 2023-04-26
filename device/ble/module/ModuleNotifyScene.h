@@ -12,24 +12,6 @@ protected:
 public:
 	ModuleNotifyScene(Device *device, uint32_t addr);
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-	/**
-	 * @brief Init parameter value from database after system start
-	 *
-	 * @param attributeId id of attribute
-	 * @param value value of attribute
-	 */
-	void InitAttribute(int attributeId, double value);
-
-	/**
-	 * @brief Save parameter value to database
-	 *
-	 */
-	void SaveAttribute();
-#endif
-
-	// int InputData(Json::Value &dataValue, Json::Value &jsonValue);
-
 	/**
 	 * @brief Parse raw data to module parameter value
 	 *
