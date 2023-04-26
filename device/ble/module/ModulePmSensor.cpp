@@ -123,7 +123,7 @@ bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModulePmSensor::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

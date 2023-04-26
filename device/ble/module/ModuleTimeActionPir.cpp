@@ -88,7 +88,7 @@ bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleTimeActionPir::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

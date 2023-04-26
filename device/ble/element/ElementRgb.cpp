@@ -168,7 +168,7 @@ bool ElementRgb::CheckData(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Element.cpp
 void ElementRgb::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

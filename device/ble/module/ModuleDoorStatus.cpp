@@ -89,7 +89,7 @@ bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Module.cpp
 void ModuleDoorStatus::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

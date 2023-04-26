@@ -102,13 +102,17 @@ int Device::BuildAttributesValue(Json::Value &pushDataValue)
 
 void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
 {
-	lastTimeActive = time(NULL);
 	InputData(data, len, addr);
+}
+
+void Device::UpdateLastTimeActive()
+{
+	lastTimeActive = time(NULL);
 }
 
 void Device::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : deviceRuleInputList)
 	{
@@ -189,7 +193,7 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		deviceData["id"] = id;
 		deviceData["data"] = jsonValueV2;
 		devices["device"].append(deviceData);
-		pushDataValue["data"] = devices;		
+		pushDataValue["data"] = devices;
 		gateway->pushDeviceUpdateLocalV2(devices);
 	}
 	return 1;

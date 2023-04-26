@@ -139,7 +139,7 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleHsl::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

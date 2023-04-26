@@ -105,7 +105,7 @@ bool ModuleSmoke::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleSmoke::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

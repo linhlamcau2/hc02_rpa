@@ -118,7 +118,7 @@ bool ModuleLightSensor::CheckData(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Module.cpp
 void ModuleLightSensor::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

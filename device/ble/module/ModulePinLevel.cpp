@@ -91,7 +91,7 @@ bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModulePinLevel::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

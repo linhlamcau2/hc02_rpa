@@ -175,6 +175,7 @@ public:
 
 	bool isOnline();
 	bool isNeedCheckOnline();
+	void UpdateLastTimeActive();
 
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);

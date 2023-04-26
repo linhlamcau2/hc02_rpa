@@ -103,7 +103,7 @@ bool ElementOnOff::CheckData(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Element.cpp
 void ElementOnOff::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

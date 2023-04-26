@@ -150,7 +150,8 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
-			LOGD("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
+			LOGV("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
+			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
 				Json::Value dataArray = Json::arrayValue;
@@ -1536,7 +1537,7 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 
 int BleProtocol::UpdateLights(uint16_t devAddr)
 {
-	LOGD("Update lights addr: 0x%04X ", devAddr);
+	LOGV("Update lights addr: 0x%04X ", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t updateHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x52};

@@ -109,7 +109,7 @@ bool ModuleControlPercent::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleControlPercent::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

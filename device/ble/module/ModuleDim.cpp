@@ -114,7 +114,7 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleDim::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

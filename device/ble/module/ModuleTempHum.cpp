@@ -143,7 +143,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleTempHum::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

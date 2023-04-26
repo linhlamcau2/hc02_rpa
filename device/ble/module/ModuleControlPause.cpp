@@ -99,7 +99,7 @@ bool ModuleControlPause::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleControlPause::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

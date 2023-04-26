@@ -170,7 +170,7 @@ bool ModuleRgb::CheckData(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Element.cpp
 void ModuleRgb::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{

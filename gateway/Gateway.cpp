@@ -297,6 +297,7 @@ void Gateway::ResetFactory()
 	database->DeviceInRoomDelAll();
 	database->SceneBleDelAll();
 	database->DeviceInSceneBleDelAll();
+	database->RuleDelAll();
 
 	database->GatewayUpdateId(gateway, "");
 	database->GatewayUpdateDormitory(gateway, "");

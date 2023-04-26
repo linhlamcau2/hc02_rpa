@@ -99,7 +99,7 @@ bool ModuleControlClose::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleControlClose::CheckTrigger()
 {
-	LOGD("CheckTrigger");
+	LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
