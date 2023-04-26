@@ -35,6 +35,7 @@ CloudProtocol::~CloudProtocol()
 void CloudProtocol::init()
 {
 	Mqtt::init();
+	isBusy = false;
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopicV1);
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
 	addActionCallback(bind(&CloudProtocol::OnServerRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);

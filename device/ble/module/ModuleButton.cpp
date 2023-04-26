@@ -109,13 +109,13 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t bt = 0, mode = 0;
 				string op = dataValue["OP"].asString();
@@ -189,20 +189,15 @@ int ModuleButton::Do(Json::Value &dataValue)
 int ModuleButton::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-		dataValue.isMember(key) && dataValue[key].isInt())
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		int bt = dataValue[key].asInt();
-		if (bleProtocol)
+		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
 		{
-			if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
-			{
-				this->bt = bt;
-			}
+			this->bt = bt;
+			return CODE_OK;
 		}
-		else
-			LOGW("BleProtocol null");
-		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

@@ -250,6 +250,8 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 			}
 			else
 			{
+				LOGW("Wrong uart data");
+				l = 0;
 				break;
 			}
 		}

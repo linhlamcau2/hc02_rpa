@@ -79,12 +79,12 @@ bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t mode1 = 0, mode2 = 0;
 			string op = dataValue["OP"].asString();
@@ -138,11 +138,11 @@ int ModuleModeRgb::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleModeRgb Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			if (bleProtocol)
@@ -160,20 +160,15 @@ int ModuleModeRgb::Do(Json::Value &dataValue)
 int ModuleModeRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
 		int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-		if (bleProtocol)
+		if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)
 		{
-			if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)
-			{
-				this->mode = mode;
-			}
+			this->mode = mode;
+			return CODE_OK;
 		}
-		else
-			LOGW("BleProtocol null");
-		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

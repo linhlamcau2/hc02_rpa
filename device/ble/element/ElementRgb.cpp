@@ -257,7 +257,7 @@ int ElementRgb::Do(Json::Value &dataValue)
 int ElementRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
+	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
 			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
 			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
@@ -269,20 +269,15 @@ int ElementRgb::DoV2(Json::Value &dataValue)
 		int b = dataValue[keyB].asInt();
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol)
+		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
 		{
-			if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
-			{
-				this->r = r;
-				this->g = g;
-				this->b = b;
-				this->dimOn = dimOn;
-				this->dimOff = dimOff;
-			}
+			this->r = r;
+			this->g = g;
+			this->b = b;
+			this->dimOn = dimOn;
+			this->dimOff = dimOff;
+			return CODE_OK;
 		}
-		else
-			LOGW("BleProtocol null");
-		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

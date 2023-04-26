@@ -15,7 +15,7 @@ Device::Device(string id, string name, string mac, string data, uint32_t addr, u
 
 	lastOnlineState = false;
 	lastTimeActive = 0;
-	lastTimeCheck = 0;
+	lastTimeCheckActive = 0;
 }
 
 Device::~Device()

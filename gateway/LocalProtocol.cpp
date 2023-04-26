@@ -31,6 +31,7 @@ void LocalProtocol::init()
 #else
 	Mqtt::init();
 #endif
+	isBusy = false;
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
 	addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
 	// addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), "HC.CONTROL.V2");

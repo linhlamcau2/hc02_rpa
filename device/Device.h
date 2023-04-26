@@ -154,7 +154,7 @@ public:
 	int powerSource;
 	bool lastOnlineState;
 	time_t lastTimeActive;
-	time_t lastTimeCheck;
+	time_t lastTimeCheckActive;
 
 public:
 	Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);

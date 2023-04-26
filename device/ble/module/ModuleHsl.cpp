@@ -80,7 +80,7 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_HSL)
 	{
-		if((l != data_message->l) || (h != data_message->h) || (s != data_message->s))
+		if ((l != data_message->l) || (h != data_message->h) || (s != data_message->s))
 		{
 			l = data_message->l;
 			h = data_message->h;
@@ -101,13 +101,13 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idS == id || this->idL == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -215,7 +215,7 @@ int ModuleHsl::Do(Json::Value &dataValue)
 {
 	LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idL == id || this->idS == id)
@@ -261,26 +261,21 @@ int ModuleHsl::Do(Json::Value &dataValue)
 int ModuleHsl::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-		dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-		dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 	{
 		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		if (bleProtocol)
+		if (bleProtocol->SetHSLLight(addr, h, s, l, 0, true) == CODE_OK)
 		{
-			if (bleProtocol->SetHSLLight(addr, h, s, l, 0, true) == CODE_OK)
-			{
-				this->h = h;
-				this->s = s;
-				this->l = l;
-			}
+			this->h = h;
+			this->s = s;
+			this->l = l;
+			return CODE_OK;
 		}
-		else
-			LOGW("BleProtocol null");
-		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

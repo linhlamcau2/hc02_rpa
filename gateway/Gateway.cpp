@@ -340,25 +340,25 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
-		currentTime = time(NULL);
 		allTimeCheck = deviceList.size() * 4;
 		if (!bleProtocol->IsProvision() && !isBusy && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			for (const auto &[id, device] : deviceList)
 			{
-				deviceStateChange = false;
 				if (device->GetAddr() != 65535)
 				{
+					currentTime = time(NULL);
+					deviceStateChange = false;
 					if (device->lastOnlineState) // online
 					{
 						// neu thiet bi ho tro ban tin check trang thai online/offline
 						if (device->isNeedCheckOnline())
 						{
 							// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
-							if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheck + allTimeCheck) <= currentTime)
+							if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheckActive + allTimeCheck) <= currentTime)
 							{
 								bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
-								device->lastTimeCheck = currentTime;
+								device->lastTimeCheckActive = currentTime;
 							}
 							// 2 chu ky khong co ban tin phan hoi thi bao offline
 							if ((device->lastTimeActive + allTimeCheck * 2 + 1) < currentTime)
@@ -385,10 +385,10 @@ int Gateway::CheckOnlineThread()
 						if (device->isNeedCheckOnline())
 						{
 							// thoi gian check qua 1 chu ky thi check lai
-							if ((device->lastTimeCheck + allTimeCheck) <= currentTime)
+							if ((device->lastTimeCheckActive + allTimeCheck) <= currentTime)
 							{
 								bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
-								device->lastTimeCheck = currentTime;
+								device->lastTimeCheckActive = currentTime;
 							}
 							// neu co ban tin moi trong vong 2 chu ky check thi bao online
 							if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
@@ -419,6 +419,15 @@ int Gateway::CheckOnlineThread()
 					}
 				}
 			}
+		}
+		else
+		{
+			if (isBusy)
+				LOGD("isBusy");
+			if (LocalProtocol::IsBusy())
+				LOGD("LocalProtocol::IsBusy()");
+			if (CloudProtocol::IsBusy())
+				LOGD("CloudProtocol::IsBusy()");
 		}
 		sleep(1);
 	}

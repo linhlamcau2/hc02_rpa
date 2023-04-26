@@ -9,7 +9,7 @@ class ModuleCallScene : public Module
 protected:
 	uint16_t idScene;
 	uint8_t id;
-    uint16_t value;
+	uint16_t value;
 
 public:
 	ModuleCallScene(Device *device, uint32_t addr);
