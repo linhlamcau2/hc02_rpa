@@ -9,19 +9,19 @@
 
 #include "Util.h"
 #include "Wifi.h"
+#include <thread>
 
 #define BUFLEN 1024
 
 Udp::Udp(int port) : port(port)
 {
 	isRunning = false;
-	udpThread = NULL;
 }
 
-static int UdpHandleMessage(Udp *udp)
+static void UdpHandleMessage(void *data)
 {
 	LOGI("Start UdpHandleMessage");
-
+	Udp *udp = (Udp *)data;
 	struct sockaddr_in si_me, si_other;
 	int slen = sizeof(si_other);
 
@@ -68,7 +68,9 @@ static int UdpHandleMessage(Udp *udp)
 		buf[recv_len] = '\0';
 		udp->UdpOnMessage(string(buf), &si_other, slen);
 	}
-	return CODE_OK;
+#ifdef ESP_PLATFORM
+	vTaskDelete(NULL);
+#endif
 }
 
 void Udp::init()
@@ -76,8 +78,13 @@ void Udp::init()
 	if (!isRunning)
 	{
 		isRunning = true;
-		udpThread = new thread(UdpHandleMessage, this);
-		udpThread->detach();
+#ifdef ESP_PLATFORM
+		xTaskCreate(UdpHandleMessage, "UdpHandleMessage", 10240, this, 10, NULL);
+		vTaskDelay(10);
+#else
+		thread udpThread(UdpHandleMessage, this);
+		udpThread.detach();
+#endif
 	}
 }
 

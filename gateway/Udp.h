@@ -1,6 +1,5 @@
 #pragma once
 
-#include <thread>
 #include <functional>
 #include "json.h"
 #include <arpa/inet.h>
@@ -19,7 +18,6 @@ public:
 	int fd;
 	int port;
 	bool isRunning;
-	thread *udpThread;
 
 	Udp(int port);
 
