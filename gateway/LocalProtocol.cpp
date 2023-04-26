@@ -59,7 +59,9 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
 		{
 			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
+			isBusy = true;
 			int rs = onLocalCallbackFunc(payloadJson, respValue);
+			isBusy = false;
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
@@ -128,7 +130,9 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 				if (onLocalCallbackFuncListV2.find(cmd) != onLocalCallbackFuncListV2.end())
 				{
 					OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncListV2[cmd];
+					isBusy = true;
 					int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
+					isBusy = false;
 					if (rs == CODE_OK)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
@@ -157,9 +161,9 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 					{
 						LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 					}
-		#ifdef ESP_PATFORM
+#ifdef ESP_PATFORM
 					vTaskDelay(1);
-		#endif
+#endif
 				}
 				else
 				{

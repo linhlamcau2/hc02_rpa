@@ -3,6 +3,7 @@
 #include "Mqtt.h"
 #include "json.h"
 #include <map>
+#include <atomic>
 
 using namespace std;
 
@@ -37,6 +38,8 @@ private:
 	string subBinRespTopicV2;
 	string pubBinReqTopicV2;
 
+	atomic<bool> isBusy;
+
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncListV2;
@@ -51,6 +54,9 @@ public:
 	virtual ~CloudProtocol();
 
 	void init();
+
+	bool IsBusy() { return isBusy; }
+
 	void cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
 	void cloudAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);
 	void cloudAddActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic);

@@ -2,6 +2,7 @@
 
 #include "json.h"
 #include <map>
+#include <atomic>
 
 using namespace std;
 
@@ -28,6 +29,8 @@ private:
 	string pubReqTopicV2;
 	string pubRespTopicV2;
 
+	atomic<bool> isBusy;
+
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnLocalCallbackFunc;
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncList;
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncListV2;
@@ -41,6 +44,8 @@ public:
 	virtual ~LocalProtocol();
 
 	void init();
+
+	bool IsBusy() { return isBusy; }
 
 	int LocalConnect();
 	void OnConnect(bool isConnected, bool isReconnect);

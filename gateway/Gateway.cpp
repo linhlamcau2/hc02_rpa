@@ -242,13 +242,15 @@ void Gateway::init()
 	CloudConnect();
 	LocalConnect();
 
-	isCheckingOnline = true;
 #ifdef ESP_PLATFORM
 	xTaskCreate(startUdpThread, "startUdpThread", 5120, this, 7, NULL);
+	vTaskDelay(10);
 #else
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
 #endif
+
+	isBusy = false;
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -280,8 +282,7 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
-	isCheckingOnline = false;
-	sleep(1);
+	isBusy = true;
 	deviceList.clear();
 	groupList.clear();
 	ruleList.clear();
@@ -309,7 +310,7 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
-	isCheckingOnline = true;
+	isBusy = false;
 }
 
 int Gateway::CheckOnlineThread()
@@ -341,7 +342,7 @@ int Gateway::CheckOnlineThread()
 	{
 		currentTime = time(NULL);
 		allTimeCheck = deviceList.size() * 4;
-		if (!bleProtocol->IsProvision() && isCheckingOnline)
+		if (!bleProtocol->IsProvision() && !isBusy && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			for (const auto &[id, device] : deviceList)
 			{
@@ -360,7 +361,7 @@ int Gateway::CheckOnlineThread()
 								device->lastTimeCheck = currentTime;
 							}
 							// 2 chu ky khong co ban tin phan hoi thi bao offline
-							if ((device->lastTimeActive + allTimeCheck * 2) < currentTime)
+							if ((device->lastTimeActive + allTimeCheck * 2 + 1) < currentTime)
 							{
 								LOGI("Device 0x%04X offline", device->GetAddr());
 								device->lastOnlineState = false;

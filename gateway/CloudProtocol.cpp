@@ -84,7 +84,9 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
 		{
 			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
+			isBusy = true;
 			int rs = onRpcCallbackFunc(payloadJson, respValue);
+			isBusy = false;
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
@@ -144,7 +146,9 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 		if (onRpcCallbackFuncListV2.find(cmd) != onRpcCallbackFuncListV2.end())
 		{
 			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncListV2[cmd];
+			isBusy = true;
 			int rs = onRpcCallbackFunc(payloadJson["data"], respValue);
+			isBusy = false;
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
