@@ -129,7 +129,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (!haveNewMac)
+		if (isProvisioning && !haveNewMac)
 		{
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			haveNewMac = true;
