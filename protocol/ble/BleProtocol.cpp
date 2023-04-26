@@ -249,10 +249,14 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 				if (gateway)
 					CheckOpcodeException(message_rsp);
 			}
-			else
+			else if (message_rsp->len < 2 && message_rsp->len > 36)
 			{
 				LOGW("Wrong uart data");
 				l = 0;
+				break;
+			}
+			else
+			{
 				break;
 			}
 		}
