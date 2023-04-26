@@ -22,7 +22,7 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 				Device *device = gateway->getDeviceFromId(deviceId);
 				if (group && device)
 				{
-					group->AddDevice(device, device->GetAddr(), false);
+					group->AddDevice(device, element, false);
 				}
 				else
 				{

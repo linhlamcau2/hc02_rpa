@@ -1288,7 +1288,7 @@ int BleProtocol::AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	addgroup_message.element = element;
 	addgroup_message.group = group;
 	addgroup_message.offset = 0x1000;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&addgroup_message, sizeof(addgroup_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addGroupHeader, 0, 6);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&addgroup_message, sizeof(addgroup_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, addGroupHeader, 0, 6);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -1332,7 +1332,7 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	delgroup_message.element = element;
 	delgroup_message.group = group;
 	delgroup_message.offset = 0x1000;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&delgroup_message, sizeof(delgroup_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delGroupHeader, 0, 6);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&delgroup_message, sizeof(delgroup_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, delGroupHeader, 0, 6);
 	if (rs == CODE_OK)
 	{
 		return CODE_OK;
@@ -2825,7 +2825,7 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	set_id_combine_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	set_id_combine_message.header = RD_OPCODE_CONFIG_SET_ID_COMBINE;
 	set_id_combine_message.id = id;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&set_id_combine_message, sizeof(set_id_combine_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, setIdCombineHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&set_id_combine_message, sizeof(set_id_combine_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, setIdCombineHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
