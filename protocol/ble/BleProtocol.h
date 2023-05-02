@@ -203,13 +203,14 @@ public:
 	void init();
 
 	void InitKey();
-	int GetAppKey();
+	string GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
 	int SetGwKey();
 
 	int StartScan();
 	int StopScan();
+	int ResetBle();
 	int ResetFactory();
 
 	bool IsProvision();
