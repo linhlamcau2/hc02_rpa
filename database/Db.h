@@ -16,6 +16,7 @@ class Db
 {
 
 private:
+	sqlite3 *db;
 	pthread_mutex_t mutex;
 
 	int Sqlite_Exec(string &sql);

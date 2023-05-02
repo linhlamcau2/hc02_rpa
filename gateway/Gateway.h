@@ -41,7 +41,7 @@ private:
 	string dormitoryId;
 	string refresh_token;
 	thread *udpBroadcastThread;
-	bool isUdpBroadcasting;
+	atomic<bool> isUdpBroadcasting;
 	atomic<bool> isBusy;
 
 	map<string, Device *> deviceList;
@@ -52,8 +52,6 @@ private:
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
-
-	int UdpBroadcastThread();
 
 	int GatewayConnectToCloudNotice();
 
@@ -213,6 +211,7 @@ public:
 	 */
 	void StartUdpBroadcast();
 	void StopUdpBroadcast();
+	int UdpBroadcastThread();
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
