@@ -67,7 +67,6 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->ble_appkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
-	udpBroadcastThread = NULL;
 }
 
 Device *Gateway::getDeviceFromMac(string mac)
@@ -201,10 +200,17 @@ void Gateway::delRoom(Room *room)
 }
 
 #ifdef ESP_PLATFORM
-static void startUdpThread(void *data)
+static void startCheckOnlineThread(void *data)
 {
 	Gateway *gateway = (Gateway *)data;
 	gateway->CheckOnlineThread();
+	vTaskDelete(NULL);
+}
+
+static void startUdpThread(void *data)
+{
+	Gateway *gateway = (Gateway *)data;
+	gateway->UdpBroadcastThread();
 	vTaskDelete(NULL);
 }
 #endif
@@ -243,9 +249,13 @@ void Gateway::init()
 	LocalConnect();
 
 #ifdef ESP_PLATFORM
-	xTaskCreate(startUdpThread, "startUdpThread", 5120, this, 7, NULL);
+	xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL);
+	vTaskDelay(10);
+	xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL);
 	vTaskDelay(10);
 #else
+	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
+	udpBroadcastThread.detach();
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
 #endif
@@ -469,40 +479,36 @@ int Gateway::UdpBroadcastThread()
 		dataValue["CONNECTION_MODE"] = "Lan";
 	}
 	hcBroadcastValue["DATA"] = dataValue;
-	isUdpBroadcasting = true;
+	string dataStr = hcBroadcastValue.toString();
 	bool ledInternet = Util::GetStatusLedInternet();
-	for (int i = 0; i < 120; i++)
-	{
-		if (!isUdpBroadcasting)
-			break;
-		Util::LedInternet(false);
-		usleep(500000);
-		send(hcBroadcastValue.toString(), &s, sizeof(s));
-		Util::LedInternet(true);
-		usleep(500000);
-	}
-	Util::LedInternet(ledInternet);
 	isUdpBroadcasting = false;
-	free(udpBroadcastThread);
-	udpBroadcastThread = NULL;
+	while (1)
+	{
+		if (isUdpBroadcasting)
+		{
+			Util::LedInternet(false);
+			usleep(500000);
+			send(dataStr, &s, sizeof(s));
+			Util::LedInternet(true);
+			usleep(500000);
+		}
+		else
+		{
+			sleep(1);
+		}
+	}
 	return CODE_OK;
 }
 
 void Gateway::StartUdpBroadcast()
 {
-	if (!udpBroadcastThread)
-	{
-		udpBroadcastThread = new thread(bind(&Gateway::UdpBroadcastThread, this));
-		udpBroadcastThread->detach();
-	}
-	else
-	{
-		LOGI("StartUdpBroadcast is still running...");
-	}
+	LOGW("StartUdpBroadcast");
+	isUdpBroadcasting = true;
 }
 
 void Gateway::StopUdpBroadcast()
 {
+	LOGW("StopUdpBroadcast");
 	isUdpBroadcasting = false;
 }
 
