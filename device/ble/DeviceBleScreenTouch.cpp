@@ -14,7 +14,7 @@ DeviceBleScreenTouch::DeviceBleScreenTouch(string id, string name, string mac, s
 	powerSource = POWER_AC;
 
 #ifdef ESP_PLATFORM
-	xTaskCreate(SendDatetime, "SendDatetime", 2048, this, 10, NULL);
+	xTaskCreate(SendDatetime, "SendDatetime", 5120, this, 10, NULL);
 	vTaskDelay(10);
 #else
 	thread SendDatetimeThread(SendDatetime, this);
