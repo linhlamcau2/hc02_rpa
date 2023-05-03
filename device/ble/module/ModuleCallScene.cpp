@@ -88,6 +88,7 @@ int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue, J
 						{
 							LOGW("DeviceBle error");
 						}
+						break;
 					}
 					else
 					{
