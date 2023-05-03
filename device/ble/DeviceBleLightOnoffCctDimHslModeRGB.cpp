@@ -15,6 +15,7 @@ DeviceBleLightOnoffCctDimHslModeRGB::DeviceBleLightOnoffCctDimHslModeRGB(string 
 	modules.push_back(moduleDim);
 	modules.push_back(moduleModeRgb);
 	modules.push_back(moduleCallScene);
+	elements.push_back(elementCct);
 	countElement = 2;
 	powerSource = POWER_AC;
 }

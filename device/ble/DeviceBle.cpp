@@ -88,6 +88,7 @@ void DeviceBle::InputData(Json::Value &dataValue)
 void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
+	valuesV2 = Json::Value::null;
 	for (auto &module : modules)
 	{
 		if (module->InputData(data, len, values, valuesV2) == CODE_OK)

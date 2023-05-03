@@ -158,10 +158,9 @@ int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, ui
 	if (opRsp)
 	{
 
-		while (message_rsp_list.status == 0xFF && timeout)
+		while (message_rsp_list.status == 0xFF && timeout--)
 		{
 			usleep(1000);
-			--timeout;
 		}
 		messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
 	}

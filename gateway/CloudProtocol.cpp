@@ -351,7 +351,7 @@ int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopicV2, sendValue.toString());
-	while (!request.status && --timeout)
+	while (!request.status && timeout--)
 	{
 		usleep(1000);
 	}
@@ -376,7 +376,7 @@ int CloudProtocol::PublishBinToCloudMessageV2(string sessionId, int index, char 
 	string rqi = sessionId + to_string(index);
 	requestList[rqi] = &request;
 	Publish(pubBinReqTopicV2 + sessionId + "/" + to_string(index), payload, payloadLen);
-	while (!request.status && --timeout)
+	while (!request.status && timeout--)
 	{
 		usleep(1000);
 	}
@@ -404,7 +404,7 @@ int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value 
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	Publish(pubReqTopicV2, sendValue.toString());
-	while (!requestBin.status && --timeout)
+	while (!requestBin.status && timeout--)
 	{
 		usleep(1000);
 	}

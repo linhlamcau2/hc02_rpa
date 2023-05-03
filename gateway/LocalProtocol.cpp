@@ -272,7 +272,7 @@ int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopicV2 + "all", sendValue.toString());
-	while (!request.status && --timeout)
+	while (!request.status && timeout--)
 	{
 		usleep(1000);
 	}

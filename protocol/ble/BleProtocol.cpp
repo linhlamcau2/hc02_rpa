@@ -307,10 +307,9 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 
 		if (opRsp)
 		{
-			while (!message_rsp_list.status && timeout)
+			while (!message_rsp_list.status && timeout--)
 			{
 				usleep(1000);
-				--timeout;
 			}
 			if (!message_rsp_list.status)
 			{
