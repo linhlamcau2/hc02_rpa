@@ -24,10 +24,13 @@ private:
 	map<string, request_t *> requestList;
 
 	string mac;
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	string subReqTopicV2;
 	string subRespTopicV2;
 	string pubReqTopicV2;
 	string pubRespTopicV2;
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 	atomic<bool> isBusy;
 
@@ -36,8 +39,10 @@ private:
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncListV2;
 
 	void OnLocalMessage(string &topic, string &payload);
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	void OnLocalMessageV2(string &topic, string &payload);
 	void OnLocalRespV2(string &topic, string &payload);
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
 	LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
@@ -54,13 +59,14 @@ public:
 	int LocalPublish(string topic, string payload);
 
 	int OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLocalCallbackFunc);
-	int OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc);
-
 	int PublishToLocalMessage(string &payload);
 	int PublishToLocalMessage(Json::Value &payloadJson);
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	int OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc);
 	int PublishToLocalMessageV2(string &payload);
 	int PublishToLocalMessageV2(Json::Value &payloadJson);
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 	vector<string> listMsgPush;
 	int PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 1000);

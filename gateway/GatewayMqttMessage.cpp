@@ -23,10 +23,10 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("RESET_BLE", bind(&Gateway::OnRpcBleReset, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("RESET_HC", bind(&Gateway::OnRpcResetFactory, this, placeholders::_1, placeholders::_2));
 
-	OnDeviceRpcCallbackRegister("CREATE_ROOM", bind(&Gateway::OnRpcCreateRoom, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRpcAddDevToRoom, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("REMOVE_DEVICE_FROM_ROOM", bind(&Gateway::OnRpcRemoveDevFromRoom, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("DELETE_ROOM", bind(&Gateway::OnRpcDeleteRoom, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("CREATE_ROOM", bind(&Gateway::OnRpcCreateRoom, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRpcAddDevToRoom, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("REMOVE_DEVICE_FROM_ROOM", bind(&Gateway::OnRpcRemoveDevFromRoom, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("DELETE_ROOM", bind(&Gateway::OnRpcDeleteRoom, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("CHECK_ROOM", bind(&Gateway::OnRpcCheckRoom, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRpcAddGroup, this, placeholders::_1, placeholders::_2));
@@ -86,6 +86,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("RESET_BLE", bind(&Gateway::OnRpcBleReset, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_HC", bind(&Gateway::OnRpcResetFactory, this, placeholders::_1, placeholders::_2));
 
+	OnLocalCallbackRegister("DEVICE_FLASH", bind(&Gateway::OnRpcDeviceFlash, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("CREATE_ROOM", bind(&Gateway::OnRpcCreateRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRpcAddDevToRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("REMOVE_DEVICE_FROM_ROOM", bind(&Gateway::OnRpcRemoveDevFromRoom, this, placeholders::_1, placeholders::_2));
@@ -846,6 +847,42 @@ int Gateway::OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue)
 		}
 	}
 	return CODE_OK;
+}
+
+static bool status = false;
+int Gateway::OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Device Flash");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		int onoff = 0;
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		{
+			string deviceId = data["DEVICE_ID"].asString();
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				if (status)
+				{
+					onoff = 1;
+					status = false;
+				}
+				else
+				{
+					onoff = 0;
+					status = true;
+				}
+				if (bleProtocol)
+					bleProtocol->SetOnOffLight(device->GetAddr(), onoff, 5, true);
+			}
+			else
+			{
+				LOGW("Device not found");
+			}
+		}
+	}
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
@@ -2604,7 +2641,6 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 						statusRsp = "FAILED";
 					}
 					database->DeviceInGroupDel(group, list[i]->device, list[i]->epId);
-						
 
 					if (bleProtocol)
 					{

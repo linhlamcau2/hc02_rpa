@@ -15,6 +15,7 @@
 
 void Gateway::initMqttMessageV2()
 {
+#ifndef ESP_PLATFORM
 	OnDeviceRpcCallbackRegisterV2("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegisterV2("controlGw", bind(&Gateway::OnControlGw, this, placeholders::_1, placeholders::_2));
@@ -81,6 +82,7 @@ void Gateway::initMqttMessageV2()
 	OnLocalCallbackRegisterV2("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("getSceneIntoRoom", bind(&Gateway::OnGetSceneIntoRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegisterV2("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
+#endif
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)

@@ -475,7 +475,7 @@ int BleProtocol::StartScan()
 	LOGD("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
 	isProvisioning = true;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 5000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 0);
 	if (rs)
 	{
 		LOGE("Send start scan error, rs: %d", rs);
@@ -488,7 +488,7 @@ int BleProtocol::StopScan()
 	LOGD("StopScan");
 	uint8_t d = HCI_GATEWAY_CMD_STOP;
 	isProvisioning = false;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 500);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 0);
 	if (rs)
 	{
 		LOGE("Send stop scan error, rs: %d", rs);
@@ -602,7 +602,7 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 	provision_message.opcode = HCI_GATEWAY_CMD_SET_NODE_PARA;
 	memcpy(&provision_message.data_pro.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
 	provision_message.data_pro.unicast_address = deviceAddr;
-	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
+	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 20000);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
