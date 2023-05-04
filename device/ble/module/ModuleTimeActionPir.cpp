@@ -106,11 +106,6 @@ void ModuleTimeActionPir::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ModuleTimeActionPir::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
-}
-
 int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
 	LOGV("ModuleTimeActionPir Do data: %s", dataValue.toString().c_str());
@@ -133,6 +128,12 @@ int ModuleTimeActionPir::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ModuleTimeActionPir::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
+}
+
 int ModuleTimeActionPir::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -148,3 +149,4 @@ int ModuleTimeActionPir::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

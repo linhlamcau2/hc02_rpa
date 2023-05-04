@@ -134,8 +134,10 @@ void ModulePirLight::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void ModulePirLight::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
 	jsonValue[KEY_ATTRIBUTE_LUX] = lux;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -38,7 +38,7 @@ public:
 	 * @return false
 	 */
 	virtual int InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2) { return CODE_ERROR; }
-	
+
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	/**
@@ -47,14 +47,6 @@ public:
 	 * @param jsonValue
 	 */
 	virtual void BuildTelemetryValue(Json::Value &jsonValue) {}
-
-	/**
-	 * @brief Build telemetry message with this module use message format version 2
-	 *
-	 * @param jsonValue
-	 */
-	virtual void BuildTelemetryValueV2(Json::Value &jsonValue) {}
-
 	/**
 	 * @brief Do an action
 	 *
@@ -64,6 +56,14 @@ public:
 	 */
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	/**
+	 * @brief Build telemetry message with this module use message format version 2
+	 *
+	 * @param jsonValue
+	 */
+	virtual void BuildTelemetryValueV2(Json::Value &jsonValue) {}
+
 	/**
 	 * @brief Do an action use message format version 2
 	 *
@@ -72,4 +72,5 @@ public:
 	 * @return false
 	 */
 	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
+#endif
 };

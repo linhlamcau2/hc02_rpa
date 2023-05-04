@@ -126,8 +126,10 @@ void ModuleSmoke::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void ModuleSmoke::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_SMOKE] = smoke;
 	jsonValue[KEY_ATTRIBUTE_SMOKE_PIN] = power;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

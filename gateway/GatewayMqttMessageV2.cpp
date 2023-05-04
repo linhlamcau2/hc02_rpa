@@ -1,3 +1,4 @@
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #include "Gateway.h"
 #include "Log.h"
 #include "Db.h"
@@ -86,7 +87,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlDevice");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+			reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		string deviceId = reqValue["id"].asString();
 		Json::Value devData = reqValue["data"];
@@ -134,8 +135,8 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 			bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
 		}
 		if (reqValue.isMember(KEY_ATTRIBUTE_HUE) && reqValue[KEY_ATTRIBUTE_HUE].isInt() &&
-			reqValue.isMember(KEY_ATTRIBUTE_SATURATION) && reqValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-			reqValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && reqValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+				reqValue.isMember(KEY_ATTRIBUTE_SATURATION) && reqValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+				reqValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && reqValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 		{
 			int h = reqValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = reqValue[KEY_ATTRIBUTE_SATURATION].asInt();
@@ -166,7 +167,7 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlGroup");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+			reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		string groupId = reqValue["id"].asString();
 		Json::Value devData = reqValue["data"];
@@ -584,8 +585,8 @@ int Gateway::OnAddDeviceGroupBle(Json::Value &deviceList, Json::Value &respSucce
 int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("name") && reqValue["name"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("name") && reqValue["name"].isString() &&
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -668,7 +669,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -756,7 +757,7 @@ int Gateway::OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSucce
 int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -854,8 +855,8 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("name") && reqValue["name"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("name") && reqValue["name"].isString() &&
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -888,8 +889,8 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				for (auto &deviceValue : deviceList)
 				{
 					if (deviceValue.isObject() &&
-						deviceValue.isMember("id") && deviceValue["id"].isString() &&
-						deviceValue.isMember("data") && deviceValue["data"].isObject())
+							deviceValue.isMember("id") && deviceValue["id"].isString() &&
+							deviceValue.isMember("data") && deviceValue["data"].isObject())
 					{
 						Json::Value deviceProperties = deviceValue["data"];
 						string deviceId = deviceValue["id"].asString();
@@ -1047,9 +1048,9 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("name") && reqValue["name"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray() &&
-		reqValue.isMember("scenes") && reqValue["scenes"].isArray())
+			reqValue.isMember("name") && reqValue["name"].isString() &&
+			reqValue.isMember("devices") && reqValue["devices"].isArray() &&
+			reqValue.isMember("scenes") && reqValue["scenes"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -1067,7 +1068,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		}
 		LOGD("roomAddr: %d", roomAddr);
 		Room *room = new Room(roomId, roomAddr, roomName);
-		Group *group = new Group(roomId, roomAddr-ROOM_START_ADDR, roomName);
+		Group *group = new Group(roomId, roomAddr - ROOM_START_ADDR, roomName);
 		if (room)
 		{
 			if (AddNewRoom(room, true, true))
@@ -1117,7 +1118,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -1172,7 +1173,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("devices") && reqValue["devices"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -1279,11 +1280,11 @@ int Gateway::OnSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 {
 	int err = 0;
 	if (reqValue.isMember("type") && reqValue["type"].isString() &&
-		reqValue.isMember("key") && reqValue["key"].isString() &&
-		reqValue.isMember("user") && reqValue["user"].isString() &&
-		reqValue.isMember("host") && reqValue["host"].isString() &&
-		reqValue.isMember("serverPort") && reqValue["serverPort"].isInt() &&
-		reqValue.isMember("forwardPort") && reqValue["forwardPort"].isInt())
+			reqValue.isMember("key") && reqValue["key"].isString() &&
+			reqValue.isMember("user") && reqValue["user"].isString() &&
+			reqValue.isMember("host") && reqValue["host"].isString() &&
+			reqValue.isMember("serverPort") && reqValue["serverPort"].isInt() &&
+			reqValue.isMember("forwardPort") && reqValue["forwardPort"].isInt())
 	{
 		string key = "";
 		string type = reqValue["type"].asString();
@@ -1448,3 +1449,5 @@ int Gateway::OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue)
 	respValue["cmd"] = "getSceneIntoRoomRsp";
 	return CODE_OK;
 }
+
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

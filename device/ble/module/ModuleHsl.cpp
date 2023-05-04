@@ -86,7 +86,9 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			h = data_message->h;
 			s = data_message->s;
 			BuildTelemetryValue(jsonValue);
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 			BuildTelemetryValueV2(jsonValueV2);
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
@@ -163,13 +165,6 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ModuleHsl::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_HUE] = h;
-	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
-	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
-}
-
 int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 {
 	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
@@ -207,7 +202,6 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 				LOGW("BleProtocol null");
 		}
 	}
-
 	return CODE_ERROR;
 }
 
@@ -258,6 +252,14 @@ int ModuleHsl::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ModuleHsl::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_HUE] = h;
+	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
+	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
+}
+
 int ModuleHsl::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -279,3 +281,4 @@ int ModuleHsl::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

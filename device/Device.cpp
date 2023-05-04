@@ -138,22 +138,6 @@ int Device::DoJsonArray(Json::Value &dataValue)
 	return CODE_OK;
 }
 
-int Device::DoJsonArrayV2(Json::Value &dataValue)
-{
-	if (dataValue.isArray())
-	{
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
-		{
-			DoV2(dataValue[i]);
-		}
-	}
-	else
-	{
-		DoV2(dataValue);
-	}
-	return CODE_OK;
-}
-
 int Device::PushTelemetry()
 {
 	Json::Value pushData;
@@ -184,6 +168,7 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		gateway->PublishToLocalMessage(pushDataValue);
 		gateway->PublishToGatewayTelemetry(pushDataValue);
 	}
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (jsonValueV2.isNull() == 0)
 	{
 		Json::Value pushDataValue;
@@ -196,6 +181,7 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		pushDataValue["data"] = devices;
 		gateway->pushDeviceUpdateLocalV2(devices);
 	}
+#endif
 	return 1;
 }
 
@@ -246,3 +232,21 @@ string Device::ConvertDeviceTypeToName(uint32_t type)
 {
 	return typeToNameList[type];
 }
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+int Device::DoJsonArrayV2(Json::Value &dataValue)
+{
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			DoV2(dataValue[i]);
+		}
+	}
+	else
+	{
+		DoV2(dataValue);
+	}
+	return CODE_OK;
+}
+#endif

@@ -14,11 +14,13 @@ RuleOutputDevice::~RuleOutputDevice()
 }
 
 void RuleOutputDevice::RunOutput()
-{	
+{
 	if (device)
 	{
 		sleep(delayTime);
-		device->DoJsonArrayV2(data);
 		device->DoJsonArray(data);
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+		device->DoJsonArrayV2(data);
+#endif
 	}
 }

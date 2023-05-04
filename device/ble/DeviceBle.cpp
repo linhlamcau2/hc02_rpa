@@ -44,30 +44,17 @@ int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
 	return CODE_OK;
 }
 
-int DeviceBle::BuildTelemetryValueV2(Json::Value &pushDataValue)
-{
-	for (auto &module : modules)
-	{
-		module->BuildTelemetryValueV2(pushDataValue);
-	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValueV2(pushDataValue);
-	}
-	return CODE_OK;
-}
-
-void DeviceBle::Getstatus(Json::Value &jsonValue)
-{
-	for (auto &module : modules)
-	{
-		module->BuildTelemetryValueV2(jsonValue);
-	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValueV2(jsonValue);
-	}
-}
+// void DeviceBle::Getstatus(Json::Value &jsonValue)
+// {
+// 	for (auto &module : modules)
+// 	{
+// 		module->BuildTelemetryValueV2(jsonValue);
+// 	}
+// 	for (auto &element : elements)
+// 	{
+// 		element->BuildTelemetryValueV2(jsonValue);
+// 	}
+// }
 
 void DeviceBle::InputData(Json::Value &dataValue)
 {
@@ -134,6 +121,20 @@ int DeviceBle::Do(Json::Value &dataValue)
 	return CODE_OK;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+int DeviceBle::BuildTelemetryValueV2(Json::Value &pushDataValue)
+{
+	for (auto &module : modules)
+	{
+		module->BuildTelemetryValueV2(pushDataValue);
+	}
+	for (auto &element : elements)
+	{
+		element->BuildTelemetryValueV2(pushDataValue);
+	}
+	return CODE_OK;
+}
+
 int DeviceBle::DoV2(Json::Value &dataValue)
 {
 	for (auto &module : modules)
@@ -146,3 +147,4 @@ int DeviceBle::DoV2(Json::Value &dataValue)
 	}
 	return CODE_OK;
 }
+#endif

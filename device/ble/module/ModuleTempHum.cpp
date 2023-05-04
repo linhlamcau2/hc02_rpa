@@ -164,8 +164,10 @@ void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void ModuleTempHum::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_TEMP] = temp;
 	jsonValue[KEY_ATTRIBUTE_HUMIDITY] = hum;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

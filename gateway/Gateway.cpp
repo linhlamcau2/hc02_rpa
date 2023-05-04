@@ -223,7 +223,9 @@ void Gateway::init()
 
 	initUdpMessage();
 	initMqttMessage();
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	initMqttMessageV2();
+#endif
 
 	database->GatewayRead();
 	database->DeviceRead();
@@ -1238,6 +1240,44 @@ void Gateway::setName(string name)
 {
 }
 
+int Gateway::Do(Json::Value &dataValue)
+{
+	LOGV("Do data: %s", dataValue.toString().c_str());
+#ifdef __ANDROID__
+	int onoff = 0;
+	if (dataValue.isObject())
+	{
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "0") && dataValue[KEY_ATTRIBUTE_RELAY "0"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio114/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio114/value");
+			}
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio115/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio115/value");
+			}
+		}
+		return CODE_OK;
+	}
+#endif
+	return CODE_FORMAT_ERROR;
+}
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 {
 	for (const auto &[id, device] : deviceList)
@@ -1419,40 +1459,4 @@ int Gateway::pushNewDeviceLocalV2(Json::Value &dataValue)
 {
 	return PublishToLocalMessageV2("newDev", dataValue, "newDevRsp", NULL, 0);
 }
-
-int Gateway::Do(Json::Value &dataValue)
-{
-	LOGV("Do data: %s", dataValue.toString().c_str());
-#ifdef __ANDROID__
-	int onoff = 0;
-	if (dataValue.isObject())
-	{
-		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "0") && dataValue[KEY_ATTRIBUTE_RELAY "0"].isInt())
-		{
-			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
-			if (onoff)
-			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio114/value");
-			}
-			else
-			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio114/value");
-			}
-		}
-		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
-		{
-			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
-			if (onoff)
-			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio115/value");
-			}
-			else
-			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio115/value");
-			}
-		}
-		return CODE_OK;
-	}
 #endif
-	return CODE_FORMAT_ERROR;
-}

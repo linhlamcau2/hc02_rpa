@@ -117,11 +117,6 @@ void ModuleControlPause::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ModuleControlPause::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_CURTAIN_PAUSE] = value;
-}
-
 int ModuleControlPause::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
@@ -145,6 +140,12 @@ int ModuleControlPause::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ModuleControlPause::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_CURTAIN_PAUSE] = value;
+}
+
 int ModuleControlPause::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -163,3 +164,4 @@ int ModuleControlPause::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

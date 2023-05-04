@@ -91,7 +91,7 @@ enum
 	BLE_SWITCH_3 = 22003,
 	BLE_SWITCH_4 = 22004,
 	BLE_SWITCH_WATER_HEATER = 22005,
-	BLE_SWITCH_CURTAIN = 22006,    
+	BLE_SWITCH_CURTAIN = 22006,
 	BLE_SWITCH_RGB_1 = 22012,
 	BLE_SWITCH_RGB_2 = 22013,
 	BLE_SWITCH_RGB_3 = 22014,
@@ -187,7 +187,6 @@ public:
 	virtual void InitAttribute(int attributeId, double value) {}
 	virtual void CheckTrigger();
 	virtual int DoJsonArray(Json::Value &dataValue);
-	virtual int DoJsonArrayV2(Json::Value &dataValue);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2);
@@ -200,13 +199,17 @@ public:
 	static string ConvertDeviceTypeToName(uint32_t type);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
-	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
-	virtual void Getstatus(Json::Value &jsonValue){}
+	// virtual void Getstatus(Json::Value &jsonValue) {}
 
-	virtual void InputData(Json::Value &dataValue){}
+	virtual void InputData(Json::Value &dataValue) {}
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0){};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	virtual int DoJsonArrayV2(Json::Value &dataValue);
+	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
 	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
+#endif
 };
