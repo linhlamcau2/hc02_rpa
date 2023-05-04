@@ -58,7 +58,9 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			{
 				dim = data_message->dim_first;
 				BuildTelemetryValue(jsonValue);
+#ifndef ESP_PLATFORM
 				BuildTelemetryValueV2(jsonValueV2);
+#endif
 			}
 		}
 		else
@@ -67,7 +69,9 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			{
 				dim = data_message->dim;
 				BuildTelemetryValue(jsonValue);
+#ifndef ESP_PLATFORM
 				BuildTelemetryValueV2(jsonValueV2);
+#endif
 			}
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE

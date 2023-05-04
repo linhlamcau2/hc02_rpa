@@ -86,7 +86,9 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			h = data_message->h;
 			s = data_message->s;
 			BuildTelemetryValue(jsonValue);
+#ifndef ESP_PLATFORM
 			BuildTelemetryValueV2(jsonValueV2);
+#endif
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
@@ -101,13 +103,13 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idS == id || this->idL == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -215,7 +217,7 @@ int ModuleHsl::Do(Json::Value &dataValue)
 {
 	LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idL == id || this->idS == id)
@@ -262,9 +264,9 @@ int ModuleHsl::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 	{
 		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();

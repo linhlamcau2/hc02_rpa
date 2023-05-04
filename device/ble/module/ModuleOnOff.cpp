@@ -65,7 +65,9 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 		SaveAttribute();
 #endif
 		BuildTelemetryValue(jsonValue);
+#ifndef ESP_PLATFORM
 		BuildTelemetryValueV2(jsonValueV2);
+#endif
 		CheckTrigger();
 		return CODE_OK;
 	}

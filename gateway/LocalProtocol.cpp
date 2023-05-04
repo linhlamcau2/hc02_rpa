@@ -33,9 +33,11 @@ void LocalProtocol::init()
 #endif
 	isBusy = false;
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
+#ifndef ESP_PLATFORM
 	addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
 	// addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), "HC.CONTROL.V2");
 	addActionCallback(bind(&LocalProtocol::OnLocalRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);
+#endif
 }
 
 int LocalProtocol::LocalConnect()
@@ -54,7 +56,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Json::Value payloadJson;
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string cmd = payloadJson["CMD"].asString();
 		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
@@ -122,9 +124,9 @@ void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-					payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-					payloadJson.isMember("data") && payloadJson["data"].isObject())
+				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+				payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+				payloadJson.isMember("data") && payloadJson["data"].isObject())
 			{
 				string cmd = payloadJson["cmd"].asString();
 				string rqi = payloadJson["rqi"].asString();
@@ -194,8 +196,8 @@ void LocalProtocol::OnLocalRespV2(string &topic, string &payload)
 		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-					payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+				payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 			{
 				string cmd = payloadJson["cmd"].asString();
 				string rqi = payloadJson["rqi"].asString();
@@ -266,9 +268,9 @@ int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue,
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopicV2 + "all", sendValue.toString());

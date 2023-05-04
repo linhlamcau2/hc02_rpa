@@ -14,11 +14,13 @@ RuleOutputDevice::~RuleOutputDevice()
 }
 
 void RuleOutputDevice::RunOutput()
-{	
+{
 	if (device)
 	{
 		sleep(delayTime);
+#ifndef ESP_PLATFORM
 		device->DoJsonArrayV2(data);
+#endif
 		device->DoJsonArray(data);
 	}
 }

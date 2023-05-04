@@ -79,7 +79,7 @@ private:
 	int OnRpcZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcZigbeeResetFactory(Json::Value &reqValue, Json::Value &respValue);
 #endif
-	sint OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue)
+	int OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue);

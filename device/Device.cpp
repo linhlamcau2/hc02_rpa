@@ -184,6 +184,7 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		gateway->PublishToLocalMessage(pushDataValue);
 		gateway->PublishToGatewayTelemetry(pushDataValue);
 	}
+#ifndef ESP_PLATFORM
 	if (jsonValueV2.isNull() == 0)
 	{
 		Json::Value pushDataValue;
@@ -196,6 +197,7 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		pushDataValue["data"] = devices;
 		gateway->pushDeviceUpdateLocalV2(devices);
 	}
+#endif
 	return 1;
 }
 

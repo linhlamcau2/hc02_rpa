@@ -864,17 +864,25 @@ int Gateway::OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue)
 			if (device)
 			{
 				if (status)
+				{
 					onoff = 1;
+					status = false;
+				}
 				else
+				{
 					onoff = 0;
+					status = true;
+				}
 				if (bleProtocol)
 					bleProtocol->SetOnOffLight(device->GetAddr(), onoff, 5, true);
-				!status;
 			}
 			else
+			{
 				LOGW("Device not found");
+			}
 		}
 	}
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
