@@ -1,6 +1,5 @@
-VERSION = 1.2.12
-
-ZIGBEE = OFF
+VERSION ?= 1.2.12
+ZIGBEE ?= OFF
 
 CC ?= gcc
 CXX ?= g++
@@ -18,7 +17,7 @@ LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
-	# COMPFLAGS += -DCONFIG_ENABLE_ZIGBEE=1
+	DEFINES += -DCONFIG_ENABLE_ZIGBEE=1
 
 	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)

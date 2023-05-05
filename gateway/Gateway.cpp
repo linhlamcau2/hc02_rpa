@@ -650,7 +650,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		}
 	}
 #endif
-#ifdef CONFIG_USE_MQTT_V2
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	Json::Value jsonData = PushNewDevMqttV2(scanDevice);
 	pushNewDeviceLocalV2(jsonData);
 #endif

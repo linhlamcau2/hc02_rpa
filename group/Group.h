@@ -19,9 +19,6 @@ public:
 class Group : public Object
 {
 private:
-	int numberOfBleDevice;
-	int numberOfZigbeeDevice;
-
 	Json::Value dataValue;
 
 public:

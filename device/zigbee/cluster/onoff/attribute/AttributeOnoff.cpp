@@ -11,13 +11,13 @@ AttributeOnoff::AttributeOnoff(Cluster *cluster) : Attribute(cluster)
 
 void AttributeOnoff::InitAttribute(int attributeId, double value)
 {
-	if (attributeId == parameterToId["onoff"])
-		onoff = value;
+	// if (attributeId == parameterToId["onoff"])
+	// 	onoff = value;
 }
 
 void AttributeOnoff::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(cluster->getDevice(), parameterToId["onoff1"], onoff);
+	// database->DeviceAttributeAddOrReplace(cluster->getDevice(), parameterToId["onoff1"], onoff);
 }
 
 void AttributeOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
@@ -58,8 +58,8 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 
 void AttributeOnoff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	Json::Value dataValue;
-	dataValue["ID"] = parameterToId["onoff"];
-	dataValue["VALUE"] = onoff;
-	jsonValue.append(dataValue);
+	// Json::Value dataValue;
+	// dataValue["ID"] = parameterToId["onoff"];
+	// dataValue["VALUE"] = onoff;
+	// jsonValue.append(dataValue);
 }

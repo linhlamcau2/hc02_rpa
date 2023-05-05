@@ -16,8 +16,6 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 
 Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
-	this->numberOfBleDevice = 0;
-	this->numberOfZigbeeDevice = 0;
 }
 
 int Group::GetPositionDevice(Device *device)
@@ -61,7 +59,6 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 					if (deviceInGroup)
 					{
 						deviceList.push_back(deviceInGroup);
-						numberOfBleDevice++;
 						return CODE_OK;
 					}
 				}
@@ -78,30 +75,29 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 			if (deviceInGroup)
 			{
 				deviceList.push_back(deviceInGroup);
-				numberOfBleDevice++;
 				return CODE_OK;
 			}
 		}
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-	if (device->GetProtocol() == ZIGBEE_DEVICE)
-	{
-		if (zigbeeProtocol->AddGroup(id, device->GetAddr(), epId))
-		{
-			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
-			if (deviceInGroup)
-			{
-				deviceList.push_back(deviceInGroup);
-				numberOfZigbeeDevice++;
-			}
-			return CODE_OK;
-		}
-		else
-		{
-			LOGW("Add Zigbee device %s to group %d error", device->GetId().c_str(), addr);
-		}
-	}
+	// if (device->GetProtocol() == ZIGBEE_DEVICE)
+	// {
+	// 	if (zigbeeProtocol->AddGroup(id, device->GetAddr(), epId))
+	// 	{
+	// 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+	// 		if (deviceInGroup)
+	// 		{
+	// 			deviceList.push_back(deviceInGroup);
+	// 			numberOfZigbeeDevice++;
+	// 		}
+	// 		return CODE_OK;
+	// 	}
+	// 	else
+	// 	{
+	// 		LOGW("Add Zigbee device %s to group %d error", device->GetId().c_str(), addr);
+	// 	}
+	// }
 #endif
 	return CODE_ERROR;
 }
@@ -130,7 +126,7 @@ int Group::DelDevice(Device *device, int epId)
 	if (device->GetProtocol() == ZIGBEE_DEVICE)
 	{
 		// TODO: remove from group
-		numberOfZigbeeDevice--;
+		// numberOfZigbeeDevice--;
 		// zigbeeProtocol->AddGroup(id, device->GetAddr(), epId);
 	}
 #endif
@@ -144,13 +140,7 @@ int Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBle();
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
-	thread doZigbeeThread(doZigbeeBind, &this->dataValue);
-	doZigbeeThread.detach();
-#endif
-
+	DoZigbee();
 	return CODE_OK;
 }
 
@@ -158,13 +148,7 @@ int Group::DoV2(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBleV2();
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
-	thread doZigbeeThread(doZigbeeBind, &this->dataValue);
-	doZigbeeThread.detach();
-#endif
-
+	// DoZigbeeV2();
 	return CODE_OK;
 }
 
@@ -237,55 +221,50 @@ void Group::DoBle()
 
 void Group::DoBleV2()
 {
-	if (dataValue.isObject())
+	if (bleProtocol && dataValue.isObject())
 	{
-		if (bleProtocol)
+		if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 		{
-			if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
-			{
-				int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-				bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
-			}
-			if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
-			{
-				int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-				uint16_t dim = (value * 65535) / 100;
-				bleProtocol->SetDimmingLight(addr + ID_START, dim, 0, true);
-			}
-			if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
-			{
-				int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-				uint16_t cct = (value * 192) + 800;
-				bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
-			}
-			if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
-			{
-				int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-				int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-				int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-				bleProtocol->SetHSLLight(addr + ID_START, h, s, l, 0, true);
-			}
-			if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
-			{
-				int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-				bleProtocol->CallModeRgb(addr + ID_START, value);
-			}
+			int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+			bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
 		}
-		else
-			LOGW("BleProtocol null");
+		if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		{
+			int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+			uint16_t dim = (value * 65535) / 100;
+			bleProtocol->SetDimmingLight(addr + ID_START, dim, 0, true);
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+		{
+			int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+			uint16_t cct = (value * 192) + 800;
+			bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+		{
+			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+			int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+			bleProtocol->SetHSLLight(addr + ID_START, h, s, l, 0, true);
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+		{
+			int value = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+			bleProtocol->CallModeRgb(addr + ID_START, value);
+		}
 	}
 }
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-void Group::DoZigbee(Json::Value *dataValue)
+void Group::DoZigbee()
 {
-	if (numberOfZigbeeDevice)
+	if (zigbeeProtocol && dataValue.isObject())
 	{
-		if (dataValue->isMember("method") && (*dataValue)["method"].isString())
+		if (dataValue.isMember("method") && dataValue["method"].isString())
 		{
-			string method = (*dataValue)["method"].asString();
+			string method = dataValue["method"].asString();
 			if (method == "TurnOn")
 			{
 				zigbeeProtocol->ZCLOnoffGroup(addr, 0);
