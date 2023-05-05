@@ -215,7 +215,7 @@ private:
 	int OnReadAttributeResp(uint8_t *buff, uint16_t len);
 
 public:
-	ZigbeeProtocol(char *uartPort, int uartBaudrate);
+	ZigbeeProtocol(char *uartPort, int baudrate);
 	virtual ~ZigbeeProtocol();
 
 	void init();

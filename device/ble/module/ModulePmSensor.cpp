@@ -147,9 +147,11 @@ void ModulePmSensor::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void ModulePmSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_PM2_5] = pm25;
 	jsonValue[KEY_ATTRIBUTE_PM10] = pm10;
 	jsonValue[KEY_ATTRIBUTE_PM1_0] = pm1_0;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

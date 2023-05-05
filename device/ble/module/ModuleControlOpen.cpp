@@ -117,11 +117,6 @@ void ModuleControlOpen::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ModuleControlOpen::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_CURTAIN_OPEN] = value;
-}
-
 int ModuleControlOpen::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
@@ -145,6 +140,12 @@ int ModuleControlOpen::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ModuleControlOpen::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_CURTAIN_OPEN] = value;
+}
+
 int ModuleControlOpen::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -163,3 +164,4 @@ int ModuleControlOpen::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

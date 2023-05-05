@@ -142,6 +142,7 @@ private:
 	int OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue);
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	// Mqtt V2 message handle
 	void initMqttMessageV2();
 	// Bản tin điều khiển
@@ -195,6 +196,7 @@ private:
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
@@ -262,22 +264,23 @@ public:
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 
-	void AddAllDeviceStatusV2(Json::Value &reqValue);
-
 	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase);
-	Rule *AddRuleV2(Json::Value &ruleValue);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 	Room *AddNewRoom(Room *room, bool addGateway, bool addDatabase);
 
-	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
-	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
-
-	int pushNewDeviceCloudV2(Json::Value &dataValue);
-	int pushNewDeviceLocalV2(Json::Value &dataValue);
-
 	int Do(Json::Value &dataValue);
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	void AddAllDeviceStatusV2(Json::Value &reqValue);
+	Rule *AddRuleV2(Json::Value &ruleValue);
+
+	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
+	int pushNewDeviceLocalV2(Json::Value &dataValue);
+	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
+	int pushNewDeviceCloudV2(Json::Value &dataValue);
+#endif
 };
 
 extern Gateway *gateway;

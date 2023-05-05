@@ -79,7 +79,8 @@ void Udp::init()
 	{
 		isRunning = true;
 #ifdef ESP_PLATFORM
-		xTaskCreate(UdpHandleMessage, "UdpHandleMessage", 10240, this, 10, NULL);
+		if (xTaskCreate(UdpHandleMessage, "UdpHandleMessage", 10240, this, 10, NULL) != pdPASS)
+			LOGE("Failed to create task\n");
 		vTaskDelay(10);
 #else
 		thread udpThread(UdpHandleMessage, this);
@@ -166,8 +167,8 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 			if (payloadJson.parse(messageBase64) && payloadJson.isObject())
 			{
 				if (payloadJson.isMember("SSID") && payloadJson["SSID"].isString() &&
-						payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
-						payloadJson.isMember("ENCRYPTION") && payloadJson["ENCRYPTION"].isString())
+					payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
+					payloadJson.isMember("ENCRYPTION") && payloadJson["ENCRYPTION"].isString())
 				{
 					string ssid = payloadJson["SSID"].asString();
 					string password = payloadJson["PASSWORD"].asString();
@@ -199,7 +200,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 int Udp::send(string message, struct sockaddr_in *si_other, int slen)
 {
 	LOGI("Send message to IP: %s:%i, len: %d",
-			 inet_ntoa(si_other->sin_addr), ntohs(si_other->sin_port), slen);
+		 inet_ntoa(si_other->sin_addr), ntohs(si_other->sin_port), slen);
 	LOGD("send message: %s", message.c_str());
 	// now reply the client with the same data
 	if (sendto(fd, message.c_str(), message.length(), 0, (struct sockaddr *)si_other, slen) == -1)

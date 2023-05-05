@@ -60,9 +60,9 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 			{
 				cct = data_message->cct_first;
 				BuildTelemetryValue(jsonValue);
-#ifndef ESP_PLATFORM
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 				BuildTelemetryValueV2(jsonValueV2);
-#endif
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 			}
 		}
 		else
@@ -71,9 +71,9 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 			{
 				cct = data_message->cct;
 				BuildTelemetryValue(jsonValue);
-#ifndef ESP_PLATFORM
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 				BuildTelemetryValueV2(jsonValueV2);
-#endif
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 			}
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -139,18 +139,6 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	if (cct >= 800)
-	{
-		jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
-	}
-	else
-	{
-		jsonValue[KEY_ATTRIBUTE_CCT] = cct;
-	}
-}
-
 int ElementCct::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
@@ -173,6 +161,19 @@ int ElementCct::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	if (cct >= 800)
+	{
+		jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
+	}
+	else
+	{
+		jsonValue[KEY_ATTRIBUTE_CCT] = cct;
+	}
+}
+
 int ElementCct::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -189,3 +190,4 @@ int ElementCct::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

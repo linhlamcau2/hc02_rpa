@@ -14,10 +14,13 @@ LocalProtocol::LocalProtocol(string mac, string server_address, int server_port,
 #endif
 {
 	this->mac = mac;
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	subReqTopicV2 = "v2/json/req/+/+";
 	subRespTopicV2 = "v2/json/resp/+/" + mac;
 	pubReqTopicV2 = "v2/json/req/" + mac + "/";
 	pubRespTopicV2 = "v2/json/resp/" + mac + "/";
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
 LocalProtocol::~LocalProtocol()
@@ -33,11 +36,11 @@ void LocalProtocol::init()
 #endif
 	isBusy = false;
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
-#ifndef ESP_PLATFORM
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
 	// addActionCallback(bind(&LocalProtocol::OnLocalMessageV2, this, placeholders::_1, placeholders::_2), "HC.CONTROL.V2");
 	addActionCallback(bind(&LocalProtocol::OnLocalRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);
-#endif
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
 int LocalProtocol::LocalConnect()
@@ -113,6 +116,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Util::LedServiceUnlock();
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void LocalProtocol::OnLocalMessageV2(string &topic, string &payload)
 {
 	Json::Value respValue;
@@ -228,6 +232,7 @@ void LocalProtocol::OnLocalRespV2(string &topic, string &payload)
 	}
 	Util::LedServiceUnlock();
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 int LocalProtocol::LocalPublish(string topic, string payload)
 {
@@ -241,13 +246,6 @@ int LocalProtocol::OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLoc
 	return CODE_OK;
 }
 
-int LocalProtocol::OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
-{
-	LOGI("OnLocalCallbackRegisterV2 cmd: %s", cmd.c_str());
-	onLocalCallbackFuncListV2[cmd] = onLocalCallbackFunc;
-	return CODE_OK;
-}
-
 int LocalProtocol::PublishToLocalMessage(string &payload)
 {
 	return Publish(HC_RESPONSE_TOPIC, payload);
@@ -256,6 +254,14 @@ int LocalProtocol::PublishToLocalMessage(string &payload)
 int LocalProtocol::PublishToLocalMessage(Json::Value &payloadJson)
 {
 	return Publish(HC_RESPONSE_TOPIC, payloadJson.toString());
+}
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+int LocalProtocol::OnLocalCallbackRegisterV2(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
+{
+	LOGI("OnLocalCallbackRegisterV2 cmd: %s", cmd.c_str());
+	onLocalCallbackFuncListV2[cmd] = onLocalCallbackFunc;
+	return CODE_OK;
 }
 
 int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
@@ -296,3 +302,4 @@ int LocalProtocol::PublishToLocalMessageV2(Json::Value &payloadJson)
 {
 	return Publish("HC.CONTROL.RESPONSE.V2", payloadJson.toString());
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -10,6 +10,10 @@
 #include "Http.h"
 #include "Config.h"
 #include "Base64.h"
+#ifdef ESP_PLATFORM
+#include "Led.h"
+#include "Wifi.h"
+#endif
 
 void Gateway::initMqttMessage()
 {
@@ -302,6 +306,9 @@ int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	Json::Value data;
 	data["STATUS"] = "SUCCESS";
 	respValue["DATA"] = data;
+#ifdef ESP_PLATFORM
+	Wifi::WifiStartAP();
+#endif
 	return CODE_OK;
 }
 
@@ -2290,7 +2297,7 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 		respValue["CMD"] = "REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
 		string deviceId = reqValue["DEVICE_ID"].asString();
-		int pirValue = 0;
+		// int pirValue = 0;
 		string sceneId = "";
 		SceneBle *scene = NULL;
 
@@ -2300,10 +2307,10 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 			for (Json::ArrayIndex i = 0; i < data.size(); i++)
 			{
 				Json::Value dataValue = data[i];
-				if (dataValue.isMember("PIR_VALUE") && dataValue["PIR_VALUE"].isInt())
-				{
-					pirValue = dataValue["PIR_VALUE"].asInt();
-				}
+				// if (dataValue.isMember("PIR_VALUE") && dataValue["PIR_VALUE"].isInt())
+				// {
+				// 	pirValue = dataValue["PIR_VALUE"].asInt();
+				// }
 				if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 				{
 					sceneId = dataValue["EVENT_TRIGGER_ID"].asString();

@@ -113,7 +113,9 @@ void ModulePirSensor::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void ModulePirSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

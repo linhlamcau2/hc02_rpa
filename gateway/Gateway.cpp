@@ -16,6 +16,9 @@
 #ifndef ESP_PLATFORM
 #include "Config.h"
 #endif
+#ifdef ESP_PLATFORM
+#include "Led.h"
+#endif
 #include "Http.h"
 
 #include "RuleInputTimer.h"
@@ -54,9 +57,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+	  LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -223,7 +226,9 @@ void Gateway::init()
 
 	initUdpMessage();
 	initMqttMessage();
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	initMqttMessageV2();
+#endif
 
 	database->GatewayRead();
 	database->DeviceRead();
@@ -249,9 +254,19 @@ void Gateway::init()
 	LocalConnect();
 
 #ifdef ESP_PLATFORM
-	xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL);
+
+	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		exit(1);
+	}
 	vTaskDelay(10);
-	xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL);
+
+	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		exit(1);
+	}
 	vTaskDelay(10);
 #else
 	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
@@ -268,7 +283,6 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	LOGI("OnCloudConnect: %d", isConnected);
 	if (isConnected)
 	{
-		Util::LedInternet(true);
 		OnlineHC(mac);
 		if (!isReconnect)
 		{
@@ -277,6 +291,11 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 				device->PushAttributes();
 			}
 		}
+		Util::LedInternet(true);
+#ifdef ESP_PLATFORM
+		Led::SetModeLedInternet(MODE_ON);
+		Led::SetLedInternet(MODE_ON);
+#endif
 	}
 	else
 	{
@@ -648,7 +667,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		}
 	}
 #endif
-#ifdef CONFIG_USE_MQTT_V2
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	Json::Value jsonData = PushNewDevMqttV2(scanDevice);
 	pushNewDeviceLocalV2(jsonData);
 #endif
@@ -841,9 +860,9 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-			ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
-			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+		ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
+		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
@@ -1238,6 +1257,44 @@ void Gateway::setName(string name)
 {
 }
 
+int Gateway::Do(Json::Value &dataValue)
+{
+	LOGV("Do data: %s", dataValue.toString().c_str());
+#ifdef __ANDROID__
+	int onoff = 0;
+	if (dataValue.isObject())
+	{
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "0") && dataValue[KEY_ATTRIBUTE_RELAY "0"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio114/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio114/value");
+			}
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
+		{
+			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
+			if (onoff)
+			{
+				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio115/value");
+			}
+			else
+			{
+				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio115/value");
+			}
+		}
+		return CODE_OK;
+	}
+#endif
+	return CODE_FORMAT_ERROR;
+}
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 {
 	for (const auto &[id, device] : deviceList)
@@ -1256,11 +1313,11 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isString() &&
+		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1279,7 +1336,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-					timeValue.isMember("end") && timeValue["end"].isString())
+				timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1302,7 +1359,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+				timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1324,7 +1381,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (deviceRuleInputValue.isObject())
 				{
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
 						string id = deviceRuleInputValue["id"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];
@@ -1419,40 +1476,4 @@ int Gateway::pushNewDeviceLocalV2(Json::Value &dataValue)
 {
 	return PublishToLocalMessageV2("newDev", dataValue, "newDevRsp", NULL, 0);
 }
-
-int Gateway::Do(Json::Value &dataValue)
-{
-	LOGV("Do data: %s", dataValue.toString().c_str());
-#ifdef __ANDROID__
-	int onoff = 0;
-	if (dataValue.isObject())
-	{
-		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "0") && dataValue[KEY_ATTRIBUTE_RELAY "0"].isInt())
-		{
-			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
-			if (onoff)
-			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio114/value");
-			}
-			else
-			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio114/value");
-			}
-		}
-		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
-		{
-			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
-			if (onoff)
-			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio115/value");
-			}
-			else
-			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio115/value");
-			}
-		}
-		return CODE_OK;
-	}
 #endif
-	return CODE_FORMAT_ERROR;
-}

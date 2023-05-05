@@ -65,9 +65,9 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 		SaveAttribute();
 #endif
 		BuildTelemetryValue(jsonValue);
-#ifndef ESP_PLATFORM
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 		BuildTelemetryValueV2(jsonValueV2);
-#endif
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 		CheckTrigger();
 		return CODE_OK;
 	}
@@ -145,11 +145,6 @@ void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ModuleOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
-}
-
 int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
@@ -173,6 +168,12 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ModuleOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
+}
+
 int ModuleOnOff::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -188,3 +189,4 @@ int ModuleOnOff::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

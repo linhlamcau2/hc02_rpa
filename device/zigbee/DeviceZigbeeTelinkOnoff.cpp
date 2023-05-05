@@ -27,10 +27,10 @@ void DeviceZigbeeTelinkOnoff::InputData(uint8_t *data, int len, uint32_t addr)
 	{
 		LOGW("Cluster 0x%04X not handle", clusterId);
 	}
-	if (values != Json::Value::null)
-	{
-		PushTelemetry(values);
-	}
+	// if (values != Json::Value::null)
+	// {
+	// 	PushTelemetry(values);
+	// }
 }
 
 bool DeviceZigbeeTelinkOnoff::CheckData(Json::Value &dataValue, bool &rs)
@@ -41,7 +41,7 @@ bool DeviceZigbeeTelinkOnoff::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-bool DeviceZigbeeTelinkOnoff::Do(Json::Value &dataValue)
+int DeviceZigbeeTelinkOnoff::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isMember("method") && dataValue["method"].isString())

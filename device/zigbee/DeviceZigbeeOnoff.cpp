@@ -32,10 +32,10 @@ void DeviceZigbeeOnoff::InputData(uint8_t *data, int len, uint32_t addr)
 	{
 		LOGW("Cluster 0x%04X not handle", clusterId);
 	}
-	if (values != Json::Value::null)
-	{
-		PushTelemetry(values);
-	}
+	// if (values != Json::Value::null)
+	// {
+	// 	PushTelemetry(values);
+	// }
 }
 
 bool DeviceZigbeeOnoff::CheckData(Json::Value &dataValue, bool &rs)

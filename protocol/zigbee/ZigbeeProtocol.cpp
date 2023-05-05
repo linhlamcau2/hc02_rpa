@@ -17,9 +17,9 @@
 
 ZigbeeProtocol *zigbeeProtocol = NULL;
 
-ZigbeeProtocol::ZigbeeProtocol(char *uartPort, int uartBaudrate) : Uart(uartPort, 100000)
+ZigbeeProtocol::ZigbeeProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 {
-	if (Open(uartBaudrate) < 0)
+	if (Open(baudrate) < 0)
 	{
 		LOGE("Open uart error")
 		exit(1);
@@ -126,6 +126,7 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	}
 	Util::LedZigbee(true);
 	Util::LedServiceUnlock();
+	return lenRemain;
 }
 
 int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout)
@@ -203,15 +204,15 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 		ZCLCmdRspHdr_st *zclCmdRspHdr = (ZCLCmdRspHdr_st *)buff;
 		uint16_t srcAddr = bswap_16(zclCmdRspHdr->srcAddr);
 		LOGD("srcAddr: 0x%04X, srcEp: %d, dstEp: %d, seqNum: %d", srcAddr, zclCmdRspHdr->srcEp, zclCmdRspHdr->dstEp, zclCmdRspHdr->seqNum);
-		DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
-		if (deviceZigbee)
-		{
-			deviceZigbee->DeviceInputData(buff + 5, len - 5);
-		}
-		else
-		{
-			LOGW("Zigbee device 0x%04X not found", srcAddr);
-		}
+		// DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
+		// if (deviceZigbee)
+		// {
+		// 	deviceZigbee->DeviceInputData(buff + 5, len - 5);
+		// }
+		// else
+		// {
+		// 	LOGW("Zigbee device 0x%04X not found", srcAddr);
+		// }
 		return CODE_OK;
 	}
 	else
@@ -347,7 +348,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				}
 				else
 				{
-					device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, srcAddr, type, true, true);
+					// device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, srcAddr, type, true, true);
 				}
 				if (device)
 					gateway->AddDeviceToScanList(device);

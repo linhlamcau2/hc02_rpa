@@ -121,11 +121,6 @@ void ElementOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ElementOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[key] = onoff;
-}
-
 int ElementOnOff::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
@@ -145,6 +140,12 @@ int ElementOnOff::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ElementOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[key] = onoff;
+}
+
 int ElementOnOff::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -160,3 +161,4 @@ int ElementOnOff::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

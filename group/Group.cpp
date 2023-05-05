@@ -16,8 +16,6 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 
 Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
-	this->numberOfBleDevice = 0;
-	this->numberOfZigbeeDevice = 0;
 }
 
 int Group::GetPositionDevice(Device *device)
@@ -61,7 +59,6 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 					if (deviceInGroup)
 					{
 						deviceList.push_back(deviceInGroup);
-						numberOfBleDevice++;
 						return CODE_OK;
 					}
 				}
@@ -78,30 +75,29 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 			if (deviceInGroup)
 			{
 				deviceList.push_back(deviceInGroup);
-				numberOfBleDevice++;
 				return CODE_OK;
 			}
 		}
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-	if (device->GetProtocol() == ZIGBEE_DEVICE)
-	{
-		if (zigbeeProtocol->AddGroup(id, device->GetAddr(), epId))
-		{
-			DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
-			if (deviceInGroup)
-			{
-				deviceList.push_back(deviceInGroup);
-				numberOfZigbeeDevice++;
-			}
-			return CODE_OK;
-		}
-		else
-		{
-			LOGW("Add Zigbee device %s to group %d error", device->GetId().c_str(), addr);
-		}
-	}
+	// if (device->GetProtocol() == ZIGBEE_DEVICE)
+	// {
+	// 	if (zigbeeProtocol->AddGroup(id, device->GetAddr(), epId))
+	// 	{
+	// 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+	// 		if (deviceInGroup)
+	// 		{
+	// 			deviceList.push_back(deviceInGroup);
+	// 			numberOfZigbeeDevice++;
+	// 		}
+	// 		return CODE_OK;
+	// 	}
+	// 	else
+	// 	{
+	// 		LOGW("Add Zigbee device %s to group %d error", device->GetId().c_str(), addr);
+	// 	}
+	// }
 #endif
 	return CODE_ERROR;
 }
@@ -130,7 +126,7 @@ int Group::DelDevice(Device *device, int epId)
 	if (device->GetProtocol() == ZIGBEE_DEVICE)
 	{
 		// TODO: remove from group
-		numberOfZigbeeDevice--;
+		// numberOfZigbeeDevice--;
 		// zigbeeProtocol->AddGroup(id, device->GetAddr(), epId);
 	}
 #endif
@@ -144,13 +140,9 @@ int Group::Do(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBle();
-
 #ifdef CONFIG_ENABLE_ZIGBEE
-	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
-	thread doZigbeeThread(doZigbeeBind, &this->dataValue);
-	doZigbeeThread.detach();
+	DoZigbee();
 #endif
-
 	return CODE_OK;
 }
 
@@ -158,13 +150,7 @@ int Group::DoV2(Json::Value &dataValue)
 {
 	this->dataValue = dataValue;
 	DoBleV2();
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-	auto doZigbeeBind = bind(&Group::DoZigbee, this, placeholders::_1);
-	thread doZigbeeThread(doZigbeeBind, &this->dataValue);
-	doZigbeeThread.detach();
-#endif
-
+	// DoZigbeeV2();
 	return CODE_OK;
 }
 
@@ -279,13 +265,13 @@ void Group::DoBleV2()
 }
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-void Group::DoZigbee(Json::Value *dataValue)
+void Group::DoZigbee()
 {
-	if (numberOfZigbeeDevice)
+	if (zigbeeProtocol && dataValue.isObject())
 	{
-		if (dataValue->isMember("method") && (*dataValue)["method"].isString())
+		if (dataValue.isMember("method") && dataValue["method"].isString())
 		{
-			string method = (*dataValue)["method"].asString();
+			string method = dataValue["method"].asString();
 			if (method == "TurnOn")
 			{
 				zigbeeProtocol->ZCLOnoffGroup(addr, 0);

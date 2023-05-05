@@ -29,7 +29,7 @@ public:
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2);
-	
+
 	/**
 	 * @brief Parse raw data to module parameter value
 	 *
@@ -64,10 +64,12 @@ public:
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	/**
 	 * @brief Build telemetry message with this module use message format version 2
 	 *
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValueV2(Json::Value &jsonValue);
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 };

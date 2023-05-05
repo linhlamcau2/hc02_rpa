@@ -200,15 +200,6 @@ void ModuleRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
-void ModuleRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[keyR] = r;
-	jsonValue[keyG] = g;
-	jsonValue[keyB] = b;
-	jsonValue[keyDimOn] = dimOn;
-	jsonValue[keyDimOff] = dimOff;
-}
-
 // TODO: viet anh recheck DoJsonArray
 int ModuleRgb::Do(Json::Value &dataValue)
 {
@@ -256,6 +247,16 @@ int ModuleRgb::Do(Json::Value &dataValue)
 	return CODE_ERROR;
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+void ModuleRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
+{
+	jsonValue[keyR] = r;
+	jsonValue[keyG] = g;
+	jsonValue[keyB] = b;
+	jsonValue[keyDimOn] = dimOn;
+	jsonValue[keyDimOff] = dimOff;
+}
+
 int ModuleRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
@@ -283,3 +284,4 @@ int ModuleRgb::DoV2(Json::Value &dataValue)
 	}
 	return CODE_ERROR;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

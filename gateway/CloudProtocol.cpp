@@ -11,6 +11,7 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 	subTopicV1 = "/v1/server/hc/" + mac + "/json";
 	pubTopicV1 = "/v1/hc/" + mac + "/server/json";
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	subReqTopicV2 = "v2/json/req/server/" + mac;
 	subRespTopicV2 = "v2/json/resp/server/" + mac;
 	pubReqTopicV2 = "v2/json/req/" + mac + "/server";
@@ -18,6 +19,7 @@ CloudProtocol::CloudProtocol(string mac, string server_address, int server_port,
 
 	subBinRespTopicV2 = "v2/bin/resp/server/" + mac + "/+/+";
 	pubBinReqTopicV2 = "v2/bin/req/" + mac + "/server/";
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 	Json::Value jsonValue;
 	Json::Value datanValue;
@@ -37,11 +39,11 @@ void CloudProtocol::init()
 	Mqtt::init();
 	isBusy = false;
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopicV1);
-#ifndef ESP_PLATFORM
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
 	addActionCallback(bind(&CloudProtocol::OnServerRespV2, this, placeholders::_1, placeholders::_2), subRespTopicV2);
 	addActionCallback(bind(&CloudProtocol::OnServerBinRespV2, this, placeholders::_1, placeholders::_2, placeholders::_3), subBinRespTopicV2);
-#endif
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -133,6 +135,14 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Util::LedServiceUnlock();
 }
 
+int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
+{
+	LOGI("OnDeviceRpcCallbackRegister cmd: %s", cmd.c_str());
+	onRpcCallbackFuncList[cmd] = onRpcCallbackFunc;
+	return CODE_OK;
+}
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 {
 	Json::Value respValue;
@@ -261,19 +271,13 @@ void CloudProtocol::OnServerBinRespV2(string &topic, char *payload, int payloadL
 	}
 }
 
-int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
-{
-	LOGI("OnDeviceRpcCallbackRegister cmd: %s", cmd.c_str());
-	onRpcCallbackFuncList[cmd] = onRpcCallbackFunc;
-	return CODE_OK;
-}
-
 int CloudProtocol::OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
 {
 	LOGI("OnDeviceRpcCallbackRegisterV2 cmd: %s", cmd.c_str());
 	onRpcCallbackFuncListV2[cmd] = onRpcCallbackFunc;
 	return CODE_OK;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 int CloudProtocol::OnlineHC(string deviceName)
 {
@@ -337,6 +341,7 @@ int CloudProtocol::PublishToGatewayAttributes(Json::Value payloadJson)
 	return PublishToGatewayAttributes(payloadJson.toString());
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToCloudMessageV2: %s", reqValue.toString().c_str());
@@ -418,3 +423,4 @@ int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value 
 	LOGD("PublishToCloudRecieveBinMessageV2 rs: %d", rs);
 	return rs;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -68,13 +68,6 @@ public:
 	void BuildTelemetryValue(Json::Value &jsonValue);
 
 	/**
-	 * @brief Build telemetry message with this module use message format version 2
-	 *
-	 * @param jsonValue
-	 */
-	void BuildTelemetryValueV2(Json::Value &jsonValue);
-
-	/**
 	 * @brief Do an action
 	 *
 	 * @param dataValue data of action
@@ -82,6 +75,14 @@ public:
 	 * @return false
 	 */
 	int Do(Json::Value &dataValue);
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	/**
+	 * @brief Build telemetry message with this module use message format version 2
+	 *
+	 * @param jsonValue
+	 */
+	void BuildTelemetryValueV2(Json::Value &jsonValue);
 
 	/**
 	 * @brief Do an action use message format version 2
@@ -91,4 +92,5 @@ public:
 	 * @return false
 	 */
 	int DoV2(Json::Value &dataValue);
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 };

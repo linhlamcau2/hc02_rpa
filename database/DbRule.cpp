@@ -36,6 +36,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 							rule->UpdateData(ruledata);
 							rule->Check();
 						}
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 						rule = gateway->AddRuleV2(ruleValue);
 						if (rule)
 						{
@@ -43,6 +44,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 							rule->UpdateData(ruledata);
 							rule->Check();
 						}
+#endif
 					}
 					else
 					{

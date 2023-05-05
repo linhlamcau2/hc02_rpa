@@ -109,7 +109,9 @@ void ModulePinLevel::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void ModulePinLevel::BuildTelemetryValueV2(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_BATTERY] = pin;
 }
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2

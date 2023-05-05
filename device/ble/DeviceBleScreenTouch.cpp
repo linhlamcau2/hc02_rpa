@@ -7,14 +7,15 @@
 static void SendDatetime(void *data);
 
 DeviceBleScreenTouch::DeviceBleScreenTouch(string id, string name, string mac, string data, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac, data, addr, BLE_AC_SCENE_SCREEN_TOUCH, version)
+	: DeviceBle(id, name, mac, data, addr, BLE_AC_SCENE_SCREEN_TOUCH, version)
 {
 	moduleNotifyScene = new ModuleNotifyScene(this, addr);
 	modules.push_back(moduleNotifyScene);
 	powerSource = POWER_AC;
 
 #ifdef ESP_PLATFORM
-	xTaskCreate(SendDatetime, "SendDatetime", 5120, this, 10, NULL);
+	if (xTaskCreate(SendDatetime, "SendDatetime", 5120, this, 10, NULL) != pdPASS)
+		LOGE("Failed to create task\n");
 	vTaskDelay(10);
 #else
 	thread SendDatetimeThread(SendDatetime, this);

@@ -1,3 +1,4 @@
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #include "Gateway.h"
 #include "Log.h"
 #include "Db.h"
@@ -1450,3 +1451,5 @@ int Gateway::OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue)
 	respValue["cmd"] = "getSceneIntoRoomRsp";
 	return CODE_OK;
 }
+
+#endif // CONFIG_USE_MESSAGE_FORMAT_V2
