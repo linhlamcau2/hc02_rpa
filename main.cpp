@@ -17,7 +17,6 @@
 #include "Wifi.h"
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
-#include "FileTransfer.h"
 #include "BleProtocol.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE

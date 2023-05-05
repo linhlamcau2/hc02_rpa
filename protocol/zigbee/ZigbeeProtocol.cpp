@@ -126,6 +126,7 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	}
 	Util::LedZigbee(true);
 	Util::LedServiceUnlock();
+	return lenRemain;
 }
 
 int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout)
