@@ -19,7 +19,10 @@
 #include "ButtonSignal.h"
 #include "FileTransfer.h"
 #include "BleProtocol.h"
+
+#ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
+#endif
 
 #define TAG "MAIN"
 
@@ -64,8 +67,10 @@ int main(int argc, char *argv[])
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
+#ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
+#endif
 
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
