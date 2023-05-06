@@ -109,6 +109,12 @@ public:
 	int SceneBleUpdateRoom(SceneBle *scene, string roomId);
 	int SceneBleDel(SceneBle *scene);
 	int SceneBleDelAll();
+
+	int SceneDelayRead();
+	int SceneDelayAdd(SceneDelay *sceneDelay);
+	int SceneDelayUpdateData(SceneDelay *sceneDelay);
+	int SceneDelayDel(SceneDelay *sceneDelay);
+	int SceneDelayDelAll();
 };
 
 extern Db *database;

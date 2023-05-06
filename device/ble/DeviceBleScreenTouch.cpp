@@ -15,7 +15,7 @@ DeviceBleScreenTouch::DeviceBleScreenTouch(string id, string name, string mac, s
 
 #ifdef ESP_PLATFORM
 	if (xTaskCreate(SendDatetime, "SendDatetime", 5120, this, 10, NULL) != pdPASS)
-		LOGE("Failed to create task\n");
+		LOGE("Failed to create task");
 	vTaskDelay(10);
 #else
 	thread SendDatetimeThread(SendDatetime, this);

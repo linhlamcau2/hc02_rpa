@@ -15,7 +15,10 @@
 #include "Device.h"
 #include "DeviceBle.h"
 #include "SceneBle.h"
+#include "SceneDelay.h"
 #include "RuleOutputSceneBle.h"
+#include "SceneDelayDeviceOutput.h"
+#include "SceneDelayGroupOutput.h"
 #include "Room.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -49,6 +52,7 @@ private:
 	map<string, SceneBle *> sceneBleList;
 	map<string, Rule *> ruleList;
 	map<string, Room *> roomList;
+	map<string, SceneDelay *> sceneDelayList;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
@@ -126,6 +130,10 @@ private:
 	int OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcEditSceneDelay(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcDeleteSceneDelay(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue);
@@ -232,6 +240,9 @@ public:
 	SceneBle *getSceneBleFromAddr(int addr);
 	void delSceneBle(SceneBle *sceneBle);
 
+	SceneDelay *getSceneDelayFromId(string id);
+	void delSceneDelay(SceneDelay *sceneDelay);
+
 	Rule *getRuleFromId(string id);
 	void delRule(Rule *rule);
 
@@ -268,6 +279,7 @@ public:
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
+	SceneDelay *AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, bool addDatabase, bool processData);
 	Room *AddNewRoom(Room *room, bool addGateway, bool addDatabase);
 
 	int Do(Json::Value &dataValue);

@@ -42,6 +42,10 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRpcEditSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRpcDeleteSceneBle, this, placeholders::_1, placeholders::_2));
 
+	OnDeviceRpcCallbackRegister("CREATE_SCENE_DELAY", bind(&Gateway::OnRpcAddSceneDelay, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("EDIT_SCENE_DELAY", bind(&Gateway::OnRpcEditSceneDelay, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_SCENE_DELAY", bind(&Gateway::OnRpcDeleteSceneDelay, this, placeholders::_1, placeholders::_2));
+
 	OnDeviceRpcCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRpcAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DelAllDevice", bind(&Gateway::OnRpcDelAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DEVICE", bind(&Gateway::OnRpcControlDevice, this, placeholders::_1, placeholders::_2));
@@ -105,6 +109,10 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("CREATE_SCENE", bind(&Gateway::OnRpcAddSceneBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_SCENE", bind(&Gateway::OnRpcEditSceneBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_SCENE", bind(&Gateway::OnRpcDeleteSceneBle, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("CREATE_SCENE_DELAY", bind(&Gateway::OnRpcAddSceneDelay, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("EDIT_SCENE_DELAY", bind(&Gateway::OnRpcEditSceneDelay, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DELETE_SCENE_DELAY", bind(&Gateway::OnRpcDeleteSceneDelay, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRpcAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DelAllDevice", bind(&Gateway::OnRpcDelAllDevice, this, placeholders::_1, placeholders::_2));
@@ -725,6 +733,25 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			string sceneId = dataValue["SCENE_ID"].asString();
 			dataJsonRsp["SCENE_ID"] = sceneId;
 			SceneBle *scene = getSceneBleFromId(sceneId);
+			if (!scene)
+			{
+				int sceneAddr = 1;
+				for (const auto &[id, sceneBle] : sceneBleList)
+				{
+					if (sceneBle->GetAddr() >= sceneAddr)
+					{
+						sceneAddr = sceneBle->GetAddr() + 1;
+					}
+				}
+				scene = new SceneBle(sceneId, sceneAddr, sceneId);
+				scene = gateway->AddNewSceneBle(scene, true, true);
+
+				SceneDelay *sceneDelay = getSceneDelayFromId(sceneId);
+				if (sceneDelay)
+				{
+					delSceneDelay(sceneDelay);
+				}
+			}
 			if (scene)
 			{
 				Json::Value groupList = dataValue["DEVICES"];
@@ -826,6 +853,278 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 		respValue["DATA"] = dataJsonRsp;
 	}
 	return CODE_OK;
+}
+
+int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "CREATE_SCENE_DELAY";
+		Json::Value dataJsonRsp = Json::objectValue;
+		dataJsonRsp["FAILED"] = Json::arrayValue;
+		dataJsonRsp["SUCCESS"] = Json::arrayValue;
+
+		Json::Value data = reqValue["DATA"];
+		string name = "";
+		uint32_t addr = 0;
+		string id = "";
+		int delay = 0;
+		if (data.isMember("NAME") && data["NAME"].isString())
+		{
+			name = data["NAME"].asString();
+		}
+		if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString())
+		{
+			id = data["SCENE_ID"].asString();
+			dataJsonRsp["SCENE_ID"] = id;
+			SceneDelay *sceneDelay = getSceneDelayFromId(id);
+			if (!sceneDelay)
+			{
+				sceneDelay = new SceneDelay(id, addr, name, data);
+			}
+			if (sceneDelay)
+			{
+				sceneDelay = AddNewSceneDelay(sceneDelay, true, true, false);
+				if (sceneDelay)
+				{
+					if (data.isMember("DEVICES") && data["DEVICES"].isArray())
+					{
+						Device *device = NULL;
+						for (Json::ArrayIndex i = 0; i < data["DEVICES"].size(); i++)
+						{
+							Json::Value deviceOutput = data["DEVICES"][i];
+							if (deviceOutput.isMember("DELAY") && deviceOutput["DELAY"].isInt())
+							{
+								delay = deviceOutput["DELAY"].asInt();
+							}
+							if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
+							{
+								string devId = deviceOutput["DEVICE_ID"].asString();
+								Json::Value property = deviceOutput["PROPERTIES"];
+								device = getDeviceFromId(devId);
+								if (device)
+								{
+									SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, property, delay);
+									if (sceneDelayDeviceOutput)
+									{
+										sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
+										dataJsonRsp["SUCCESS"].append(devId);
+									}
+									else
+									{
+										dataJsonRsp["FAILED"].append(devId);
+									}
+								}
+								else
+								{
+									dataJsonRsp["FAILED"].append(devId);
+								}
+							}
+							else
+							{
+								LOGW("Data device output error");
+							}
+						}
+					}
+
+					if (data.isMember("GROUPS") && data["GROUPS"].isArray())
+					{
+						Group *group = NULL;
+						for (int j = 0; j < data["GROUPS"].size(); j++)
+						{
+							Json::Value groupInSceneDelay = data["GROUPS"][j];
+							if (groupInSceneDelay.isMember("DELAY") && groupInSceneDelay["DELAY"].isInt())
+							{
+								delay = groupInSceneDelay["DELAY"].asInt();
+							}
+							if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
+							{
+								string groupId = groupInSceneDelay["GROUP_ID"].asString();
+								Json::Value property = groupInSceneDelay["PROPERTIES"];
+								group = getGroupFromId(groupId);
+								if (group)
+								{
+									SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, property, delay);
+									if (sceneDelayGroupOutput)
+									{
+										sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);
+										dataJsonRsp["SUCCESS"].append(groupId);
+									}
+									else
+									{
+										dataJsonRsp["FAILED"].append(groupId);
+									}
+								}
+								else
+								{
+									dataJsonRsp["FAILED"].append(groupId);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Gateway::OnRpcEditSceneDelay(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "EDIT_SCENE_DELAY";
+		Json::Value dataJsonRsp = Json::objectValue;
+		dataJsonRsp["FAILED"] = Json::arrayValue;
+		dataJsonRsp["SUCCESS"] = Json::arrayValue;
+
+		Json::Value data = reqValue["DATA"];
+		string name = "";
+		uint32_t addr = 0;
+		string id = "";
+		int delay = 0;
+		if (data.isMember("NAME") && data["NAME"].isString())
+		{
+			name = data["NAME"].asString();
+		}
+		if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString())
+		{
+			id = data["SCENE_ID"].asString();
+			dataJsonRsp["SCENE_ID"] = id;
+			SceneDelay *sceneDelay = getSceneDelayFromId(id);
+			if (!sceneDelay)
+			{
+				sceneDelay = new SceneDelay(id, addr, name, data);
+				sceneDelay = AddNewSceneDelay(sceneDelay, true, true, false);
+				SceneBle *sceneBle = getSceneBleFromId(id);
+				if (sceneBle)
+				{
+					vector<Device *> listDevInScene;
+					int numDevInScene = sceneBle->deviceList.size();
+					for (int j = 0; j < numDevInScene; j++)
+					{
+						listDevInScene.push_back(sceneBle->deviceList[j]->device);
+					}
+					for (int i = 0; i < numDevInScene; i++)
+					{
+						sceneBle->DelDevice(listDevInScene[i]);
+						database->DeviceInSceneBleDel(sceneBle, listDevInScene[i]);
+					}
+					delSceneBle(sceneBle);
+				}
+			}
+			if (sceneDelay)
+			{
+				sceneDelay->DelAllSceneDelayOutput();
+				if (data.isMember("DEVICES") && data["DEVICES"].isArray())
+				{
+					Device *device = NULL;
+					for (Json::ArrayIndex i = 0; i < data["DEVICES"].size(); i++)
+					{
+						Json::Value deviceOutput = data["DEVICES"][i];
+						if (deviceOutput.isMember("DELAY") && deviceOutput["DELAY"].isInt())
+						{
+							delay = deviceOutput["DELAY"].asInt();
+						}
+						if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
+						{
+							string devId = deviceOutput["DEVICE_ID"].asString();
+							Json::Value property = deviceOutput["PROPERTIES"];
+							device = getDeviceFromId(devId);
+							if (device)
+							{
+								SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, property, delay);
+								if (sceneDelayDeviceOutput)
+								{
+									sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
+									dataJsonRsp["SUCCESS"].append(devId);
+								}
+								else
+								{
+									dataJsonRsp["FAILED"].append(devId);
+								}
+							}
+							else
+							{
+								dataJsonRsp["FAILED"].append(devId);
+							}
+						}
+					}
+				}
+
+				if (data.isMember("GROUPS") && data["GROUPS"].isArray())
+				{
+					Group *group = NULL;
+					for (int j = 0; j < data["GROUPS"].size(); j++)
+					{
+						Json::Value groupInSceneDelay = data["GROUPS"][j];
+						if (groupInSceneDelay.isMember("DELAY") && groupInSceneDelay["DELAY"].isInt())
+						{
+							delay = groupInSceneDelay["DELAY"].asInt();
+						}
+						if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
+						{
+							string groupId = groupInSceneDelay["GROUP_ID"].asString();
+							Json::Value property = groupInSceneDelay["PROPERTIES"];
+							group = getGroupFromId(groupId);
+							if (group)
+							{
+								SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, property, delay);
+								if (sceneDelayGroupOutput)
+								{
+									sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);
+									dataJsonRsp["SUCCESS"].append(groupId);
+								}
+								else
+								{
+									dataJsonRsp["FAILED"].append(groupId);
+								}
+							}
+							else
+							{
+								dataJsonRsp["FAILED"].append(groupId);
+							}
+						}
+					}
+				}
+			}
+		}
+		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Gateway::OnRpcDeleteSceneDelay(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "DELETE_SCENE_DELAY";
+		Json::Value dataJsonRsp = Json::objectValue;
+		dataJsonRsp["FAILED"] = Json::arrayValue;
+		dataJsonRsp["SUCCESS"] = Json::arrayValue;
+
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("SCENE_ID") && data["SCENE_ID"].isString())
+		{
+			string id = data["SCENE_ID"].asString();
+			dataJsonRsp["SCENE_ID"] = id;
+			SceneDelay *sceneDelay = getSceneDelayFromId(id);
+			if (sceneDelay)
+			{
+				delSceneDelay(sceneDelay);
+			}
+			else
+			{
+				LOGW("Scene %s not found", id.c_str());
+			}
+		}
+		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 int Gateway::OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue)
@@ -2872,11 +3171,17 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			if (scene)
 			{
 				scene->Do();
+				return CODE_NOT_RESPONSE;
 			}
-			else
+
+			SceneDelay *sceneDelay = getSceneDelayFromId(sceneId);
+			if (sceneDelay)
 			{
-				LOGW("Scene %s dose not exsit", sceneId.c_str());
+				sceneDelay->RunOutput();
+				return CODE_NOT_RESPONSE;
 			}
+
+			LOGW("Scene %s dose not exsit", sceneId.c_str());
 		}
 	}
 	return CODE_NOT_RESPONSE;

@@ -101,7 +101,8 @@ int Db::createTableIfNotExists()
 				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (group_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (room_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
-				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (scene_ble_id)) WITHOUT ROWID;";
+				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (scene_ble_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS SceneDelay (scene_delay_id VARCHAR NOT NULL, scene_delay_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (scene_delay_id)) WITHOUT ROWID;";
 #else
 	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version VARCHAR, hardware_version VARCHAR, active_time INTEGER, update_time INTEGER, data TEXT, PRIMARY KEY (device_id));"
 				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id));"
@@ -113,7 +114,8 @@ int Db::createTableIfNotExists()
 				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (group_id));"
 				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (room_id));"
 				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, PRIMARY KEY (rule_id));"
-				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (scene_ble_id));";
+				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (scene_ble_id));"
+				 "CREATE TABLE IF NOT EXISTS SceneDelay (scene_delay_id VARCHAR NOT NULL, scene_delay_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (scene_delay_id));";
 #endif
 	return Sqlite_Exec(sql);
 }

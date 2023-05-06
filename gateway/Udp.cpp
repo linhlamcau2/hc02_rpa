@@ -80,7 +80,7 @@ void Udp::init()
 		isRunning = true;
 #ifdef ESP_PLATFORM
 		if (xTaskCreate(UdpHandleMessage, "UdpHandleMessage", 10240, this, 10, NULL) != pdPASS)
-			LOGE("Failed to create task\n");
+			LOGE("Failed to create task");
 		vTaskDelay(10);
 #else
 		thread udpThread(UdpHandleMessage, this);

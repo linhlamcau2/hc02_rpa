@@ -167,6 +167,21 @@ void Gateway::delSceneBle(SceneBle *sceneBle)
 	delete sceneBle;
 }
 
+SceneDelay *Gateway::getSceneDelayFromId(string id)
+{
+	if (sceneDelayList.find(id) != sceneDelayList.end())
+	{
+		return sceneDelayList[id];
+	}
+	return NULL;
+}
+void Gateway::delSceneDelay(SceneDelay *sceneDelay)
+{
+	sceneDelayList.erase(sceneDelay->GetId());
+	database->SceneDelayDel(sceneDelay);
+	delete sceneDelay;
+}
+
 Rule *Gateway::getRuleFromId(string id)
 {
 	if (ruleList.find(id) != ruleList.end())
@@ -239,6 +254,7 @@ void Gateway::init()
 	database->DeviceInSceneBleRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
+	database->SceneDelayRead();
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -1130,6 +1146,93 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 		}
 	}
 	return sceneBle;
+}
+
+SceneDelay *Gateway::AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, bool addDatabase, bool processData)
+{
+	if (sceneDelay)
+	{
+		if (addDatabase)
+		{
+			int rs = database->SceneDelayAdd(sceneDelay);
+			if (rs)
+			{
+				LOGW("rs: %d", rs);
+				return NULL;
+			}
+		}
+		if (addGateway)
+		{
+			sceneDelayList[sceneDelay->GetId()] = sceneDelay;
+		}
+		if (processData)
+		{
+			Json::Value data = sceneDelay->GetData();
+			int delay = 0;
+			if (data.isMember("DEVICES") && data["DEVICES"].isArray())
+			{
+				Device *device = NULL;
+				for (Json::ArrayIndex i = 0; i < data["DEVICES"].size(); i++)
+				{
+					Json::Value deviceOutput = data["DEVICES"][i];
+					if (deviceOutput.isMember("DELAY") && deviceOutput["DELAY"].isInt())
+					{
+						delay = deviceOutput["DELAY"].asInt();
+					}
+					if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
+					{
+						string devId = deviceOutput["DEVICE_ID"].asString();
+						Json::Value property = deviceOutput["PROPERTIES"];
+						device = getDeviceFromId(devId);
+						if (device)
+						{
+							SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, property, delay);
+							if (sceneDelayDeviceOutput)
+							{
+								sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
+							}
+						}
+					}
+					else
+					{
+						LOGW("Data device output error");
+					}
+				}
+			}
+
+			if (data.isMember("GROUPS") && data["GROUPS"].isArray())
+			{
+				Group *group = NULL;
+				for (int j = 0; j < data["GROUPS"].size(); j++)
+				{
+					Json::Value groupInSceneDelay = data["GROUPS"][j];
+					if (groupInSceneDelay.isMember("DELAY") && groupInSceneDelay["DELAY"].isInt())
+					{
+						delay = groupInSceneDelay["DELAY"].asInt();
+					}
+					if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
+					{
+						string groupId = groupInSceneDelay["GROUP_ID"].asString();
+						Json::Value property = groupInSceneDelay["PROPERTIES"];
+						group = getGroupFromId(groupId);
+						if (group)
+						{
+							SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, property, delay);
+							if (sceneDelayGroupOutput)
+							{
+								sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);
+							}
+						}
+					}
+					else
+					{
+						LOGW("Data Group output error");
+					}
+				}
+			}
+		}
+	}
+	return sceneDelay;
 }
 
 Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
