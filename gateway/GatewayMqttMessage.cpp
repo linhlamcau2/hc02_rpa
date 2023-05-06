@@ -3200,7 +3200,12 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 			string password = dataValue["PASSWD"].asString();
 			if (config->GetPassword() == "")
 			{
-				string user = "hc-" + mac;
+				string user = "";
+#ifdef ESP_PLATFORM
+				user = "minihub-" + mac;
+#else
+				user = "hc-" + mac;
+#endif
 				if (config->SetClientId(user))
 				{
 					if (config->SetUsername(user))
