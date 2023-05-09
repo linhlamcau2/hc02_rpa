@@ -269,9 +269,11 @@ void Gateway::init()
 	LocalConnect();
 
 #ifdef ESP_PLATFORM
-	xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL);
+	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
+		LOGE("Failed to create task");
 	vTaskDelay(10);
-	xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL);
+	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
+		LOGE("Failed to create task");
 	vTaskDelay(10);
 #else
 	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
