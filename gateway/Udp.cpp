@@ -26,7 +26,11 @@ static void UdpHandleMessage(void *data)
 	int slen = sizeof(si_other);
 
 	int recv_len;
+#ifdef ESP_PLATFORM
+	char *buf = (uint8_t *)heap_caps_malloc_prefer(BUFLEN, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
+#else
 	char buf[BUFLEN];
+#endif
 
 	// create a UDP socket
 	if ((udp->fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -167,8 +171,8 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 			if (payloadJson.parse(messageBase64) && payloadJson.isObject())
 			{
 				if (payloadJson.isMember("SSID") && payloadJson["SSID"].isString() &&
-					payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
-					payloadJson.isMember("ENCRYPTION") && payloadJson["ENCRYPTION"].isString())
+						payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
+						payloadJson.isMember("ENCRYPTION") && payloadJson["ENCRYPTION"].isString())
 				{
 					string ssid = payloadJson["SSID"].asString();
 					string password = payloadJson["PASSWORD"].asString();
@@ -200,7 +204,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 int Udp::send(string message, struct sockaddr_in *si_other, int slen)
 {
 	LOGI("Send message to IP: %s:%i, len: %d",
-		 inet_ntoa(si_other->sin_addr), ntohs(si_other->sin_port), slen);
+			 inet_ntoa(si_other->sin_addr), ntohs(si_other->sin_port), slen);
 	LOGD("send message: %s", message.c_str());
 	// now reply the client with the same data
 	if (sendto(fd, message.c_str(), message.length(), 0, (struct sockaddr *)si_other, slen) == -1)

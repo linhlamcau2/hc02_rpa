@@ -18,6 +18,7 @@ private:
 	} request_t;
 	map<string, request_t *> requestList;
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	typedef struct
 	{
 		bool status;
@@ -25,6 +26,7 @@ private:
 		int *payloadLen;
 	} request_bin_t;
 	map<string, request_bin_t *> requestBinList;
+#endif
 
 	string mac;
 	string subTopicV1;
@@ -44,7 +46,9 @@ private:
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncListV2;
+#endif
 
 	void OnDeviceRpc(string &topic, string &payload);
 
