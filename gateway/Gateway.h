@@ -120,6 +120,7 @@ private:
 	int OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcTapToRun(Json::Value &reqValue, Json::Value &respValue);
 
 	// HCL
 	int OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue);

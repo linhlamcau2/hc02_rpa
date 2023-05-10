@@ -35,6 +35,10 @@
 #include "DeviceBleSwitchTouchRgb2.h"
 #include "DeviceBleSwitchTouchRgb3.h"
 #include "DeviceBleSwitchTouchRgb4.h"
+#include "DeviceBleSwitchElectrical1.h"
+#include "DeviceBleSwitchElectrical2.h"
+#include "DeviceBleSwitchElectrical3.h"
+#include "DeviceBleSwitchElectrical4.h"
 #include "DeviceBleSwitchScene6DC.h"
 #include "DeviceBleSwitchScene6AC.h"
 #include "DeviceBleSwitchScene6ACRgb.h"
@@ -244,6 +248,20 @@ void Gateway::init()
 	initMqttMessageV2();
 #endif
 
+#ifdef ESP_PLATFORM
+	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
+		LOGE("Failed to create task");
+	vTaskDelay(10);
+	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
+		LOGE("Failed to create task");
+	vTaskDelay(10);
+#else
+	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
+	udpBroadcastThread.detach();
+	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	checkOnlineThread.detach();
+#endif
+
 	database->GatewayRead();
 	database->DeviceRead();
 	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
@@ -267,20 +285,6 @@ void Gateway::init()
 
 	CloudConnect();
 	LocalConnect();
-
-#ifdef ESP_PLATFORM
-	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
-		LOGE("Failed to create task");
-	vTaskDelay(10);
-	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
-		LOGE("Failed to create task");
-	vTaskDelay(10);
-#else
-	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
-	udpBroadcastThread.detach();
-	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
-	checkOnlineThread.detach();
-#endif
 
 	isBusy = false;
 }
@@ -737,6 +741,19 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SWITCH_RGB_4_SQUARE:
 		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, type, version);
 		break;
+	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
+		device = new DeviceBleSwitchElectrical1(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_SWITCH_ELECTRICAL_2:
+		device = new DeviceBleSwitchElectrical2(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_SWITCH_ELECTRICAL_3:
+		device = new DeviceBleSwitchElectrical3(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_SWITCH_ELECTRICAL_4:
+		device = new DeviceBleSwitchElectrical4(id, name, mac, data, addr, type, version);
+		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
 	case BLE_REMOTE_M3_V2:
@@ -907,7 +924,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, boo
 		}
 		else
 		{
-			repeat = Util::ConvertRepeatDayToInt(1, 1, 1, 1, 1, 1, 1);
+			repeat = Util::ConvertRepeatDayToInt(0, 0, 0, 0, 0, 0, 0);
 		}
 
 		Rule *rule = NULL;
@@ -924,11 +941,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, boo
 		string type;
 		if (logical == -1 || logical == 3 || logical == 2) // rule theo thoi gian or theo thoi gian va tb dau vao
 		{
-			if (logical == -1 || logical == 3)
+			if (logical == 3)
 			{
 				type = "and";
 			}
-			else if (logical == 2)
+			else if (logical == 2 || logical == -1)
 			{
 				type = "or";
 			}
@@ -961,6 +978,15 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, boo
 			{
 				type = "and";
 			}
+			rule = new Rule(id, type, repeat, "", 0, ruleValue);
+			if (!rule)
+			{
+				LOGW("New rule error");
+			}
+		}
+		else if (logical == -2)
+		{
+			type = "or";
 			rule = new Rule(id, type, repeat, "", 0, ruleValue);
 			if (!rule)
 			{

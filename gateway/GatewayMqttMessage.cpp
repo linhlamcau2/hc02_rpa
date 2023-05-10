@@ -70,6 +70,7 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("EDIT_EVENT_TRIGGER", bind(&Gateway::OnRpcEditRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("EVENT_TRIGGER_STATUS", bind(&Gateway::OnRpcSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_EVENT_TRIGGER", bind(&Gateway::OnRpcDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("TAP_TO_RUN", bind(&Gateway::OnRpcTapToRun, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("COUNTDOWN", bind(&Gateway::OnRpcCreateCountDown, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_COUNTDOWN", bind(&Gateway::OnRpcDelCountDown, this, placeholders::_1, placeholders::_2));
@@ -138,6 +139,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("EDIT_EVENT_TRIGGER", bind(&Gateway::OnRpcEditRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EVENT_TRIGGER_STATUS", bind(&Gateway::OnRpcSwitchStatusEvent, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_EVENT_TRIGGER", bind(&Gateway::OnRpcDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("TAP_TO_RUN", bind(&Gateway::OnRpcTapToRun, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("COUNTDOWN", bind(&Gateway::OnRpcCreateCountDown, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_COUNTDOWN", bind(&Gateway::OnRpcDelCountDown, this, placeholders::_1, placeholders::_2));
@@ -519,6 +521,30 @@ int Gateway::OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_ERROR;
 }
 
+int Gateway::OnRpcTapToRun(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcTapToRun");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+		{
+			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
+			Rule *rule = gateway->getRuleFromId(ruleId);
+			if (rule)
+			{
+				rule->RunOutput();
+			}
+			else
+			{
+				LOGW("Rule not found");
+			}
+		}
+		return CODE_NOT_RESPONSE;
+	}
+	return CODE_ERROR;
+}
+
 int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
@@ -535,31 +561,35 @@ int Gateway::OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue)
 			string evevtId = data["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
 			string groupId = data["GROUP_ID"].asString();
-			Json::Value eachDay = data["EVENT_TRIGGER_ID"];
+			Json::Value eachDay = data["EACH_DAY"];
 			int status = data["STATUS"].asInt();
 			Json::Value states = data["STATES"];
-			if (states.isMember("TIME") && states["TIME"].isString() && states.isMember("PROPERTIES") && states["PROPERTIES"].isArray())
+			for (Json::ArrayIndex i = 0; i < states.size(); i++)
 			{
-				string time = states["TIME"].asString();
-				Json::Value properties = states["PROPERTIES"];
-				Json::Value dataAddRule;
-				dataAddRule["EVENT_TRIGGER_ID"] = evevtId;
-				dataAddRule["START_AT"] = time;
-				dataAddRule["EACH_DAY"] = eachDay;
-				dataAddRule["LOGICAL_OPERATOR_ID"] = 0;
-				dataAddRule["STATUS"] = status;
-				Json::Value outputGroup;
-				outputGroup["GROUP_ID"] = groupId;
-				outputGroup["PROPERTIES"] = properties;
-				dataAddRule["OUTPUT_GROUPS"] = outputGroup;
-				Rule *rule = AddRule(dataAddRule, "", true, true);
-				if (rule)
+				Json::Value state = states[i];
+				if (state.isMember("TIME") && state["TIME"].isString() && state.isMember("PROPERTIES") && state["PROPERTIES"].isArray())
 				{
-					dataJsonRsp["STATUS"] = "SUCCESS";
-				}
-				else
-				{
-					dataJsonRsp["STATUS"] = "FAILED";
+					string time = state["TIME"].asString();
+					Json::Value properties = state["PROPERTIES"];
+					Json::Value dataAddRule;
+					dataAddRule["EVENT_TRIGGER_ID"] = evevtId;
+					dataAddRule["START_AT"] = time;
+					dataAddRule["EACH_DAY"] = eachDay;
+					dataAddRule["LOGICAL_OPERATOR_ID"] = -1;
+					dataAddRule["STATUS"] = status;
+					Json::Value outputGroup;
+					outputGroup["GROUP_ID"] = groupId;
+					outputGroup["PROPERTIES"] = properties;
+					dataAddRule["OUTPUT_GROUPS"] = outputGroup;
+					Rule *rule = AddRule(dataAddRule, "", true, true);
+					if (rule)
+					{
+						dataJsonRsp["STATUS"] = "SUCCESS";
+					}
+					else
+					{
+						dataJsonRsp["STATUS"] = "FAILED";
+					}
 				}
 			}
 		}
@@ -589,34 +619,38 @@ int Gateway::OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue)
 			string evevtId = data["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = evevtId;
 			string groupId = data["GROUP_ID"].asString();
-			Json::Value eachDay = data["EVENT_TRIGGER_ID"];
+			Json::Value eachDay = data["EACH_DAY"];
 			int status = data["STATUS"].asInt();
 			Json::Value states = data["STATES"];
-			if (states.isMember("TIME") && states["TIME"].isString() && states.isMember("PROPERTIES") && states["PROPERTIES"].isArray())
+			for (Json::ArrayIndex i = 0; i < states.size(); i++)
 			{
-				string time = states["TIME"].asString();
-				Json::Value properties = states["PROPERTIES"];
-				Json::Value dataAddRule;
-				dataAddRule["EVENT_TRIGGER_ID"] = evevtId;
-				dataAddRule["START_AT"] = time;
-				dataAddRule["EACH_DAY"] = eachDay;
-				dataAddRule["LOGICAL_OPERATOR_ID"] = 0;
-				dataAddRule["STATUS"] = status;
-				Json::Value outputGroup;
-				outputGroup["GROUP_ID"] = groupId;
-				outputGroup["PROPERTIES"] = properties;
-				dataAddRule["OUTPUT_GROUPS"] = outputGroup;
-				Rule *rule = getRuleFromId(evevtId);
-				if (rule)
+				Json::Value state = states[i];
+				if (state.isMember("TIME") && state["TIME"].isString() && state.isMember("PROPERTIES") && state["PROPERTIES"].isArray())
 				{
-					rule->DelAllRuleInput();
-					rule->DelAllRuleOutput();
-					rule = AddRule(dataAddRule, "", true, true);
-					dataJsonRsp["STATUS"] = "SUCCESS";
-				}
-				else
-				{
-					dataJsonRsp["STATUS"] = "FAILED";
+					string time = state["TIME"].asString();
+					Json::Value properties = state["PROPERTIES"];
+					Json::Value dataAddRule;
+					dataAddRule["EVENT_TRIGGER_ID"] = evevtId;
+					dataAddRule["START_AT"] = time;
+					dataAddRule["EACH_DAY"] = eachDay;
+					dataAddRule["LOGICAL_OPERATOR_ID"] = -1;
+					dataAddRule["STATUS"] = status;
+					Json::Value outputGroup;
+					outputGroup["GROUP_ID"] = groupId;
+					outputGroup["PROPERTIES"] = properties;
+					dataAddRule["OUTPUT_GROUPS"] = outputGroup;
+					Rule *rule = getRuleFromId(evevtId);
+					if (rule)
+					{
+						rule->DelAllRuleInput();
+						rule->DelAllRuleOutput();
+						rule = AddRule(dataAddRule, "", true, true);
+						dataJsonRsp["STATUS"] = "SUCCESS";
+					}
+					else
+					{
+						dataJsonRsp["STATUS"] = "FAILED";
+					}
 				}
 			}
 		}
