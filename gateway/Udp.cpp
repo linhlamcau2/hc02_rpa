@@ -27,7 +27,7 @@ static void UdpHandleMessage(void *data)
 
 	int recv_len;
 #ifdef ESP_PLATFORM
-	char *buf = (uint8_t *)heap_caps_malloc_prefer(BUFLEN, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
+	char *buf = (char *)heap_caps_malloc_prefer(BUFLEN, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
 	char buf[BUFLEN];
 #endif
