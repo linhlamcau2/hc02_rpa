@@ -417,3 +417,26 @@ bool Util::GetStatusLedInternet()
 {
 	return ledInternet;
 }
+
+static float longitude = 0;
+static float latitude = 0;
+
+float Util::GetLongitude()
+{
+	return longitude;
+}
+
+float Util::GetLatitude()
+{
+	return latitude;
+}
+
+void Util::SetLongitude(float value)
+{
+	longitude = value;
+}
+
+void Util::SetLatitude(float value)
+{
+	latitude = value;
+}

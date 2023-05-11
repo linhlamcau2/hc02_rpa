@@ -4,7 +4,7 @@
 #include "element/ElementButton.h"
 #include "element/ElementRgb.h"
 #include "module/ModuleOnOff.h"
-#include "module/ModuleRgb.h"
+#include "module/ModuleDimonDimoff.h"
 
 using namespace std;
 
@@ -18,7 +18,7 @@ private:
 
 #ifdef CONFIG_USE_OLD_APP
 	ModuleOnOff *moduleOnOff;
-	ModuleRgb * moduleRgb;
+	ModuleDimonDimoff * moduleDimonDimoff;
 #endif
 
 public:

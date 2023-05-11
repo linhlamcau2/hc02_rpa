@@ -16,7 +16,7 @@ DeviceBleSwitchElectrical1::DeviceBleSwitchElectrical1(string id, string name, s
 #ifdef CONFIG_USE_OLD_APP
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
-	moduleRgb = new ModuleRgb(this, addr, 0);
-	modules.push_back(moduleRgb);
+	moduleDimonDimoff = new ModuleDimonDimoff(this, addr, 0);
+	modules.push_back(moduleDimonDimoff);
 #endif
 }

@@ -82,6 +82,8 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRpcStairsSwitch, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("POWER_SWITCH_TIMEOUT", bind(&Gateway::OnRpcPowerSwitchTimeout, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("REMOVE_POWER_SWITCH_TIMEOUT", bind(&Gateway::OnRpcRemovePowerSwitchTimeout, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
 
@@ -151,6 +153,8 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("STAIRS_SWITCH", bind(&Gateway::OnRpcStairsSwitch, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("EDIT_STAIRS_SWITCH", bind(&Gateway::OnRpcEditStairsSwitch, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DELETE_STAIRS_SWITCH", bind(&Gateway::OnRpcDelStairsSwitch, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("POWER_SWITCH_TIMEOUT", bind(&Gateway::OnRpcPowerSwitchTimeout, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("REMOVE_POWER_SWITCH_TIMEOUT", bind(&Gateway::OnRpcRemovePowerSwitchTimeout, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
 
@@ -164,6 +168,11 @@ int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value data = reqValue["DATA"];
 		respValue["CMD"] = "HC_CONNECT_TO_CLOUD";
+		if (data.isMember("LATITUDE") && data["LATITUDE"].isDouble() && data.isMember("LONGITUDE") && data["LONGITUDE"].isDouble())
+		{
+			Util::SetLongitude(data["LONGITUDE"].asDouble());
+			Util::SetLatitude(data["LATITUDE"].asDouble());
+		}
 		if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
 		{
 			string dormitoryId = data["DORMITORY_ID"].asString();
@@ -210,6 +219,7 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		HTTPRequest *httpRequest = new HTTPRequest();
 		httpRequest->setUrl(string(BASE_URL_DEV) + string(RENEW_TOKEN));
 		httpRequest->setMethod("POST");
+		
 		if (gateway->getDormitory() == "" || gateway->getRefreshToken() == "")
 		{
 			LOGW("Gateway does not have info dormitory,refresh token");
@@ -252,6 +262,8 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 			LOGW("Get token failed");
 			status = 0;
 		}
+
+		delete httpRequest;
 		dataJsonRsp["STATUS"] = status;
 		respValue["DATA"] = dataJsonRsp;
 		return CODE_OK;
@@ -3003,6 +3015,121 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 		}
 		dataJsonRsp["STATUS"] = statusRsp;
 		respValue["DATA"] = dataJsonRsp;
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcPowerSwitchTimeout");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "POWER_SWITCH_TIMEOUT";
+		Json::Value data = reqValue["DATA"];
+		respValue["DATA"] = data;
+
+		if (data.isMember("EVENT_TRIGGER_ID") && data["EVENT_TRIGGER_ID"].isString() &&
+			data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString() &&
+			data.isMember("BUTTON") && data["BUTTON"].isString() &&
+			data.isMember("CHANGE_AT") && data["CHANGE_AT"].isString() &&
+			data.isMember("CHANGE_TO") && data["CHANGE_TO"].isInt())
+		{
+			string id = data["EVENT_TRIGGER_ID"].asString();
+			string devId = data["DEVICE_ID"].asString();
+			string btnId = data["BUTTON"].asString();
+			string time = data["CHANGE_AT"].asString();
+			int value = data["CHANGE_TO"].asInt();
+
+			Json::Value properties;
+			properties["ID"] = 0;
+			properties["VALUE"] = value;
+
+			uint8_t buttonId = 11;
+			if (btnId == "BUTTON_1")
+				buttonId = 11;
+			else if (btnId == "BUTTON_2")
+				buttonId = 12;
+			else if (btnId == "BUTTON_3")
+				buttonId = 13;
+			else if (btnId == "BUTTON_4")
+				buttonId = 14;
+			else if (btnId == "BUTTON_5")
+				buttonId = 15;
+			else if (btnId == "BUTTON_6")
+				buttonId = 16;
+
+			Device *deviceParent = getDeviceFromId(devId);
+			Device *deviceChild = NULL;
+			if (deviceParent)
+			{
+				deviceChild = getDeviceBleFromAddr(deviceParent->GetAddr() + (buttonId - 11));
+			}
+			else
+				LOGW("Device not found");
+
+			Rule *rule = getRuleFromId(id);
+			if (rule)
+			{
+				rule->DelAllRuleInput();
+				rule->DelAllRuleOutput();
+			}
+			if (deviceChild)
+			{
+				int day = Util::GetDaysCurrent();
+				int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+				switch (day)
+				{
+				case 2:
+					mon = 1;
+					break;
+				case 3:
+					tue = 1;
+					break;
+				case 4:
+					wed = 1;
+					break;
+				case 5:
+					thu = 1;
+					break;
+				case 6:
+					fri = 1;
+					break;
+				case 7:
+					sat = 1;
+					break;
+				case 8:
+					sun = 1;
+					break;
+				}
+				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+				rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
+				RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceChild, properties, 0);
+				rule->AddRuleOutput(ruleOutputDevice);
+				ruleList[id] = rule;
+			}
+			else
+				LOGW("Device not found");
+			return CODE_OK;
+		}
+		else
+			LOGW("Power switch timeout failed");
+	}
+	return CODE_ERROR;
+}
+int Gateway::OnRpcRemovePowerSwitchTimeout(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "REMOVE_POWER_SWITCH_TIMEOUT";
+		Json::Value dataValue = reqValue["DATA"];
+		respValue["DATA"] = dataValue;
+		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+		{
+			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
+			ruleList.erase(ruleList.find(ruleId));
+			return CODE_OK;
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;

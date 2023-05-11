@@ -176,3 +176,34 @@ string HTTPRequest::DownloadFile(string dormitory)
 	}
 	return readBuffer;
 }
+
+string HTTPRequest::GetWeather(float longitude, float latitude)
+{
+	CURL *curl;
+	CURLcode res;
+	curl = curl_easy_init();
+	string readBuffer = "";
+	if (curl)
+	{
+		LOGW("method %s",method.c_str());
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https://api.openweathermap.org/data/2.5/weather?lat="+to_string(latitude)+"&lon="+to_string(longitude)+"&appid=ebd13e00acf60358e311499f1701ffc2&units=metric");
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+
+		struct curl_slist *headers = NULL;
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+		res = curl_easy_perform(curl);
+		if (res != CURLE_OK)
+		{
+			LOGW("get token error");
+		}
+		curl_easy_cleanup(curl);
+		curl = NULL;
+	}
+	return readBuffer;
+}

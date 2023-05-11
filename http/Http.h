@@ -36,4 +36,5 @@ public:
 	void setMethod(string method);
 	void setUrl(string url);
 	void setToken(string token);
+	string GetWeather(float longitude, float latitude);
 };

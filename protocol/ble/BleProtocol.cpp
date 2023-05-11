@@ -66,6 +66,7 @@ void BleProtocol::init()
 	usleep(100000); // wait uart rx thread start
 
 #ifdef ESP_PLATFORM
+	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, this, 10, NULL) != pdPASS)
 		LOGE("Failed to create task");
 	vTaskDelay(10);
@@ -896,6 +897,11 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev)
 	case BLE_SWITCH_RGB_3_SQUARE:
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
+	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_2:
+	case BLE_SWITCH_ELECTRICAL_3:
+	case BLE_SWITCH_ELECTRICAL_4:
+	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
 		BleProtocol::GetOnoffLight(devAddr);
 		break;
 	}

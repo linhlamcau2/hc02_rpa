@@ -17,6 +17,8 @@
 #include "SceneBle.h"
 #include "SceneDelay.h"
 #include "RuleOutputSceneBle.h"
+#include "RuleOutputDevice.h"
+#include "RuleOutputGroup.h"
 #include "SceneDelayDeviceOutput.h"
 #include "SceneDelayGroupOutput.h"
 #include "Room.h"
@@ -110,6 +112,8 @@ private:
 	int OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcRemovePowerSwitchTimeout(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);

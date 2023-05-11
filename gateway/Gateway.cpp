@@ -249,6 +249,7 @@ void Gateway::init()
 #endif
 
 #ifdef ESP_PLATFORM
+	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
 		LOGE("Failed to create task");
 	vTaskDelay(10);
@@ -304,7 +305,6 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 			}
 		}
 #ifdef ESP_PLATFORM
-		LOGE("OnCloudConnect");
 		Led::SetModeLedInternet(MODE_ON);
 		Led::SetLedInternet(MODE_ON);
 #endif
@@ -633,7 +633,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 
 #ifdef CONFIG_USE_OLD_APP
 	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
-	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE)
+	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2)
 	{
 		dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
 		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), 1);
@@ -642,7 +642,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		jsonValue["DATA"] = dataValue;
 		PublishToLocalMessage(jsonValue);
 	}
-	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3)
 	{
 		for (int i = 1; i <= 2; i++)
 		{
@@ -654,7 +654,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			PublishToLocalMessage(jsonValue);
 		}
 	}
-	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_4)
 	{
 		for (int i = 1; i <= 3; i++)
 		{
@@ -815,12 +815,12 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			deviceList[id] = device;
 #ifdef CONFIG_USE_OLD_APP
 			Device *deviceChild = NULL;
-			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE)
+			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_2)
 			{
 				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version);
 				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
 			}
-			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_3)
 			{
 				for (int i = 1; i <= 2; i++)
 				{
@@ -828,7 +828,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
-			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_4)
 			{
 				for (int i = 1; i <= 3; i++)
 				{
@@ -885,7 +885,6 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-		ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt() &&
 		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
 		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
@@ -911,7 +910,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, boo
 					tue = 1;
 				else if (repeatDays[i] == "EACHWEDNESDAY")
 					wed = 1;
-				else if (repeatDays[i] == "EACHTHUSDAY")
+				else if (repeatDays[i] == "EACHTHURSDAY")
 					thu = 1;
 				else if (repeatDays[i] == "EACHFRIDAY")
 					fri = 1;
@@ -937,21 +936,23 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, boo
 			- +2: Rule Time + OR
 			- +3: Rule Time + AND
 		*/
-		int logical = ruleValue["LOGICAL_OPERATOR_ID"].asInt();
-		string type;
+		int logical = -1;
+		if (ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt())
+			int logical = ruleValue["LOGICAL_OPERATOR_ID"].asInt();
+		string type = "or";
 		if (logical == -1 || logical == 3 || logical == 2) // rule theo thoi gian or theo thoi gian va tb dau vao
 		{
-			if (logical == 3)
+			if (logical == 3 || logical == -1)
 			{
 				type = "and";
 			}
-			else if (logical == 2 || logical == -1)
+			else if (logical == 2)
 			{
 				type = "or";
 			}
 			if (ruleValue.isMember("START_AT") && ruleValue["START_AT"].isString())
 			{
-				string endAt;
+				string endAt = "";
 				if (ruleValue.isMember("END_AT") && ruleValue["END_AT"].isString())
 				{
 					endAt = ruleValue["END_AT"].asString();

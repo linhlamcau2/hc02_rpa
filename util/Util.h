@@ -66,4 +66,9 @@ namespace Util
 	bool GetStatusLedService();
 	bool GetStatusLedZigbee();
 	bool GetStatusLedInternet();
+
+	float GetLongitude();
+	float GetLatitude();
+	void SetLongitude(float value);
+	void SetLatitude(float value);
 }
