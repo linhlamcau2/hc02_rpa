@@ -62,7 +62,8 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json
 	{
 		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE)
 		{
-			bt = data_message->btId;
+			id = 10 + data_message->btId;
+			bt = data_message->mode;
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			if (data_message->scene > 0)
