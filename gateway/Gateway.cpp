@@ -490,10 +490,11 @@ int Gateway::UdpBroadcastThread()
 	Json::Value appInfoValaue;
 	Json::Value dataValue;
 	hcBroadcastValue["CMD"] = "HC_BROADCAST";
+	hcBroadcastValue["NAME"] = "minihub"+mac;
 	hcBroadcastValue["REQUEST_ID"] = Util::genRandRQI(16);
 	hcBroadcastValue["TIME"] = Util::GetCurrentTimeStr();
 	hcBroadcastValue["CONNECTION_TYPE"] = 0;
-	hcInfoValue["TYPE"] = 2;
+	hcInfoValue["TYPE"] = 3;
 	hcInfoValue["DORMITORY_ID"] = dormitoryId;
 	hcInfoValue["MAC"] = mac;
 	hcInfoValue["VERSION"] = STR(VERSION);
