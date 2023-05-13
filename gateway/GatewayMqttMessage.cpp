@@ -219,7 +219,7 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		HTTPRequest *httpRequest = new HTTPRequest();
 		httpRequest->setUrl(string(BASE_URL_DEV) + string(RENEW_TOKEN));
 		httpRequest->setMethod("POST");
-		
+
 		if (gateway->getDormitory() == "" || gateway->getRefreshToken() == "")
 		{
 			LOGW("Gateway does not have info dormitory,refresh token");
@@ -279,7 +279,8 @@ int Gateway::OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	respValue["CMD"] = "VERSION_HC";
 	respValue["DATA"]["MAC"] = mac;
-	respValue["DATA"]["VERSION"] = STR(VERSION);
+	respValue["DATA"]["VERSION_HC"] = STR(VERSION);
+	LOGE("OnRpcVersionHc %s", respValue.toString().c_str());
 	return CODE_OK;
 }
 
@@ -3688,6 +3689,14 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 				sum = dataValue["CHECK_SUM"].asString();
 				url = dataValue["URL"].asString();
 				string check = name + ".tar.xz";
+
+#ifdef ESP_PLATFORM
+
+				if (url.find("smh_gw.bin") != std::string::npos)
+				{
+					nameOld = name;
+				}
+#else
 				if (url.find(check) != std::string::npos)
 				{
 					if (name > nameOld)
@@ -3695,12 +3704,15 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 						nameOld = name;
 					}
 				}
+#endif
 			}
 		}
 		if (nameOld != "")
 		{
 			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
-			Ota::startOta(name, url, sum);
+			string domain = string(BASE_URL_DEV) + url;
+			LOGE("domain: %s", domain.c_str());
+			Ota::startOta(name, domain, sum);
 			return CODE_OK;
 		}
 	}
