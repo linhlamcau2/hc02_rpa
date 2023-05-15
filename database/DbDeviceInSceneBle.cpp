@@ -32,7 +32,7 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 						if (decode == "")
 						{
 							Json::Value devInSceneJson;
-							if(devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
+							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
 							{
 								int modeRgb = 0;
 								for (Json::ArrayIndex i = 0; i < devInSceneJson.size(); i++)
@@ -60,6 +60,8 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 							LOGW("Decode data error");
 						}
 					}
+					else
+						LOGW("Device not found %s", deviceId.c_str());
 				}
 				else
 				{
@@ -97,10 +99,15 @@ int Db::DeviceInSceneBleDel(SceneBle *scene, Device *device)
 	return Sqlite_Exec(sql);
 }
 
+int Db::DeviceInSceneBleDelDev(string deviceId)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + deviceId + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::DeviceInSceneBleDelDev(Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "';";
-	return Sqlite_Exec(sql);
+	return DeviceInSceneBleDelDev(device->GetId());
 }
 
 int Db::DeviceInSceneBleDelAll()

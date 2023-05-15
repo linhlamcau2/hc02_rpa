@@ -15,8 +15,6 @@ SceneBle::SceneBle(string id, uint32_t addr, string name) : Object(id, addr, nam
 
 SceneBle::~SceneBle()
 {
-	for (auto &dev : deviceList)
-		delete dev->device;
 	deviceList.clear();
 }
 

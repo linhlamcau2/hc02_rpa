@@ -25,6 +25,8 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 					{
 						room->AddDevice(device, false);
 					}
+					else
+						LOGW("Device not found %s", deviceId.c_str());
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -48,7 +50,7 @@ int Db::DeviceInRoomRead()
 
 int Db::DeviceInRoomAdd(Room *room, Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, device_id) VALUES ('" + room->GetId()+ "','" + device->GetId() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, device_id) VALUES ('" + room->GetId() + "','" + device->GetId() + "');";
 	return Sqlite_Exec(sql);
 }
 
@@ -58,10 +60,15 @@ int Db::DeviceInRoomDel(Room *room, Device *device)
 	return Sqlite_Exec(sql);
 }
 
+int Db::DeviceInRoomDelDev(string deviceId)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + deviceId + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::DeviceInRoomDelDev(Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "';";
-	return Sqlite_Exec(sql);
+	return DeviceInRoomDelDev(device->GetId());
 }
 
 int Db::DeviceInRoomDelAll()

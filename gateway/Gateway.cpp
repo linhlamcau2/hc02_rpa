@@ -1388,7 +1388,6 @@ void Gateway::DelAllDevice()
 {
 	for (auto &[id, device] : deviceList)
 		delete device;
-
 	deviceList.clear();
 }
 
