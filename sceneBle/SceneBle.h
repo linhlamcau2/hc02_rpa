@@ -22,6 +22,7 @@ class SceneBle : public Object
 public:
 	vector<DeviceInSceneBle *> deviceList;
 	SceneBle(string id, uint32_t addr, string name);
+	~SceneBle();
 	
 	int GetPositionDevice(Device *device);
 	int AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);

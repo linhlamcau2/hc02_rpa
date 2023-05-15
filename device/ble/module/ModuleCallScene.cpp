@@ -14,6 +14,10 @@ ModuleCallScene::ModuleCallScene(Device *device, uint32_t addr) : Module(device,
 	value = 0;
 }
 
+ModuleCallScene::~ModuleCallScene()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleCallScene::InitAttribute(int id, double value)
 {
@@ -108,12 +112,12 @@ bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t idScene1 = 0, idScene2 = 0;
 			string op = dataValue["OP"].asString();

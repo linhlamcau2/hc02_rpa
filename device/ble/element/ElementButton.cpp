@@ -13,6 +13,10 @@ ElementButton::ElementButton(Device *device, uint32_t addr) : Element(device, ad
 	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr());
 }
 
+ElementButton::~ElementButton()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ElementButton::InitAttribute(int id, double value)
 {
@@ -71,12 +75,12 @@ bool ElementButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t bt = 0, mode = 0;
 			string op = dataValue["OP"].asString();
@@ -150,7 +154,7 @@ int ElementButton::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		int bt = dataValue[key].asInt();
 		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)

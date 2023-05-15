@@ -26,6 +26,7 @@ public:
 
 public:
 	Group(string id, uint32_t addr, string name);
+	~Group();
 
 	int GetPositionDevice(Device *device);
 

@@ -12,6 +12,7 @@ protected:
 
 public:
 	ModuleOnOff(Device *device, uint32_t addr);
+	~ModuleOnOff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

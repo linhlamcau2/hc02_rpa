@@ -12,6 +12,10 @@ ModulePirSensor::ModulePirSensor(Device *device, uint32_t addr) : Module(device,
 	id = BLE_ATTRIBUTE_PIR;
 }
 
+ModulePirSensor::~ModulePirSensor()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModulePirSensor::InitAttribute(int id, double value)
 {
@@ -63,12 +67,12 @@ bool ModulePirSensor::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();

@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleDim(Device *device, uint32_t addr);
+	~ModuleDim();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

@@ -12,6 +12,11 @@ ModuleControlClose::ModuleControlClose(Device *device, uint32_t addr) : Module(d
 	id = BLE_ATTRIBUTE_CURTAIN_CLOSE;
 }
 
+ModuleControlClose::~ModuleControlClose()
+{
+	
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleControlClose::InitAttribute(int id, double value)
 {

@@ -58,6 +58,12 @@ int Db::DeviceInRoomDel(Room *room, Device *device)
 	return Sqlite_Exec(sql);
 }
 
+int Db::DeviceInRoomDelDev(Device *device)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::DeviceInRoomDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME " ; ";

@@ -61,6 +61,12 @@ int Db::DeviceInGroupDel(Group *group, Device *device, int epId)
 	return Sqlite_Exec(sql);
 }
 
+int Db::DeviceInGroupDelDev(Device *device)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::DeviceInGroupDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME ";";

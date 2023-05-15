@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleControlPercent(Device *device, uint32_t addr);
+	~ModuleControlPercent();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

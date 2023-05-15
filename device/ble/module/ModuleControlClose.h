@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleControlClose(Device *device, uint32_t addr);
+	~ModuleControlClose();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

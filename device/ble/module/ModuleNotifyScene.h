@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleNotifyScene(Device *device, uint32_t addr);
+	~ModuleNotifyScene();
 
 	/**
 	 * @brief Parse raw data to module parameter value

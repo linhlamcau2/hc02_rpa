@@ -12,6 +12,10 @@ ModuleTimeActionPir::ModuleTimeActionPir(Device *device, uint32_t addr) : Module
 	id = BLE_ATTRIBUTE_ACTIME;
 }
 
+ModuleTimeActionPir::~ModuleTimeActionPir()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleTimeActionPir::InitAttribute(int id, double value)
 {
@@ -57,12 +61,12 @@ bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -110,7 +114,7 @@ int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
 	LOGV("ModuleTimeActionPir Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
@@ -138,7 +142,7 @@ int ModuleTimeActionPir::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
 		int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
 		if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)

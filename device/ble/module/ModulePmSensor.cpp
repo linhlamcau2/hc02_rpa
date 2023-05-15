@@ -16,6 +16,10 @@ ModulePmSensor::ModulePmSensor(Device *device, uint32_t addr) : Module(device, a
 	idPm1_0 = BLE_ATTRIBUTE_PM1_0;
 }
 
+ModulePmSensor::~ModulePmSensor()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModulePmSensor::InitAttribute(int id, double value)
 {

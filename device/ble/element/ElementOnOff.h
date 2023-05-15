@@ -12,6 +12,7 @@ protected:
 
 public:
 	ElementOnOff(Device *device, uint32_t addr);
+	~ElementOnOff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

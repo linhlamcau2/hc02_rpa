@@ -12,6 +12,10 @@ ModuleDoorStatus::ModuleDoorStatus(Device *device, uint32_t addr) : Module(devic
 	id = BLE_ATTRIBUTE_DOOR;
 }
 
+ModuleDoorStatus::~ModuleDoorStatus()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleDoorStatus::InitAttribute(int id, double value)
 {

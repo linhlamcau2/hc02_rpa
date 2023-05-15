@@ -13,6 +13,7 @@ protected:
 public:
 	ModuleButton(Device *device, uint32_t addr);
 	ModuleButton(Device *device, uint32_t addr, int index);
+	~ModuleButton();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

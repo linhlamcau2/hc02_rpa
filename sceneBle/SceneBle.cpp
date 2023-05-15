@@ -13,6 +13,13 @@ SceneBle::SceneBle(string id, uint32_t addr, string name) : Object(id, addr, nam
 {
 }
 
+SceneBle::~SceneBle()
+{
+	for (auto &dev : deviceList)
+		delete dev->device;
+	deviceList.clear();
+}
+
 int SceneBle::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();
@@ -52,7 +59,7 @@ int SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 	{
 		int modeRGB = 0;
 		if (data.isObject() &&
-				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		}

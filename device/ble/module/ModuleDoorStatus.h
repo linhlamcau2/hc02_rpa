@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleDoorStatus(Device *device, uint32_t addr);
+	~ModuleDoorStatus();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

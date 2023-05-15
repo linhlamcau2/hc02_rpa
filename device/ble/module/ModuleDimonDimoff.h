@@ -14,6 +14,7 @@ protected:
 
 public:
 	ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t button = 0);
+	~ModuleDimonDimoff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

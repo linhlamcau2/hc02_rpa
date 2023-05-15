@@ -377,6 +377,9 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 					if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
 					{
 						dataJsonRsp["SUCCESS"].append(device->GetId());
+						database->DeviceInGroupDelDev(device);
+						database->DeviceInSceneBleDelDev(device);
+						database->DeviceInRoomDelDev(device);
 						delDevice(device);
 					}
 					else
@@ -3712,6 +3715,14 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
 			string domain = string(BASE_URL_DEV) + url;
 			LOGE("domain: %s", domain.c_str());
+
+			DelAllDevice();
+			DelAllGroup();
+			DelAllRoom();
+			DelAllRule();
+			DelAllSceneBle();
+			DelAllSceneDelay();
+
 			Ota::startOta(name, domain, sum);
 			return CODE_OK;
 		}

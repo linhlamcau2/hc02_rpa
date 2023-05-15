@@ -7,6 +7,10 @@ Object::Object(string id, uint32_t addr, string name)
 	this->name = name;
 }
 
+Object::~Object()
+{
+}
+
 string Object::GetId()
 {
 	return id;

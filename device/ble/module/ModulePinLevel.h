@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModulePinLevel(Device *device, uint32_t addr);
+	~ModulePinLevel();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

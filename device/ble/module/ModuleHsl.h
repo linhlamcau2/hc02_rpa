@@ -12,6 +12,7 @@ protected:
 
 public:
 	ModuleHsl(Device *device, uint32_t addr);
+	~ModuleHsl();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

@@ -6,6 +6,10 @@ Element::Element(Device *device, uint32_t addr)
 	this->addr = addr;
 }
 
+Element::~Element()
+{
+}
+
 bool Element::CheckAddr(uint32_t addr)
 {
 	return this->addr == addr;

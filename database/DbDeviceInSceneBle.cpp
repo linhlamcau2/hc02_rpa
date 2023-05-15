@@ -97,6 +97,12 @@ int Db::DeviceInSceneBleDel(SceneBle *scene, Device *device)
 	return Sqlite_Exec(sql);
 }
 
+int Db::DeviceInSceneBleDelDev(Device *device)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + device->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::DeviceInSceneBleDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME ";";

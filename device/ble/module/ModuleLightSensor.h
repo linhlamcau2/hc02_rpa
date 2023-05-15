@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleLightSensor(Device *device, uint32_t addr);
+	~ModuleLightSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

@@ -14,6 +14,7 @@ protected:
 
 public:
 	Object(string id, uint32_t addr, string name);
+	~Object();
 
 	string GetId();
 	void SetId(string id);

@@ -13,6 +13,10 @@ ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr) : Module(device, addr)
 	code = KEY_ATTRIBUTE_ONOFF;
 }
 
+ModuleOnOff::~ModuleOnOff()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleOnOff::InitAttribute(int id, double value)
 {

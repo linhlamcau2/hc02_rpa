@@ -12,6 +12,7 @@ protected:
 
 public:
 	ElementButton(Device *device, uint32_t addr);
+	~ElementButton();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

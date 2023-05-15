@@ -15,6 +15,7 @@ protected:
 
 public:
 	Module(Device *device, uint32_t addr);
+	virtual ~Module();
 
 	/**
 	 * @brief Parse raw data to element parameter value

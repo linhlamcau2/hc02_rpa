@@ -54,16 +54,19 @@ public:
 	int DeviceInGroupRead();
 	int DeviceInGroupAdd(Group *group, Device *device, int epId);
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
+	int DeviceInGroupDelDev(Device *device);
 	int DeviceInGroupDelAll();
 
 	int DeviceInRoomRead();
 	int DeviceInRoomAdd(Room *room, Device *device);
 	int DeviceInRoomDel(Room *room, Device *device);
+	int DeviceInRoomDelDev(Device *device);
 	int DeviceInRoomDelAll();
 
 	int DeviceInSceneBleRead();
 	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data);
 	int DeviceInSceneBleDel(SceneBle *scene, Device *device);
+	int DeviceInSceneBleDelDev(Device *device);
 	int DeviceInSceneBleDelAll();
 
 	int GatewayRead();

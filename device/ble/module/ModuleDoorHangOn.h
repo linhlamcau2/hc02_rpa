@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleDoorHangOn(Device *device, uint32_t addr);
+	~ModuleDoorHangOn();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

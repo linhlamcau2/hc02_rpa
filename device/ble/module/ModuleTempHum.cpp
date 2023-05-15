@@ -14,6 +14,10 @@ ModuleTempHum::ModuleTempHum(Device *device, uint32_t addr) : Module(device, add
 	idHum = BLE_ATTRIBUTE_HUMIDITY;
 }
 
+ModuleTempHum::~ModuleTempHum()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleTempHum::InitAttribute(int id, double value)
 {

@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleControlPause(Device *device, uint32_t addr);
+	~ModuleControlPause();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

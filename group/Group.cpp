@@ -18,6 +18,13 @@ Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
 }
 
+Group::~Group()
+{
+	for (auto &deviceInGroup : deviceList)
+		delete deviceInGroup->device;
+	deviceList.clear();
+}
+
 int Group::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();
@@ -166,7 +173,7 @@ void Group::DoBle()
 		{
 			Json::Value property = dataValue[i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
-					property.isMember("VALUE") && property["VALUE"].isInt())
+				property.isMember("VALUE") && property["VALUE"].isInt())
 			{
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();
@@ -243,8 +250,8 @@ void Group::DoBleV2()
 			bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 		{
 			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();

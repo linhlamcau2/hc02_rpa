@@ -28,6 +28,10 @@ ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t button) : Module(dev
 	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + to_string(addr - device->GetAddr());
 }
 
+ModuleRgb::~ModuleRgb()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleRgb::InitAttribute(int id, double value)
 {
@@ -127,13 +131,13 @@ bool ModuleRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idR == id || this->idG == id || this->idB == id || this->idDimOn == id || this->idDimOff == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -261,11 +265,11 @@ int ModuleRgb::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
-			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
-			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+		dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+		dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int r = dataValue[keyR].asInt();
 		int g = dataValue[keyG].asInt();

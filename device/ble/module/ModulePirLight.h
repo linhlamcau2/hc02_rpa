@@ -13,6 +13,7 @@ protected:
 
 public:
 	ModulePirLight(Device *device, uint32_t addr);
+	~ModulePirLight();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

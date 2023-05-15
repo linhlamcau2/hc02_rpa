@@ -14,6 +14,10 @@ ModuleSmoke::ModuleSmoke(Device *device, uint32_t addr) : Module(device, addr)
 	idPower = BLE_ATTRIBUTE_SMOKE_PIN;
 }
 
+ModuleSmoke::~ModuleSmoke()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleSmoke::InitAttribute(int id, double value)
 {

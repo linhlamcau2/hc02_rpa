@@ -19,6 +19,10 @@ ModuleHsl::ModuleHsl(Device *device, uint32_t addr) : Module(device, addr)
 	isL = false;
 }
 
+ModuleHsl::~ModuleHsl()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleHsl::InitAttribute(int id, double value)
 {

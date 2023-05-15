@@ -12,6 +12,10 @@ ModuleDim::ModuleDim(Device *device, uint32_t addr) : Module(device, addr)
 	id = BLE_ATTRIBUTE_DIM;
 }
 
+ModuleDim::~ModuleDim()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleDim::InitAttribute(int id, double value)
 {
@@ -87,12 +91,12 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t dim1 = 0, dim2 = 0;
 			string op = dataValue["OP"].asString();
@@ -140,11 +144,11 @@ int ModuleDim::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleDim Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t dim = (value * 65535) / 100;
@@ -170,7 +174,7 @@ int ModuleDim::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		uint16_t value = (dim * 65535) / 100;

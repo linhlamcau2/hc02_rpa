@@ -18,6 +18,10 @@ ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t butt
 	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + to_string(addr - device->GetAddr());
 }
 
+ModuleDimonDimoff::~ModuleDimonDimoff()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleDimonDimoff::InitAttribute(int id, double value)
 {
@@ -93,13 +97,13 @@ bool ModuleDimonDimoff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idDimOn == id || this->idDimOff == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -193,8 +197,8 @@ int ModuleDimonDimoff::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();

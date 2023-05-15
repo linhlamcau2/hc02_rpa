@@ -12,6 +12,10 @@ ElementCct::ElementCct(Device *device, uint32_t addr) : Element(device, addr)
 	id = BLE_ATTRIBUTE_CCT;
 }
 
+ElementCct::~ElementCct()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ElementCct::InitAttribute(int id, double value)
 {

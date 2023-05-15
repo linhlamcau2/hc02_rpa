@@ -29,6 +29,7 @@ private:
 
 public:
 	HTTPRequest();
+	~HTTPRequest();
 	string GetToken(string refreshToken, string dormitory);
 	string UploadFile(string refreshToken, string dormitory, string pathFile);
 	bool CreateBackup(string refreshToken, string dormitory, string mac, string version, string size, string path, string hcId);

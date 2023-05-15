@@ -8,6 +8,14 @@ DeviceBle::DeviceBle(string id, string name, string mac, string data, uint32_t a
 	deviceKey = GetDeviceKey(data);
 }
 
+DeviceBle::~DeviceBle()
+{
+	for (auto &module : modules)
+		delete module;
+	for (auto &element : elements)
+		delete element;
+}
+
 string DeviceBle::GetDeviceKey(string data)
 {
 	Json::Value dataJson;

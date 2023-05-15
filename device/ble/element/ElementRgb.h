@@ -13,6 +13,7 @@ protected:
 
 public:
 	ElementRgb(Device *device, uint32_t addr);
+	~ElementRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

@@ -13,6 +13,7 @@ protected:
 
 public:
 	ModuleCallScene(Device *device, uint32_t addr);
+	~ModuleCallScene();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

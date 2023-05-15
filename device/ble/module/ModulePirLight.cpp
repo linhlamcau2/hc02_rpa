@@ -14,6 +14,10 @@ ModulePirLight::ModulePirLight(Device *device, uint32_t addr) : Module(device, a
 	idLux = BLE_ATTRIBUTE_LUX;
 }
 
+ModulePirLight::~ModulePirLight()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModulePirLight::InitAttribute(int id, double value)
 {

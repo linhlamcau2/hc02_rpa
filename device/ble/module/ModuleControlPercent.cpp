@@ -12,6 +12,10 @@ ModuleControlPercent::ModuleControlPercent(Device *device, uint32_t addr) : Modu
 	id = BLE_ATTRIBUTE_CURTAIN_OPENED;
 }
 
+ModuleControlPercent::~ModuleControlPercent()
+{
+}
+
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleControlPercent::InitAttribute(int id, double value)
 {
@@ -54,7 +58,7 @@ int ModuleControlPercent::InputData(uint8_t *data, int len, Json::Value &jsonVal
 	data_message_t *data_message = (data_message_t *)data;
 
 	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN) && ((data_message->header & 0x00FF) == PERCENT)) ||
-			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PERCENT))
+		(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PERCENT))
 	{
 		if (data_message->opcode == 0x52)
 		{
@@ -78,12 +82,12 @@ bool ModuleControlPercent::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -131,11 +135,11 @@ int ModuleControlPercent::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int percent = dataValue["VALUE"].asInt();
 			if (bleProtocol)
@@ -160,7 +164,7 @@ int ModuleControlPercent::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPENED) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPENED) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].isInt())
 	{
 		int percent = dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].asInt();
 		if (bleProtocol->ControlOpenClosePausePercent(addr, PERCENT, (uint8_t)percent) == CODE_OK)

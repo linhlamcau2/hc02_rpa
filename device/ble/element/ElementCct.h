@@ -12,6 +12,7 @@ protected:
 
 public:
 	ElementCct(Device *device, uint32_t addr);
+	~ElementCct();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

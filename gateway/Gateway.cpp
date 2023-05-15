@@ -490,7 +490,11 @@ int Gateway::UdpBroadcastThread()
 	Json::Value appInfoValaue;
 	Json::Value dataValue;
 	hcBroadcastValue["CMD"] = "HC_BROADCAST";
-	hcBroadcastValue["NAME"] = "minihub"+mac;
+#ifdef ESP_PLATFORM
+	hcBroadcastValue["NAME"] = "minihub" + mac;
+#else
+	hcBroadcastValue["NAME"] = "hc" + mac;
+#endif
 	hcBroadcastValue["REQUEST_ID"] = Util::genRandRQI(16);
 	hcBroadcastValue["TIME"] = Util::GetCurrentTimeStr();
 	hcBroadcastValue["CONNECTION_TYPE"] = 0;
@@ -1378,6 +1382,45 @@ void Gateway::setVersion(string version)
 }
 void Gateway::setName(string name)
 {
+}
+
+void Gateway::DelAllDevice()
+{
+	for (auto &[id, device] : deviceList)
+		delete device;
+
+	deviceList.clear();
+}
+
+void Gateway::DelAllGroup()
+{
+	for (auto &[id, group] : groupList)
+		delete group;
+	groupList.clear();
+}
+void Gateway::DelAllSceneBle()
+{
+	for (auto &[id, scene] : sceneBleList)
+		delete scene;
+	sceneBleList.clear();
+}
+void Gateway::DelAllSceneDelay()
+{
+	for (auto &[id, scene] : sceneDelayList)
+		delete scene;
+	sceneDelayList.clear();
+}
+void Gateway::DelAllRule()
+{
+	for (auto &[id, rule] : ruleList)
+		delete rule;
+	ruleList.clear();
+}
+void Gateway::DelAllRoom()
+{
+	for (auto &[id, room] : roomList)
+		delete room;
+	roomList.clear();
 }
 
 int Gateway::Do(Json::Value &dataValue)

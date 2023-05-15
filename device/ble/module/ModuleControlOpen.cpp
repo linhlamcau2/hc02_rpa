@@ -12,6 +12,9 @@ ModuleControlOpen::ModuleControlOpen(Device *device, uint32_t addr) : Module(dev
 	id = BLE_ATTRIBUTE_CURTAIN_OPEN;
 }
 
+ModuleControlOpen::~ModuleControlOpen()
+{
+}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleControlOpen::InitAttribute(int id, double value)
 {
@@ -68,12 +71,12 @@ bool ModuleControlOpen::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -121,11 +124,11 @@ int ModuleControlOpen::Do(Json::Value &dataValue)
 {
 	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int percent = dataValue["VALUE"].asInt();
 			if (bleProtocol)
@@ -150,7 +153,7 @@ int ModuleControlOpen::DoV2(Json::Value &dataValue)
 {
 	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].asInt();
 		if (value)

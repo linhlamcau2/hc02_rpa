@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleTimeActionPir(Device *device, uint32_t addr);
+	~ModuleTimeActionPir();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

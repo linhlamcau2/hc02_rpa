@@ -14,6 +14,7 @@ protected:
 
 public:
 	ModuleRgb(Device *device, uint32_t addr, uint8_t button = 0);
+	~ModuleRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

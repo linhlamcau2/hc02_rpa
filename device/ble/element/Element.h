@@ -15,6 +15,7 @@ protected:
 
 public:
 	Element(Device *device, uint32_t addr);
+	virtual ~Element();
 
 	bool CheckAddr(uint32_t addr);
 

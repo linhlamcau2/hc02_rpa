@@ -11,6 +11,7 @@ protected:
 
 public:
 	ModuleModeRgb(Device *device, uint32_t addr);
+	~ModuleModeRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

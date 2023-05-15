@@ -28,6 +28,7 @@ public:
 	vector<Group *> groupList;
 
 	Room(string id, uint32_t addr, string name);
+	~Room();
 
 	int GetPositionDevice(Device *device);
 	int GetPositionGroup(Group *group);

@@ -6,6 +6,10 @@ HTTPRequest::HTTPRequest()
 {
 }
 
+HTTPRequest::~HTTPRequest()
+{
+}
+
 void HTTPRequest::setMethod(string method)
 {
 	this->method = method;

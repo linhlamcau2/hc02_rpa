@@ -277,6 +277,14 @@ public:
 	void setVersion(string version);
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
+	
+	void DelAllDevice();
+	void DelAllGroup();
+	void DelAllSceneBle();
+	void DelAllSceneDelay();
+	void DelAllRule();
+	void DelAllRoom();
+
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 

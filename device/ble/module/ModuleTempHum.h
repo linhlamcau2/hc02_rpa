@@ -13,6 +13,7 @@ protected:
 
 public:
 	ModuleTempHum(Device *device, uint32_t addr);
+	~ModuleTempHum();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

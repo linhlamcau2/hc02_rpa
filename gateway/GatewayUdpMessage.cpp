@@ -26,14 +26,16 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		}
 		string macGw = mac;
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
-													{ return c == ':'; }),
-								macGw.end());
+							  { return c == ':'; }),
+					macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
 #ifdef ESP_PLATFORM
 		string hostName = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
+		respValue["TYPE"] = 2;
 #else
 		string hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+		respValue["TYPE"] = 1;
 #endif
 		for (auto &c : hostName)
 			c = toupper(c);
@@ -199,8 +201,8 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 						{
 							Json::Value wifi = data["WIFI"];
 							if (wifi.isMember("SSID") && wifi["SSID"].isString() &&
-									wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
-									wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
+								wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
+								wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
 							{
 								string ssid = wifi["SSID"].asString();
 								string password = wifi["PASSWORD"].asString();
