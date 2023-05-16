@@ -60,9 +60,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+	  LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -375,43 +375,20 @@ void Gateway::ResetFactory()
 		LOGW("BleProtocol null");
 }
 
-void Gateway::SendDataForScreenTouch(Device *device, string dataWeather)
+void Gateway::SendDataForScreenTouch(Device *device, string dataWeather, uint8_t statusWeather, uint16_t temp)
 {
-	string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
 	if (bleProtocol)
 	{
 		bleProtocol->SendDate(device->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
 		bleProtocol->SendTime(device->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
-
-		Json::Value dataWeatherJson;
-		if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
-		{
-			if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-				dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
-			{
-				Json::Value weather = dataWeatherJson["weather"][0];
-				Json::Value main = dataWeatherJson["main"];
-				if (weather.isMember("icon") && weather["icon"].isString() && main.isMember("temp") && main["temp"].isDouble())
-				{
-					string icon = weather["icon"].asString();
-					int StatusWeather = 0;
-					for (int i = 0; i < 17; i++)
-					{
-						if (icon.compare(ST_array_icon[i]) == 0)
-						{
-							StatusWeather = i;
-							break;
-						}
-					}
-					uint16_t temp = main["temp"].asInt();
-					bleProtocol->SendWeatherOutdoor(device->GetAddr(), StatusWeather, temp);
-				}
-			}
-		}
+		if (statusWeather != 254 && temp != 65534)
+			bleProtocol->SendWeatherOutdoor(device->GetAddr(), statusWeather, temp);
 	}
 	else
 		LOGW("BleProtocol null");
 }
+
+static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
 
 int Gateway::CheckOnlineThread()
 {
@@ -449,12 +426,40 @@ int Gateway::CheckOnlineThread()
 			string dataWeather = httpRequest->GetWeather(Util::GetLongitude(), Util::GetLatitude());
 			delete httpRequest;
 			LOGI("dataWeather:%s", dataWeather.c_str());
+
+			uint8_t status = 254;
+			uint16_t temp = 65534;
+
+			Json::Value dataWeatherJson;
+			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
+			{
+				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
+					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+				{
+					Json::Value weather = dataWeatherJson["weather"][0];
+					Json::Value main = dataWeatherJson["main"];
+					if (weather.isMember("icon") && weather["icon"].isString() && main.isMember("temp") && main["temp"].isDouble())
+					{
+						string icon = weather["icon"].asString();
+						for (int i = 0; i < 17; i++)
+						{
+							if (icon.compare(ST_array_icon[i]) == 0)
+							{
+								status = i;
+								break;
+							}
+						}
+						temp = main["temp"].asInt();
+					}
+				}
+			}
+
 			deviceListMtx.lock();
 			for (const auto &[id, device] : deviceList)
 			{
-				if (device->GetType() == BLE_AC_SCENE_CONTACT)
+				if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
 				{
-					SendDataForScreenTouch(device, dataWeather);
+					SendDataForScreenTouch(device, dataWeather, status, temp);
 				}
 			}
 			deviceListMtx.unlock();
@@ -971,8 +976,8 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
@@ -1563,11 +1568,11 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isString() &&
+		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1586,7 +1591,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-					timeValue.isMember("end") && timeValue["end"].isString())
+				timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1609,7 +1614,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+				timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1631,7 +1636,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (deviceRuleInputValue.isObject())
 				{
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
 						string id = deviceRuleInputValue["id"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];
