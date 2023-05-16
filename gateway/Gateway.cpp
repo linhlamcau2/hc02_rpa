@@ -60,9 +60,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-	  LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
-	  Udp(8181)
+		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+			LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
+			Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -77,25 +77,34 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 
 Device *Gateway::getDeviceFromMac(string mac)
 {
+	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
 	{
 		if (device->GetMac() == mac)
+		{
+			deviceListMtx.unlock();
 			return device;
+		}
 	}
+	deviceListMtx.unlock();
 	return NULL;
 }
 
 Device *Gateway::getDeviceFromId(string id)
 {
+	deviceListMtx.lock();
 	if (deviceList.find(id) != deviceList.end())
 	{
+		deviceListMtx.unlock();
 		return deviceList[id];
 	}
+	deviceListMtx.unlock();
 	return NULL;
 }
 
 DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 {
+	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
 	{
 		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
@@ -103,16 +112,20 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
 			if (deviceBle)
 			{
+				deviceListMtx.unlock();
 				return deviceBle;
 			}
 		}
 	}
+	deviceListMtx.unlock();
 	return NULL;
 }
 
 void Gateway::delDevice(Device *device)
 {
+	deviceListMtx.lock();
 	deviceList.erase(device->GetId());
+	deviceListMtx.unlock();
 	database->DeviceDel(device);
 	delete device;
 }
@@ -292,8 +305,6 @@ void Gateway::init()
 
 	CloudConnect();
 	LocalConnect();
-
-	isBusy = false;
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -305,10 +316,12 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 		OnlineHC(mac);
 		if (!isReconnect)
 		{
+			deviceListMtx.lock();
 			for (const auto &[id, device] : deviceList)
 			{
 				device->PushAttributes();
 			}
+			deviceListMtx.unlock();
 		}
 #ifdef ESP_PLATFORM
 		Led::SetModeLedInternet(MODE_ON);
@@ -329,8 +342,9 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
-	isBusy = true;
+	deviceListMtx.lock();
 	deviceList.clear();
+	deviceListMtx.unlock();
 	groupList.clear();
 	ruleList.clear();
 	sceneBleList.clear();
@@ -358,7 +372,6 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
-	isBusy = false;
 }
 
 int Gateway::CheckOnlineThread()
@@ -388,8 +401,7 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
-
-		if (!bleProtocol->IsProvision() && !isBusy && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			deviceListMtx.lock();
 			allTimeCheck = deviceList.size() * 4;
@@ -899,8 +911,8 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
@@ -1473,6 +1485,7 @@ int Gateway::Do(Json::Value &dataValue)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 {
+	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
 	{
 		Json::Value deviceValue;
@@ -1482,6 +1495,7 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 		deviceValue["data"] = deviceAttbute;
 		dataValue.append(deviceValue);
 	}
+	deviceListMtx.unlock();
 }
 
 Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
@@ -1489,11 +1503,11 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isString() &&
-		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1512,7 +1526,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-				timeValue.isMember("end") && timeValue["end"].isString())
+					timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1535,7 +1549,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-				timerValue.isMember("time") && timerValue["time"].isString())
+					timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1557,7 +1571,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (deviceRuleInputValue.isObject())
 				{
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
 						string id = deviceRuleInputValue["id"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];

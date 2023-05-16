@@ -48,7 +48,6 @@ private:
 	string refresh_token;
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
-	atomic<bool> isBusy;
 
 	map<string, Device *> deviceList;
 	map<string, Group *> groupList;
