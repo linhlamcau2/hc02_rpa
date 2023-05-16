@@ -978,7 +978,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		{
 			deviceList[id] = device;
 #ifdef CONFIG_USE_OLD_APP
-			LOGE("CONFIG_USE_OLD_APP");
 			Device *deviceChild = NULL;
 			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_2)
 			{

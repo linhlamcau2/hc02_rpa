@@ -65,7 +65,6 @@ int ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Jso
 		SaveAttribute();
 #endif
 		BuildTelemetryValue(jsonValue);
-		BuildTelemetryValueV2(jsonValueV2);
 		CheckTrigger();
 		return CODE_OK;
 	}
