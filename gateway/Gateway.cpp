@@ -73,6 +73,7 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->ble_appkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
+	this->numScreenTouchs = 0;
 }
 
 Device *Gateway::getDeviceFromMac(string mac)
@@ -305,6 +306,8 @@ void Gateway::init()
 
 	CloudConnect();
 	LocalConnect();
+
+	isBusy = false;
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -342,6 +345,7 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
+	isBusy = true;
 	deviceListMtx.lock();
 	deviceList.clear();
 	deviceListMtx.unlock();
@@ -372,12 +376,52 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
+	isBusy = false;
+}
+
+void Gateway::SendDataForScreenTouch(Device *device, string dataWeather)
+{
+	string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
+	if (bleProtocol)
+	{
+		bleProtocol->SendDate(device->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
+		bleProtocol->SendTime(device->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
+
+		Json::Value dataWeatherJson;
+		if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
+		{
+			if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
+				dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+			{
+				Json::Value weather = dataWeatherJson["weather"][0];
+				Json::Value main = dataWeatherJson["main"];
+				if (weather.isMember("icon") && weather["icon"].isString() && main.isMember("temp") && main["temp"].isDouble())
+				{
+					string icon = weather["icon"].asString();
+					int StatusWeather = 0;
+					for (int i = 0; i < 17; i++)
+					{
+						if (icon.compare(ST_array_icon[i]) == 0)
+						{
+							StatusWeather = i;
+							break;
+						}
+					}
+					uint16_t temp = main["temp"].asInt();
+					bleProtocol->SendWeatherOutdoor(device->GetAddr(), StatusWeather, temp);
+				}
+			}
+		}
+	}
+	else
+		LOGW("BleProtocol null");
 }
 
 int Gateway::CheckOnlineThread()
 {
 	LOGI("Start CheckOnlineThread");
 	time_t currentTime = 0;
+	time_t oldTime = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
 	Json::Value onlineValue;
@@ -401,7 +445,26 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
-		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		// Check have device screen touch -> send datetime, weather data
+		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 360)
+		{
+			oldTime = time(NULL);
+			HTTPRequest *httpRequest = new HTTPRequest();
+			string dataWeather = httpRequest->GetWeather(Util::GetLongitude(), Util::GetLatitude());
+			delete httpRequest;
+			LOGI("dataWeather:%s", dataWeather.c_str());
+			deviceListMtx.lock();
+			for (const auto &[id, device] : deviceList)
+			{
+				if (device->GetType() == BLE_AC_SCENE_CONTACT)
+				{
+					SendDataForScreenTouch(device, dataWeather);
+				}
+			}
+			deviceListMtx.unlock();
+		}
+
+		if (!bleProtocol->IsProvision() && !isBusy && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			deviceListMtx.lock();
 			allTimeCheck = deviceList.size() * 4;
@@ -809,6 +872,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
 		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
+		numScreenTouchs++;
 		break;
 	case BLE_SWITCH_RGB_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN_SQUARE:

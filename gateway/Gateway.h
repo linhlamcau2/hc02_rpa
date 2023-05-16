@@ -48,6 +48,7 @@ private:
 	string refresh_token;
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
+	atomic<bool> isBusy;
 
 	map<string, Device *> deviceList;
 	map<string, Group *> groupList;
@@ -57,6 +58,7 @@ private:
 	map<string, SceneDelay *> sceneDelayList;
 
 	mutex deviceListMtx;
+	uint8_t numScreenTouchs;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
@@ -230,6 +232,8 @@ public:
 	void StartUdpBroadcast();
 	void StopUdpBroadcast();
 	int UdpBroadcastThread();
+
+	void SendDataForScreenTouch(Device *device, string dataWeather);
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
@@ -279,7 +283,7 @@ public:
 	void setVersion(string version);
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
-	
+
 	void DelAllDevice();
 	void DelAllGroup();
 	void DelAllSceneBle();

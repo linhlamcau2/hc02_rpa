@@ -3,6 +3,9 @@
 #include "TimerSchedule.h"
 #include "Util.h"
 #include "Log.h"
+#ifdef ESP_PLATFORM
+#include "Sntp.h"
+#endif
 
 Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
@@ -108,10 +111,21 @@ void Rule::Check()
 
 void Rule::RunOutput()
 {
+#ifdef ESP_PLATFORM
+	if (Sntp::haveNtpTime())
+	{
+
+		for (auto &ruleOutput : ruleOutputList)
+		{
+			ruleOutput->RunOutput();
+		}
+	}
+#else
 	for (auto &ruleOutput : ruleOutputList)
 	{
 		ruleOutput->RunOutput();
 	}
+#endif
 }
 
 void Rule::AddRuleInput(RuleInput *ruleInput)
