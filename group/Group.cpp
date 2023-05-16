@@ -20,8 +20,6 @@ Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
 
 Group::~Group()
 {
-	for (auto &deviceInGroup : deviceList)
-		delete deviceInGroup->device;
 	deviceList.clear();
 }
 

@@ -68,7 +68,10 @@ void BleProtocol::init()
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, this, 10, NULL) != pdPASS)
+	{
 		LOGE("Failed to create task");
+		Led::SetLedService(MODE_OFF);
+	}
 	vTaskDelay(10);
 #else
 	thread addDeviceThread(AddDeviceThread, this);

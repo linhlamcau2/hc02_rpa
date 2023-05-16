@@ -4,6 +4,7 @@
 #include <map>
 #include <functional>
 #include <thread>
+#include <mutex>
 #include "json.h"
 #include "Define.h"
 #include "ErrorCode.h"
@@ -55,6 +56,8 @@ private:
 	map<string, Rule *> ruleList;
 	map<string, Room *> roomList;
 	map<string, SceneDelay *> sceneDelayList;
+
+	mutex deviceListMtx;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);

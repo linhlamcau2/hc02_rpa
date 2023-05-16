@@ -5,6 +5,10 @@
 #include "Log.h"
 #include "Http.h"
 
+#ifdef ESP_PLATFORM
+#include "Led.h"
+#endif
+
 static void SendDatetime(void *data);
 
 DeviceBleScreenTouch::DeviceBleScreenTouch(string id, string name, string mac, string data, uint32_t addr, uint16_t version)
@@ -17,7 +21,10 @@ DeviceBleScreenTouch::DeviceBleScreenTouch(string id, string name, string mac, s
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(SendDatetime, "SendDatetime", 5120, this, 10, NULL) != pdPASS)
+	{
 		LOGE("Failed to create task");
+		Led::SetLedService(MODE_OFF);
+	}
 	vTaskDelay(10);
 #else
 	thread SendDatetimeThread(SendDatetime, this);

@@ -11,6 +11,10 @@
 #include "Wifi.h"
 #include <thread>
 
+#ifdef ESP_PLATFORM
+#include "Led.h"
+#endif
+
 #define BUFLEN 1024
 
 Udp::Udp(int port) : port(port)
@@ -85,7 +89,10 @@ void Udp::init()
 #ifdef ESP_PLATFORM
 		LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 		if (xTaskCreate(UdpHandleMessage, "UdpHandleMessage", 10240, this, 10, NULL) != pdPASS)
+		{
 			LOGE("Failed to create task");
+			Led::SetLedService(MODE_OFF);
+		}
 		vTaskDelay(10);
 #else
 		thread udpThread(UdpHandleMessage, this);

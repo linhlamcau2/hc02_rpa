@@ -15,13 +15,7 @@ Room::Room(string id, uint32_t addr, string name) : Object(id, addr, name)
 Room::~Room()
 {
 	deviceList.clear();
-
-	for (auto &group : groupList)
-		delete group;
 	groupList.clear();
-
-	for (auto &scene : sceneBleList)
-		delete scene;
 	sceneBleList.clear();
 }
 

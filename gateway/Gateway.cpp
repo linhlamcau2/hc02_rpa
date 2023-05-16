@@ -251,10 +251,16 @@ void Gateway::init()
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
+	{
 		LOGE("Failed to create task");
+		Led::SetLedService(MODE_OFF);
+	}
 	vTaskDelay(10);
 	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
+	{
 		LOGE("Failed to create task");
+		Led::SetLedService(MODE_OFF);
+	}
 	vTaskDelay(10);
 #else
 	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
@@ -382,9 +388,11 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
-		allTimeCheck = deviceList.size() * 4;
+
 		if (!bleProtocol->IsProvision() && !isBusy && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
+			deviceListMtx.lock();
+			allTimeCheck = deviceList.size() * 4;
 			for (const auto &[id, device] : deviceList)
 			{
 				if (device->GetAddr() != 65535)
@@ -461,6 +469,7 @@ int Gateway::CheckOnlineThread()
 					}
 				}
 			}
+			deviceListMtx.unlock();
 		}
 		sleep(1);
 	}
@@ -1386,9 +1395,11 @@ void Gateway::setName(string name)
 
 void Gateway::DelAllDevice()
 {
+	deviceListMtx.lock();
 	for (auto &[id, device] : deviceList)
 		delete device;
 	deviceList.clear();
+	deviceListMtx.unlock();
 }
 
 void Gateway::DelAllGroup()
