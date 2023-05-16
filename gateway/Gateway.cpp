@@ -306,8 +306,6 @@ void Gateway::init()
 
 	CloudConnect();
 	LocalConnect();
-
-	isBusy = false;
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -345,7 +343,6 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
-	isBusy = true;
 	deviceListMtx.lock();
 	deviceList.clear();
 	deviceListMtx.unlock();
@@ -376,7 +373,6 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
-	isBusy = false;
 }
 
 void Gateway::SendDataForScreenTouch(Device *device, string dataWeather)
@@ -446,7 +442,7 @@ int Gateway::CheckOnlineThread()
 	while (1)
 	{
 		// Check have device screen touch -> send datetime, weather data
-		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 360)
+		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);
 			HTTPRequest *httpRequest = new HTTPRequest();
@@ -464,7 +460,7 @@ int Gateway::CheckOnlineThread()
 			deviceListMtx.unlock();
 		}
 
-		if (!bleProtocol->IsProvision() && !isBusy && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			deviceListMtx.lock();
 			allTimeCheck = deviceList.size() * 4;
