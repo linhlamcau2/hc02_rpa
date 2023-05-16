@@ -28,6 +28,9 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		{
 			return CODE_ERROR;
 		}
+	}
+	else
+	{
 		string macGw = mac;
 		string hostName = "";
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
@@ -57,10 +60,6 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		respValue["MAC"] = mac;
 		respValue["VERSION"] = STR(VERSION);
 		return CODE_OK;
-	}
-	else
-	{
-		LOGW("OnUdpScanHc payload: %s error", reqValue.toString().c_str());
 	}
 	return CODE_ERROR;
 }

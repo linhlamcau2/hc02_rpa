@@ -95,6 +95,7 @@ int ElementRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::
 
 int ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
+	LOGE("ElementOnOff::InputData raw data rgb");
 	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
@@ -119,6 +120,7 @@ int ElementRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 		SaveAttribute();
 #endif
 		BuildTelemetryValue(jsonValue);
+		BuildTelemetryValueV2(jsonValueV2);
 		CheckTrigger();
 		return CODE_OK;
 	}
