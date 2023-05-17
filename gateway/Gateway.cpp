@@ -375,7 +375,7 @@ void Gateway::ResetFactory()
 		LOGW("BleProtocol null");
 }
 
-void Gateway::SendDataForScreenTouch(Device *device, string dataWeather, uint8_t statusWeather, uint16_t temp)
+void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp)
 {
 	if (bleProtocol)
 	{
