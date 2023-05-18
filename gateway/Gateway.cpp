@@ -133,103 +133,134 @@ void Gateway::delDevice(Device *device)
 
 Group *Gateway::getGroupFromId(string id)
 {
+	groupListMtx.lock();
 	if (groupList.find(id) != groupList.end())
 	{
+		groupListMtx.unlock();
 		return groupList[id];
 	}
+	groupListMtx.unlock();
 	return NULL;
 }
 
 Group *Gateway::getGroupFromAddr(int addr)
 {
+	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
 		if (group->GetAddr() == addr)
 		{
+			groupListMtx.unlock();
 			return group;
 		}
 	}
+	groupListMtx.unlock();
 	return NULL;
 }
 
 void Gateway::delGroup(Group *group)
 {
+	groupListMtx.lock();
 	groupList.erase(group->GetId());
+	groupListMtx.unlock();
 	database->GroupDel(group);
 	delete group;
 }
 
 SceneBle *Gateway::getSceneBleFromId(string id)
 {
+	sceneBleListMtx.lock();
 	if (sceneBleList.find(id) != sceneBleList.end())
 	{
+		sceneBleListMtx.unlock();
 		return sceneBleList[id];
 	}
+	sceneBleListMtx.unlock();
 	return NULL;
 }
 
 SceneBle *Gateway::getSceneBleFromAddr(int addr)
 {
+	sceneBleListMtx.lock();
 	for (const auto &[id, sceneBle] : sceneBleList)
 	{
 		if (sceneBle->GetAddr() == addr)
 		{
+			sceneBleListMtx.unlock();
 			return sceneBle;
 		}
 	}
+	sceneBleListMtx.unlock();
 	return NULL;
 }
 
 void Gateway::delSceneBle(SceneBle *sceneBle)
 {
+	sceneBleListMtx.lock();
 	sceneBleList.erase(sceneBle->GetId());
+	sceneBleListMtx.unlock();
 	database->SceneBleDel(sceneBle);
 	delete sceneBle;
 }
 
 SceneDelay *Gateway::getSceneDelayFromId(string id)
 {
+	sceneDelayListMtx.lock();
 	if (sceneDelayList.find(id) != sceneDelayList.end())
 	{
+		sceneDelayListMtx.unlock();
 		return sceneDelayList[id];
 	}
+	sceneDelayListMtx.unlock();
 	return NULL;
 }
 void Gateway::delSceneDelay(SceneDelay *sceneDelay)
 {
+	sceneDelayListMtx.lock();
 	sceneDelayList.erase(sceneDelay->GetId());
+	sceneDelayListMtx.unlock();
 	database->SceneDelayDel(sceneDelay);
 	delete sceneDelay;
 }
 
 Rule *Gateway::getRuleFromId(string id)
 {
+	ruleListMtx.lock();
 	if (ruleList.find(id) != ruleList.end())
 	{
+		ruleListMtx.unlock();
 		return ruleList[id];
 	}
+	ruleListMtx.unlock();
 	return NULL;
 }
 
 void Gateway::delRule(Rule *rule)
 {
+	ruleListMtx.lock();
 	ruleList.erase(rule->GetId());
+	ruleListMtx.unlock();
 	database->RuleDel(rule);
 	delete rule;
 }
 
 Room *Gateway::getRoomFromId(string id)
 {
+	roomListMtx.lock();
 	if (roomList.find(id) != roomList.end())
 	{
+		roomListMtx.unlock();
 		return roomList[id];
 	}
+	roomListMtx.unlock();
 	return NULL;
 }
 
 void Gateway::delRoom(Room *room)
 {
+	roomListMtx.lock();
 	roomList.erase(room->GetId());
+	roomListMtx.unlock();
 	database->RoomDel(room);
 	delete room;
 }
@@ -343,12 +374,32 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
+
+	config->SetPassword("");
+
 	deviceListMtx.lock();
 	deviceList.clear();
 	deviceListMtx.unlock();
+
+	groupListMtx.lock();
 	groupList.clear();
+	groupListMtx.unlock();
+
+	ruleListMtx.lock();
 	ruleList.clear();
+	ruleListMtx.unlock();
+
+	sceneBleListMtx.lock();
 	sceneBleList.clear();
+	sceneBleListMtx.unlock();
+
+	sceneDelayListMtx.lock();
+	sceneDelayList.clear();
+	sceneDelayListMtx.unlock();
+
+	roomListMtx.lock();
+	roomList.clear();
+	roomListMtx.unlock();
 
 	database->DeviceDelAll();
 	database->DeviceAttributeDelAll();
@@ -967,7 +1018,9 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 		}
 		if (addGateway)
 		{
+			groupListMtx.lock();
 			groupList[group->GetId()] = group;
+			groupListMtx.unlock();
 		}
 	}
 	return group;
@@ -1234,7 +1287,9 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, boo
 			}
 			if (addGateway)
 			{
+				ruleListMtx.lock();
 				ruleList[id] = rule;
+				ruleListMtx.unlock();
 			}
 			if (addDatabase)
 			{
@@ -1269,7 +1324,9 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 		}
 		if (addGateway)
 		{
+			sceneBleListMtx.lock();
 			sceneBleList[sceneBle->GetId()] = sceneBle;
+			sceneBleListMtx.unlock();
 		}
 	}
 	return sceneBle;
@@ -1290,7 +1347,9 @@ SceneDelay *Gateway::AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, b
 		}
 		if (addGateway)
 		{
+			sceneDelayListMtx.lock();
 			sceneDelayList[sceneDelay->GetId()] = sceneDelay;
+			sceneDelayListMtx.unlock();
 		}
 		if (processData)
 		{
@@ -1481,33 +1540,43 @@ void Gateway::DelAllDevice()
 
 void Gateway::DelAllGroup()
 {
+	groupListMtx.lock();
 	for (auto &[id, group] : groupList)
 		delete group;
 	groupList.clear();
+	groupListMtx.unlock();
 }
 void Gateway::DelAllSceneBle()
 {
+	sceneBleListMtx.lock();
 	for (auto &[id, scene] : sceneBleList)
 		delete scene;
 	sceneBleList.clear();
+	sceneBleListMtx.unlock();
 }
 void Gateway::DelAllSceneDelay()
 {
+	sceneDelayListMtx.lock();
 	for (auto &[id, scene] : sceneDelayList)
 		delete scene;
 	sceneDelayList.clear();
+	sceneDelayListMtx.unlock();
 }
 void Gateway::DelAllRule()
 {
+	ruleListMtx.lock();
 	for (auto &[id, rule] : ruleList)
 		delete rule;
 	ruleList.clear();
+	ruleListMtx.unlock();
 }
 void Gateway::DelAllRoom()
 {
+	roomListMtx.lock();
 	for (auto &[id, room] : roomList)
 		delete room;
 	roomList.clear();
+	roomListMtx.unlock();
 }
 
 int Gateway::Do(Json::Value &dataValue)
@@ -1596,13 +1665,17 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
 				rule = new Rule(id, type, repeat, name, 0, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), ruleValue);
+				ruleListMtx.lock();
 				ruleList[rule->GetId()] = rule;
+				ruleListMtx.unlock();
 			}
 		}
 		if (!rule)
 		{
 			rule = new Rule(id, type, repeat, name, 0, ruleValue);
+			ruleListMtx.lock();
 			ruleList[rule->GetId()] = rule;
+			ruleListMtx.unlock();
 		}
 		if (!rule)
 		{

@@ -13,7 +13,11 @@
 #endif
 
 #ifndef VERSION
-#define VERSION 1.2.20
+#ifdef ESP_PLATFORM
+#define VERSION 1.0.0
+#else
+#define VERSION 1.2.13
+#endif
 #endif
 
 #ifndef DB_NAME

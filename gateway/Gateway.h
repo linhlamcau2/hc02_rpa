@@ -57,6 +57,12 @@ private:
 	map<string, SceneDelay *> sceneDelayList;
 
 	mutex deviceListMtx;
+	mutex groupListMtx;
+	mutex ruleListMtx;
+	mutex roomListMtx;
+	mutex sceneDelayListMtx;
+	mutex sceneBleListMtx;
+
 	uint8_t numScreenTouchs;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);

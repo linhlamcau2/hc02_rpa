@@ -280,7 +280,6 @@ int Gateway::OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue)
 	respValue["CMD"] = "VERSION_HC";
 	respValue["DATA"]["MAC"] = mac;
 	respValue["DATA"]["VERSION_HC"] = STR(VERSION);
-	LOGE("OnRpcVersionHc %s", respValue.toString().c_str());
 	return CODE_OK;
 }
 
@@ -700,6 +699,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			string sceneId = dataValue["SCENE_ID"].asString();
 			dataJsonRsp["SCENE_ID"] = sceneId;
 			int sceneAddr = 1;
+			sceneBleListMtx.lock();
 			for (const auto &[id, sceneBle] : sceneBleList)
 			{
 				if (sceneBle->GetAddr() >= sceneAddr)
@@ -707,6 +707,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 					sceneAddr = sceneBle->GetAddr() + 1;
 				}
 			}
+			sceneBleListMtx.unlock();
 			SceneBle *scene = new SceneBle(sceneId, sceneAddr, sceneId);
 			if (scene)
 			{
@@ -790,6 +791,7 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			if (!scene)
 			{
 				int sceneAddr = 1;
+				sceneBleListMtx.lock();
 				for (const auto &[id, sceneBle] : sceneBleList)
 				{
 					if (sceneBle->GetAddr() >= sceneAddr)
@@ -797,6 +799,7 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 						sceneAddr = sceneBle->GetAddr() + 1;
 					}
 				}
+				sceneBleListMtx.unlock();
 				scene = new SceneBle(sceneId, sceneAddr, sceneId);
 				scene = gateway->AddNewSceneBle(scene, true, true);
 
@@ -1278,6 +1281,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					jsonGroupRsp["GROUP_ID"] = groupId;
 					jsonGroupRsp["FAILED"] = Json::arrayValue;
 					int groupAddr = 1;
+					groupListMtx.lock();
 					for (const auto &[id, groupBle] : groupList)
 					{
 						if (groupBle->GetAddr() >= groupAddr)
@@ -1285,6 +1289,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							groupAddr = groupBle->GetAddr() + 1;
 						}
 					}
+					groupListMtx.unlock();
 					if (!isRoom)
 					{
 						isRoom = true;
@@ -1360,6 +1365,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					jsonSceneRsp["SCENE_ID"] = sceneId;
 					jsonSceneRsp["FAILED"] = Json::arrayValue;
 					int sceneAddr = 1;
+					sceneBleListMtx.lock();
 					for (const auto &[id, sceneBle] : sceneBleList)
 					{
 						if (sceneBle->GetAddr() >= sceneAddr)
@@ -1367,6 +1373,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							sceneAddr = sceneBle->GetAddr() + 1;
 						}
 					}
+					sceneBleListMtx.unlock();
 					SceneBle *sceneInRoom = new SceneBle(sceneId, sceneAddr, sceneName);
 					if (sceneInRoom)
 					{
@@ -1552,6 +1559,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							nameGroup = groupAddDev["NAME"].asString();
 						}
 						int groupAddr = 1;
+						groupListMtx.lock();
 						for (const auto &[id, group] : groupList)
 						{
 							if (group->GetAddr() >= groupAddr)
@@ -1559,6 +1567,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 								groupAddr = group->GetAddr() + 1;
 							}
 						}
+						groupListMtx.unlock();
 						Group *newGroup = new Group(groupId, groupAddr, nameGroup);
 						if (newGroup)
 						{
@@ -2040,6 +2049,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 			string groupId = dataValue["GROUP_ID"].asString();
 			string groupName = dataValue["NAME"].asString();
 			int groupAddr = 1;
+			groupListMtx.lock();
 			for (const auto &[id, group] : groupList)
 			{
 				if (group->GetAddr() >= groupAddr)
@@ -2047,6 +2057,7 @@ int Gateway::OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue)
 					groupAddr = group->GetAddr() + 1;
 				}
 			}
+			groupListMtx.unlock();
 			Group *group = new Group(groupId, groupAddr, groupName);
 			if (group)
 			{
@@ -2795,11 +2806,13 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			if (group == NULL)
 			{
 				int groupAddr = 1;
+				groupListMtx.lock();
 				for (auto id = groupList.begin(); id != groupList.end(); ++id)
 				{
 					if (id->second->GetAddr() > groupAddr)
 						groupAddr = id->second->GetAddr() + 1;
 				}
+				groupListMtx.unlock();
 				group = new Group(groupId, groupAddr, groupId);
 				group = AddNewGroup(group, true, true);
 			}
@@ -3114,7 +3127,9 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 				rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceChild, properties, 0);
 				rule->AddRuleOutput(ruleOutputDevice);
+				ruleListMtx.lock();
 				ruleList[id] = rule;
+				ruleListMtx.unlock();
 			}
 			else
 				LOGW("Device not found");
@@ -3135,7 +3150,9 @@ int Gateway::OnRpcRemovePowerSwitchTimeout(Json::Value &reqValue, Json::Value &r
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
 			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
+			ruleListMtx.lock();
 			ruleList.erase(ruleList.find(ruleId));
+			ruleListMtx.unlock();
 			return CODE_OK;
 		}
 		return CODE_OK;
@@ -3641,7 +3658,9 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(scene, 0);
 				rule->AddRuleOutput(ruleOutputSceneBle);
+				ruleListMtx.lock();
 				ruleList[eventTriggerId] = rule;
+				ruleListMtx.unlock();
 			}
 			else
 			{
@@ -3667,7 +3686,9 @@ int Gateway::OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
 			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
+			ruleListMtx.lock();
 			ruleList.erase(ruleList.find(ruleId));
+			ruleListMtx.unlock();
 			return CODE_OK;
 		}
 		return CODE_OK;
@@ -3685,9 +3706,10 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		string name;
 		string sum;
 		string url;
-		for (Json::ArrayIndex i = 0; i < datasValue.size(); i++)
+		int numFirm = datasValue.size();
+		if (numFirm > 0)
 		{
-			Json::Value dataValue = datasValue[0];
+			Json::Value dataValue = datasValue[numFirm - 1];
 			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
 				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
 				dataValue.isMember("URL") && dataValue["URL"].isString())

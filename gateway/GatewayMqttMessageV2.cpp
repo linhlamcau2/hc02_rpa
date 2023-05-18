@@ -291,6 +291,7 @@ int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetRoomList");
 	Json::Value roomData;
+	roomListMtx.lock();
 	for (const auto &[id, room] : roomList)
 	{
 		Json::Value roomValue;
@@ -298,6 +299,7 @@ int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
 		roomValue["name"] = room->GetName();
 		roomData.append(roomValue);
 	}
+	roomListMtx.unlock();
 	respValue["data"]["rooms"] = roomData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getRoomListRsp";
@@ -350,6 +352,7 @@ int Gateway::OnGetGroupList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetGroupList");
 	Json::Value groupData;
+	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
 		Json::Value groupValue;
@@ -357,6 +360,7 @@ int Gateway::OnGetGroupList(Json::Value &reqValue, Json::Value &respValue)
 		groupValue["name"] = group->GetName();
 		groupData.append(groupValue);
 	}
+	groupListMtx.unlock();
 	respValue["data"]["groups"] = groupData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getGroupListRsp";
@@ -367,6 +371,7 @@ int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetSceneList");
 	Json::Value sceneData;
+	sceneBleListMtx.lock();
 	for (const auto &[id, scene] : sceneBleList)
 	{
 		Json::Value sceneValue;
@@ -374,6 +379,7 @@ int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 		sceneValue["name"] = scene->GetName();
 		sceneData.append(sceneValue);
 	}
+	sceneBleListMtx.unlock();
 	respValue["data"]["scenes"] = sceneData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getSceneListRsp";
@@ -424,6 +430,7 @@ int Gateway::OnGetRuleList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetRuleList");
 	Json::Value ruleData;
+	ruleListMtx.lock();
 	for (const auto &[id, rule] : ruleList)
 	{
 		Json::Value ruleValue;
@@ -431,6 +438,7 @@ int Gateway::OnGetRuleList(Json::Value &reqValue, Json::Value &respValue)
 		ruleValue["name"] = rule->GetName();
 		ruleData.append(ruleValue);
 	}
+	ruleListMtx.unlock();
 	respValue["data"]["rules"] = ruleData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getRuleListRsp";
@@ -597,6 +605,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value devices = reqValue["devices"];
 		// TODO: add start address of normal group
 		int groupAddr = 1;
+		groupListMtx.lock();
 		for (const auto &[id, group] : groupList)
 		{
 			if (group->GetAddr() >= groupAddr)
@@ -604,6 +613,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 				groupAddr = group->GetAddr() + 1;
 			}
 		}
+		groupListMtx.unlock();
 		Group *group = new Group(groupId, groupAddr, groupName);
 		if (group)
 		{
@@ -834,9 +844,8 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 					failedList.append(deviceInGroup->device->GetId());
 				}
 			}
-			database->GroupDel(group);
-			groupList.erase(group->GetId());
-			delete group;
+			delGroup(group);
+			
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -866,6 +875,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 		string sceneName = reqValue["name"].asString();
 		// TODO: add start address of normal scene
 		int sceneAddr = 1;
+		sceneBleListMtx.lock();
 		for (const auto &[id, sceneBle] : sceneBleList)
 		{
 			if (sceneBle->GetAddr() >= sceneAddr)
@@ -873,6 +883,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				sceneAddr = sceneBle->GetAddr() + 1;
 			}
 		}
+		sceneBleListMtx.unlock();
 		SceneBle *scene = new SceneBle(sceneId, sceneAddr, sceneName);
 		if (scene)
 		{
@@ -956,9 +967,8 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 					failedList.append(deviceInScene->device->GetId());
 				}
 			}
-			sceneBleList.erase(scene->GetId());
-			database->SceneBleDel(scene);
-			delete scene;
+			delSceneBle(scene);
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -1006,7 +1016,9 @@ int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 	if (rule)
 	{
 		LOGI("Add Rule %s", rule->GetId().c_str());
+		ruleListMtx.lock();
 		ruleList[rule->GetId()] = rule;
+		ruleListMtx.unlock();
 		string ruleStr = reqValue.toString();
 		ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 		database->RuleAdd(rule, ruleStr, true);
@@ -1029,9 +1041,7 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 		Rule *rule = getRuleFromId(ruleId);
 		if (rule)
 		{
-			database->RuleDel(rule);
-			delete ruleList[ruleId];
-			ruleList.erase(ruleId);
+			delRule(rule);
 			respValue["data"]["code"] = CODE_OK;
 		}
 		else
@@ -1061,6 +1071,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value devices = reqValue["devices"];
 		Json::Value scenes = reqValue["scenes"];
 		int roomAddr = ROOM_START_ADDR;
+
+		roomListMtx.lock();
 		for (const auto &[id, room] : roomList)
 		{
 			if (room->GetAddr() >= roomAddr)
@@ -1068,6 +1080,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				roomAddr = room->GetAddr() + 200;
 			}
 		}
+		roomListMtx.unlock();
 		LOGD("roomAddr: %d", roomAddr);
 		Room *room = new Room(roomId, roomAddr, roomName);
 		Group *group = new Group(roomId, roomAddr - ROOM_START_ADDR, roomName);
