@@ -13,9 +13,8 @@
 #include "Wifi.h"
 #include "Ota.h"
 #include "Base64.h"
-#ifndef ESP_PLATFORM
+#ifdef ESP_PLATFORM
 #include "Config.h"
-#else
 #include "Led.h"
 #endif
 #include "Http.h"
