@@ -373,9 +373,6 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
-
-	config->SetPassword("");
-
 	deviceListMtx.lock();
 	deviceList.clear();
 	deviceListMtx.unlock();
