@@ -224,7 +224,7 @@ public:
 	int ResetDev(uint16_t devAddr);
 	int ResetDelAll();
 
-	int SendOnlineCheck(uint16_t devAddr, uint32_t typeDev);
+	int SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version);
 
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);
