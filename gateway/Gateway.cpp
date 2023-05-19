@@ -517,85 +517,88 @@ int Gateway::CheckOnlineThread()
 
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
-			deviceListMtx.lock();
+			// deviceListMtx.lock();
 			allTimeCheck = deviceList.size() * 4;
 			for (const auto &[id, device] : deviceList)
 			{
-				if (device->GetAddr() != 65535)
+				if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 				{
-					currentTime = time(NULL);
-					deviceStateChange = false;
-					if (device->lastOnlineState) // online
+					if (device->GetAddr() != 65535)
 					{
-						// neu thiet bi ho tro ban tin check trang thai online/offline
-						if (device->isNeedCheckOnline())
+						currentTime = time(NULL);
+						deviceStateChange = false;
+						if (device->lastOnlineState) // online
 						{
-							// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
-							if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheckActive + allTimeCheck) <= currentTime)
+							// neu thiet bi ho tro ban tin check trang thai online/offline
+							if (device->isNeedCheckOnline())
 							{
-								bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
-								device->lastTimeCheckActive = currentTime;
+								// thoi gian lan cuoi cung nhan ban tin hoac lan cuoi cung check qua 1 chu ky
+								if ((device->lastTimeActive + allTimeCheck) <= currentTime && (device->lastTimeCheckActive + allTimeCheck) <= currentTime)
+								{
+									bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
+									device->lastTimeCheckActive = currentTime;
+								}
+								// 2 chu ky khong co ban tin phan hoi thi bao offline
+								if ((device->lastTimeActive + allTimeCheck * 2 + 1) < currentTime)
+								{
+									LOGI("Device 0x%04X offline", device->GetAddr());
+									device->lastOnlineState = false;
+									deviceStateChange = true;
+								}
 							}
-							// 2 chu ky khong co ban tin phan hoi thi bao offline
-							if ((device->lastTimeActive + allTimeCheck * 2 + 1) < currentTime)
+							// neu thiet bi khong ho tro ban tin check trang thai online/offline
+							else
 							{
-								LOGI("Device 0x%04X offline", device->GetAddr());
-								device->lastOnlineState = false;
-								deviceStateChange = true;
-							}
-						}
-						// neu thiet bi khong ho tro ban tin check trang thai online/offline
-						else
-						{
-							// 1 ngay khong co ban tin moi thi bao offline
-							if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
-							{
-								LOGI("Device 0x%04X offline", device->GetAddr());
-								device->lastOnlineState = false;
-								deviceStateChange = true;
-							}
-						}
-					}
-					else
-					{
-						if (device->isNeedCheckOnline())
-						{
-							// thoi gian check qua 1 chu ky thi check lai
-							if ((device->lastTimeCheckActive + allTimeCheck) <= currentTime)
-							{
-								bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
-								device->lastTimeCheckActive = currentTime;
-							}
-							// neu co ban tin moi trong vong 2 chu ky check thi bao online
-							if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
-							{
-								LOGI("Device 0x%04X online", device->GetAddr());
-								device->lastOnlineState = true;
-								deviceStateChange = true;
+								// 1 ngay khong co ban tin moi thi bao offline
+								if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
+								{
+									LOGI("Device 0x%04X offline", device->GetAddr());
+									device->lastOnlineState = false;
+									deviceStateChange = true;
+								}
 							}
 						}
 						else
 						{
-							// trong ngay co ban tin thi online
-							if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+							if (device->isNeedCheckOnline())
 							{
-								LOGI("Device 0x%04X online", device->GetAddr());
-								device->lastOnlineState = true;
-								deviceStateChange = true;
+								// thoi gian check qua 1 chu ky thi check lai
+								if ((device->lastTimeCheckActive + allTimeCheck) <= currentTime)
+								{
+									bleProtocol->SendOnlineCheck(device->GetAddr(), device->GetType());
+									device->lastTimeCheckActive = currentTime;
+								}
+								// neu co ban tin moi trong vong 2 chu ky check thi bao online
+								if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
+								{
+									LOGI("Device 0x%04X online", device->GetAddr());
+									device->lastOnlineState = true;
+									deviceStateChange = true;
+								}
+							}
+							else
+							{
+								// trong ngay co ban tin thi online
+								if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
+								{
+									LOGI("Device 0x%04X online", device->GetAddr());
+									device->lastOnlineState = true;
+									deviceStateChange = true;
+								}
 							}
 						}
-					}
-					// send device state to server
-					if (deviceStateChange)
-					{
-						onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
-						onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
-						PublishToLocalMessage(onlineValue);
-						PublishToGatewayTelemetry(onlineValue);
+						// send device state to server
+						if (deviceStateChange)
+						{
+							onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
+							onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
+							PublishToLocalMessage(onlineValue);
+							PublishToGatewayTelemetry(onlineValue);
+						}
 					}
 				}
 			}
-			deviceListMtx.unlock();
+			// deviceListMtx.unlock();
 		}
 		sleep(1);
 	}
