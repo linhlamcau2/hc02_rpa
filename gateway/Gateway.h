@@ -222,6 +222,7 @@ private:
 
 public:
 	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
+	~Gateway();
 	void init();
 
 	/**

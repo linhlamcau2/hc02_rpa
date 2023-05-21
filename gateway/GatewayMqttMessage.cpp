@@ -329,6 +329,7 @@ int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	data["STATUS"] = "SUCCESS";
 	respValue["DATA"] = data;
 #ifdef ESP_PLATFORM
+	Led::TaskLedInternet(MODE_FLASH);
 	Wifi::WifiStartAP();
 #endif
 	return CODE_OK;
@@ -3740,7 +3741,6 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		{
 			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
 			string domain = string(BASE_URL_DEV) + url;
-			LOGE("domain: %s", domain.c_str());
 
 			DelAllDevice();
 			DelAllGroup();
@@ -3748,7 +3748,11 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 			DelAllRule();
 			DelAllSceneBle();
 			DelAllSceneDelay();
-
+#ifdef ESP_PLATFORM
+			config->SetUrlOta(domain);
+			config->SetCheckSumOta(sum);
+			esp_restart();
+#endif
 			Ota::startOta(name, domain, sum);
 			return CODE_OK;
 		}

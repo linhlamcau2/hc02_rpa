@@ -15,6 +15,11 @@ Db::Db()
 	LOGI("Init db");
 }
 
+Db::~Db()
+{
+	LOGW("Delete database object");
+}
+
 void Db::init(void)
 {
 #ifdef ESP_PLATFORM

@@ -75,6 +75,10 @@ Gateway::Gateway(string mac, string server_address, int server_port, string toke
 	this->numScreenTouchs = 0;
 }
 
+Gateway::~Gateway()
+{
+}
+
 Device *Gateway::getDeviceFromMac(string mac)
 {
 	deviceListMtx.lock();
@@ -597,7 +601,7 @@ int Gateway::CheckOnlineThread()
 			}
 			// deviceListMtx.unlock();
 		}
-		sleep(1);
+		usleep(500000);
 	}
 	return CODE_OK;
 }
@@ -1440,6 +1444,7 @@ uint16_t Gateway::getBleAddr()
 {
 	return ble_addr;
 }
+
 uint32_t Gateway::getBleIvIndex()
 {
 	return ble_iv_index;
@@ -1449,30 +1454,37 @@ string Gateway::getBleNetKey()
 {
 	return ble_netkey;
 }
+
 string Gateway::getBleAppKey()
 {
 	return ble_appkey;
 }
+
 string Gateway::getBleDeviceKey()
 {
 	return ble_devicekey;
 }
+
 string Gateway::getDormitory()
 {
 	return dormitoryId;
 }
+
 string Gateway::getId()
 {
 	return id;
 }
+
 string Gateway::getVersion()
 {
 	return version;
 }
+
 string Gateway::getName()
 {
 	return "";
 }
+
 string Gateway::getRefreshToken()
 {
 	return refresh_token;
@@ -1492,38 +1504,47 @@ void Gateway::setBleIvIndex(uint32_t ivIndex)
 {
 	this->ble_iv_index = ivIndex;
 }
+
 void Gateway::setBleNetkey(string netkey)
 {
 	this->ble_netkey = netkey;
 }
+
 void Gateway::setBleAppkey(string appkey)
 {
 	this->ble_appkey = appkey;
 }
+
 void Gateway::setBleDevicekey(string devicekey)
 {
 	this->ble_devicekey = devicekey;
 }
+
 void Gateway::setDormitory(string dormitory)
 {
 	this->dormitoryId = dormitory;
 }
+
 void Gateway::setRefreshToken(string refresh_token)
 {
 	this->refresh_token = refresh_token;
 }
+
 void Gateway::setId(string id)
 {
 	this->id = id;
 }
+
 void Gateway::setMac(string mac)
 {
 	this->mac = mac;
 }
+
 void Gateway::setVersion(string version)
 {
 	this->version = version;
 }
+
 void Gateway::setName(string name)
 {
 }

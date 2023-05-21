@@ -24,7 +24,7 @@ private:
 
 public:
 	Db();
-	~Db() {}
+	~Db();
 
 	void init(void);
 	bool IsHaveDb();

@@ -83,9 +83,23 @@ void BleProtocol::InitKey()
 {
 	if (GetAppKey() == "")
 		ResetBle();
+#ifdef ESP_PLATFORM
+	Led::SetModeLedInternet(MODE_OFF);
+	Led::SetLedInternet(MODE_OFF);
+#endif
 	while (GetNetKey())
 	{
-		sleep(5);
+#ifdef ESP_PLATFORM
+		for (int i = 0; i < 10; i++)
+		{
+			Led::SetLedInternet(MODE_ON);
+			usleep(200000);
+			Led::SetLedInternet(MODE_OFF);
+			usleep(200000);
+		}
+#elif
+		sleep(4);
+#endif
 	}
 }
 
