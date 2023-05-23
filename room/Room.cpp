@@ -10,6 +10,7 @@ DeviceInRoom::DeviceInRoom(Device *device)
 
 Room::Room(string id, uint32_t addr, string name) : Object(id, addr, name)
 {
+	dataConfig = "";
 }
 
 Room::~Room()
@@ -174,7 +175,7 @@ int Room::DelDevice2(Device *device)
 
 string Room::GetDataConfig()
 {
-	return dataConfig;
+	return this->dataConfig;
 }
 
 void Room::SetDataConfig(string dataConfig)

@@ -227,73 +227,90 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	bool statusLedService = Led::GetLedService();
 	Led::SetLedService(!statusLedService);
 #endif
+	int index = 0;
 	while (l >= 4)
 	{
-		message_rsp = (message_rsp_st *)d;
-		is_dupplicate = false;
-		if (old_message_rsp && message_rsp->len == old_message_rsp->len)
+		if ((d[index] | d[index + 1] << 8) >= 3)
 		{
-			is_dupplicate = true;
-			for (int i = 0; i < message_rsp->len; i++)
+			if (d[index + 2] == 0x80 || d[index + 2] == 0x90 || d[index + 2] == 0x91 || d[index + 2] == 0x92 || d[index + 2] == 0xfa)
 			{
-				if (message_rsp->data[i] != old_message_rsp->data[i])
+				message_rsp = (message_rsp_st *)&d[index];
+				is_dupplicate = false;
+				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
 				{
-					is_dupplicate = false;
-					break;
-				}
-			}
-		}
-		if (!is_dupplicate)
-		{
-			if (message_rsp->len >= 2 && message_rsp->len <= l - 2)
-			{
-				// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
-				for (auto &messageResp : messageRespList)
-				{
-					if (message_rsp->opcode == messageResp->opcode)
+					is_dupplicate = true;
+					for (int i = 0; i < message_rsp->len; i++)
 					{
-						match = true;
-						if (messageResp->compare_data)
+						if (message_rsp->data[i] != old_message_rsp->data[i])
 						{
-							for (int i = 0; i < messageResp->compare_len; i++)
-							{
-								if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
-									match = false;
-							}
-						}
-						if (match)
-						{
-							messageResp->status = true;
-							if (messageResp->len)
-							{
-								*(messageResp->len) = message_rsp->len - 2;
-								if (messageResp->data)
-									memcpy(messageResp->data, message_rsp->data, *messageResp->len);
-							}
+							is_dupplicate = false;
+							break;
 						}
 					}
 				}
-				if (gateway)
-					CheckOpcodeException(message_rsp);
-			}
-			else if (message_rsp->len < 2 && message_rsp->len > 36)
-			{
-				LOGW("Wrong uart data");
-				l = 0;
-				break;
+				if (!is_dupplicate)
+				{
+					if (message_rsp->len >= 2 && message_rsp->len <= l - 2)
+					{
+						// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
+						for (auto &messageResp : messageRespList)
+						{
+							if (message_rsp->opcode == messageResp->opcode)
+							{
+								match = true;
+								if (messageResp->compare_data)
+								{
+									for (int i = 0; i < messageResp->compare_len; i++)
+									{
+										if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
+											match = false;
+									}
+								}
+								if (match)
+								{
+									messageResp->status = true;
+									if (messageResp->len)
+									{
+										*(messageResp->len) = message_rsp->len - 2;
+										if (messageResp->data)
+											memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+									}
+								}
+							}
+						}
+						if (gateway)
+							CheckOpcodeException(message_rsp);
+					}
+					else if (message_rsp->len < 2 && message_rsp->len > 36)
+					{
+						LOGW("Wrong uart data");
+						l = 0;
+						break;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					// LOGW("dupplicate");
+				}
+				old_message_rsp = message_rsp;
+				l -= message_rsp->len + 2;
+				d += message_rsp->len + 2;
 			}
 			else
 			{
-				break;
+				index++;
+				l--;
 			}
 		}
 		else
 		{
-			// LOGW("dupplicate");
+			index++;
+			l--;
 		}
-		old_message_rsp = message_rsp;
-		l -= message_rsp->len + 2;
-		d += message_rsp->len + 2;
 	}
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
@@ -559,9 +576,9 @@ bool BleProtocol::IsProvision()
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
-// #ifdef ESP_PLATFORM
-// 	Led::TaskLedService(MODE_BLINK);
-// #endif
+	// #ifdef ESP_PLATFORM
+	// 	Led::TaskLedService(MODE_BLINK);
+	// #endif
 	uint16_t version = 0;
 	uint32_t deviceType = 0;
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
@@ -605,10 +622,10 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 		StartScan();
 	}
 
-// #ifdef ESP_PLATFORM
-// 	Led::SetModeLedService(MODE_ON);
-// 	Led::SetLedService(MODE_ON);
-// #endif
+	// #ifdef ESP_PLATFORM
+	// 	Led::SetModeLedService(MODE_ON);
+	// 	Led::SetLedService(MODE_ON);
+	// #endif
 
 	return rs;
 }

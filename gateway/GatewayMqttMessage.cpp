@@ -215,7 +215,7 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value dataJsonRsp;
 		dataJsonRsp["HC_ID"] = idHc;
 		uint8_t status = 0;
-		
+
 		DelAllDevice();
 		DelAllGroup();
 		DelAllRoom();
@@ -1263,17 +1263,17 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 	string roomId = "";
 	string roomName = "";
 	int roomUnicast = 0;
+	Room *room = NULL;
+
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		Json::Value data = reqValue["DATA"];
-		Room *room = NULL;
 		if (data.isMember("NAME") && data["NAME"].isString())
 		{
 			roomName = data["NAME"].asString();
 		}
 		if (data.isMember("GROUPS") && data["GROUPS"].isArray() && data.isMember("SCENES") && data["SCENES"].isArray())
 		{
-			Room *room = NULL;
 			Json::Value groups = data["GROUPS"];
 			respValue["CMD"] = "CREATE_ROOM";
 			Json::Value jsonDataRsp;
@@ -1316,8 +1316,8 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						jsonGroupRsp["GROUP_UNICAST_ID"] = groupAddr + 49152;
 						if (AddNewGroup(newGroup, true, true))
 						{
-							room->AddGroup(newGroup, true, true);
-							Json::Value data;
+							if (room)
+								room->AddGroup(newGroup, true, true);
 							if (group.isMember("DEVICES") && group["DEVICES"].isArray())
 							{
 								Json::Value devices = group["DEVICES"];
@@ -1387,7 +1387,8 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						jsonSceneRsp["SCENE_UNICAST_ID"] = sceneAddr;
 						sceneInRoom = AddNewSceneBle(sceneInRoom, true, true);
-						room->AddSceneBle(sceneInRoom, true, true);
+						if (room)
+							room->AddSceneBle(sceneInRoom, true, true);
 					}
 
 					Json::Value groupsOfScene = scene["GROUPS"];
@@ -1582,7 +1583,6 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							groupJsonRsp["GROUP_UNICAST_ID"] = groupAddr + 49152;
 							if (AddNewGroup(newGroup, true, true))
 							{
-								Json::Value data;
 								Json::Value devices = groupAddDev["DEVICES"];
 								for (Json::ArrayIndex j = 0; j < devices.size(); j++)
 								{

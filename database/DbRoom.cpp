@@ -28,7 +28,7 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 					if (decode == "")
 					{
 						Json::Value roomValue;
-						if(roomValue.parse(roomData) && roomValue.isObject())
+						if (roomValue.parse(roomData) && roomValue.isObject())
 						{
 							room->SetDataConfig(roomValue.toString());
 						}
@@ -64,7 +64,7 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "');";
 	return Sqlite_Exec(sql);
 }
 
