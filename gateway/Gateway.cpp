@@ -366,6 +366,10 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	else
 	{
 		Util::LedInternet(false);
+#ifdef ESP_PLATFORM
+		Led::SetModeLedInternet(MODE_OFF);
+		Led::SetLedInternet(MODE_OFF);
+#endif
 	}
 }
 

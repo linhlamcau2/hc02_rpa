@@ -97,7 +97,7 @@ void BleProtocol::InitKey()
 			Led::SetLedInternet(MODE_OFF);
 			usleep(200000);
 		}
-#elif
+#else
 		sleep(4);
 #endif
 	}
@@ -223,6 +223,10 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	bool match;
 	Util::LedBle(false);
 	Util::LedServiceLock();
+#ifdef ESP_PLATFORM
+	bool statusLedService = Led::GetLedService();
+	Led::SetLedService(!statusLedService);
+#endif
 	while (l >= 4)
 	{
 		message_rsp = (message_rsp_st *)d;
@@ -293,6 +297,9 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	}
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
+#ifdef ESP_PLATFORM
+	Led::SetLedService(statusLedService);
+#endif
 	return l;
 }
 
@@ -552,9 +559,9 @@ bool BleProtocol::IsProvision()
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
-#ifdef ESP_PLATFORM
-	Led::TaskLedService(MODE_BLINK);
-#endif
+// #ifdef ESP_PLATFORM
+// 	Led::TaskLedService(MODE_BLINK);
+// #endif
 	uint16_t version = 0;
 	uint32_t deviceType = 0;
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
@@ -598,10 +605,10 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 		StartScan();
 	}
 
-#ifdef ESP_PLATFORM
-	Led::SetModeLedService(MODE_ON);
-	Led::SetLedService(MODE_ON);
-#endif
+// #ifdef ESP_PLATFORM
+// 	Led::SetModeLedService(MODE_ON);
+// 	Led::SetLedService(MODE_ON);
+// #endif
 
 	return rs;
 }

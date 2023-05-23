@@ -5,6 +5,10 @@
 #include "Util.h"
 #include "Wifi.h"
 
+#ifdef ESP_PLATFORM
+#include "Led.h"
+#endif
+
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
 {
 	this->mac = mac;
@@ -82,8 +86,12 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Json::Value payloadJson;
 	Util::LedInternet(false);
 	Util::LedServiceLock();
+#ifdef ESP_PLATFORM
+	bool statusLedInternet = Led::GetLedInternet();
+	Led::SetLedInternet(!statusLedInternet);
+#endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string cmd = payloadJson["CMD"].asString();
 		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
@@ -131,6 +139,9 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		LOGW("OnDeviceRpc topic: %s", topic.c_str());
 		LOGW("OnDeviceRpc payload: %s", payload.c_str());
 	}
+#ifdef ESP_PLATFORM
+	Led::SetLedInternet(statusLedInternet);
+#endif
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
 }
@@ -150,9 +161,9 @@ void CloudProtocol::OnDeviceRpcV2(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-			payloadJson.isMember("data") && payloadJson["data"].isObject())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -214,8 +225,8 @@ void CloudProtocol::OnServerRespV2(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -352,9 +363,9 @@ int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue,
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopicV2, sendValue.toString());
@@ -376,9 +387,9 @@ int CloudProtocol::PublishBinToCloudMessageV2(string sessionId, int index, char 
 	LOGD("PublishBinToCloudMessageV2");
 	int rs = CODE_OK;
 	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
 	};
 	string rqi = sessionId + to_string(index);
 	requestList[rqi] = &request;
@@ -401,9 +412,9 @@ int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value 
 	LOGD("PublishToCloudRecieveBinMessageV2");
 	int rs = CODE_OK;
 	request_bin_t requestBin = {
-			.status = false,
-			.payload = payload,
-			.payloadLen = payloadLen,
+		.status = false,
+		.payload = payload,
+		.payloadLen = payloadLen,
 	};
 	requestBinList[rqi] = &requestBin;
 	Json::Value sendValue;

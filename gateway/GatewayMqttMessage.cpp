@@ -215,6 +215,13 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value dataJsonRsp;
 		dataJsonRsp["HC_ID"] = idHc;
 		uint8_t status = 0;
+		
+		DelAllDevice();
+		DelAllGroup();
+		DelAllRoom();
+		DelAllRule();
+		DelAllSceneBle();
+		DelAllSceneDelay();
 
 		HTTPRequest *httpRequest = new HTTPRequest();
 		httpRequest->setUrl(string(BASE_URL_DEV) + string(RENEW_TOKEN));
@@ -266,13 +273,13 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		delete httpRequest;
 		dataJsonRsp["STATUS"] = status;
 		respValue["DATA"] = dataJsonRsp;
-		return CODE_OK;
+		return CODE_EXIT;
 	}
 	else
 	{
 		LOGW("OnRpcHcBackup %s error", reqValue.toString().c_str());
 	}
-	return CODE_ERROR;
+	return CODE_EXIT;
 }
 
 int Gateway::OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue)
