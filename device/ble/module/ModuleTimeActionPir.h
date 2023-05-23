@@ -80,7 +80,7 @@ public:
 	 *
 	 * @param jsonValue
 	 */
-	void BuildTelemetryValue(Json::Value &jsonValue);
+	void BuildTelemetryValueV2(Json::Value &jsonValue);
 
 	/**
 	 * @brief Do an action use message format version 2

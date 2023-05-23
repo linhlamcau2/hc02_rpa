@@ -198,7 +198,7 @@ string HTTPRequest::GetWeather(string longitude, string latitude)
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&appid=ebd13e00acf60358e311499f1701ffc2&units=metric");
+		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, string("https://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&appid=ebd13e00acf60358e311499f1701ffc2&units=metric").c_str());
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
 
