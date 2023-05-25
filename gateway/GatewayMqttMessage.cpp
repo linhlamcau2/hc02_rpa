@@ -2346,7 +2346,7 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 				{
 					if (bleProtocol)
 					{
-						if (device->GetType() == BLE_DC_SCENE_CONTACT)
+						if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
 						{
 							if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, scene->GetAddr(), 0) == 0)
 							{
@@ -2359,6 +2359,10 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 							{
 								return CODE_OK;
 							}
+						}
+						else
+						{
+							LOGW("Type dev don't support function");
 						}
 					}
 					else
@@ -2373,6 +2377,10 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 			{
 				LOGW("Device %s does not exsit", deviceId.c_str());
 			}
+		}
+		else
+		{
+			LOGW("Data error"); 
 		}
 	}
 	return CODE_ERROR;

@@ -908,6 +908,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
 	case BLE_REMOTE_M3_V2:
+	case BLE_REMOTE_M4:
 		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_AC_SCENE_CONTACT:

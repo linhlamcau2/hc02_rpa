@@ -67,7 +67,7 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Js
 {
 	if (data[0] == 0x52 && data[1] == 0x07 && data[2] == 0x02)
 	{
-		typedef struct
+		typedef struct __attribute__((packed))
 		{
 			uint16_t pm25;
 			uint16_t pm10;

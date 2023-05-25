@@ -47,7 +47,7 @@ int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue
 
 int ModuleControlPause::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
 		uint16_t vendorId;

@@ -5,5 +5,6 @@ DeviceBleSwitchOnoff::DeviceBleSwitchOnoff(string id, string name, string mac, s
 		: DeviceBle(id, name, mac, data, addr, type, version)
 {
 	moduleOnOff = new ModuleOnOff(this, addr);
+	modules.push_back(moduleOnOff);
 	powerSource = POWER_AC;
 }

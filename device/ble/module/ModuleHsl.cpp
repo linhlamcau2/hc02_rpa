@@ -74,7 +74,7 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::V
 
 int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
 {
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t opcode;
 		uint16_t l;

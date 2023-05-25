@@ -58,7 +58,7 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 {
 	if (data[0] == 0x52 && data[1] == 0x08 && data[2] == 0x01)
 	{
-		typedef struct
+		typedef struct __attribute__((packed))
 		{
 			uint8_t smoke;
 			uint8_t power;
