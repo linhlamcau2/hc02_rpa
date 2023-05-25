@@ -336,10 +336,9 @@ int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	data["STATUS"] = "SUCCESS";
 	respValue["DATA"] = data;
 #ifdef ESP_PLATFORM
-	Led::TaskLedInternet(MODE_FLASH);
 	Wifi::WifiStartAP();
 #endif
-	return CODE_OK;
+	return CODE_EXIT;
 }
 
 // int Gateway::OnRpcBleAddDevice(Json::Value &reqValue, Json::Value &respValue)
