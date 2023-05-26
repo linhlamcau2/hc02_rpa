@@ -3201,7 +3201,7 @@ int Gateway::OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue)
 			uint32_t type = dataValue["type"].asInt();
 			string devicekey = dataValue["devicekey"].asString();
 			uint16_t version = dataValue["version"].asInt();
-			Device *device = AddNewDevice(deviceId, name, mac, devicekey, addr, type, version, true, true);
+			Device *device = AddNewDevice(deviceId, name, mac, devicekey, addr, type, version, true, true, false);
 			respValue["code"] = 0;
 			return CODE_OK;
 		}

@@ -1,7 +1,7 @@
 #include "DeviceBle.h"
 #include "Log.h"
 
-DeviceBle::DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, data, addr, type, version)
+DeviceBle::DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite) : Device(id, name, mac, data, addr, type, version, isFavorite)
 {
 	protocol = BLE_DEVICE;
 	countElement = 1;

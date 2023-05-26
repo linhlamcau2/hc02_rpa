@@ -21,5 +21,5 @@ private:
 	ElementCct *elementCct;
 
 public:
-	DeviceBleLightOnoffCctDimHslModeRGB(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffCctDimHslModeRGB(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite);
 };

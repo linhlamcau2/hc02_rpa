@@ -5,12 +5,13 @@
 #include <unistd.h>
 #include <Util.h>
 
-Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
+Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite) : Object(id, addr, name)
 {
 	this->mac = mac;
 	this->type = type;
 	this->data = data;
 	this->version = version;
+	this->isFavorite = isFavorite;
 	powerSource = POWER_UNKNOWN;
 
 	lastOnlineState = false;
@@ -250,3 +251,12 @@ int Device::DoJsonArrayV2(Json::Value &dataValue)
 	return CODE_OK;
 }
 #endif
+bool Device::GetIsFavorite()
+{
+	return this->isFavorite;
+}
+bool Device::SetIsFavorite(bool isFavorite)
+{
+	this->isFavorite = isFavorite;
+	return this->isFavorite;
+}

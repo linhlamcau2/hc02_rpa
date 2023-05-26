@@ -1,8 +1,8 @@
 #include "DeviceBleSwitchScene6ACRgb.h"
 #include "Log.h"
 
-DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version)
-    : DeviceBle(id, name, mac, data, addr, type, version)
+DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version, bool isFavorite)
+    : DeviceBle(id, name, mac, data, addr, type, version, isFavorite)
 {
 #ifndef CONFIG_USE_OLD_APP
     for (int i = 0; i < 6; i++)

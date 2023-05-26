@@ -22,5 +22,5 @@ private:
 #endif
 
 public:
-	DeviceBleSwitchTouchRgb3(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleSwitchTouchRgb3(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite);
 };

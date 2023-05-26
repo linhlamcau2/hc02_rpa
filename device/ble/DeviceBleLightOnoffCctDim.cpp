@@ -1,8 +1,8 @@
 #include "DeviceBleLightOnoffCctDim.h"
 #include "Log.h"
 
-DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
-	: DeviceBle(id, name, mac, data, addr, type, version)
+DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite)
+	: DeviceBle(id, name, mac, data, addr, type, version, isFavorite)
 {
 	moduleOnOff = new ModuleOnOff(this, addr);
 	moduleDim = new ModuleDim(this, addr);

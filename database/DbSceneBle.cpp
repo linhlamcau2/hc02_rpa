@@ -20,6 +20,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				int addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				bool isFavorite = sqlite3_column_int(stmt, index++);
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneId);
 				if (!sceneBle)
 				{
