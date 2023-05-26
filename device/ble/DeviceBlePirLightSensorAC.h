@@ -3,7 +3,6 @@
 #include "DeviceBle.h"
 #include "module/ModulePirSensor.h"
 #include "module/ModuleLightSensor.h"
-#include "module/ModulePinLevel.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
 
@@ -15,7 +14,6 @@ private:
 	ModulePirLight *modulePirLight;
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
-	ModulePinLevel *modulePinLevel;
 	ModuleTimeActionPir *moduleTimeActionPir;
 
 public:

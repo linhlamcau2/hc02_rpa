@@ -13,10 +13,14 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
     countElement = 6;
 #endif
 
-    powerSource = POWER_AC;
+    // powerSource = POWER_AC;
 #ifdef CONFIG_USE_OLD_APP
     moduleRgb = new ModuleRgb(this, addr, button);
     modules.push_back(moduleRgb);
+    for (int i = 0; i < 6; i++)
+    {
+        moduleButton[i] = new ModuleButton(this, addr, i);
+        modules.push_back(moduleButton[i]);
+    }
 #endif
-
 }

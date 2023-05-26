@@ -44,6 +44,7 @@
 #include "DeviceBleSensorTempHum.h"
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
+#include "DeviceBlePirLightSensorAC.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
@@ -926,6 +927,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
 		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version);
+		break;
+	case BLE_PIR_LIGHT_SENSOR_AC:
+	case BLE_PIR_LIGHT_SENSOR_AC_AMTRAN:
+		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, version);
 		break;
 	case BLE_SMOKE_SENSOR:
 		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, version);

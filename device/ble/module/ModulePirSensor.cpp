@@ -5,6 +5,8 @@
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
+#include "Gateway.h"
+#include "SceneBle.h"
 
 ModulePirSensor::ModulePirSensor(Device *device, uint32_t addr) : Module(device, addr)
 {
@@ -58,6 +60,41 @@ int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, J
 		pir = (data_message->pir);
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		uint16_t sceneId = data[5] | (data[6] << 8);
+		if (sceneId > 0)
+		{
+			SceneBle *scene = gateway->getSceneBleFromAddr(data_message->scene);
+			if (scene)
+			{
+				for (int i = 0; i < scene->deviceList.size(); i++)
+				{
+					DeviceBle *dev = (DeviceBle *)scene->deviceList[i]->device;
+					if (dev)
+					{
+						if (scene->deviceList[i]->data.isArray())
+						{
+							for (Json::ArrayIndex j = 0; j < scene->deviceList[i]->data.size(); j++)
+							{
+								if (scene->deviceList[i]->data[j].isObject())
+								{
+									dev->InputData(scene->deviceList[i]->data[j]);
+								}
+							}
+						}
+						else if (scene->deviceList[i]->data.isObject())
+						{
+							dev->InputData(scene->deviceList[i]->data);
+						}
+					}
+					else
+					{
+						LOGW("DeviceBle error");
+					}
+				}
+			}
+			else
+				LOGW("Scene not found");
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;

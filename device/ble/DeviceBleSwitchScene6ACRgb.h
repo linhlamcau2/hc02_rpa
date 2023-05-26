@@ -4,6 +4,7 @@
 #include "module/ModuleButton.h"
 #include "element/ElementRgb.h"
 #include "module/ModuleRgb.h"
+#include "module/ModuleButton.h"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ private:
 
 #ifdef CONFIG_USE_OLD_APP
     ModuleRgb *moduleRgb;
+    ModuleButton *moduleButton[6];
 #endif
 
 public:
