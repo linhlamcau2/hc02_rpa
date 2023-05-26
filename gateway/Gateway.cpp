@@ -19,38 +19,6 @@
 #endif
 #include "Http.h"
 
-#include "RuleInputTimer.h"
-#include "RuleOutputGroup.h"
-#include "RuleOutputDevice.h"
-
-#include "BleDefine.h"
-#include "BleProtocol.h"
-#include "DeviceBleAll.h"
-#include "DeviceBleSwitchOnoff.h"
-#include "DeviceBleLightOnoffCctDim.h"
-#include "DeviceBleLightOnoffHslModeRGB.h"
-#include "DeviceBleLightOnoffCctDimHslModeRGB.h"
-#include "DeviceBleSwitchTouchRgb1.h"
-#include "DeviceBleSwitchTouchRgb2.h"
-#include "DeviceBleSwitchTouchRgb3.h"
-#include "DeviceBleSwitchTouchRgb4.h"
-#include "DeviceBleSwitchElectrical1.h"
-#include "DeviceBleSwitchElectrical2.h"
-#include "DeviceBleSwitchElectrical3.h"
-#include "DeviceBleSwitchElectrical4.h"
-#include "DeviceBleSwitchScene6DC.h"
-#include "DeviceBleSwitchScene6AC.h"
-#include "DeviceBleSwitchScene6ACRgb.h"
-#include "DeviceBleSensorTempHum.h"
-#include "DeviceBleSensorPm.h"
-#include "DeviceBlePirLightSensorDC.h"
-#include "DeviceBlePirLightSensorAC.h"
-#include "DeviceBleSmokeSensor.h"
-#include "DeviceBleDoorSensor.h"
-#include "DeviceBleScreenTouch.h"
-#include "DeviceBleCurtain.h"
-#include "DeviceBleRoolDoor.h"
-
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
 #include "DeviceZigbeeOnoff.h"
@@ -119,6 +87,35 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 			{
 				deviceListMtx.unlock();
 				return deviceBle;
+			}
+		}
+	}
+	deviceListMtx.unlock();
+	return NULL;
+}
+
+DeviceBleSwitchScene6ACRgb *Gateway::getDeviceBleSceneACByElement(uint32_t addr, int button)
+{
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
+		{
+			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
+			if (deviceBle)
+			{
+				if (deviceBle->GetType() == BLE_AC_SCENE_CONTACT_RGB || deviceBle->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+				{
+					DeviceBleSwitchScene6ACRgb *sceneAcRgb = dynamic_cast<DeviceBleSwitchScene6ACRgb *>(deviceBle);
+					if (sceneAcRgb)
+					{
+						if (sceneAcRgb->GetButton() == button)
+						{
+							deviceListMtx.unlock();
+							return sceneAcRgb;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -440,6 +437,7 @@ void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_
 	{
 		bleProtocol->SendDate(device->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
 		bleProtocol->SendTime(device->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
+		bleProtocol->SendWeatherIndoor(device->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
 		if (statusWeather != 254 && temp != 65534)
 			bleProtocol->SendWeatherOutdoor(device->GetAddr(), statusWeather, temp);
 	}
@@ -998,6 +996,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			{
 				for (int i = 1; i <= 5; i++)
 				{
+					LOGE("%s", Util::GenIdDeviceByElement(id, i).c_str());
 					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, i + 1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}

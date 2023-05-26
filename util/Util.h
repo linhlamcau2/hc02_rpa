@@ -71,4 +71,9 @@ namespace Util
 	float GetLatitude();
 	void SetLongitude(float value);
 	void SetLatitude(float value);
+
+	void SetTempOfScreenTouch(uint16_t temp);
+	void SetHumOfScreenTouch(uint16_t hum);
+	uint16_t GetTempOfScreenTouch();
+	uint16_t GetHumOfScreenTouch();
 }

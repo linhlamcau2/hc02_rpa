@@ -440,3 +440,28 @@ void Util::SetLatitude(float value)
 {
 	latitude = value;
 }
+
+static uint16_t tempForScreenTouch = 0;
+static uint16_t humForScreenTouch = 0;
+
+void Util::SetTempOfScreenTouch(uint16_t temp)
+{
+	tempForScreenTouch = temp;
+}
+
+void Util::SetHumOfScreenTouch(uint16_t hum)
+{
+	humForScreenTouch = hum;
+}
+
+uint16_t Util::GetTempOfScreenTouch()
+{
+	return tempForScreenTouch;
+}
+
+uint16_t Util::GetHumOfScreenTouch()
+{
+	return humForScreenTouch;
+}
+
+

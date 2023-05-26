@@ -17,12 +17,41 @@
 #include "DeviceBle.h"
 #include "SceneBle.h"
 #include "SceneDelay.h"
+#include "RuleInputTimer.h"
 #include "RuleOutputSceneBle.h"
 #include "RuleOutputDevice.h"
 #include "RuleOutputGroup.h"
 #include "SceneDelayDeviceOutput.h"
 #include "SceneDelayGroupOutput.h"
 #include "Room.h"
+
+#include "BleDefine.h"
+#include "BleProtocol.h"
+#include "DeviceBleAll.h"
+#include "DeviceBleSwitchOnoff.h"
+#include "DeviceBleLightOnoffCctDim.h"
+#include "DeviceBleLightOnoffHslModeRGB.h"
+#include "DeviceBleLightOnoffCctDimHslModeRGB.h"
+#include "DeviceBleSwitchTouchRgb1.h"
+#include "DeviceBleSwitchTouchRgb2.h"
+#include "DeviceBleSwitchTouchRgb3.h"
+#include "DeviceBleSwitchTouchRgb4.h"
+#include "DeviceBleSwitchElectrical1.h"
+#include "DeviceBleSwitchElectrical2.h"
+#include "DeviceBleSwitchElectrical3.h"
+#include "DeviceBleSwitchElectrical4.h"
+#include "DeviceBleSwitchScene6DC.h"
+#include "DeviceBleSwitchScene6AC.h"
+#include "DeviceBleSwitchScene6ACRgb.h"
+#include "DeviceBleSensorTempHum.h"
+#include "DeviceBleSensorPm.h"
+#include "DeviceBlePirLightSensorDC.h"
+#include "DeviceBlePirLightSensorAC.h"
+#include "DeviceBleSmokeSensor.h"
+#include "DeviceBleDoorSensor.h"
+#include "DeviceBleScreenTouch.h"
+#include "DeviceBleCurtain.h"
+#include "DeviceBleRoolDoor.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "DeviceZigbee.h"
@@ -247,6 +276,7 @@ public:
 	Device *getDeviceFromMac(string mac);
 	Device *getDeviceFromId(string id);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
+	DeviceBleSwitchScene6ACRgb *getDeviceBleSceneACByElement(uint32_t addr, int element);
 	void delDevice(Device *device);
 
 	Group *getGroupFromId(string id);

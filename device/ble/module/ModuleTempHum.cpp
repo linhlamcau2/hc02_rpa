@@ -91,6 +91,8 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Jso
 			hum = (data_message->value2[0] << 8) | data_message->value2[1];
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			Util::SetTempOfScreenTouch(temp);
+			Util::SetHumOfScreenTouch(hum);
 			return CODE_OK;
 		}
 		else if (data_message->header == 0x0107 && len >= 9)

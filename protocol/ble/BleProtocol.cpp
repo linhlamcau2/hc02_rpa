@@ -10,6 +10,7 @@
 #include "Db.h"
 #include "BleOpCode.h"
 #include "DeviceBle.h"
+#include "DeviceBleSwitchScene6ACRgb.h"
 #include "AES.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -170,6 +171,14 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		data_message_t *data_message = (data_message_t *)message_rsp->data;
 		LOGD("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
+
+		DeviceBleSwitchScene6ACRgb *sceneAcRgb = gateway->getDeviceBleSceneACByElement(data_message->dev_addr, data_message->data[5]);
+		if (sceneAcRgb)
+		{
+			LOGV("Have device mac 0x%s type: 0x%08X", sceneAcRgb->GetMac().c_str(), sceneAcRgb->GetType());
+			sceneAcRgb->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+		}
+		
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
@@ -2292,7 +2301,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 	weather_outdoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_outdoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	weather_outdoor_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_WEATHER_OUTDOOR;
-	weather_outdoor_screen_touch_message.temp = temp;
+	weather_outdoor_screen_touch_message.temp = bswap_16(temp);
 	weather_outdoor_screen_touch_message.status = status;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_outdoor_screen_touch_message, sizeof(weather_outdoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherOutdoorScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2343,8 +2352,8 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	weather_indoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_indoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	weather_indoor_screen_touch_message.header = 0x030a;
-	weather_indoor_screen_touch_message.temp = temp;
-	weather_indoor_screen_touch_message.hum = hum;
+	weather_indoor_screen_touch_message.temp = bswap_16(temp);
+	weather_indoor_screen_touch_message.hum = bswap_16(hum);
 	weather_indoor_screen_touch_message.pm25 = pm25;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_indoor_screen_touch_message, sizeof(weather_indoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherIndoorScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)

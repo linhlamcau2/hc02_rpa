@@ -24,3 +24,10 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
     }
 #endif
 }
+
+#ifdef CONFIG_USE_OLD_APP
+int DeviceBleSwitchScene6ACRgb::GetButton()
+{
+    return button;
+}
+#endif

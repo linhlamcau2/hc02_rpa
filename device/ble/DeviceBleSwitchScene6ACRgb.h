@@ -18,8 +18,12 @@ private:
 #ifdef CONFIG_USE_OLD_APP
     ModuleRgb *moduleRgb;
     ModuleButton *moduleButton[6];
+    int button;
 #endif
 
 public:
     DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version);
+#ifdef CONFIG_USE_OLD_APP
+    int GetButton();
+#endif
 };
