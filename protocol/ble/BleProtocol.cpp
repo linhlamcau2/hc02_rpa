@@ -178,32 +178,34 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			LOGV("Have device mac 0x%s type: 0x%08X", sceneAcRgb->GetMac().c_str(), sceneAcRgb->GetType());
 			sceneAcRgb->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 		}
-		
-		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
-		if (deviceBle)
+		else
 		{
-			LOGV("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
-			deviceBle->UpdateLastTimeActive();
-			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
+			DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
+			if (deviceBle)
 			{
-				Json::Value dataArray = Json::arrayValue;
-				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
-				if (dataArray.size() > 0)
+				LOGV("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
+				deviceBle->UpdateLastTimeActive();
+				if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 				{
-					for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
+					Json::Value dataArray = Json::arrayValue;
+					GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
+					if (dataArray.size() > 0)
 					{
-						deviceBle->InputData(dataArray[i]);
+						for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
+						{
+							deviceBle->InputData(dataArray[i]);
+						}
 					}
+				}
+				else
+				{
+					deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 				}
 			}
 			else
 			{
-				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+				LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
 			}
-		}
-		else
-		{
-			LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
 		}
 		break;
 	}

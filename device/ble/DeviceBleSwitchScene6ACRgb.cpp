@@ -22,12 +22,13 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
         moduleButton[i] = new ModuleButton(this, addr, i);
         modules.push_back(moduleButton[i]);
     }
+    this->button = button;
 #endif
 }
 
 #ifdef CONFIG_USE_OLD_APP
 int DeviceBleSwitchScene6ACRgb::GetButton()
 {
-    return button;
+    return this->button;
 }
 #endif

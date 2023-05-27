@@ -94,6 +94,14 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 	return NULL;
 }
 
+
+/**
+ * Xu ly cho scene touch AC rgb
+ * Duoi device khong co nhieu element
+ * Tren app sinh nhieu element de dieu khien mau rgb cua nut
+ * Gap truong hop cung addr co nhieu deviceId
+ * Sinh them button de tim device qua addr va button
+*/
 DeviceBleSwitchScene6ACRgb *Gateway::getDeviceBleSceneACByElement(uint32_t addr, int button)
 {
 	deviceListMtx.lock();
@@ -996,9 +1004,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			{
 				for (int i = 1; i <= 5; i++)
 				{
-					LOGE("%s", Util::GenIdDeviceByElement(id, i).c_str());
 					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, i + 1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+					// LOGE("%s, addr %04x, button %d ", Util::GenIdDeviceByElement(id, i).c_str(), addr, i+1);
 				}
 			}
 #endif
