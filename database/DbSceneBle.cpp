@@ -25,6 +25,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				if (!sceneBle)
 				{
 					sceneBle = new SceneBle(sceneId, addr, name);
+					sceneBle->SetIsFavorite(isFavorite);
 					if (sceneBle)
 					{
 						if (gateway->AddNewSceneBle(sceneBle, true, false))
@@ -84,5 +85,11 @@ int Db::SceneBleDel(SceneBle *scene)
 int Db::SceneBleDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME ";";
+	return Sqlite_Exec(sql);
+}
+
+int Db::SceneBleUpdateFavorite(SceneBle *scene)
+{
+	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(scene->GetIsFavorite()) + " WHERE scene_ble_id='" + scene->GetId() + "';";
 	return Sqlite_Exec(sql);
 }

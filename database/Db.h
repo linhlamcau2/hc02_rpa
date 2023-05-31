@@ -37,6 +37,7 @@ public:
 	int DeviceDel(string mac);
 	int DeviceDelAll();
 	int DelDevExist(Device *device);
+	int DeviceUpdateFavorite(Device *device);
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
@@ -121,6 +122,7 @@ public:
 	int SceneDelayUpdateData(SceneDelay *sceneDelay);
 	int SceneDelayDel(SceneDelay *sceneDelay);
 	int SceneDelayDelAll();
+	int SceneBleUpdateFavorite(SceneBle *scene);
 };
 
 extern Db *database;

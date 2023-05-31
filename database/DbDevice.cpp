@@ -101,3 +101,9 @@ int Db::DelDevExist(Device *device)
 	Sqlite_Exec(sql);
 	return CODE_OK;
 }
+
+int Db::DeviceUpdateFavorite(Device *device)
+{
+	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(device->GetIsFavorite()) + " WHERE mac='" + device->GetMac() + "';";
+	return Sqlite_Exec(sql);
+}
