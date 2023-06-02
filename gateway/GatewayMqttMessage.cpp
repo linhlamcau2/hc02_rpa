@@ -1216,7 +1216,7 @@ int Gateway::OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
-	return CODE_OK;
+	return CODE_NOT_RESPONSE;
 }
 
 static bool status = false;
