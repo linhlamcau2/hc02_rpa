@@ -5,6 +5,10 @@
 #include "Db.h"
 #include <algorithm>
 
+#ifdef ESP_PLATFORM
+#include "mongoose.h"
+#endif
+
 void Gateway::initUdpMessage()
 {
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
@@ -25,24 +29,32 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 			return CODE_ERROR;
 		}
 		string macGw = mac;
+		string hostName = "";
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
 							  { return c == ':'; }),
 					macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
 #ifdef ESP_PLATFORM
-		string hostName = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
+		hostName = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
 		respValue["TYPE"] = 2;
+#ifdef MG_ENABLE_MBEDTLS
+		respValue["TLS"] = true;
+		respValue["MQTT_PORT"] = 8883;
 #else
-		string hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+		respValue["TLS"] = false;
+		respValue["MQTT_PORT"] = 1883;
+#endif
+#else
+		hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
 		respValue["TYPE"] = 1;
+		respValue["TLS"] = false;
+		respValue["MQTT_PORT"] = 1883;
 #endif
 		for (auto &c : hostName)
 			c = toupper(c);
 		respValue["HOSTNAME"] = hostName;
 		respValue["MAC"] = mac;
-		respValue["TLS"] = false;
-		respValue["MQTT_PORT"] = 1883;
 		respValue["VERSION"] = STR(VERSION);
 		return CODE_OK;
 	}
