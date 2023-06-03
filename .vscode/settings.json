@@ -60,6 +60,13 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
+<<<<<<< HEAD
         "typeinfo": "cpp"
+=======
+        "typeinfo": "cpp",
+        "cassert": "cpp",
+        "cerrno": "cpp",
+        "climits": "cpp"
+>>>>>>> 9eef52c (fix merge "tuvh")
     }
 }
