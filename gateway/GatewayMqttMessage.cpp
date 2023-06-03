@@ -2380,7 +2380,7 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 		}
 		else
 		{
-			LOGW("Data error"); 
+			LOGW("Data error");
 		}
 	}
 	return CODE_ERROR;
@@ -3399,28 +3399,23 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("PASSWD") && dataValue["PASSWD"].isString())
 		{
 			string password = dataValue["PASSWD"].asString();
-			if (config->GetPassword() == "")
-			{
-				string user = "";
+			string user = "";
+
 #ifdef ESP_PLATFORM
-				user = "minihub-" + mac;
+			user = "minihub-" + mac;
 #else
-				user = "hc-" + mac;
+			user = "hc-" + mac;
 #endif
-				if (config->SetClientId(user))
+
+			if (config->SetClientId(user))
+			{
+				if (config->SetUsername(user))
 				{
-					if (config->SetUsername(user))
+					if (config->SetPort(1884))
 					{
-						if (config->SetPort(1884))
+						if (config->SetPassword(password))
 						{
-							if (config->SetPassword(password))
-							{
-								status = 1;
-							}
-							else
-							{
-								status = 0;
-							}
+							status = 1;
 						}
 						else
 						{
@@ -3436,16 +3431,14 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 				{
 					status = 0;
 				}
-				dataJsonRsp["STATUS"] = status;
-				respValue["DATA"] = dataJsonRsp;
-				return CODE_EXIT;
 			}
 			else
 			{
-				dataJsonRsp["STATUS"] = 0;
-				respValue["DATA"] = dataJsonRsp;
-				return CODE_OK;
+				status = 0;
 			}
+			dataJsonRsp["STATUS"] = status;
+			respValue["DATA"] = dataJsonRsp;
+			return CODE_EXIT;
 		}
 	}
 	return CODE_ERROR;
