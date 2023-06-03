@@ -38,7 +38,7 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 #ifdef ESP_PLATFORM
 		hostName = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
 		respValue["TYPE"] = 2;
-#ifdef MG_ENABLE_MBEDTLS
+#if MG_ENABLE_MBEDTLS
 		respValue["TLS"] = true;
 		respValue["MQTT_PORT"] = 8883;
 #else

@@ -80,7 +80,7 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 
 bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -113,7 +113,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 
 bool ModuleOnOff::CheckDataV2(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("op") && dataValue["op"].isString() &&
 		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
@@ -129,7 +129,7 @@ bool ModuleOnOff::CheckDataV2(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Module.cpp
 void ModuleOnOff::CheckTrigger()
 {
-	LOGV("CheckTrigger");
+	// LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
@@ -151,7 +151,7 @@ void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 
 int ModuleOnOff::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
+	// LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

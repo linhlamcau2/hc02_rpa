@@ -91,7 +91,7 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 
 bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -125,7 +125,7 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 // TODO: can nhac di chuyen den Element.cpp
 void ElementCct::CheckTrigger()
 {
-	LOGV("CheckTrigger");
+	// LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
@@ -145,7 +145,7 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 
 int ElementCct::Do(Json::Value &dataValue)
 {
-	LOGD("Do data: %s", dataValue.toString().c_str());
+	// LOGD("Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{

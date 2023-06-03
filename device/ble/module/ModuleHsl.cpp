@@ -105,7 +105,7 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 
 bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -145,7 +145,7 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleHsl::CheckTrigger()
 {
-	LOGV("CheckTrigger");
+	// LOGV("CheckTrigger");
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
@@ -171,7 +171,7 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 
 int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 {
-	LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
+	// LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
 	if (dataValue.isArray())
 	{
 		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
@@ -211,7 +211,7 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 
 int ModuleHsl::Do(Json::Value &dataValue)
 {
-	LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
+	// LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
