@@ -1,8 +1,8 @@
 #include "DeviceBleSwitchElectrical1.h"
 #include "Log.h"
 
-DeviceBleSwitchElectrical1::DeviceBleSwitchElectrical1(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
-	: DeviceBle(id, name, mac, data, addr, type, version)
+DeviceBleSwitchElectrical1::DeviceBleSwitchElectrical1(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite)
+	: DeviceBle(id, name, mac, data, addr, type, version, isFavorite)
 {
 
 	elementButton = new ElementButton(this, addr);

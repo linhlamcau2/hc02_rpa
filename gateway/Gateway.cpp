@@ -901,16 +901,16 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-		device = new DeviceBleSwitchElectrical1(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical1(id, name, mac, data, addr, type, version, isFavorite);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
-		device = new DeviceBleSwitchElectrical2(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical2(id, name, mac, data, addr, type, version, isFavorite);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
-		device = new DeviceBleSwitchElectrical3(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical3(id, name, mac, data, addr, type, version, isFavorite);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
-		device = new DeviceBleSwitchElectrical4(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical4(id, name, mac, data, addr, type, version, isFavorite);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
