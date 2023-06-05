@@ -129,8 +129,6 @@ enum
 	BLE_DOOR_SENSOR = 36001,
 	BLE_SMOKE_SENSOR = 33001,
 
-	CAMERA = 40001,
-
 	ZIGBEE_LUMI_PLUG = 0x02000001,
 	ZIGBEE_LUMI_SENSOR_SWITCH = 0x02000002,
 	ZIGBEE_PIR_RH3040 = 0x02000102,
@@ -155,7 +153,6 @@ protected:
 	string data;
 	Json::Value values; // telemetry data
 	Json::Value valuesV2;
-	bool isFavorite;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -166,7 +163,7 @@ public:
 	time_t lastTimeCheckActive;
 
 public:
-	Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite);
+	Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
 	string GetMac();
@@ -221,7 +218,4 @@ public:
 	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
 	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
 #endif
-
-	bool GetIsFavorite();
-	bool SetIsFavorite(bool isFavorite);
 };

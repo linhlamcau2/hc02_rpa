@@ -15,5 +15,5 @@ private:
 	ModulePinLevel *modulePinLevel;
 
 public:
-	DeviceBleDoorSensor(string id, string name, string mac, string data, uint32_t addr, uint16_t version, bool isFavorite);
+	DeviceBleDoorSensor(string id, string name, string mac, string data, uint32_t addr, uint16_t version);
 };

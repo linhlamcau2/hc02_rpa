@@ -1,8 +1,8 @@
 #include "DeviceBleCurtain.h"
 #include "Log.h"
 
-DeviceBleCurtain::DeviceBleCurtain(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite)
-    : DeviceBle(id, name, mac, data, addr, type, version, isFavorite)
+DeviceBleCurtain::DeviceBleCurtain(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
+    : DeviceBle(id, name, mac, data, addr, type, version)
 {
     moduleControlClose = new ModuleControlClose(this, addr);
     modules.push_back(moduleControlClose);

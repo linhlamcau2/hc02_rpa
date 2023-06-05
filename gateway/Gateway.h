@@ -230,7 +230,6 @@ private:
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupList(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
@@ -244,13 +243,6 @@ private:
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
-	int OnDelFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
-	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
@@ -338,7 +330,7 @@ public:
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 
-	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase, bool isFavorite);
+	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);

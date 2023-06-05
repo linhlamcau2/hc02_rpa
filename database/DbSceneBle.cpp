@@ -20,12 +20,10 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				int addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_int(stmt, index++);
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneId);
 				if (!sceneBle)
 				{
 					sceneBle = new SceneBle(sceneId, addr, name);
-					sceneBle->SetIsFavorite(isFavorite);
 					if (sceneBle)
 					{
 						if (gateway->AddNewSceneBle(sceneBle, true, false))
@@ -85,11 +83,5 @@ int Db::SceneBleDel(SceneBle *scene)
 int Db::SceneBleDelAll()
 {
 	string sql = "DELETE FROM " TABLE_NAME ";";
-	return Sqlite_Exec(sql);
-}
-
-int Db::SceneBleUpdateFavorite(SceneBle *scene)
-{
-	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(scene->GetIsFavorite()) + " WHERE scene_ble_id='" + scene->GetId() + "';";
 	return Sqlite_Exec(sql);
 }

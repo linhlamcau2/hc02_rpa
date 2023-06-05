@@ -26,7 +26,6 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				uint32_t active_time = sqlite3_column_int(stmt, index++);
 				uint32_t update_time = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_int(stmt, index++);
 				string devData;
 				string decode = macaron::Base64::Decode(data, devData);
 				if (decode == "")
@@ -35,7 +34,7 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 					if (devDataJson.parse(devData) && devDataJson.isObject())
 					{
 						uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
-						gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false, isFavorite);
+						gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false);
 					}
 				}
 			}
@@ -100,10 +99,4 @@ int Db::DelDevExist(Device *device)
 	sql = "DELETE FROM DeviceBleChild WHERE device_id = '"+device->GetId()+"';";
 	Sqlite_Exec(sql);
 	return CODE_OK;
-}
-
-int Db::DeviceUpdateFavorite(Device *device)
-{
-	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(device->GetIsFavorite()) + " WHERE mac='" + device->GetMac() + "';";
-	return Sqlite_Exec(sql);
 }

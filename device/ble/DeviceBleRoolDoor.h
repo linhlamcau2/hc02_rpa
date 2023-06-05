@@ -19,5 +19,5 @@ private:
     ModuleTimeActionPir *moduleTimeAction;
 
 public:
-    DeviceBleRoolDoor(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite);
+    DeviceBleRoolDoor(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
 };

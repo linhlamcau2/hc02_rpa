@@ -1,7 +1,7 @@
 #include "DeviceBle.h"
 #include "Log.h"
 
-DeviceBle::DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite) : Device(id, name, mac, data, addr, type, version, isFavorite)
+DeviceBle::DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, data, addr, type, version)
 {
 	protocol = BLE_DEVICE;
 	countElement = 1;
@@ -83,6 +83,7 @@ void DeviceBle::InputData(Json::Value &dataValue)
 void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	values = Json::Value::null;
+	valuesV2 = Json::Value::null;
 	for (auto &module : modules)
 	{
 		if (module->InputData(data, len, values, valuesV2) == CODE_OK)

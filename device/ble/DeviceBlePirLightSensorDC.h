@@ -20,5 +20,5 @@ private:
 	ModuleTimeActionPir *moduleTimeActionPir;
 
 public:
-	DeviceBlePirLightSensorDC(string id, string name, string mac, string data, uint32_t addr, uint16_t version, bool isFavorite);
+	DeviceBlePirLightSensorDC(string id, string name, string mac, string data, uint32_t addr, uint16_t version);
 };

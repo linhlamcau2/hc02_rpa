@@ -1,8 +1,8 @@
 #include "DeviceBleSwitchElectrical2.h"
 #include "Log.h"
 
-DeviceBleSwitchElectrical2::DeviceBleSwitchElectrical2(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite)
-	: DeviceBle(id, name, mac, data, addr, type, version, isFavorite)
+DeviceBleSwitchElectrical2::DeviceBleSwitchElectrical2(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
+	: DeviceBle(id, name, mac, data, addr, type, version)
 {
 	for (int i = 0; i < 2; i++)
 	{

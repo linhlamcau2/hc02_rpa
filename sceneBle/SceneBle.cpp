@@ -18,17 +18,6 @@ SceneBle::~SceneBle()
 	deviceList.clear();
 }
 
-bool SceneBle::GetIsFavorite()
-{
-	return this->isFavorite;
-}
-
-bool SceneBle::SetIsFavorite(bool isFavorite)
-{
-	this->isFavorite = isFavorite;
-	return this->isFavorite;
-}
-
 int SceneBle::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();

@@ -325,7 +325,7 @@ void Gateway::init()
 
 	database->GatewayRead();
 	database->DeviceRead();
-	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false, false);
+	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
 	database->RoomRead();
@@ -843,14 +843,14 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 #endif
 }
 
-Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase, bool isFavorite)
+Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
 	Device *device = NULL;
 	switch (type)
 	{
 	case BLE_ALL:
-		device = new DeviceBleAll(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleAll(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_LED_CHIEU_TRANH:
 	case BLE_LED_CHIEU_GUONG:
@@ -869,90 +869,91 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
-		device = new DeviceBleLightOnoffCctDim(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleLightOnoffCctDim(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
-		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_LED_DAY_RGB:
-		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ONOFF:
-		device = new DeviceBleSwitchOnoff(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchOnoff(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
-		device = new DeviceBleSwitchTouchRgb1(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchTouchRgb1(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
-		device = new DeviceBleSwitchTouchRgb2(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchTouchRgb2(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
-		device = new DeviceBleSwitchTouchRgb3(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchTouchRgb3(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
-		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-		device = new DeviceBleSwitchElectrical1(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchElectrical1(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
-		device = new DeviceBleSwitchElectrical2(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchElectrical2(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
-		device = new DeviceBleSwitchElectrical3(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchElectrical3(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
-		device = new DeviceBleSwitchElectrical4(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleSwitchElectrical4(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
 	case BLE_REMOTE_M3_V2:
-		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, type, version, isFavorite);
+	case BLE_REMOTE_M4:
+		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_AC_SCENE_CONTACT:
-		device = new DeviceBleSwitchScene6AC(id, name, mac, data, addr, BLE_AC_SCENE_CONTACT, version, isFavorite);
+		device = new DeviceBleSwitchScene6AC(id, name, mac, data, addr, version);
 		break;
 	case BLE_AC_SCENE_CONTACT_RGB:
 	case BLE_AC_SCENE_CONTACT_RGB_SQUARE:
-		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, data, addr, type, 1, version, isFavorite);
+		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, data, addr, type, 1, version);
 		break;
 	case BLE_TEMP_HUM_SENSOR:
-		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, BLE_TEMP_HUM_SENSOR, version, isFavorite);
+		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, version);
 		break;
 	case BLE_PM_SENSOR:
-		device = new DeviceBleSensorPm(id, name, mac, data, addr, BLE_PM_SENSOR, version, isFavorite);
+		device = new DeviceBleSensorPm(id, name, mac, data, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
-		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version, isFavorite);
+		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
 	case BLE_PIR_LIGHT_SENSOR_AC_AMTRAN:
-		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, version, isFavorite);
+		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, version);
 		break;
 	case BLE_SMOKE_SENSOR:
-		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, BLE_SMOKE_SENSOR,version, isFavorite);
+		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, version);
 		break;
 	case BLE_DOOR_SENSOR:
-		device = new DeviceBleDoorSensor(id, name, mac, data, addr, version, isFavorite);
+		device = new DeviceBleDoorSensor(id, name, mac, data, addr, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
+		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
 		numScreenTouchs++;
-		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version, isFavorite);
 		break;
 	case BLE_SWITCH_RGB_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
-		device = new DeviceBleCurtain(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleCurtain(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ROOLING_DOOR:
-		device = new DeviceBleRoolDoor(id, name, mac, data, addr, type, version, isFavorite);
+		device = new DeviceBleRoolDoor(id, name, mac, data, addr, type, version);
 		break;
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
@@ -980,14 +981,14 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			Device *deviceChild = NULL;
 			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_2)
 			{
-				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version, isFavorite);
+				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version);
 				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
 			}
 			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_3)
 			{
 				for (int i = 1; i <= 2; i++)
 				{
-					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version, isFavorite);
+					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
@@ -995,7 +996,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			{
 				for (int i = 1; i <= 3; i++)
 				{
-					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version, isFavorite);
+					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
@@ -1003,7 +1004,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			{
 				for (int i = 1; i <= 5; i++)
 				{
-					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, i + 1, version, isFavorite);
+					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, i + 1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 					// LOGE("%s, addr %04x, button %d ", Util::GenIdDeviceByElement(id, i).c_str(), addr, i+1);
 				}

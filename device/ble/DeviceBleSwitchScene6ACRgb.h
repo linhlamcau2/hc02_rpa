@@ -22,8 +22,8 @@ private:
 #endif
 
 public:
+    DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version);
 #ifdef CONFIG_USE_OLD_APP
     int GetButton();
 #endif
-    DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version, bool isFavorite);
 };

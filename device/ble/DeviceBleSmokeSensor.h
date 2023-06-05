@@ -12,5 +12,5 @@ private:
 	ModuleSmoke *moduleSmoke;
 
 public:
-	DeviceBleSmokeSensor(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool isFavorite);
+	DeviceBleSmokeSensor(string id, string name, string mac, string data, uint32_t addr, uint16_t version);
 };
