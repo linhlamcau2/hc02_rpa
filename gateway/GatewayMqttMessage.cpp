@@ -294,6 +294,7 @@ int Gateway::OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
+		bleProtocol->SetProvisioning(true);
 		bleProtocol->StartScan();
 	}
 	else

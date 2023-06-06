@@ -178,7 +178,7 @@ void Group::DoBle()
 
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(addr + ID_START, value, 5, false);
+					bleProtocol->SetOnOffLight(addr + ID_START, value, 5, true);
 				}
 				else if (idProperty == 1)
 				{

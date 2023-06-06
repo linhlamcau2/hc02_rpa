@@ -153,7 +153,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (isProvisioning && !haveNewMac)
+		if (IsProvision() && !haveNewMac)
 		{
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			haveNewMac = true;
@@ -531,7 +531,7 @@ int BleProtocol::StartScan()
 {
 	LOGD("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
-	isProvisioning = true;
+	// SetProvisioning(true);
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 0);
 	if (rs)
 	{
@@ -544,7 +544,7 @@ int BleProtocol::StopScan()
 {
 	LOGD("StopScan");
 	uint8_t d = HCI_GATEWAY_CMD_STOP;
-	isProvisioning = false;
+	SetProvisioning(false);
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 0);
 	if (rs)
 	{
@@ -584,6 +584,11 @@ bool BleProtocol::IsProvision()
 	return isProvisioning;
 }
 
+void BleProtocol::SetProvisioning(bool isProvision)
+{
+	this->isProvisioning = isProvision;
+}
+
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
@@ -596,17 +601,17 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
 	LOGI("Scan device mac 0x%s, rssi: %i", mac.c_str(), scan_device_message->rssi);
 	int rs = CODE_ERROR;
-	if (isProvisioning && !SelectMac(scan_device_message->mac))
+	if (IsProvision() && !SelectMac(scan_device_message->mac))
 	{
-		if (isProvisioning && !GetNetKey())
+		if (IsProvision() && !GetNetKey())
 		{
-			if (isProvisioning && !Provision(nextAddr))
+			if (IsProvision() && !Provision(nextAddr))
 			{
-				if (isProvisioning && !BindingAll())
+				if (IsProvision() && !BindingAll())
 				{
-					if (isProvisioning && !SetGwAddr(nextAddr, gateway->getBleAddr()))
+					if (IsProvision() && !SetGwAddr(nextAddr, gateway->getBleAddr()))
 					{
-						if (isProvisioning && !GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
+						if (IsProvision() && !GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
 						{
 							deviceType = convertDeviceType(deviceType);
 							Json::Value devKeyJson;
@@ -627,10 +632,12 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 			}
 		}
 	}
-	if (isProvisioning)
+
+	if (IsProvision())
 	{
 		sleep(1);
-		StartScan();
+		if (IsProvision())
+			StartScan();
 	}
 
 	// #ifdef ESP_PLATFORM
