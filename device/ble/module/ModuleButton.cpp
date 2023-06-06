@@ -169,7 +169,7 @@ void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 
 int ModuleButton::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleButton Do data: %s", dataValue.toString().c_str());
+	// LOGD("ModuleButton Do data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();

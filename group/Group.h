@@ -33,9 +33,9 @@ public:
 	int AddDevice(Device *device, int epId, bool sendBle);
 	int DelDevice(Device *device, int epId);
 
-	int Do(Json::Value &dataValue);
+	int Do(Json::Value &dataValue, bool ack);
 	int DoV2(Json::Value &dataValue);
-	void DoBle();
+	void DoBle(bool ack);
 	void DoBleV2();
 	void DoZigbee();
 };

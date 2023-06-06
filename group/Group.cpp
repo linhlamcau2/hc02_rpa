@@ -141,10 +141,10 @@ int Group::DelDevice(Device *device, int epId)
 	return CODE_ERROR;
 }
 
-int Group::Do(Json::Value &dataValue)
+int Group::Do(Json::Value &dataValue, bool ack)
 {
 	this->dataValue = dataValue;
-	DoBle();
+	DoBle(ack);
 #ifdef CONFIG_ENABLE_ZIGBEE
 	DoZigbee();
 #endif
@@ -159,7 +159,7 @@ int Group::DoV2(Json::Value &dataValue)
 	return CODE_OK;
 }
 
-void Group::DoBle()
+void Group::DoBle(bool ack)
 {
 	bool isIdHue = false;
 	bool isIdSaturation = false;
@@ -178,15 +178,15 @@ void Group::DoBle()
 
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(addr + ID_START, value, 5, true);
+					bleProtocol->SetOnOffLight(addr + ID_START, value, 5, ack);
 				}
 				else if (idProperty == 1)
 				{
-					bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, 5, false);
+					bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, 5, ack);
 				}
 				else if (idProperty == 2)
 				{
-					bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, 5, false);
+					bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, 5, ack);
 				}
 				else if (idProperty == 3)
 				{
@@ -219,7 +219,7 @@ void Group::DoBle()
 		}
 		if (isIdHue && isIdLuminance && isIdSaturation)
 		{
-			bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, 5, false);
+			bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, 5, ack);
 		}
 	}
 	else

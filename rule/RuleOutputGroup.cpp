@@ -17,6 +17,6 @@ void RuleOutputGroup::RunOutput()
 {
 	if (group)
 	{
-		group->Do(data);
+		group->Do(data, true);
 	}
 }
