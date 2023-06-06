@@ -169,6 +169,9 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue.append(dataValue);
 }
 
+static uint16_t value_h = 0;
+static uint16_t value_s = 0;
+static uint16_t value_l = 0;
 int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 {
 	// LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
@@ -182,17 +185,17 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 				if (data["ID"].asInt() == BLE_ATTRIBUTE_HUE)
 				{
 					isH = true;
-					h = data["VALUE"].asInt();
+					value_h = data["VALUE"].asInt();
 				}
 				else if (data["ID"].asInt() == BLE_ATTRIBUTE_SATURATION)
 				{
 					isS = true;
-					s = data["VALUE"].asInt();
+					value_s = data["VALUE"].asInt();
 				}
 				else if (data["ID"].asInt() == BLE_ATTRIBUTE_LUMINANCE)
 				{
 					isL = true;
-					l = data["VALUE"].asInt();
+					value_l = data["VALUE"].asInt();
 				}
 			}
 		}
@@ -200,7 +203,7 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 		{
 			if (bleProtocol)
 			{
-				bleProtocol->SetHSLLight(addr, h, s, l, 0, true);
+				bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, 0, true);
 			}
 			else
 				LOGW("BleProtocol null");
@@ -224,17 +227,17 @@ int ModuleHsl::Do(Json::Value &dataValue)
 				if (this->idH == id)
 				{
 					isH = true;
-					h = value;
+					value_h = value;
 				}
 				else if (this->idS == id)
 				{
 					isS = true;
-					s = value;
+					value_s = value;
 				}
 				else if (this->idL == id)
 				{
 					isL = true;
-					l = value;
+					value_l = value;
 				}
 				if (isH && isS && isL)
 				{
@@ -243,7 +246,7 @@ int ModuleHsl::Do(Json::Value &dataValue)
 					isL = false;
 					if (bleProtocol)
 					{
-						bleProtocol->SetHSLLight(addr, h, s, l, 0, true);
+						bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, 0, true);
 					}
 					else
 						LOGW("BleProtocol null");
