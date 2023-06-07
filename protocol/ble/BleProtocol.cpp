@@ -169,7 +169,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			uint8_t data[100];
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)message_rsp->data;
-		LOGD("Device addr 0x%04X", data_message->dev_addr);
+		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
 
 		DeviceBleSwitchScene6ACRgb *sceneAcRgb = gateway->getDeviceBleSceneACByElement(data_message->dev_addr, data_message->data[5]);
@@ -205,6 +205,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			else
 			{
 				LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
+				usleep(50000);
 			}
 		}
 		break;
