@@ -13,6 +13,7 @@
 #include "Wifi.h"
 #include "Ota.h"
 #include "Base64.h"
+#include "Config.h"
 #ifdef ESP_PLATFORM
 #include "Config.h"
 #include "Led.h"
@@ -28,9 +29,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-	  LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
-	  Udp(8181)
+		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
+			LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
+			Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -94,14 +95,13 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 	return NULL;
 }
 
-
 /**
  * Xu ly cho scene touch AC rgb
  * Duoi device khong co nhieu element
  * Tren app sinh nhieu element de dieu khien mau rgb cua nut
  * Gap truong hop cung addr co nhieu deviceId
  * Sinh them button de tim device qua addr va button
-*/
+ */
 DeviceBleSwitchScene6ACRgb *Gateway::getDeviceBleSceneACByElement(uint32_t addr, int button)
 {
 	deviceListMtx.lock();
@@ -297,8 +297,9 @@ void Gateway::init()
 	Udp::init();
 
 	initUdpMessage();
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	initMqttMessage();
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	initMqttMessageV2();
 #endif
 
@@ -499,7 +500,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -1052,8 +1053,8 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 Rule *Gateway::AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
@@ -1569,6 +1570,62 @@ void Gateway::setName(string name)
 {
 }
 
+int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
+		Json::Value dataJsonRsp = Json::objectValue;
+		int status = 0;
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("PASSWD") && dataValue["PASSWD"].isString())
+		{
+			string password = dataValue["PASSWD"].asString();
+			string user = "";
+
+#ifdef ESP_PLATFORM
+			user = "minihub-" + mac;
+#else
+			user = "hc-" + mac;
+#endif
+
+			if (config->SetClientId(user))
+			{
+				if (config->SetUsername(user))
+				{
+					if (config->SetPort(1884))
+					{
+						if (config->SetPassword(password))
+						{
+							status = 1;
+						}
+						else
+						{
+							status = 0;
+						}
+					}
+					else
+					{
+						status = 0;
+					}
+				}
+				else
+				{
+					status = 0;
+				}
+			}
+			else
+			{
+				status = 0;
+			}
+			dataJsonRsp["STATUS"] = status;
+			respValue["DATA"] = dataJsonRsp;
+			return CODE_EXIT;
+		}
+	}
+	return CODE_ERROR;
+}
+
 void Gateway::DelAllDevice()
 {
 	deviceListMtx.lock();
@@ -1677,11 +1734,11 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isString() &&
-		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1700,7 +1757,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-				timeValue.isMember("end") && timeValue["end"].isString())
+					timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1727,7 +1784,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 		{
 			Json::Value timerValue = inputValue["timer"];
 			if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-				timerValue.isMember("time") && timerValue["time"].isString())
+					timerValue.isMember("time") && timerValue["time"].isString())
 			{
 				int repeat = timerValue["repeat"].asInt();
 				string timerStr = timerValue["time"].asString();
@@ -1749,7 +1806,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue)
 				if (deviceRuleInputValue.isObject())
 				{
 					if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-						deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 					{
 						string id = deviceRuleInputValue["id"].asString();
 						Json::Value dataValue = deviceRuleInputValue["data"];

@@ -105,7 +105,10 @@ private:
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	
+	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	// Mqtt message handle
 	void initMqttMessage();
 	int OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
@@ -118,11 +121,6 @@ private:
 	int OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue);
 
-#ifdef CONFIG_ENABLE_ZIGBEE
-	int OnRpcZigbeeStartScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcZigbeeStopScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcZigbeeResetFactory(Json::Value &reqValue, Json::Value &respValue);
-#endif
 	int OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
@@ -185,15 +183,12 @@ private:
 	int OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue);
 
-	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
-
 	int OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue);
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	// Mqtt V2 message handle
 	void initMqttMessageV2();
 	// Bản tin điều khiển

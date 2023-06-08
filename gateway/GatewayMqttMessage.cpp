@@ -1,3 +1,4 @@
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 #include <fstream>
 #include <algorithm>
 #include "Gateway.h"
@@ -3389,62 +3390,6 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_NOT_RESPONSE;
 }
 
-int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
-{
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
-	{
-		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
-		Json::Value dataJsonRsp = Json::objectValue;
-		int status = 0;
-		Json::Value dataValue = reqValue["DATA"];
-		if (dataValue.isMember("PASSWD") && dataValue["PASSWD"].isString())
-		{
-			string password = dataValue["PASSWD"].asString();
-			string user = "";
-
-#ifdef ESP_PLATFORM
-			user = "minihub-" + mac;
-#else
-			user = "hc-" + mac;
-#endif
-
-			if (config->SetClientId(user))
-			{
-				if (config->SetUsername(user))
-				{
-					if (config->SetPort(1884))
-					{
-						if (config->SetPassword(password))
-						{
-							status = 1;
-						}
-						else
-						{
-							status = 0;
-						}
-					}
-					else
-					{
-						status = 0;
-					}
-				}
-				else
-				{
-					status = 0;
-				}
-			}
-			else
-			{
-				status = 0;
-			}
-			dataJsonRsp["STATUS"] = status;
-			respValue["DATA"] = dataJsonRsp;
-			return CODE_EXIT;
-		}
-	}
-	return CODE_ERROR;
-}
-
 int Gateway::OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue)
 {
 	int err = 0;
@@ -3771,3 +3716,5 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 	}
 	return CODE_ERROR;
 }
+
+#endif
