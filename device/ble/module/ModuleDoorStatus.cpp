@@ -29,7 +29,7 @@ void ModuleDoorStatus::SaveAttribute()
 }
 #endif
 
-int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -45,7 +45,7 @@ int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue, 
 	return CODE_ERROR;
 }
 
-int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
 	{
@@ -61,12 +61,12 @@ bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -105,15 +105,12 @@ void ModuleDoorStatus::CheckTrigger()
 
 void ModuleDoorStatus::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_DOOR] = status;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = status;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleDoorStatus::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_DOOR] = status;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

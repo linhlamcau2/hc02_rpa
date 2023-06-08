@@ -29,7 +29,7 @@ void ModuleTimeActionPir::SaveAttribute()
 }
 #endif
 
-int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -45,7 +45,7 @@ int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValu
 	return CODE_ERROR;
 }
 
-int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x03)
 	{
@@ -61,12 +61,12 @@ bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -104,17 +104,33 @@ void ModuleTimeActionPir::CheckTrigger()
 
 void ModuleTimeActionPir::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = time;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
 	LOGV("ModuleTimeActionPir Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
+	{
+		int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
+		if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)
+		{
+			this->time = time;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
@@ -129,28 +145,10 @@ int ModuleTimeActionPir::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleTimeActionPir::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
-}
-
-int ModuleTimeActionPir::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
+#endif
+	else
 	{
-		int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
-		if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)
-		{
-			this->time = time;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

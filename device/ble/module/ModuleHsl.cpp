@@ -48,7 +48,7 @@ void ModuleHsl::SaveAttribute()
 }
 #endif
 
-int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -72,7 +72,7 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::V
 	return CODE_ERROR;
 }
 
-int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -90,9 +90,6 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			h = data_message->h;
 			s = data_message->s;
 			BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-			BuildTelemetryValueV2(jsonValueV2);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
@@ -107,13 +104,13 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idS == id || this->idL == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -157,6 +154,11 @@ void ModuleHsl::CheckTrigger()
 
 void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_HUE] = h;
+	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
+	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = idH;
 	dataValue["VALUE"] = h;
@@ -167,6 +169,7 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idL;
 	dataValue["VALUE"] = l;
 	jsonValue.append(dataValue);
+#endif
 }
 
 static uint16_t value_h = 0;
@@ -215,8 +218,26 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 int ModuleHsl::Do(Json::Value &dataValue)
 {
 	// LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+	{
+		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+		if (bleProtocol->SetHSLLight(addr, h, s, l, 0, true) == CODE_OK)
+		{
+			this->h = h;
+			this->s = s;
+			this->l = l;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idL == id || this->idS == id)
@@ -255,37 +276,10 @@ int ModuleHsl::Do(Json::Value &dataValue)
 			}
 		}
 	}
-
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleHsl::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_HUE] = h;
-	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
-	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
-}
-
-int ModuleHsl::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-		dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-		dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+#endif
+	else
 	{
-		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		if (bleProtocol->SetHSLLight(addr, h, s, l, 0, true) == CODE_OK)
-		{
-			this->h = h;
-			this->s = s;
-			this->l = l;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

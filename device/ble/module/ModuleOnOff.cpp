@@ -30,7 +30,7 @@ void ModuleOnOff::SaveAttribute()
 }
 #endif
 
-int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValue2)
+int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -46,7 +46,7 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json:
 	return CODE_ERROR;
 }
 
-int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -69,9 +69,6 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json:
 		SaveAttribute();
 #endif
 		BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-		BuildTelemetryValueV2(jsonValueV2);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 		CheckTrigger();
 		return CODE_OK;
 	}
@@ -82,12 +79,12 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -115,8 +112,8 @@ bool ModuleOnOff::CheckDataV2(Json::Value &dataValue, bool &rs)
 {
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("op") && dataValue["op"].isString() &&
-		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
+			dataValue.isMember("op") && dataValue["op"].isString() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
@@ -143,21 +140,37 @@ void ModuleOnOff::CheckTrigger()
 
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = onoff;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	// LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+	{
+		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+		{
+			this->onoff = onoff;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			if (bleProtocol)
@@ -169,28 +182,10 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleOnOff::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
-}
-
-int ModuleOnOff::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+#endif
+	else
 	{
-		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
-		{
-			this->onoff = onoff;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

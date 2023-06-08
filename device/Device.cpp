@@ -149,11 +149,9 @@ int Device::PushTelemetry()
 	return CODE_ERROR;
 }
 
-int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
+int Device::PushTelemetry(Json::Value &jsonValue)
 {
-	if (jsonValue.isNull() && jsonValueV2.isNull())
-		return -1;
-	if (jsonValue.isNull() == 0)
+	if (!jsonValue.isNull())
 	{
 		Json::Value pushDataValue;
 		Json::Value deviceData;
@@ -167,22 +165,9 @@ int Device::PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2)
 		pushDataValue["DATA"].append(deviceData);
 		gateway->PublishToLocalMessage(pushDataValue);
 		gateway->PublishToGatewayTelemetry(pushDataValue);
+		return CODE_OK;
 	}
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	if (jsonValueV2.isNull() == 0)
-	{
-		Json::Value pushDataValue;
-		Json::Value deviceData;
-		Json::Value devices;
-		Json::Value device;
-		deviceData["id"] = id;
-		deviceData["data"] = jsonValueV2;
-		devices["device"].append(deviceData);
-		pushDataValue["data"] = devices;
-		gateway->pushDeviceUpdateLocalV2(devices);
-	}
-#endif
-	return 1;
+	return CODE_ERROR;
 }
 
 int Device::PushAttributes()
@@ -197,7 +182,7 @@ int Device::PushAttributes()
 	return CODE_ERROR;
 }
 
-int Device::PushAttributes(Json::Value jsonValue)
+int Device::PushAttributes(Json::Value &jsonValue)
 {
 	if (jsonValue.isNull())
 		return CODE_ERROR;
@@ -232,21 +217,3 @@ string Device::ConvertDeviceTypeToName(uint32_t type)
 {
 	return typeToNameList[type];
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-int Device::DoJsonArrayV2(Json::Value &dataValue)
-{
-	if (dataValue.isArray())
-	{
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
-		{
-			DoV2(dataValue[i]);
-		}
-	}
-	else
-	{
-		DoV2(dataValue);
-	}
-	return CODE_OK;
-}
-#endif

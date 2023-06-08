@@ -31,7 +31,7 @@ void ModulePirSensor::SaveAttribute()
 }
 #endif
 
-int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -47,7 +47,7 @@ int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue, J
 	return CODE_ERROR;
 }
 
-int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x05 && data[2] == 0x00)
 	{
@@ -148,15 +148,12 @@ void ModulePirSensor::CheckTrigger()
 
 void ModulePirSensor::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = pir;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModulePirSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

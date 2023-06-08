@@ -19,8 +19,5 @@ void RuleOutputDevice::RunOutput()
 	{
 		sleep(delayTime);
 		device->DoJsonArray(data);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-		device->DoJsonArrayV2(data);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 	}
 }

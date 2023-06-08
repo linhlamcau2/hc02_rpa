@@ -16,7 +16,7 @@ ModuleNotifyScene::~ModuleNotifyScene()
 {
 }
 
-int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	idScene = 0;
 	typedef struct __attribute__((packed))

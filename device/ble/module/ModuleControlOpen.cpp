@@ -28,7 +28,7 @@ void ModuleControlOpen::SaveAttribute()
 }
 #endif
 
-int ModuleControlOpen::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleControlOpen::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -44,7 +44,7 @@ int ModuleControlOpen::InputData(Json::Value &dataValue, Json::Value &jsonValue,
 	return CODE_ERROR;
 }
 
-int ModuleControlOpen::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleControlOpen::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -55,7 +55,7 @@ int ModuleControlOpen::InputData(uint8_t *data, int len, Json::Value &jsonValue,
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 	if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == OPEN)) ||
-		(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == OPEN))
+			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == OPEN))
 	{
 		value = 1;
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -72,12 +72,12 @@ bool ModuleControlOpen::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -115,46 +115,22 @@ void ModuleControlOpen::CheckTrigger()
 
 void ModuleControlOpen::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_CURTAIN_OPEN] = value;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = value;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleControlOpen::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int percent = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-			{
-				bleProtocol->ControlOpenClosePausePercent(addr, OPEN);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-	return CODE_ERROR;
-}
-
+	LOGD("ModuleControlOpen Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleControlOpen::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_CURTAIN_OPEN] = value;
-}
-
-int ModuleControlOpen::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].asInt();
 		if (value)
@@ -166,6 +142,28 @@ int ModuleControlOpen::DoV2(Json::Value &dataValue)
 			}
 		}
 	}
+#else
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int percent = dataValue["VALUE"].asInt();
+			if (bleProtocol)
+			{
+				bleProtocol->ControlOpenClosePausePercent(addr, OPEN);
+			}
+			else
+				LOGW("BleProtocol null");
+			return CODE_OK;
+		}
+	}
+#endif
+	else
+	{
+		LOGW("Message format error");
+	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

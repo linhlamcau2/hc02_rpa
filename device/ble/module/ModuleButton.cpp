@@ -51,7 +51,7 @@ void ModuleButton::SaveAttribute()
 // 	return CODE_ERROR;
 // }
 
-int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -114,13 +114,13 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t bt = 0, mode = 0;
 				string op = dataValue["OP"].asString();
@@ -161,15 +161,31 @@ void ModuleButton::CheckTrigger()
 
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[key] = bt;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = bt;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleButton::Do(Json::Value &dataValue)
 {
 	// LOGD("ModuleButton Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
+	{
+		int bt = dataValue[key].asInt();
+		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
+		{
+			this->bt = bt;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
@@ -183,28 +199,10 @@ int ModuleButton::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleButton::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[key] = bt;
-}
-
-int ModuleButton::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(key) && dataValue[key].isInt())
+#endif
+	else
 	{
-		int bt = dataValue[key].asInt();
-		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
-		{
-			this->bt = bt;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

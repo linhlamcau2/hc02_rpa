@@ -34,7 +34,7 @@ void ModuleSmoke::SaveAttribute()
 }
 #endif
 
-int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -54,7 +54,7 @@ int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json:
 	return CODE_ERROR;
 }
 
-int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x08 && data[2] == 0x01)
 	{
@@ -121,6 +121,10 @@ void ModuleSmoke::CheckTrigger()
 
 void ModuleSmoke::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_SMOKE] = smoke;
+	jsonValue[KEY_ATTRIBUTE_SMOKE_PIN] = power;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = idSmoke;
 	dataValue["VALUE"] = smoke;
@@ -128,12 +132,5 @@ void ModuleSmoke::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idPower;
 	dataValue["VALUE"] = power;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleSmoke::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_SMOKE] = smoke;
-	jsonValue[KEY_ATTRIBUTE_SMOKE_PIN] = power;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

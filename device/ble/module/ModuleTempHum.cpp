@@ -34,7 +34,7 @@ void ModuleTempHum::SaveAttribute()
 }
 #endif
 
-int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -54,7 +54,7 @@ int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue, Jso
 	return CODE_ERROR;
 }
 
-int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	// if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
 	// {
@@ -161,6 +161,10 @@ void ModuleTempHum::CheckTrigger()
 
 void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_TEMP] = temp;
+	jsonValue[KEY_ATTRIBUTE_HUMIDITY] = hum;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = idTemp;
 	dataValue["VALUE"] = temp;
@@ -168,12 +172,5 @@ void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idHum;
 	dataValue["VALUE"] = hum;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleTempHum::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_TEMP] = temp;
-	jsonValue[KEY_ATTRIBUTE_HUMIDITY] = hum;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

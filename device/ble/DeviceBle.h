@@ -32,9 +32,4 @@ public:
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 
 	virtual int Do(Json::Value &dataValue);
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue);
-	virtual int DoV2(Json::Value &dataValue);
-#endif
 };

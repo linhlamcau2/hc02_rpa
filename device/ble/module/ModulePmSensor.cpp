@@ -39,7 +39,7 @@ void ModulePmSensor::SaveAttribute()
 }
 #endif
 
-int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -63,7 +63,7 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue, Js
 	return CODE_ERROR;
 }
 
-int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x07 && data[2] == 0x02)
 	{
@@ -139,6 +139,11 @@ void ModulePmSensor::CheckTrigger()
 
 void ModulePmSensor::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_PM2_5] = pm25;
+	jsonValue[KEY_ATTRIBUTE_PM10] = pm10;
+	jsonValue[KEY_ATTRIBUTE_PM1_0] = pm1_0;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = idPm25;
 	dataValue["VALUE"] = pm25;
@@ -149,13 +154,5 @@ void ModulePmSensor::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idPm1_0;
 	dataValue["VALUE"] = pm1_0;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModulePmSensor::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_PM2_5] = pm25;
-	jsonValue[KEY_ATTRIBUTE_PM10] = pm10;
-	jsonValue[KEY_ATTRIBUTE_PM1_0] = pm1_0;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

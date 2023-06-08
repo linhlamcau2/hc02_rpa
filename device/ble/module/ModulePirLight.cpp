@@ -36,7 +36,7 @@ void ModulePirLight::SaveAttribute()
 }
 #endif
 
-int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -58,7 +58,7 @@ int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue, Js
 	return CODE_ERROR;
 }
 
-int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x05 && data[2] == 0x00)
 	{
@@ -166,6 +166,10 @@ void ModulePirLight::CheckTrigger()
 
 void ModulePirLight::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
+	jsonValue[KEY_ATTRIBUTE_LUX] = lux;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = idPir;
 	dataValue["VALUE"] = pir;
@@ -173,12 +177,5 @@ void ModulePirLight::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idLux;
 	dataValue["VALUE"] = lux;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModulePirLight::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_PIR] = pir;
-	jsonValue[KEY_ATTRIBUTE_LUX] = lux;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

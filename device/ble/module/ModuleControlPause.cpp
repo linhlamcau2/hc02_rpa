@@ -29,7 +29,7 @@ void ModuleControlPause::SaveAttribute()
 }
 #endif
 
-int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -45,7 +45,7 @@ int ModuleControlPause::InputData(Json::Value &dataValue, Json::Value &jsonValue
 	return CODE_ERROR;
 }
 
-int ModuleControlPause::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleControlPause::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -72,12 +72,12 @@ bool ModuleControlPause::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -115,46 +115,22 @@ void ModuleControlPause::CheckTrigger()
 
 void ModuleControlPause::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_CURTAIN_PAUSE] = value;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = value;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleControlPause::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int percent = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-			{
-				bleProtocol->ControlOpenClosePausePercent(addr, PAUSE);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-	return CODE_ERROR;
-}
-
+	LOGD("ModuleControlPause Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleControlPause::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_CURTAIN_PAUSE] = value;
-}
-
-int ModuleControlPause::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_PAUSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_PAUSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].isInt())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].asInt();
 		if (value)
@@ -166,6 +142,28 @@ int ModuleControlPause::DoV2(Json::Value &dataValue)
 			}
 		}
 	}
+#else
+	if (dataValue.isObject() &&
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
+	{
+		int id = dataValue["ID"].asInt();
+		if (this->id == id &&
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+		{
+			int percent = dataValue["VALUE"].asInt();
+			if (bleProtocol)
+			{
+				bleProtocol->ControlOpenClosePausePercent(addr, PAUSE);
+			}
+			else
+				LOGW("BleProtocol null");
+			return CODE_OK;
+		}
+	}
+#endif
+	else
+	{
+		LOGW("Message format error");
+	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -29,7 +29,7 @@ void ModuleDim::SaveAttribute()
 }
 #endif
 
-int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -45,7 +45,7 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::V
 	return CODE_ERROR;
 }
 
-int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -62,9 +62,6 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			{
 				dim = data_message->dim_first;
 				BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-				BuildTelemetryValueV2(jsonValueV2);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 			}
 		}
 		else
@@ -73,9 +70,6 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::V
 			{
 				dim = data_message->dim;
 				BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-				BuildTelemetryValueV2(jsonValueV2);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 			}
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -91,12 +85,12 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t dim1 = 0, dim2 = 0;
 			string op = dataValue["OP"].asString();
@@ -134,21 +128,38 @@ void ModuleDim::CheckTrigger()
 
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_DIM] = dim * 100 / 65535;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = (dim * 100) / 65535;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleDim::Do(Json::Value &dataValue)
 {
 	// LOGD("ModuleDim Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+	{
+		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+		uint16_t value = (dim * 65535) / 100;
+		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+		{
+			this->dim = dim;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t dim = (value * 65535) / 100;
@@ -161,29 +172,10 @@ int ModuleDim::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleDim::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_DIM] = dim * 100 / 65535;
-}
-
-int ModuleDim::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+#endif
+	else
 	{
-		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		uint16_t value = (dim * 65535) / 100;
-		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
-		{
-			this->dim = dim;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -30,7 +30,7 @@ public:
 	void SaveAttribute();
 #endif
 
-	int InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2);
+	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
 	/**
 	 * @brief Parse raw data to element parameter value
@@ -41,7 +41,7 @@ public:
 	 * @return true if data include this element opcode
 	 * @return false
 	 */
-	int InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2);
+	int InputData(uint8_t *data, int len, Json::Value &jsonValue);
 
 	/**
 	 * @brief Check rule input

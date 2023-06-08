@@ -1722,7 +1722,7 @@ void Gateway::AddAllDeviceStatusV2(Json::Value &dataValue)
 		Json::Value deviceValue;
 		deviceValue["id"] = device->GetId();
 		Json::Value deviceAttbute;
-		device->BuildTelemetryValueV2(deviceAttbute);
+		device->BuildTelemetryValue(deviceAttbute);
 		deviceValue["data"] = deviceAttbute;
 		dataValue.append(deviceValue);
 	}

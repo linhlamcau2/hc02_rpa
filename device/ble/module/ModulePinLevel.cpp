@@ -29,7 +29,7 @@ void ModulePinLevel::SaveAttribute()
 }
 #endif
 
-int ModulePinLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePinLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -45,7 +45,7 @@ int ModulePinLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue, Js
 	return CODE_ERROR;
 }
 
-int ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModulePinLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x01 && data[2] == 0x00)
 	{
@@ -107,15 +107,12 @@ void ModulePinLevel::CheckTrigger()
 
 void ModulePinLevel::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_BATTERY] = pin;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = pin;
 	jsonValue.append(dataValue);
+#endif
 }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModulePinLevel::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_BATTERY] = pin;
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -94,7 +94,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 		Device *device = getDeviceFromId(deviceId);
 		if (device)
 		{
-			int rs = device->DoV2(devData);
+			int rs = device->Do(devData);
 			respValue["data"]["code"] = rs;
 		}
 		else
@@ -237,7 +237,7 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 					Json::Value deviceValue;
 					deviceValue["id"] = device->GetId();
 					Json::Value deviceAttbute;
-					device->BuildTelemetryValueV2(deviceAttbute);
+					device->BuildTelemetryValue(deviceAttbute);
 					deviceValue["data"] = deviceAttbute;
 					devicesData.append(deviceValue);
 				}

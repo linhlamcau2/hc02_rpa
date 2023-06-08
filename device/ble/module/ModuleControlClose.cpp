@@ -14,7 +14,6 @@ ModuleControlClose::ModuleControlClose(Device *device, uint32_t addr) : Module(d
 
 ModuleControlClose::~ModuleControlClose()
 {
-	
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -30,7 +29,7 @@ void ModuleControlClose::SaveAttribute()
 }
 #endif
 
-int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -46,7 +45,7 @@ int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue
 	return CODE_ERROR;
 }
 
-int ModuleControlClose::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleControlClose::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -56,8 +55,8 @@ int ModuleControlClose::InputData(uint8_t *data, int len, Json::Value &jsonValue
 		uint8_t type;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == CLOSE)) || 
-	(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CLOSE))
+	if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == CLOSE)) ||
+			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CLOSE))
 	{
 		value = 1;
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -117,15 +116,34 @@ void ModuleControlClose::CheckTrigger()
 
 void ModuleControlClose::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_CURTAIN_CLOSE] = value;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = value;
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ModuleControlClose::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleControl Percent Do data: %s", dataValue.toString().c_str());
+	LOGD("ModuleControlClose Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_CLOSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].isInt())
+	{
+		int value = dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].asInt();
+		if (value)
+		{
+			if (bleProtocol->ControlOpenClosePausePercent(addr, CLOSE) == CODE_OK)
+			{
+				this->value = value;
+				return CODE_OK;
+			}
+		}
+	}
+#else
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -143,31 +161,10 @@ int ModuleControlClose::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleControlClose::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[KEY_ATTRIBUTE_CURTAIN_CLOSE] = value;
-}
-
-int ModuleControlClose::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_CLOSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].isInt())
+#endif
+	else
 	{
-		int value = dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].asInt();
-		if (value)
-		{
-			if (bleProtocol->ControlOpenClosePausePercent(addr, CLOSE) == CODE_OK)
-			{
-				this->value = value;
-				return CODE_OK;
-			}
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

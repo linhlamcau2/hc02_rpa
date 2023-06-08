@@ -67,7 +67,7 @@ void ModuleRgb::SaveAttribute()
 }
 #endif
 
-int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -95,7 +95,7 @@ int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::V
 	return CODE_ERROR;
 }
 
-int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -131,13 +131,13 @@ bool ModuleRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idR == id || this->idG == id || this->idB == id || this->idDimOn == id || this->idDimOff == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+					dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -186,6 +186,13 @@ void ModuleRgb::CheckTrigger()
 
 void ModuleRgb::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[keyR] = r;
+	jsonValue[keyG] = g;
+	jsonValue[keyB] = b;
+	jsonValue[keyDimOn] = dimOn;
+	jsonValue[keyDimOff] = dimOff;
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = idR;
 	dataValue["VALUE"] = r;
@@ -202,12 +209,37 @@ void ModuleRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idDimOff;
 	dataValue["VALUE"] = dimOff;
 	jsonValue.append(dataValue);
+#endif
 }
 
 // TODO: viet anh recheck DoJsonArray
 int ModuleRgb::Do(Json::Value &dataValue)
 {
 	LOGD("Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+	{
+		int r = dataValue[keyR].asInt();
+		int g = dataValue[keyG].asInt();
+		int b = dataValue[keyB].asInt();
+		int dimOn = dataValue[keyDimOn].asInt();
+		int dimOff = dataValue[keyDimOff].asInt();
+		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+		{
+			this->r = r;
+			this->g = g;
+			this->b = b;
+			this->dimOn = dimOn;
+			this->dimOff = dimOff;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject())
 	{
 		if (dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
@@ -248,44 +280,10 @@ int ModuleRgb::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ModuleRgb::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	jsonValue[keyR] = r;
-	jsonValue[keyG] = g;
-	jsonValue[keyB] = b;
-	jsonValue[keyDimOn] = dimOn;
-	jsonValue[keyDimOff] = dimOff;
-}
-
-int ModuleRgb::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
-		dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
-		dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
-		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+#endif
+	else
 	{
-		int r = dataValue[keyR].asInt();
-		int g = dataValue[keyG].asInt();
-		int b = dataValue[keyB].asInt();
-		int dimOn = dataValue[keyDimOn].asInt();
-		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
-		{
-			this->r = r;
-			this->g = g;
-			this->b = b;
-			this->dimOn = dimOn;
-			this->dimOff = dimOff;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

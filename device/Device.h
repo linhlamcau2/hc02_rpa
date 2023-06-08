@@ -151,8 +151,7 @@ protected:
 	int rssi;
 	protocol_e protocol;
 	string data;
-	Json::Value values; // telemetry data
-	Json::Value valuesV2;
+	Json::Value values;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -195,9 +194,9 @@ public:
 	virtual int DoJsonArray(Json::Value &dataValue);
 
 	int PushTelemetry();
-	int PushTelemetry(Json::Value jsonValue, Json::Value jsonValueV2);
+	int PushTelemetry(Json::Value &jsonValue);
 	int PushAttributes();
-	int PushAttributes(Json::Value jsonValue);
+	int PushAttributes(Json::Value &jsonValue);
 
 	static void InitDeviceModelList();
 	static void RegisterDeviceModel(uint32_t type, string model, string name);
@@ -212,10 +211,4 @@ public:
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	virtual int DoJsonArrayV2(Json::Value &dataValue);
-	virtual int BuildTelemetryValueV2(Json::Value &pushDataValue) { return CODE_ERROR; }
-	virtual int DoV2(Json::Value &dataValue) { return CODE_ERROR; }
-#endif
 };

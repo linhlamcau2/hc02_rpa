@@ -29,7 +29,7 @@ void ElementCct::SaveAttribute()
 }
 #endif
 
-int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -46,7 +46,7 @@ int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue, Json::
 	return CODE_ERROR;
 }
 
-int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::Value &jsonValueV2)
+int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -64,9 +64,6 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 			{
 				cct = data_message->cct_first;
 				BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-				BuildTelemetryValueV2(jsonValueV2);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 			}
 		}
 		else
@@ -75,9 +72,6 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue, Json::
 			{
 				cct = data_message->cct;
 				BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-				BuildTelemetryValueV2(jsonValueV2);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 			}
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -93,12 +87,12 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-			dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t cct1 = 0, cct2 = 0;
 			string op = dataValue["OP"].asString();
@@ -137,21 +131,38 @@ void ElementCct::CheckTrigger()
 
 void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
+#else
 	Json::Value dataValue;
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = ((cct - 800) / 192);
 	jsonValue.append(dataValue);
+#endif
 }
 
 int ElementCct::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (bleProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+	{
+		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		uint16_t value = (cct * 192) + 800;
+		if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
+		{
+			this->cct = cct;
+			return CODE_OK;
+		}
+	}
+#else
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t cct = (value * 192) + 800;
@@ -162,36 +173,10 @@ int ElementCct::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-	return CODE_ERROR;
-}
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-void ElementCct::BuildTelemetryValueV2(Json::Value &jsonValue)
-{
-	if (cct >= 800)
-	{
-		jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
-	}
+#endif
 	else
 	{
-		jsonValue[KEY_ATTRIBUTE_CCT] = cct;
-	}
-}
-
-int ElementCct::DoV2(Json::Value &dataValue)
-{
-	LOGV("DoV2 data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
-	{
-		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		uint16_t value = (cct * 192) + 800;
-		if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
-		{
-			this->cct = cct;
-			return CODE_OK;
-		}
+		LOGW("Message format error");
 	}
 	return CODE_ERROR;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
