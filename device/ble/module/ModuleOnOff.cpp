@@ -181,9 +181,5 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 		}
 	}
 #endif
-	else
-	{
-		LOGW("Message format error");
-	}
 	return CODE_ERROR;
 }

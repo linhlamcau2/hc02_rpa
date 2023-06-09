@@ -153,6 +153,17 @@ int Device::PushTelemetry(Json::Value &jsonValue)
 {
 	if (!jsonValue.isNull())
 	{
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+		Json::Value deviceData;
+		Json::Value devicesData;
+		Json::Value dataValue;
+		deviceData["id"] = id;
+		deviceData["data"] = jsonValue;
+		devicesData.append(deviceData);
+		dataValue["device"] = devicesData;
+		gateway->pushDeviceUpdateLocalV2(dataValue);
+		gateway->pushDeviceUpdateCloudV2(dataValue);
+#else
 		Json::Value pushDataValue;
 		Json::Value deviceData;
 		Json::Value onLine;
@@ -165,6 +176,7 @@ int Device::PushTelemetry(Json::Value &jsonValue)
 		pushDataValue["DATA"].append(deviceData);
 		gateway->LocalPublish(pushDataValue);
 		gateway->CloudPublish(pushDataValue);
+#endif
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -184,9 +196,9 @@ int Device::PushAttributes()
 
 int Device::PushAttributes(Json::Value &jsonValue)
 {
-	if (jsonValue.isNull())
-		return CODE_ERROR;
-	return gateway->CloudPublish(jsonValue);
+	if (!jsonValue.isNull())
+		return gateway->CloudPublish(jsonValue);
+	return CODE_ERROR;
 }
 
 // TODO: remove

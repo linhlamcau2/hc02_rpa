@@ -459,6 +459,14 @@ int Gateway::CheckOnlineThread()
 	time_t oldTime = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	Json::Value devicesData;
+	Json::Value onlineValue;
+	Json::Value offlineValue;
+	offlineValue["stt"] = 0;
+	onlineValue["stt"] = 1;
+#else
 	Json::Value onlineValue;
 	Json::Value datasValue;
 	Json::Value dataValue;
@@ -472,6 +480,7 @@ int Gateway::CheckOnlineThread()
 	datasValue.append(dataValue);
 	onlineValue["CMD"] = "DEVICE";
 	onlineValue["DATA"] = datasValue;
+#endif
 
 	while (!bleProtocol)
 	{
@@ -530,6 +539,9 @@ int Gateway::CheckOnlineThread()
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			// deviceListMtx.lock();
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+			devicesData = Json::Value::null;
+#endif
 			allTimeCheck = deviceList.size() * 4;
 			for (const auto &[id, device] : deviceList)
 			{
@@ -602,15 +614,34 @@ int Gateway::CheckOnlineThread()
 						// send device state to server
 						if (deviceStateChange)
 						{
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+							Json::Value deviceData;
+							deviceData["id"] = device->GetId();
+							if (device->lastOnlineState)
+								deviceData["data"] = onlineValue;
+							else
+								deviceData["data"] = offlineValue;
+							devicesData.append(deviceData);
+#else
 							onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
 							onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
 							LocalPublish(onlineValue);
 							CloudPublish(onlineValue);
+#endif
 						}
 					}
 				}
 			}
 			// deviceListMtx.unlock();
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+			if (!devicesData.isNull())
+			{
+				Json::Value dataValue;
+				dataValue["device"] = devicesData;
+				gateway->pushDeviceUpdateLocalV2(dataValue);
+				gateway->pushDeviceUpdateCloudV2(dataValue);
+			}
+#endif
 		}
 		usleep(500000);
 	}
