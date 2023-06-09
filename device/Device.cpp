@@ -144,7 +144,7 @@ int Device::PushTelemetry()
 	int build = BuildTelemetryValue(pushData);
 	if (build == 0)
 	{
-		return gateway->PublishToGatewayTelemetry(pushData);
+		return gateway->CloudPublish(pushData);
 	}
 	return CODE_ERROR;
 }
@@ -163,8 +163,8 @@ int Device::PushTelemetry(Json::Value &jsonValue)
 		deviceData["PROPERTIES"] = jsonValue;
 		pushDataValue["CMD"] = "DEVICE";
 		pushDataValue["DATA"].append(deviceData);
-		gateway->PublishToLocalMessage(pushDataValue);
-		gateway->PublishToGatewayTelemetry(pushDataValue);
+		gateway->LocalPublish(pushDataValue);
+		gateway->CloudPublish(pushDataValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -177,7 +177,7 @@ int Device::PushAttributes()
 	int build = BuildAttributesValue(pushData);
 	if (build == 0)
 	{
-		return gateway->PublishToGatewayAttributes(pushData);
+		return gateway->CloudPublish(pushData);
 	}
 	return CODE_ERROR;
 }
@@ -186,7 +186,7 @@ int Device::PushAttributes(Json::Value &jsonValue)
 {
 	if (jsonValue.isNull())
 		return CODE_ERROR;
-	return gateway->PublishToGatewayAttributes(jsonValue);
+	return gateway->CloudPublish(jsonValue);
 }
 
 // TODO: remove

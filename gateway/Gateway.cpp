@@ -604,8 +604,8 @@ int Gateway::CheckOnlineThread()
 						{
 							onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
 							onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
-							PublishToLocalMessage(onlineValue);
-							PublishToGatewayTelemetry(onlineValue);
+							LocalPublish(onlineValue);
+							CloudPublish(onlineValue);
 						}
 					}
 				}
@@ -781,9 +781,9 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
 #ifdef CONFIG_USE_OLD_APP
-	PublishToLocalMessage(jsonValue);
+	LocalPublish(jsonValue);
 #else
-	PublishToDeviceTelemetry(jsonValue);
+	CloudPublish(jsonValue);
 #endif
 
 #ifdef CONFIG_USE_OLD_APP
@@ -795,7 +795,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
 		dataValue["BUTTON_ID"] = 12;
 		jsonValue["DATA"] = dataValue;
-		PublishToLocalMessage(jsonValue);
+		LocalPublish(jsonValue);
 	}
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3)
 	{
@@ -806,7 +806,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-			PublishToLocalMessage(jsonValue);
+			LocalPublish(jsonValue);
 		}
 	}
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_4)
@@ -818,7 +818,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-			PublishToLocalMessage(jsonValue);
+			LocalPublish(jsonValue);
 		}
 	}
 	else if (scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB || scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
@@ -830,7 +830,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-			PublishToLocalMessage(jsonValue);
+			LocalPublish(jsonValue);
 		}
 	}
 #endif
