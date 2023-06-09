@@ -101,7 +101,7 @@ bool ModuleSmoke::CheckData(Json::Value &dataValue, bool &rs)
 					value1 = listValue[0].asInt();
 				}
 
-				rs = Util::CompareNumber(this->smoke, value1, value2, op);
+				rs = Util::CompareNumber(op, this->smoke, value1, value2);
 				return true;
 			}
 		}

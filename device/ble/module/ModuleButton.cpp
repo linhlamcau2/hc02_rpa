@@ -139,7 +139,7 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 						bt = listValue[0].asInt();
 					}
 					if (this->id == id)
-						rs = Util::CompareNumber(this->bt, bt, mode, op);
+						rs = Util::CompareNumber(op, this->bt, bt, mode);
 					return true;
 				}
 			}

@@ -84,7 +84,7 @@ bool ModuleDoorHangOn::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					value1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->hangOn, value1, value2, op);
+				rs = Util::CompareNumber(op, this->hangOn, value1, value2);
 				return true;
 			}
 		}

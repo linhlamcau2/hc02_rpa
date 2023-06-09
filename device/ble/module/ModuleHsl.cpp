@@ -129,11 +129,11 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 						value1 = listValue[0].asInt();
 					}
 					if (this->idH == id)
-						rs = Util::CompareNumber(this->h, value1, value2, op);
+						rs = Util::CompareNumber(op, this->h, value1, value2);
 					else if (this->idS == id)
-						rs = Util::CompareNumber(this->h, value1, value2, op);
+						rs = Util::CompareNumber(op, this->h, value1, value2);
 					else if (this->idL == id)
-						rs = Util::CompareNumber(this->h, value1, value2, op);
+						rs = Util::CompareNumber(op, this->h, value1, value2);
 					return true;
 				}
 			}

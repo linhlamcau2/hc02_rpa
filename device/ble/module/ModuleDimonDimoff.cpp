@@ -122,9 +122,9 @@ bool ModuleDimonDimoff::CheckData(Json::Value &dataValue, bool &rs)
 						value1 = listValue[0].asInt();
 					}
 					if (this->idDimOn == id)
-						rs = Util::CompareNumber(this->dimOn, value1, value2, op);
+						rs = Util::CompareNumber(op, this->dimOn, value1, value2);
 					else if (this->idDimOff == id)
-						rs = Util::CompareNumber(this->dimOff, value1, value2, op);
+						rs = Util::CompareNumber(op, this->dimOff, value1, value2);
 					return true;
 				}
 			}

@@ -156,15 +156,15 @@ bool ModuleRgb::CheckData(Json::Value &dataValue, bool &rs)
 						value1 = listValue[0].asInt();
 					}
 					if (this->idR == id)
-						rs = Util::CompareNumber(this->r, value1, value2, op);
+						rs = Util::CompareNumber(op, this->r, value1, value2);
 					else if (this->idG == id)
-						rs = Util::CompareNumber(this->g, value1, value2, op);
+						rs = Util::CompareNumber(op, this->g, value1, value2);
 					else if (this->idB == id)
-						rs = Util::CompareNumber(this->b, value1, value2, op);
+						rs = Util::CompareNumber(op, this->b, value1, value2);
 					else if (this->idDimOn == id)
-						rs = Util::CompareNumber(this->dimOn, value1, value2, op);
+						rs = Util::CompareNumber(op, this->dimOn, value1, value2);
 					else if (this->idDimOff == id)
-						rs = Util::CompareNumber(this->dimOff, value1, value2, op);
+						rs = Util::CompareNumber(op, this->dimOff, value1, value2);
 					return true;
 				}
 			}

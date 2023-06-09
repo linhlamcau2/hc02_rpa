@@ -106,7 +106,7 @@ bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					mode1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->mode, mode1, mode2, op);
+				rs = Util::CompareNumber(op, this->mode, mode1, mode2);
 				return true;
 			}
 		}

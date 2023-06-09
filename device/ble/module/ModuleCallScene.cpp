@@ -135,7 +135,7 @@ bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					idScene1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->value, idScene1, idScene2, op);
+				rs = Util::CompareNumber(op, this->value, idScene1, idScene2);
 				return true;
 			}
 		}

@@ -218,7 +218,7 @@ vector<string> Util::splitString(string str, char splitter)
 	return result;
 }
 
-bool Util::CompareNumber(int a, int b, int c, string op)
+bool Util::CompareNumber(string op, int a, int b, int c)
 {
 	if (op == "==")
 		return a == b;

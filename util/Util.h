@@ -45,7 +45,7 @@ namespace Util
 	int ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun);
 	int ConvertWeekDayToIntCompare(int day);
 	vector<string> splitString(string str, char splitter);
-	bool CompareNumber(int a, int b, int c, string op);
+	bool CompareNumber(string op, int a, int b, int c = 0);
 
 	string ExecuteCMD(char const *command);
 	string GetCurrentTimeStr();

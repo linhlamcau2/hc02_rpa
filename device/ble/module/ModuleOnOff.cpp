@@ -85,7 +85,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 	{
 		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
-		rs = Util::CompareNumber(this->onoff, value, value, op);
+		rs = Util::CompareNumber(op, this->onoff, value, value);
 		return true;
 	}
 #else
@@ -111,7 +111,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					value1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->onoff, value1, value2, op);
+				rs = Util::CompareNumber(op, this->onoff, value1, value2);
 				return true;
 			}
 		}

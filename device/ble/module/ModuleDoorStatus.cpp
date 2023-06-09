@@ -84,7 +84,7 @@ bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					value1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->status, value1, value2, op);
+				rs = Util::CompareNumber(op, this->status, value1, value2);
 				return true;
 			}
 		}

@@ -110,7 +110,7 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					cct1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->cct, cct1, cct2, op);
+				rs = Util::CompareNumber(op, this->cct, cct1, cct2);
 				return true;
 			}
 		}

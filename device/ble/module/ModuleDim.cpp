@@ -108,7 +108,7 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					dim1 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->dim, dim1, dim2, op);
+				rs = Util::CompareNumber(op, this->dim, dim1, dim2);
 				return true;
 			}
 		}

@@ -105,7 +105,7 @@ bool ModuleControlPercent::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					value2 = listValue[0].asInt();
 				}
-				rs = Util::CompareNumber(this->percent, value1, value2, op);
+				rs = Util::CompareNumber(op, this->percent, value1, value2);
 				return true;
 			}
 		}

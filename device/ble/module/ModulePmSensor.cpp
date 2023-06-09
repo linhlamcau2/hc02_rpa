@@ -114,11 +114,11 @@ bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)
 					}
 
 					if (this->idPm25 == id)
-						rs = Util::CompareNumber(this->pm25, value1, value2, op);
+						rs = Util::CompareNumber(op, this->pm25, value1, value2);
 					else if (this->idPm10 == id)
-						rs = Util::CompareNumber(this->pm10, value1, value2, op);
+						rs = Util::CompareNumber(op, this->pm10, value1, value2);
 					else if (this->idPm1_0 == id)
-						rs = Util::CompareNumber(this->pm1_0, value1, value2, op);
+						rs = Util::CompareNumber(op, this->pm1_0, value1, value2);
 					return true;
 				}
 			}

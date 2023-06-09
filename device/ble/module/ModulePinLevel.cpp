@@ -86,7 +86,7 @@ bool ModulePinLevel::CheckData(Json::Value &dataValue, bool &rs)
 						value1 = listValue[0].asInt();
 					}
 					if (this->id == id)
-						rs = Util::CompareNumber(this->pin, value1, value2, op);
+						rs = Util::CompareNumber(op, this->pin, value1, value2);
 					return true;
 				}
 			}

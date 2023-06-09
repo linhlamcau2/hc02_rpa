@@ -49,7 +49,7 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 		if (dataValue.isMember("onoff") && dataValue["onoff"].isInt())
 		{
 			int onoff = dataValue["onoff"].asInt();
-			rs = Util::CompareNumber(this->onoff, onoff, 0, op);
+			rs = Util::CompareNumber(op, this->onoff, onoff, 0);
 			return true;
 		}
 	}

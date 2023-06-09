@@ -138,9 +138,9 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 						value1 = listValue[0].asInt();
 					}
 					if (this->idTemp == id)
-						rs = Util::CompareNumber(this->temp / 10, value1, value2, op);
+						rs = Util::CompareNumber(op, this->temp / 10, value1, value2);
 					else if (this->idHum == id)
-						rs = Util::CompareNumber(this->hum / 10, value1, value2, op);
+						rs = Util::CompareNumber(op, this->hum / 10, value1, value2);
 					return true;
 				}
 			}
