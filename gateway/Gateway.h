@@ -105,12 +105,12 @@ private:
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
-	
+
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
+	void initMqttMessage();
 #ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	// Mqtt message handle
-	void initMqttMessage();
 	int OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue);
@@ -189,8 +189,6 @@ private:
 	int OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue);
 #else
-	// Mqtt V2 message handle
-	void initMqttMessageV2();
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
@@ -327,17 +325,14 @@ public:
 
 	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
-	Rule *AddRule(Json::Value &ruleValue, string name, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 	SceneDelay *AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, bool addDatabase, bool processData);
 	Room *AddNewRoom(Room *room, bool addGateway, bool addDatabase);
+	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 
 	int Do(Json::Value &dataValue);
 
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	void AddAllDeviceStatusV2(Json::Value &reqValue);
-	Rule *AddRuleV2(Json::Value &ruleValue);
-
 	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
 	int pushNewDeviceLocalV2(Json::Value &dataValue);
 	int pushDeviceUpdateLocalV2(Json::Value &dataValue);

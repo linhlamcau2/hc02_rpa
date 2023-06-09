@@ -60,6 +60,8 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -87,6 +89,7 @@ bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 			}
 		}
 	}
+#endif
 	return false;
 }
 

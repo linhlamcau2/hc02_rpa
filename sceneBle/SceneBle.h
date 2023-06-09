@@ -23,10 +23,9 @@ public:
 	vector<DeviceInSceneBle *> deviceList;
 	SceneBle(string id, uint32_t addr, string name);
 	~SceneBle();
-	
+
 	int GetPositionDevice(Device *device);
-	int AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB);
-	int AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB);
+	int AddDevice(Device *device, Json::Value data, bool addOnlyDB);
 	int DelDevice(Device *device);
 	int Do();
 };

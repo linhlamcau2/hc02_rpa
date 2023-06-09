@@ -34,20 +34,7 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 							Json::Value devInSceneJson;
 							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
 							{
-								int modeRgb = 0;
-								for (Json::ArrayIndex i = 0; i < devInSceneJson.size(); i++)
-								{
-									Json::Value property = devInSceneJson[i];
-									if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
-									{
-										if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
-										{
-											modeRgb = property["VALUE"].asInt();
-											break;
-										}
-									}
-								}
-								sceneBle->AddDevice(device, devInSceneJson, modeRgb, true);
+								sceneBle->AddDevice(device, devInSceneJson, true);
 							}
 							else
 							{
@@ -87,15 +74,15 @@ int Db::DeviceInSceneBleRead()
 	return ReadAll(TABLE_NAME, NULL, DeviceInSceneBleParse);
 }
 
-int Db::DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data)
+int Db::DeviceInSceneBleAdd(SceneBle *sceneBle, Device *device, string data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data) VALUES ('" + scene->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "')";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceInSceneBleDel(SceneBle *scene, Device *device)
+int Db::DeviceInSceneBleDel(SceneBle *sceneBle, Device *device)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id= '" + scene->GetId() + "' AND device_id='" + device->GetId() + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id= '" + sceneBle->GetId() + "' AND device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

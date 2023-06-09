@@ -63,29 +63,29 @@ int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			idScene = data_message->id;
 		if (idScene > 0)
 		{
-			SceneBle *scene = gateway->getSceneBleFromAddr(idScene);
-			if (scene)
+			SceneBle *sceneBle = gateway->getSceneBleFromAddr(idScene);
+			if (sceneBle)
 			{
-				for (int i = 0; i < scene->deviceList.size(); i++)
+				for (int i = 0; i < sceneBle->deviceList.size(); i++)
 				{
-					if (scene->deviceList[i]->device->GetAddr() == addr)
+					if (sceneBle->deviceList[i]->device->GetAddr() == addr)
 					{
-						DeviceBle *dev = (DeviceBle *)scene->deviceList[i]->device;
+						DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
 						if (dev)
 						{
-							if (scene->deviceList[i]->data.isArray())
+							if (sceneBle->deviceList[i]->data.isArray())
 							{
-								for (Json::ArrayIndex j = 0; j < scene->deviceList[i]->data.size(); j++)
+								for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
 								{
-									if (scene->deviceList[i]->data[j].isObject())
+									if (sceneBle->deviceList[i]->data[j].isObject())
 									{
-										dev->InputData(scene->deviceList[i]->data[j]);
+										dev->InputData(sceneBle->deviceList[i]->data[j]);
 									}
 								}
 							}
-							else if (scene->deviceList[i]->data.isObject())
+							else if (sceneBle->deviceList[i]->data.isObject())
 							{
-								dev->InputData(scene->deviceList[i]->data);
+								dev->InputData(sceneBle->deviceList[i]->data);
 							}
 						}
 						else
@@ -111,6 +111,8 @@ int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -138,6 +140,7 @@ bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
 			}
 		}
 	}
+#endif
 	return false;
 }
 

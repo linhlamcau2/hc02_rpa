@@ -66,8 +66,8 @@ public:
 	int DeviceInRoomDelAll();
 
 	int DeviceInSceneBleRead();
-	int DeviceInSceneBleAdd(SceneBle *scene, Device *device, string data);
-	int DeviceInSceneBleDel(SceneBle *scene, Device *device);
+	int DeviceInSceneBleAdd(SceneBle *sceneBle, Device *device, string data);
+	int DeviceInSceneBleDel(SceneBle *sceneBle, Device *device);
 	int DeviceInSceneBleDelDev(string deviceId);
 	int DeviceInSceneBleDelDev(Device *device);
 	int DeviceInSceneBleDelAll();
@@ -110,10 +110,10 @@ public:
 	int RuleDelAll();
 
 	int SceneBleRead();
-	int SceneBleAdd(SceneBle *scene);
-	int SceneBleUpdate(SceneBle *scene);
-	int SceneBleUpdateRoom(SceneBle *scene, string roomId);
-	int SceneBleDel(SceneBle *scene);
+	int SceneBleAdd(SceneBle *sceneBle);
+	int SceneBleUpdate(SceneBle *sceneBle);
+	int SceneBleUpdateRoom(SceneBle *sceneBle, string roomId);
+	int SceneBleDel(SceneBle *sceneBle);
 	int SceneBleDelAll();
 
 	int SceneDelayRead();

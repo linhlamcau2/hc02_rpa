@@ -58,7 +58,7 @@ public:
 	void Check();
 	void RunOutput();
 
-	void UpdateData(string data);
+	void UpdateData(Json::Value &ruleData);
 	bool GetStatus();
 	void SetStatus(bool enable);
 };

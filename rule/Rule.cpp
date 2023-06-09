@@ -140,19 +140,21 @@ void Rule::AddRuleOutput(RuleOutput *ruleOutput)
 
 void Rule::DelAllRuleInput()
 {
+	for (auto ruleInput : ruleInputList)
+		delete ruleInput;
 	ruleInputList.clear();
 }
 
 void Rule::DelAllRuleOutput()
 {
+	for (auto ruleOutput : ruleOutputList)
+		delete ruleOutput;
 	ruleOutputList.clear();
 }
 
-void Rule::UpdateData(string data)
+void Rule::UpdateData(Json::Value &ruleData)
 {
-	Json::Value ruleValue;
-	ruleValue.parse(data);
-	this->ruleData = ruleValue;
+	this->ruleData = ruleData;
 }
 
 bool Rule::GetStatus()

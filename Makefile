@@ -1,4 +1,3 @@
-VERSION ?= 1.2.12
 ZIGBEE ?= OFF
 
 CC ?= gcc
@@ -11,7 +10,7 @@ CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
 INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota -IsceneDelay
-DEFINES += -DVERSION=$(VERSION) -DCONFIG_USE_OLD_APP=0 -DCONFIG_USE_MESSAGE_FORMAT_V2=1
+DEFINES += -DCONFIG_USE_OLD_APP=0 -DCONFIG_USE_MESSAGE_FORMAT_V2=1
 # DEFINES += -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
 

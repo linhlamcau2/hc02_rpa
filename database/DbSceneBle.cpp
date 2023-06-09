@@ -56,27 +56,27 @@ int Db::SceneBleRead()
 	return ReadAll(TABLE_NAME, NULL, SceneBleParse);
 }
 
-int Db::SceneBleAdd(SceneBle *scene)
+int Db::SceneBleAdd(SceneBle *sceneBle)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name) VALUES ('" + scene->GetId() + "', " + to_string(scene->GetAddr()) + ", '" + scene->GetName() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name) VALUES ('" + sceneBle->GetId() + "', " + to_string(sceneBle->GetAddr()) + ", '" + sceneBle->GetName() + "');";
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneBleUpdate(SceneBle *scene)
+int Db::SceneBleUpdate(SceneBle *sceneBle)
 {
-	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(scene->GetAddr()) + " AND name='" + scene->GetName() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(sceneBle->GetAddr()) + " AND name='" + sceneBle->GetName() + "';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneBleUpdateRoom(SceneBle *scene, string roomId)
+int Db::SceneBleUpdateRoom(SceneBle *sceneBle, string roomId)
 {
-	string sql = "UPDATE " TABLE_NAME " SET room_id='" + roomId + "' WHERE scene_ble_id ='" + scene->GetId() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET room_id='" + roomId + "' WHERE scene_ble_id ='" + sceneBle->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::SceneBleDel(SceneBle *scene)
+int Db::SceneBleDel(SceneBle *sceneBle)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id='" + scene->GetId() + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE scene_ble_id='" + sceneBle->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

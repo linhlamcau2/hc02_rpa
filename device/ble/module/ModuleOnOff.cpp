@@ -78,6 +78,17 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (dataValue.isObject() &&
+			dataValue.isMember("op") && dataValue["op"].isString() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
+	{
+		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		string op = dataValue["op"].asString();
+		rs = Util::CompareNumber(this->onoff, value, value, op);
+		return true;
+	}
+#else
 	if (dataValue.isObject() &&
 			dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
@@ -105,21 +116,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 			}
 		}
 	}
-	return false;
-}
-
-bool ModuleOnOff::CheckDataV2(Json::Value &dataValue, bool &rs)
-{
-	// LOGD("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
-	{
-		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		string op = dataValue["op"].asString();
-		rs = Util::CompareNumber(this->onoff, value, value, op);
-		return true;
-	}
+#endif
 	return false;
 }
 
@@ -132,8 +129,6 @@ void ModuleOnOff::CheckTrigger()
 	{
 		rs = false;
 		if (CheckData(*ruleInputDevice->GetData(), rs))
-			ruleInputDevice->Trigger(rs);
-		else if (CheckDataV2(*ruleInputDevice->GetData(), rs))
 			ruleInputDevice->Trigger(rs);
 	}
 }

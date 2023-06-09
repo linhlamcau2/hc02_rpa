@@ -2,6 +2,7 @@
 #include <thread>
 #include "Log.h"
 #include "BleProtocol.h"
+#include "BleDefine.h"
 
 DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 {
@@ -31,33 +32,20 @@ int SceneBle::GetPositionDevice(Device *device)
 	return CODE_ERROR;
 }
 
-int SceneBle::AddDevice(Device *device, Json::Value data, int modeRGB, bool addOnlyDB)
+int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 {
-	if (addOnlyDB == false)
-	{
-		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
-		{
-			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
-			deviceList.push_back(deviceInSceneBle);
-			return CODE_OK;
-		}
-	}
-	else
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	if (addOnlyDB)
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 		deviceList.push_back(deviceInSceneBle);
 		return CODE_OK;
 	}
-	return CODE_ERROR;
-}
-
-int SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
-{
-	if (addOnlyDB == false)
+	else
 	{
 		int modeRGB = 0;
 		if (data.isObject() &&
-			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		}
@@ -68,12 +56,36 @@ int SceneBle::AddDeviceV2(Device *device, Json::Value data, bool addOnlyDB)
 			return CODE_OK;
 		}
 	}
-	else
+#else
+	if (addOnlyDB)
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 		deviceList.push_back(deviceInSceneBle);
 		return CODE_OK;
 	}
+	else
+	{
+		int modeRGB = 0;
+		for (Json::ArrayIndex i = 0; i < data.size(); i++)
+		{
+			Json::Value property = data[i];
+			if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
+			{
+				if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
+				{
+					modeRGB = property["VALUE"].asInt();
+					break;
+				}
+			}
+		}
+		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
+		{
+			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+			deviceList.push_back(deviceInSceneBle);
+			return CODE_OK;
+		}
+	}
+#endif
 	return CODE_ERROR;
 }
 
