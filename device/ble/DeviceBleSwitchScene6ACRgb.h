@@ -11,14 +11,11 @@ using namespace std;
 class DeviceBleSwitchScene6ACRgb : public DeviceBle
 {
 private:
-#ifndef CONFIG_USE_OLD_APP
-    ElementRgb *elementRgb[6];
-#endif
-
 #ifdef CONFIG_USE_OLD_APP
     ModuleRgb *moduleRgb;
     ModuleButton *moduleButton[6];
     int button;
+    string idButton[6];
 #endif
 
 public:
@@ -26,4 +23,5 @@ public:
 #ifdef CONFIG_USE_OLD_APP
     int GetButton();
 #endif
+    void InputData(uint8_t *data, int len, uint32_t addr);
 };

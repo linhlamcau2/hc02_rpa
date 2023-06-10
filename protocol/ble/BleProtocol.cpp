@@ -14,6 +14,7 @@
 #include "AES.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
+#include "ButtonSignal.h"
 #endif
 
 BleProtocol *bleProtocol = NULL;
@@ -172,41 +173,40 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
 
-		DeviceBleSwitchScene6ACRgb *sceneAcRgb = gateway->getDeviceBleSceneACByElement(data_message->dev_addr, data_message->data[5]);
-		if (sceneAcRgb)
+		// DeviceBleSwitchScene6ACRgb *sceneAcRgb = gateway->getDeviceBleSceneACByElement(data_message->dev_addr, data_message->data[5]);
+		// if (sceneAcRgb)
+		// {
+		// 	LOGV("Have device mac 0x%s type: 0x%08X", sceneAcRgb->GetMac().c_str(), sceneAcRgb->GetType());
+		// 	sceneAcRgb->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+		// }
+		// else
+		// {
+		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
+		if (deviceBle)
 		{
-			LOGV("Have device mac 0x%s type: 0x%08X", sceneAcRgb->GetMac().c_str(), sceneAcRgb->GetType());
-			sceneAcRgb->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
-		}
-		else
-		{
-			DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
-			if (deviceBle)
+			LOGV("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
+			deviceBle->UpdateLastTimeActive();
+			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
-				LOGV("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
-				deviceBle->UpdateLastTimeActive();
-				if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
+				Json::Value dataArray = Json::arrayValue;
+				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
+				if (dataArray.size() > 0)
 				{
-					Json::Value dataArray = Json::arrayValue;
-					GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
-					if (dataArray.size() > 0)
+					for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
 					{
-						for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
-						{
-							deviceBle->InputData(dataArray[i]);
-						}
+						deviceBle->InputData(dataArray[i]);
 					}
-				}
-				else
-				{
-					deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 				}
 			}
 			else
 			{
-				LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
-				usleep(50000);
+				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
+		}
+		else
+		{
+			LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
+			usleep(50000);
 		}
 		break;
 	}
@@ -237,7 +237,10 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedService = Led::GetLedService();
-	Led::SetLedService(!statusLedService);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedService(!statusLedService);
+	}
 #endif
 	int index = 0;
 	while (l >= 4)
@@ -327,7 +330,10 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
 #ifdef ESP_PLATFORM
-	Led::SetLedService(statusLedService);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedService(statusLedService);
+	}
 #endif
 	return l;
 }
@@ -1064,7 +1070,7 @@ int BleProtocol::GetOnoffLight(uint16_t devAddr)
 	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
 	onoff_message.ble_message_header.devAddr = devAddr;
 	onoff_message.opcode = G_ONOFF_GET;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, getOnOffHeader, 0, 6);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -1640,7 +1646,7 @@ int BleProtocol::UpdateLights(uint16_t devAddr)
 	update_message.ble_message_header.devAddr = devAddr;
 	update_message.opcode = LIGHTNESS_LINEAR_SET;
 	update_message.header = 0x02;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, updateHeader, 0, 6);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, updateHeader, 0, 6);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))

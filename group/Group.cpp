@@ -20,19 +20,24 @@ Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
 
 Group::~Group()
 {
+	mtx.lock();
 	deviceList.clear();
+	mtx.unlock();
 }
 
 int Group::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();
+	mtx.lock();
 	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
 		if (deviceAddr == deviceList[i]->device->GetAddr())
 		{
+			mtx.unlock();
 			return i;
 		}
 	}
+	mtx.unlock();
 	return CODE_ERROR;
 }
 
@@ -63,7 +68,9 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 				{
 					if (deviceInGroup)
 					{
+						mtx.lock();
 						deviceList.push_back(deviceInGroup);
+						mtx.unlock();
 						return CODE_OK;
 					}
 				}
@@ -79,7 +86,9 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 		{
 			if (deviceInGroup)
 			{
+				mtx.lock();
 				deviceList.push_back(deviceInGroup);
+				mtx.unlock();
 				return CODE_OK;
 			}
 		}
@@ -118,7 +127,9 @@ int Group::DelDevice(Device *device, int epId)
 				int deviceIndex = GetPositionDevice(device);
 				if (deviceIndex > -1)
 				{
+					mtx.lock();
 					deviceList.erase(deviceList.begin() + deviceIndex);
+					mtx.unlock();
 				}
 				return CODE_OK;
 			}

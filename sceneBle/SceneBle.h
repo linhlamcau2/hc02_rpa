@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <mutex>
 #include "json.h"
 #include "Object.h"
 #include "Device.h"
@@ -19,6 +20,9 @@ public:
 
 class SceneBle : public Object
 {
+private:
+	mutex mtx;
+
 public:
 	vector<DeviceInSceneBle *> deviceList;
 	SceneBle(string id, uint32_t addr, string name);

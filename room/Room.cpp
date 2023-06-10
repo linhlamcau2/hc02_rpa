@@ -15,47 +15,64 @@ Room::Room(string id, uint32_t addr, string name) : Object(id, addr, name)
 
 Room::~Room()
 {
+	mtxDev.lock();
 	deviceList.clear();
+	mtxDev.unlock();
+
+	mtxGroup.lock();
 	groupList.clear();
+	mtxGroup.unlock();
+
+	mtxScene.lock();
 	sceneBleList.clear();
+	mtxScene.unlock();
 }
 
 int Room::GetPositionDevice(Device *device)
 {
 	uint32_t deviceAddr = device->GetAddr();
+	mtxDev.lock();
 	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
 		if (deviceAddr == deviceList[i]->device->GetAddr())
 		{
+			mtxDev.unlock();
 			return i;
 		}
 	}
+	mtxDev.unlock();
 	return CODE_ERROR;
 }
 
 int Room::GetPositionGroup(Group *group)
 {
 	string id = group->GetId();
+	mtxGroup.lock();
 	for (uint32_t i = 0; i < groupList.size(); i++)
 	{
-		if (id.compare(groupList[i]->GetId()) == CODE_OK)
+		if (id == groupList[i]->GetId())
 		{
+			mtxGroup.unlock();
 			return i;
 		}
 	}
+	mtxGroup.unlock();
 	return CODE_ERROR;
 }
 
 int Room::GetPositionSceneBle(SceneBle *sceneBle)
 {
 	string id = sceneBle->GetId();
-	for (uint32_t i = 0; i < sceneBleList.size(); i++)
+	mtxScene.lock();
+	for (int i = 0; i < sceneBleList.size(); i++)
 	{
-		if (id.compare(sceneBleList[i]->GetId()) == CODE_OK)
+		if (id == sceneBleList[i]->GetId())
 		{
+			mtxScene.unlock();
 			return i;
 		}
 	}
+	mtxScene.unlock();
 	return CODE_ERROR;
 }
 
@@ -81,7 +98,9 @@ int Room::AddDevice(Device *device, bool sendBle)
 				{
 					if (GetPositionDevice(device) == -1)
 					{
+						mtxDev.lock();
 						deviceList.push_back(deviceInRoom);
+						mtxDev.unlock();
 						return CODE_OK;
 					}
 				}
@@ -97,7 +116,9 @@ int Room::AddDevice(Device *device, bool sendBle)
 			{
 				if (GetPositionDevice(device) == -1)
 				{
+					mtxDev.lock();
 					deviceList.push_back(deviceInRoom);
+					mtxDev.unlock();
 					return CODE_OK;
 				}
 			}
@@ -124,7 +145,9 @@ int Room::AddDevice2(Device *device, bool sendBle)
 				{
 					if (GetPositionDevice(device) == -1)
 					{
+						mtxDev.lock();
 						deviceList.push_back(deviceInRoom);
+						mtxDev.unlock();
 						return CODE_OK;
 					}
 				}
@@ -140,7 +163,9 @@ int Room::AddDevice2(Device *device, bool sendBle)
 			{
 				if (GetPositionDevice(device) == -1)
 				{
+					mtxDev.lock();
 					deviceList.push_back(deviceInRoom);
+					mtxDev.unlock();
 					return CODE_OK;
 				}
 			}
@@ -160,7 +185,9 @@ int Room::DelDevice(Device *device)
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)
 		{
+			mtxDev.lock();
 			deviceList.erase(deviceList.begin() + deviceIndex);
+			mtxDev.unlock();
 		}
 		return CODE_OK;
 	}
@@ -189,7 +216,9 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
 	{
 		if (isAddGateway)
 		{
+			mtxGroup.lock();
 			groupList.push_back(group);
+			mtxGroup.unlock();
 		}
 		if (isAddDatabase)
 		{
@@ -205,7 +234,9 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 	{
 		if (isAddGateway)
 		{
+			mtxScene.lock();
 			sceneBleList.push_back(sceneBle);
+			mtxScene.unlock();
 		}
 		if (isAddDatabase)
 		{

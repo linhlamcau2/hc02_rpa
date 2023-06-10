@@ -7,6 +7,7 @@
 
 #ifdef ESP_PLATFORM
 #include "Led.h"
+#include "ButtonSignal.h"
 #endif
 
 CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
@@ -42,6 +43,7 @@ void CloudProtocol::init()
 {
 	Mqtt::init();
 	isBusy = false;
+	isConfig = false;
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopicV1);
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	addActionCallback(bind(&CloudProtocol::OnDeviceRpcV2, this, placeholders::_1, placeholders::_2), subReqTopicV2);
@@ -80,6 +82,11 @@ void CloudProtocol::OnConnect(bool isConnected, bool isReconnect)
 	OnCloudConnect(isConnected, isReconnect);
 }
 
+void CloudProtocol::SetConfig(bool value)
+{
+	this->isConfig = value;
+}
+
 void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 {
 	Json::Value respValue;
@@ -88,7 +95,10 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedInternet = Led::GetLedInternet();
-	Led::SetLedInternet(!statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(!statusLedInternet);
+	}
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
@@ -140,7 +150,10 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		LOGW("OnDeviceRpc payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	Led::SetLedInternet(statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(statusLedInternet);
+	}
 #endif
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
@@ -344,7 +357,9 @@ int CloudProtocol::PublishToDeviceAttributes(Json::Value payloadJson)
 
 int CloudProtocol::PublishToGatewayTelemetry(Json::Value payloadJson)
 {
-	return PublishToGatewayTelemetry(payloadJson.toString());
+	if (!IsConfig())
+		return PublishToGatewayTelemetry(payloadJson.toString());
+	return CODE_ERROR;
 }
 
 int CloudProtocol::PublishToGatewayAttributes(Json::Value payloadJson)

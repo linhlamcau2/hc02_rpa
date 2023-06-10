@@ -43,6 +43,7 @@ private:
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 	atomic<bool> isBusy;
+	atomic<bool> isConfig;
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
@@ -65,6 +66,8 @@ public:
 	void init();
 
 	bool IsBusy() { return isBusy; }
+	bool IsConfig() { return isConfig; }
+	void SetConfig(bool value);
 
 	void cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
 	void cloudAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);

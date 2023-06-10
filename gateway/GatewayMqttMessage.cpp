@@ -698,6 +698,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRpcAddSceneBle");
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
+		SetConfig(true);
 		respValue["CMD"] = "CREATE_SCENE";
 		Json::Value dataJsonRsp = Json::objectValue;
 		dataJsonRsp["FAILED"] = Json::arrayValue;
@@ -768,6 +769,7 @@ int Gateway::OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["DATA"] = dataJsonRsp;
+		SetConfig(false);
 	}
 	return CODE_OK;
 }
@@ -784,18 +786,18 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			dataJsonRsp["FAILED"] = Json::arrayValue;
 			string sceneId = dataValue["SCENE_ID"].asString();
 			dataJsonRsp["SCENE_ID"] = sceneId;
-			int sceneAddr = 1;
-			sceneBleListMtx.lock();
-			for (const auto &[id, sceneBle] : sceneBleList)
-			{
-				if (sceneBle->GetAddr() >= sceneAddr)
-				{
-					sceneAddr = sceneBle->GetAddr() + 1;
-				}
-			}
 			SceneBle *sceneBle = getSceneBleFromId(sceneId);
 			if (!sceneBle)
 			{
+				int sceneAddr = 1;
+				sceneBleListMtx.lock();
+				for (const auto &[id, scene] : sceneBleList)
+				{
+					if (scene->GetAddr() >= sceneAddr)
+					{
+						sceneAddr = scene->GetAddr() + 1;
+					}
+				}
 				sceneBleListMtx.unlock();
 				sceneBle = new SceneBle(sceneId, sceneAddr, sceneId);
 				if (sceneBle)
@@ -2772,10 +2774,12 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 			{
 				int groupAddr = 1;
 				groupListMtx.lock();
-				for (auto id = groupList.begin(); id != groupList.end(); ++id)
+				for (const auto &[id, group] : groupList)
 				{
-					if (id->second->GetAddr() > groupAddr)
-						groupAddr = id->second->GetAddr() + 1;
+					if (group->GetAddr() >= groupAddr)
+					{
+						groupAddr = group->GetAddr() + 1;
+					}
 				}
 				groupListMtx.unlock();
 				group = new Group(groupId, groupAddr, groupId);

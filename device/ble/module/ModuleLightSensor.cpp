@@ -48,6 +48,24 @@ int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
+static uint16_t CalculateLux(uint16_t rsp_lux)
+{
+	unsigned int lux_LSB = 0;
+	unsigned char lux_MSB = 0;
+	uint16_t lux_Value = 0;
+	unsigned int pow = 1;
+	unsigned char i;
+	lux_LSB = rsp_lux & 0x0FFF;
+	lux_MSB = ((rsp_lux >> 12) & 0x0F);
+	// Lux_Value = 0.01 * pow(2,Lux_MSB) * Lux_LSB; //don't use
+	for (i = 0; i < lux_MSB; i++)
+	{
+		pow = pow * 2;
+	}
+	lux_Value = 0.01 * pow * lux_LSB;
+	return lux_Value;
+}
+
 int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52)
@@ -60,7 +78,7 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				uint16_t scene;
 			} data_message_t;
 			data_message_t *data_message = (data_message_t *)&data[3];
-			lux = (data_message->lux);
+			lux = CalculateLux(bswap_16(data_message->lux));
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 			return false;

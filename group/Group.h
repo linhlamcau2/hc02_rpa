@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 #include "json.h"
 #include "Object.h"
 #include "Device.h"
@@ -20,6 +21,7 @@ class Group : public Object
 {
 private:
 	Json::Value dataValue;
+	mutex mtx;
 
 public:
 	vector<DeviceInGroup *> deviceList;

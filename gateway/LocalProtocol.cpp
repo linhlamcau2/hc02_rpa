@@ -6,6 +6,7 @@
 
 #ifdef ESP_PLATFORM
 #include "Led.h"
+#include "ButtonSignal.h"
 #endif
 
 #define HC_CONTROL_TOPIC "HC.CONTROL"
@@ -64,7 +65,10 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedInternet = Led::GetLedInternet();
-	Led::SetLedInternet(!statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(!statusLedInternet);
+	}
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
@@ -122,7 +126,10 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		LOGW("OnLocalMessage payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	Led::SetLedInternet(statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(statusLedInternet);
+	}
 #endif
 	Util::LedServiceUnlock();
 }

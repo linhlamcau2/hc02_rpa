@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 #include "json.h"
 #include "Object.h"
 #include "Device.h"
@@ -21,6 +22,9 @@ class Room : public Object
 {
 private:
 	string dataConfig;
+	mutex mtxDev;
+	mutex mtxGroup;
+	mutex mtxScene;
 
 public:
 	vector<DeviceInRoom *> deviceList;

@@ -14,6 +14,32 @@
 #include "Ota.h"
 #include "Base64.h"
 #include "Config.h"
+#include "DeviceBleAll.h"
+#include "DeviceBleSwitchOnoff.h"
+#include "DeviceBleLightOnoffCctDim.h"
+#include "DeviceBleLightOnoffHslModeRGB.h"
+#include "DeviceBleLightOnoffCctDimHslModeRGB.h"
+#include "DeviceBleSwitchTouchRgb1.h"
+#include "DeviceBleSwitchTouchRgb2.h"
+#include "DeviceBleSwitchTouchRgb3.h"
+#include "DeviceBleSwitchTouchRgb4.h"
+#include "DeviceBleSwitchElectrical1.h"
+#include "DeviceBleSwitchElectrical2.h"
+#include "DeviceBleSwitchElectrical3.h"
+#include "DeviceBleSwitchElectrical4.h"
+#include "DeviceBleSwitchScene6DC.h"
+#include "DeviceBleSwitchScene6AC.h"
+#include "DeviceBleSwitchScene6ACRgb.h"
+#include "DeviceBleSensorTempHum.h"
+#include "DeviceBleSensorPm.h"
+#include "DeviceBlePirLightSensorDC.h"
+#include "DeviceBlePirLightSensorAC.h"
+#include "DeviceBleSmokeSensor.h"
+#include "DeviceBleDoorSensor.h"
+#include "DeviceBleScreenTouch.h"
+#include "DeviceBleCurtain.h"
+#include "DeviceBleRoolDoor.h"
+
 #ifdef ESP_PLATFORM
 #include "Config.h"
 #include "Led.h"
@@ -88,42 +114,6 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 			{
 				deviceListMtx.unlock();
 				return deviceBle;
-			}
-		}
-	}
-	deviceListMtx.unlock();
-	return NULL;
-}
-
-/**
- * Xu ly cho scene touch AC rgb
- * Duoi device khong co nhieu element
- * Tren app sinh nhieu element de dieu khien mau rgb cua nut
- * Gap truong hop cung addr co nhieu deviceId
- * Sinh them button de tim device qua addr va button
- */
-DeviceBleSwitchScene6ACRgb *Gateway::getDeviceBleSceneACByElement(uint32_t addr, int button)
-{
-	deviceListMtx.lock();
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
-		{
-			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
-			if (deviceBle)
-			{
-				if (deviceBle->GetType() == BLE_AC_SCENE_CONTACT_RGB || deviceBle->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
-				{
-					DeviceBleSwitchScene6ACRgb *sceneAcRgb = dynamic_cast<DeviceBleSwitchScene6ACRgb *>(deviceBle);
-					if (sceneAcRgb)
-					{
-						if (sceneAcRgb->GetButton() == button)
-						{
-							deviceListMtx.unlock();
-							return sceneAcRgb;
-						}
-					}
-				}
 			}
 		}
 	}
@@ -609,10 +599,12 @@ int Gateway::CheckOnlineThread()
 						}
 					}
 				}
+				else
+					break;
 			}
 			// deviceListMtx.unlock();
 		}
-		usleep(500000);
+		sleep(1);
 	}
 	return CODE_OK;
 }
@@ -976,12 +968,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			deviceList[id] = device;
 #ifdef CONFIG_USE_OLD_APP
 			Device *deviceChild = NULL;
-			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_2)
+			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE)
 			{
 				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version);
 				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
 			}
-			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_3)
+			else if (device->GetType() == BLE_SWITCH_ELECTRICAL_2)
+			{
+				deviceChild = new DeviceBleSwitchElectrical1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_ELECTRICAL_1, version);
+				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
+			}
+			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE)
 			{
 				for (int i = 1; i <= 2; i++)
 				{
@@ -989,11 +986,27 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
-			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE || device->GetType() == BLE_SWITCH_ELECTRICAL_4)
+			else if (device->GetType() == BLE_SWITCH_ELECTRICAL_3)
+			{
+				for (int i = 1; i <= 2; i++)
+				{
+					deviceChild = new DeviceBleSwitchElectrical1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_ELECTRICAL_1, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+				}
+			}
+			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
 			{
 				for (int i = 1; i <= 3; i++)
 				{
 					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
+					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
+				}
+			}
+			else if (device->GetType() == BLE_SWITCH_ELECTRICAL_4)
+			{
+				for (int i = 1; i <= 3; i++)
+				{
+					deviceChild = new DeviceBleSwitchElectrical1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_ELECTRICAL_1, version);
 					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
 				}
 			}
@@ -1273,7 +1286,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		*/
 		int logical = -1;
 		if (ruleValue.isMember("LOGICAL_OPERATOR_ID") && ruleValue["LOGICAL_OPERATOR_ID"].isInt())
-			int logical = ruleValue["LOGICAL_OPERATOR_ID"].asInt();
+			logical = ruleValue["LOGICAL_OPERATOR_ID"].asInt();
 		string type = "or";
 		if (logical == -1 || logical == 3 || logical == 2) // rule theo thoi gian or theo thoi gian va tb dau vao
 		{
