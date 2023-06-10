@@ -44,7 +44,7 @@ private:
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
-	LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
+	LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive);
 	virtual ~LocalProtocol();
 
 	void init();

@@ -56,7 +56,7 @@ private:
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
-	CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
+	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive);
 	virtual ~CloudProtocol();
 
 	void init();

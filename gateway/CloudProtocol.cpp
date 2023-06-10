@@ -9,7 +9,7 @@
 #include "Led.h"
 #endif
 
-CloudProtocol::CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
+CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive) : Mqtt(address, port, clientId, username, password, keepalive)
 {
 	this->mac = mac;
 

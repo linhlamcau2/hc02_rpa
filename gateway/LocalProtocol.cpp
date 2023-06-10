@@ -12,9 +12,9 @@
 #define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
 
 #ifdef ESP_PLATFORM
-LocalProtocol::LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : MqttBroker()
+LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : MqttBroker()
 #else
-LocalProtocol::LocalProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive) : Mqtt(server_address, server_port, token, username, password, keepalive)
+LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : Mqtt(address, port, token, username, password, keepalive)
 #endif
 {
 	this->mac = mac;
