@@ -58,82 +58,6 @@ void LocalProtocol::OnConnect(bool isConnected, bool isReconnect)
 	OnLocalConnect(isConnected, isReconnect);
 }
 
-void LocalProtocol::OnLocalMessage(string &topic, string &payload)
-{
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedServiceLock();
-#ifdef ESP_PLATFORM
-	bool statusLedInternet = Led::GetLedInternet();
-	if (!buttonSignal->GetStatus())
-	{
-		Led::SetLedInternet(!statusLedInternet);
-	}
-#endif
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
-	{
-		string cmd = payloadJson["CMD"].asString();
-		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
-		{
-			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
-			isBusy = true;
-			int rs = onLocalCallbackFunc(payloadJson, respValue);
-			isBusy = false;
-			if (rs == CODE_OK)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
-			}
-			else if (rs == CODE_DATA_ARRAY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				if (respValue.isArray())
-				{
-					for (auto &respV : respValue)
-					{
-						Publish(HC_RESPONSE_TOPIC, respV.toString());
-					}
-				}
-			}
-			else if (rs == CODE_NOT_RESPONSE)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-			}
-			else if (rs == CODE_EXIT)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
-				exit(1);
-			}
-			else
-			{
-				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-			}
-#ifdef ESP_PATFORM
-			vTaskDelay(1);
-#endif
-		}
-		else
-		{
-			LOGW("Method %s not registed", cmd.c_str());
-			LOGW("OnLocalMessage payload: %s", payload.c_str());
-		}
-	}
-	else
-	{
-		LOGW("OnLocalMessage topic: %s", topic.c_str());
-		LOGW("OnLocalMessage payload: %s", payload.c_str());
-	}
-#ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		Led::SetLedInternet(statusLedInternet);
-	}
-#endif
-	Util::LedServiceUnlock();
-}
-
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void LocalProtocol::OnLocalReq(string &topic, string &payload)
 {
@@ -258,7 +182,10 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedInternet = Led::GetLedInternet();
-	Led::SetLedInternet(!statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(!statusLedInternet);
+	}
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
@@ -316,7 +243,10 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		LOGW("OnLocalMessage payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	Led::SetLedInternet(statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(statusLedInternet);
+	}
 #endif
 	Util::LedServiceUnlock();
 }

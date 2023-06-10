@@ -46,7 +46,6 @@ void CloudProtocol::init()
 	Mqtt::init();
 	isBusy = false;
 	isConfig = false;
-	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopicV1);
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subRespTopic);
@@ -90,86 +89,6 @@ void CloudProtocol::SetConfig(bool value)
 {
 	this->isConfig = value;
 }
-
-void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
-{
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedInternet(false);
-	Util::LedServiceLock();
-#ifdef ESP_PLATFORM
-	bool statusLedInternet = Led::GetLedInternet();
-	if (!buttonSignal->GetStatus())
-	{
-		Led::SetLedInternet(!statusLedInternet);
-	}
-#endif
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
-	{
-		string cmd = payloadJson["CMD"].asString();
-		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
-		{
-			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
-			isBusy = true;
-			int rs = onRpcCallbackFunc(payloadJson, respValue);
-			isBusy = false;
-			if (rs == CODE_OK)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(pubTopicV1, respValue.toString());
-			}
-			else if (rs == CODE_DATA_ARRAY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				if (respValue.isArray())
-				{
-					for (auto &respV : respValue)
-					{
-						Publish(pubTopicV1, respV.toString());
-					}
-				}
-			}
-			else if (rs == CODE_NOT_RESPONSE)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-			}
-			else
-			{
-				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-			}
-#ifdef ESP_PATFORM
-			vTaskDelay(1);
-#endif
-		}
-		else
-		{
-			LOGW("Method %s not registed", cmd.c_str());
-			LOGW("OnDeviceRpc payload: %s", payload.c_str());
-		}
-	}
-	else
-	{
-		LOGW("OnDeviceRpc topic: %s", topic.c_str());
-		LOGW("OnDeviceRpc payload: %s", payload.c_str());
-	}
-#ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		Led::SetLedInternet(statusLedInternet);
-	}
-#endif
-	Util::LedInternet(true);
-	Util::LedServiceUnlock();
-}
-
-int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
-{
-	LOGI("OnDeviceRpcCallbackRegister cmd: %s", cmd.c_str());
-	onRpcCallbackFuncList[cmd] = onRpcCallbackFunc;
-	return CODE_OK;
-}
-
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void CloudProtocol::OnServerReq(string &topic, string &payload)
 {
@@ -307,7 +226,10 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedInternet = Led::GetLedInternet();
-	Led::SetLedInternet(!statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(!statusLedInternet);
+	}
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
@@ -359,7 +281,10 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		LOGW("OnDeviceRpc payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	Led::SetLedInternet(statusLedInternet);
+	if (!buttonSignal->GetStatus())
+	{
+		Led::SetLedInternet(statusLedInternet);
+	}
 #endif
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
@@ -396,39 +321,11 @@ int CloudProtocol::CloudPublish(string topic, char *payload, int payloadLen)
 
 int CloudProtocol::CloudPublish(string payload)
 {
-	return Publish(pubTopicV1, payload);
-}
-
-int CloudProtocol::PublishToDeviceAttributes(string payload)
-{
-	return Publish(pubTopicV1, payload);
-}
-
-int CloudProtocol::PublishToGatewayTelemetry(string payload)
-{
-	return Publish(pubTopicV1, payload);
-}
-
-int CloudProtocol::PublishToGatewayAttributes(string payload)
-{
-	return Publish(pubTopicV1, payload);
-}
-
-int CloudProtocol::PublishToDeviceTelemetry(Json::Value payloadJson)
-{
-	return PublishToDeviceTelemetry(payloadJson.toString());
-}
-
-int CloudProtocol::PublishToDeviceAttributes(Json::Value payloadJson)
-{
-	return PublishToDeviceAttributes(payloadJson.toString());
-}
-
-int CloudProtocol::PublishToGatewayTelemetry(Json::Value payloadJson)
-{
-	if (!IsConfig())
-		return PublishToGatewayTelemetry(payloadJson.toString());
-	return CODE_ERROR;
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	return Publish(pubReqTopic, payload);
+#else
+	return Publish(pubTopic, payload);
+#endif
 }
 
 int CloudProtocol::CloudPublish(Json::Value payloadJson)
