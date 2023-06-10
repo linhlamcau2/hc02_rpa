@@ -32,6 +32,8 @@ void ModuleOnOff::SaveAttribute()
 
 int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
@@ -43,6 +45,7 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			return CODE_OK;
 		}
 	}
+#endif
 	return CODE_ERROR;
 }
 
@@ -85,7 +88,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 	{
 		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
-		rs = Util::CompareNumber(op, this->onoff, value, value);
+		rs = Util::CompareNumber(op, this->onoff, value);
 		return true;
 	}
 #else
@@ -178,9 +181,5 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 		}
 	}
 #endif
-	else
-	{
-		LOGW("Message format error");
-	}
 	return CODE_ERROR;
 }

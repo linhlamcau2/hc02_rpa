@@ -218,7 +218,7 @@ private:
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
-	Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
+	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
 	~Gateway();
 	void init();
 

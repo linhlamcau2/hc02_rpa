@@ -28,39 +28,36 @@ private:
 	map<string, request_bin_t *> requestBinList;
 #endif
 
-	string mac;
-	string subTopicV1;
-	string pubTopicV1;
-
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	string subReqTopicV2;
-	string subRespTopicV2;
-	string pubReqTopicV2;
-	string pubRespTopicV2;
+	string subReqTopic;
+	string subRespTopic;
+	string pubReqTopic;
+	string pubRespTopic;
 
-	string subBinRespTopicV2;
-	string pubBinReqTopicV2;
+	string subBinRespTopic;
+	string pubBinReqTopic;
+#else
+	string subTopic;
+	string pubTopic;
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
+	string mac;
 	atomic<bool> isBusy;
 	atomic<bool> isConfig;
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	map<string, OnRpcCallbackFunc> onRpcCallbackFuncListV2;
-#endif
 
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	void OnServerReq(string &topic, string &payload);
+	void OnServerResp(string &topic, string &payload);
+	void OnServerBinResp(string &topic, char *payload, int payloadLen);
+#else
 	void OnDeviceRpc(string &topic, string &payload);
-
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	void OnDeviceRpcV2(string &topic, string &payload);
-	void OnServerRespV2(string &topic, string &payload);
-	void OnServerBinRespV2(string &topic, char *payload, int payloadLen);
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
-	CloudProtocol(string mac, string server_address, int server_port, string token, string username, string password, int keepalive);
+	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive);
 	virtual ~CloudProtocol();
 
 	void init();
@@ -84,19 +81,10 @@ public:
 
 	int CloudPublish(string topic, string payload);
 	int CloudPublish(string topic, char *payload, int payloadLen);
-
-	int PublishToDeviceTelemetry(string payload);
-	int PublishToDeviceAttributes(string payload);
-	int PublishToGatewayTelemetry(string payload);
-	int PublishToGatewayAttributes(string payload);
-
-	int PublishToDeviceTelemetry(Json::Value payloadJson);
-	int PublishToDeviceAttributes(Json::Value payloadJson);
-	int PublishToGatewayTelemetry(Json::Value payloadJson);
-	int PublishToGatewayAttributes(Json::Value payloadJson);
+	int CloudPublish(string payload);
+	int CloudPublish(Json::Value payloadJson);
 
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	int OnDeviceRpcCallbackRegisterV2(string cmd, OnRpcCallbackFunc onRpcCallbackFunc);
 	int PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
 	int PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
 	int PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout = 5000);

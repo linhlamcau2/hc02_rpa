@@ -202,53 +202,12 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 	return CODE_TIMEOUT;
 }
 
-int Mqtt::Publish(string topic, string payload, int maxTime, int duration)
+int Mqtt::Publish(string topic, string payload)
 {
-	time_t currentTime;
-	if (!connected)
-		return CODE_ERROR;
-	MQTTPubSub mqttPublish;
-	mqttPublish.setState(false);
-	LOGV("Publish topic: %s, payload:\n%s", topic.c_str(), payload.c_str());
-	mtx.lock();
-	if (mqttPublishs.size() >= MAX_BUFFER_SIZE)
-	{
-		LOGW("mqttSubscribes buffer size: %d", (int)mqttPublishs.size());
-		mqttPublishs.erase(mqttPublishs.begin());
-	}
-	mqttPublishs.push_back(&mqttPublish);
-	// LOGV("publish");
-	int ret = publish(&mqttPublish.id, topic.c_str(), payload.size(), payload.c_str());
-	if (ret != MOSQ_ERR_SUCCESS)
-	{
-		removeObjectFromVector(&mqttPublishs, &mqttPublish);
-		LOGW("Publish error: %d", ret);
-		mtx.unlock();
-		return CODE_ERROR;
-	}
-	for (int i = 0; i < maxTime; i++)
-	{
-		currentTime = time(NULL);
-		while (time(NULL) < currentTime + duration)
-		{
-			if (mqttPublish.getState() == true)
-			{
-				// LOGV("Publish topic: %s OK", topic.c_str());
-				removeObjectFromVector(&mqttPublishs, &mqttPublish);
-				mtx.unlock();
-				return CODE_OK;
-			}
-			usleep(1000);
-		}
-		publish(&mqttPublish.id, topic.c_str(), payload.size(), payload.c_str());
-	}
-	removeObjectFromVector(&mqttPublishs, &mqttPublish);
-	LOGW("Publish topic: %s time out", topic.c_str());
-	mtx.unlock();
-	return CODE_TIMEOUT;
+	return Publish(topic, payload.c_str(), payload.length());
 }
 
-int Mqtt::Publish(string topic, char *payload, int payloadLen)
+int Mqtt::Publish(string topic, const char *payload, int payloadLen)
 {
 	int rs = publish(NULL, topic.c_str(), payloadLen, payload);
 	if (rs == MOSQ_ERR_SUCCESS)

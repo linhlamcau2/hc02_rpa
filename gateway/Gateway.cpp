@@ -54,9 +54,9 @@
 
 Gateway *gateway = NULL;
 
-Gateway::Gateway(string mac, string server_address, int server_port, string token, string username, string password, int keepalive, string localIp, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, server_address, server_port, token, username, password, keepalive),
-			LocalProtocol(mac, localIp, localPort, mac, localUsername, localPassword, localKeepalive),
+Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+		: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
+			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
 			Udp(8181)
 {
 	this->mac = mac;
@@ -449,6 +449,14 @@ int Gateway::CheckOnlineThread()
 	time_t oldTime = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
+
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	Json::Value devicesData;
+	Json::Value onlineValue;
+	Json::Value offlineValue;
+	offlineValue["stt"] = 0;
+	onlineValue["stt"] = 1;
+#else
 	Json::Value onlineValue;
 	Json::Value datasValue;
 	Json::Value dataValue;
@@ -462,6 +470,7 @@ int Gateway::CheckOnlineThread()
 	datasValue.append(dataValue);
 	onlineValue["CMD"] = "DEVICE";
 	onlineValue["DATA"] = datasValue;
+#endif
 
 	while (!bleProtocol)
 	{
@@ -520,6 +529,9 @@ int Gateway::CheckOnlineThread()
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			// deviceListMtx.lock();
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+			devicesData = Json::Value::null;
+#endif
 			allTimeCheck = deviceList.size() * 4;
 			for (const auto &[id, device] : deviceList)
 			{
@@ -592,10 +604,20 @@ int Gateway::CheckOnlineThread()
 						// send device state to server
 						if (deviceStateChange)
 						{
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+							Json::Value deviceData;
+							deviceData["id"] = device->GetId();
+							if (device->lastOnlineState)
+								deviceData["data"] = onlineValue;
+							else
+								deviceData["data"] = offlineValue;
+							devicesData.append(deviceData);
+#else
 							onlineValue["DATA"][0]["DEVICE_ID"] = device->GetId();
 							onlineValue["DATA"][0]["PROPERTIES"][0]["VALUE"] = (int)device->lastOnlineState;
-							PublishToLocalMessage(onlineValue);
-							PublishToGatewayTelemetry(onlineValue);
+							LocalPublish(onlineValue);
+							CloudPublish(onlineValue);
+#endif
 						}
 					}
 				}
@@ -603,6 +625,15 @@ int Gateway::CheckOnlineThread()
 					break;
 			}
 			// deviceListMtx.unlock();
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+			if (!devicesData.isNull())
+			{
+				Json::Value dataValue;
+				dataValue["device"] = devicesData;
+				gateway->pushDeviceUpdateLocalV2(dataValue);
+				gateway->pushDeviceUpdateCloudV2(dataValue);
+			}
+#endif
 		}
 		sleep(1);
 	}
@@ -773,9 +804,9 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
 #ifdef CONFIG_USE_OLD_APP
-	PublishToLocalMessage(jsonValue);
+	LocalPublish(jsonValue);
 #else
-	PublishToDeviceTelemetry(jsonValue);
+	CloudPublish(jsonValue);
 #endif
 
 #ifdef CONFIG_USE_OLD_APP
@@ -787,7 +818,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
 		dataValue["BUTTON_ID"] = 12;
 		jsonValue["DATA"] = dataValue;
-		PublishToLocalMessage(jsonValue);
+		LocalPublish(jsonValue);
 	}
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3)
 	{
@@ -798,7 +829,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-			PublishToLocalMessage(jsonValue);
+			LocalPublish(jsonValue);
 		}
 	}
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_4)
@@ -810,7 +841,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-			PublishToLocalMessage(jsonValue);
+			LocalPublish(jsonValue);
 		}
 	}
 	else if (scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB || scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
@@ -822,7 +853,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
-			PublishToLocalMessage(jsonValue);
+			LocalPublish(jsonValue);
 		}
 	}
 #endif

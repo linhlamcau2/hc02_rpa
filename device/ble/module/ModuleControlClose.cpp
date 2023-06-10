@@ -31,6 +31,8 @@ void ModuleControlClose::SaveAttribute()
 
 int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
@@ -42,6 +44,7 @@ int ModuleControlClose::InputData(Json::Value &dataValue, Json::Value &jsonValue
 			return CODE_OK;
 		}
 	}
+#endif
 	return CODE_ERROR;
 }
 
@@ -165,9 +168,5 @@ int ModuleControlClose::Do(Json::Value &dataValue)
 		}
 	}
 #endif
-	else
-	{
-		LOGW("Message format error");
-	}
 	return CODE_ERROR;
 }

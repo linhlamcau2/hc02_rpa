@@ -38,6 +38,8 @@ void ModulePirLight::SaveAttribute()
 
 int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+#else
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
@@ -55,6 +57,7 @@ int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			}
 		}
 	}
+#endif
 	return CODE_ERROR;
 }
 
