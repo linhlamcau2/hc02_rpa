@@ -122,19 +122,6 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-// TODO: can nhac di chuyen den Element.cpp
-void ElementCct::CheckTrigger()
-{
-	// LOGV("CheckTrigger");
-	bool rs;
-	for (auto &ruleInputDevice : device->deviceRuleInputList)
-	{
-		rs = false;
-		if (CheckData(*ruleInputDevice->GetData(), rs))
-			ruleInputDevice->Trigger(rs);
-	}
-}
-
 void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2

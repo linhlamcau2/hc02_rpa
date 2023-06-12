@@ -144,18 +144,6 @@ bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-void ModuleCallScene::CheckTrigger()
-{
-	LOGV("CheckTrigger");
-	bool rs;
-	for (auto &ruleInputDevice : device->deviceRuleInputList)
-	{
-		rs = false;
-		if (CheckData(*ruleInputDevice->GetData(), rs))
-			ruleInputDevice->Trigger(rs);
-	}
-}
-
 void ModuleCallScene::BuildTelemetryValue(Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2

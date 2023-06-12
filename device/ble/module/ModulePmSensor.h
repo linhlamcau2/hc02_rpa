@@ -57,12 +57,6 @@ public:
 	bool CheckData(Json::Value &dataValue, bool &rs);
 
 	/**
-	 * @brief Check rules related with this module
-	 *
-	 */
-	void CheckTrigger();
-
-	/**
 	 * @brief Build telemetry message with this module
 	 *
 	 * @param jsonValue

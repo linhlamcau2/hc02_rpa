@@ -37,7 +37,14 @@ public:
 	 * @return false
 	 */
 	virtual int InputData(uint8_t *data, int len, Json::Value &jsonValue) { return CODE_ERROR; }
-	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
+
+	/**
+	 * @brief Check rules related with this element
+	 *
+	 */
+	virtual void CheckTrigger();
+
+	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 
 	/**
 	 * @brief Build telemetry message with this module

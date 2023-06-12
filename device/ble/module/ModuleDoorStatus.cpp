@@ -96,19 +96,6 @@ bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-// TODO: can nhac di chuyen den Module.cpp
-void ModuleDoorStatus::CheckTrigger()
-{
-	LOGV("CheckTrigger");
-	bool rs;
-	for (auto &ruleInputDevice : device->deviceRuleInputList)
-	{
-		rs = false;
-		if (CheckData(*ruleInputDevice->GetData(), rs))
-			ruleInputDevice->Trigger(rs);
-	}
-}
-
 void ModuleDoorStatus::BuildTelemetryValue(Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
