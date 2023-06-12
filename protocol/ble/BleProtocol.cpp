@@ -58,6 +58,27 @@ static void AddDeviceThread(void *data)
 	}
 }
 
+static void HandleOpcodeBle(void *data)
+{
+	BleProtocol *bleProtocol = (BleProtocol *)data;
+	message_rsp_st *messageRsp;
+	while (1)
+	{
+#ifdef ESP_PLATFORM
+		if (xQueueReceive(bleProtocol->opcodeMessageQueue, &messageRsp, (TickType_t)5))
+#else
+		if (msgrcv(bleProtocol->msgid, &messageRsp, sizeof(messageRsp), 1, 0) != -1)
+#endif
+		{
+			if (messageRsp)
+			{
+				bleProtocol->CheckOpcodeException(messageRsp);
+				free(messageRsp);
+			}
+		}
+	}
+}
+
 void BleProtocol::init()
 {
 	if (pthread_mutex_init(&mutex, NULL) != 0)
@@ -68,6 +89,7 @@ void BleProtocol::init()
 	usleep(100000); // wait uart rx thread start
 
 #ifdef ESP_PLATFORM
+	opcodeMessageQueue = xQueueCreate(10, sizeof(message_rsp_st *));
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, this, 10, NULL) != pdPASS)
 	{
@@ -75,9 +97,24 @@ void BleProtocol::init()
 		Led::SetLedService(MODE_OFF);
 	}
 	vTaskDelay(10);
+	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		Led::SetLedService(MODE_OFF);
+	}
+	vTaskDelay(10);
 #else
+	// ftok to generate unique key
+	key = ftok("HC_Core", 65);
+
+	// msgget creates a message queue
+	// and returns identifier
+	msgid = msgget(key, 0666 | IPC_CREAT);
+
 	thread addDeviceThread(AddDeviceThread, this);
 	addDeviceThread.detach();
+	thread handleOpcodeBleThread(HandleOpcodeBle, this);
+	handleOpcodeBleThread.detach();
 #endif
 }
 
@@ -172,15 +209,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		data_message_t *data_message = (data_message_t *)message_rsp->data;
 		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
-
-		// DeviceBleSwitchScene6ACRgb *sceneAcRgb = gateway->getDeviceBleSceneACByElement(data_message->dev_addr, data_message->data[5]);
-		// if (sceneAcRgb)
-		// {
-		// 	LOGV("Have device mac 0x%s type: 0x%08X", sceneAcRgb->GetMac().c_str(), sceneAcRgb->GetType());
-		// 	sceneAcRgb->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
-		// }
-		// else
-		// {
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
@@ -294,7 +322,16 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 							}
 						}
 						if (gateway)
-							CheckOpcodeException(message_rsp);
+						{
+							// CheckOpcodeException(message_rsp);
+							message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
+							memcpy(temp_message, message_rsp, message_rsp->len + 2);
+#ifdef ESP_PLATFORM
+							xQueueSend(opcodeMessageQueue, (void *)&temp_message, (TickType_t)0);
+#else
+							msgsnd(msgid, &temp_message, sizeof(temp_message), 0);
+#endif
+						}
 					}
 					else if (message_rsp->len < 2 && message_rsp->len > 36)
 					{
@@ -406,7 +443,6 @@ string BleProtocol::GetAppKey()
 		string appkey = Util::arrayToString844412((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
-
 		gateway->setBleAppkey(appkey);
 	}
 	else

@@ -7,6 +7,15 @@
 #include <atomic>
 #include <functional>
 
+#ifdef ESP_PLATFORM
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#else
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#endif
+
 #define SYSTEM_REQ 0xFFE9
 #define APP_REQ 0xFFE8
 #define RAL_MAGIC 0x0428
@@ -119,6 +128,14 @@ typedef struct __attribute__((packed))
 	uint16_t dc;
 } scan_device_message_t;
 
+typedef struct __attribute__((packed))
+{
+	uint16_t len;
+	uint8_t magic;
+	uint8_t opcode;
+	uint8_t data[];
+} message_rsp_st;
+
 class BleProtocol : public Uart
 {
 private:
@@ -127,14 +144,6 @@ private:
 		uint16_t opcode;
 		uint8_t data[100];
 	} message_req_st;
-
-	typedef struct __attribute__((packed))
-	{
-		uint16_t len;
-		uint8_t magic;
-		uint8_t opcode;
-		uint8_t data[];
-	} message_rsp_st;
 
 	typedef struct __attribute__((packed))
 	{
@@ -185,11 +194,16 @@ private:
 	uint8_t deviceKey[16];
 	uint16_t nextAddr;
 
-	void CheckOpcodeException(message_rsp_st *message);
 	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
+#ifdef ESP_PLATFORM
+	QueueHandle_t opcodeMessageQueue;
+#else
+	key_t key;
+	int msgid;
+#endif
 	atomic<bool> haveNewMac;
 	atomic<bool> isProvisioning;
 	scan_device_message_t scanDeviceMessage;
@@ -201,6 +215,7 @@ public:
 #endif
 	virtual ~BleProtocol();
 	void init();
+	void CheckOpcodeException(message_rsp_st *message);
 
 	void InitKey();
 	string GetAppKey();
