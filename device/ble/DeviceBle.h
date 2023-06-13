@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Device.h"
+#include "module/Module.h"
+#include "element/Element.h"
 
 using namespace std;
 

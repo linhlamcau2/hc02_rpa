@@ -48,6 +48,10 @@ public:
 	virtual ~LocalProtocol();
 
 	void init();
+	void localAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic);
+	void localAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic);
+	void localAddActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic);
+	void localAddActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic);
 
 	bool IsBusy() { return isBusy; }
 

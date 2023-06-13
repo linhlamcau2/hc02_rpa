@@ -7,8 +7,6 @@
 #include "ErrorCode.h"
 #include "Object.h"
 #include "RuleInputDevice.h"
-#include "module/Module.h"
-#include "element/Element.h"
 
 #define KEY_ATTRIBUTE_ONOFF "onoff"
 #define KEY_ATTRIBUTE_DIM "dim"
@@ -51,12 +49,15 @@
 #define KEY_ATTRIBUTE_DIM_OFF "dimOff"
 #define KEY_ATTRIBUTE_RELAY "rl"
 
+#define KEY_ATTRIBUTE_ZONE "zone"
+
 using namespace std;
 
 typedef enum
 {
 	BLE_DEVICE,
-	ZIGBEE_DEVICE
+	ZIGBEE_DEVICE,
+	MQTT_DEVICE
 } protocol_e;
 
 enum
@@ -132,7 +133,9 @@ enum
 	ZIGBEE_LUMI_PLUG = 0x02000001,
 	ZIGBEE_LUMI_SENSOR_SWITCH = 0x02000002,
 	ZIGBEE_PIR_RH3040 = 0x02000102,
-	ZIGBEE_TELINK_TLSR82xx = 0x02000201
+	ZIGBEE_TELINK_TLSR82xx = 0x02000201,
+
+	MQTT_AI_HUB = 0x03000001
 };
 
 enum

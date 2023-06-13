@@ -48,6 +48,26 @@ void LocalProtocol::init()
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
+void LocalProtocol::localAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
+{
+	addActionCallback(actionCallbackFuncType1, topic);
+}
+
+void LocalProtocol::localAddActionCallback(ActionCallbackFuncType2 actionCallbackFuncType2, string topic)
+{
+	addActionCallback(actionCallbackFuncType2, topic);
+}
+
+void LocalProtocol::localAddActionCallback(ActionCallbackFuncType3 actionCallbackFuncType3, string topic)
+{
+	addActionCallback(actionCallbackFuncType3, topic);
+}
+
+void LocalProtocol::localAddActionCallback(ActionCallbackFuncType4 actionCallbackFuncType4, string topic)
+{
+	addActionCallback(actionCallbackFuncType4, topic);
+}
+
 int LocalProtocol::LocalConnect()
 {
 	return Connect();
