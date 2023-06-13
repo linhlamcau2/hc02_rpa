@@ -58,6 +58,7 @@ static void AddDeviceThread(void *data)
 	}
 }
 
+#ifndef __ANDROID__
 static void HandleOpcodeBle(void *data)
 {
 	BleProtocol *bleProtocol = (BleProtocol *)data;
@@ -78,6 +79,7 @@ static void HandleOpcodeBle(void *data)
 		}
 	}
 }
+#endif
 
 void BleProtocol::init()
 {
@@ -88,7 +90,10 @@ void BleProtocol::init()
 	Uart::init();
 	usleep(100000); // wait uart rx thread start
 
-#ifdef ESP_PLATFORM
+#ifdef __ANDROID__
+	thread addDeviceThread(AddDeviceThread, this);
+	addDeviceThread.detach();
+#elif defined(ESP_PLATFORM)
 	opcodeMessageQueue = xQueueCreate(10, sizeof(message_rsp_st *));
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, this, 10, NULL) != pdPASS)
@@ -104,17 +109,13 @@ void BleProtocol::init()
 	}
 	vTaskDelay(10);
 #else
-	// ftok to generate unique key
 	key = ftok("HC_Core", 65);
-
-	// msgget creates a message queue
-	// and returns identifier
 	msgid = msgget(key, 0666 | IPC_CREAT);
+	thread handleOpcodeBleThread(HandleOpcodeBle, this);
+	handleOpcodeBleThread.detach();
 
 	thread addDeviceThread(AddDeviceThread, this);
 	addDeviceThread.detach();
-	thread handleOpcodeBleThread(HandleOpcodeBle, this);
-	handleOpcodeBleThread.detach();
 #endif
 }
 
@@ -323,12 +324,15 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 						}
 						if (gateway)
 						{
-							// CheckOpcodeException(message_rsp);
+#ifdef __ANDROID__
+							CheckOpcodeException(message_rsp);
+#elif defined(ESP_PLATFORM)
 							message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
 							memcpy(temp_message, message_rsp, message_rsp->len + 2);
-#ifdef ESP_PLATFORM
 							xQueueSend(opcodeMessageQueue, (void *)&temp_message, (TickType_t)0);
 #else
+							message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
+							memcpy(temp_message, message_rsp, message_rsp->len + 2);
 							msgsnd(msgid, &temp_message, sizeof(temp_message), 0);
 #endif
 						}

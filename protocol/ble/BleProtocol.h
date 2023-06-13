@@ -7,7 +7,9 @@
 #include <atomic>
 #include <functional>
 
-#ifdef ESP_PLATFORM
+#ifdef __ANDROID__
+
+#elif defined(ESP_PLATFORM)
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -198,7 +200,8 @@ private:
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
-#ifdef ESP_PLATFORM
+#ifdef __ANDROID__
+#elif defined(ESP_PLATFORM)
 	QueueHandle_t opcodeMessageQueue;
 #else
 	key_t key;
