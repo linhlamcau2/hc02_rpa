@@ -18,6 +18,7 @@
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
 #include "BleProtocol.h"
+#include "MqttProtocol.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -78,6 +79,9 @@ int main(int argc, char *argv[])
 	gateway->init();
 
 	bleProtocol->InitKey();
+
+	mqttProtocol = new MqttProtocol();
+	mqttProtocol->init();
 
 	Util::LedService(true);
 

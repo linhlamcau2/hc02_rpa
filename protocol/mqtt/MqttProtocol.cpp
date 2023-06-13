@@ -24,6 +24,7 @@ void MqttProtocol::init()
 	else
 	{
 		LOGE("Must init gateway before init MqttProtocol");
+		exit(1);
 	}
 }
 
@@ -97,14 +98,14 @@ int MqttProtocol::SendMessage(string data)
 int MqttProtocol::OnAddDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnAddDevice");
-	
+
 	return CODE_OK;
 }
 
 int MqttProtocol::OnAddFunction(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnAddFunction");
-	
+
 	return CODE_OK;
 }
 
