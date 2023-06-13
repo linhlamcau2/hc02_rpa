@@ -228,6 +228,24 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
 	}
 	return CODE_ERROR;
 }
+
+/**
+ * Don't delete in database
+ * Function main delete record in database
+ */
+int Room::DelGroup(Group *group)
+{
+	int position = GetPositionGroup(group);
+	if (position > -1)
+	{
+		mtxGroup.lock();
+		groupList.erase(groupList.begin() + position);
+		mtxGroup.unlock();
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
 int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 {
 	if (GetPositionSceneBle(sceneBle) < 0)
@@ -242,6 +260,22 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 		{
 			database->SceneBleUpdateRoom(sceneBle, id);
 		}
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+/**
+ * Don't delete in database same DelGroup
+ */
+int Room::DelSceneBle(SceneBle *sceneBle)
+{
+	int position = GetPositionSceneBle(sceneBle);
+	if (position > -1)
+	{
+		mtxScene.lock();
+		sceneBleList.erase(sceneBleList.begin() + position);
+		mtxScene.unlock();
 		return CODE_OK;
 	}
 	return CODE_ERROR;

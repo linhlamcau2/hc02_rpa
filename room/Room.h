@@ -42,7 +42,9 @@ public:
 	int DelDevice(Device *device);
 	int DelDevice2(Device *device);
 	int AddGroup(Group *group, bool isAddGateway, bool isAddDatabase);	
+	int DelGroup(Group *group);
 	int AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase);	
+	int DelSceneBle(SceneBle *sceneBle);
 
 	string GetDataConfig();
 	void SetDataConfig(string dataConfig);
