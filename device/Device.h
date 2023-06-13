@@ -49,7 +49,10 @@
 #define KEY_ATTRIBUTE_DIM_OFF "dimOff"
 #define KEY_ATTRIBUTE_RELAY "rl"
 
-#define KEY_ATTRIBUTE_ZONE "zone"
+#define KEY_ATTRIBUTE_ZONE_ID "zoneId"
+#define KEY_ATTRIBUTE_ZONE_VALUE "zoneValue"
+#define KEY_ATTRIBUTE_FACE_ID "faceId"
+#define KEY_ATTRIBUTE_FACE_VALUE "faceValue"
 
 using namespace std;
 

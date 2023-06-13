@@ -33,6 +33,7 @@ public:
 	int DeviceRead();
 	int DeviceAdd(Device *device);
 	int DeviceUpdate(Device *device);
+	int DeviceUpdateData(Device *device);
 	int DeviceDel(Device *device);
 	int DeviceDel(string mac);
 	int DeviceDelAll();

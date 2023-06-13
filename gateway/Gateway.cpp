@@ -43,6 +43,8 @@
 #ifdef ESP_PLATFORM
 #include "Config.h"
 #include "Led.h"
+#else
+#include "DeviceMqttAihub.h"
 #endif
 #include "Http.h"
 
@@ -55,9 +57,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-	  Udp(8181)
+		: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
+			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+			Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -495,7 +497,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -975,6 +977,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SWITCH_ROOLING_DOOR:
 		device = new DeviceBleRoolDoor(id, name, mac, data, addr, type, version);
 		break;
+
+#ifndef ESP_PLATFORM
+	case MQTT_AI_HUB:
+		device = new DeviceMqttAihub(id, name, mac, data, version);
+		break;
+#endif
+
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
 		break;
@@ -1096,11 +1105,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isString() &&
-		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1119,7 +1128,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-				timeValue.isMember("end") && timeValue["end"].isString())
+					timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1145,7 +1154,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				Json::Value timerValue = inputValue["timer"];
 				if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+						timerValue.isMember("time") && timerValue["time"].isString())
 				{
 					int repeat = timerValue["repeat"].asInt();
 					string timerStr = timerValue["time"].asString();
@@ -1167,7 +1176,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					if (deviceRuleInputValue.isObject())
 					{
 						if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+								deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 						{
 							string id = deviceRuleInputValue["id"].asString();
 							Json::Value dataValue = deviceRuleInputValue["data"];
@@ -1264,8 +1273,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();

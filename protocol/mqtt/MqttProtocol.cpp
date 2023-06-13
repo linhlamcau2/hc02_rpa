@@ -1,5 +1,6 @@
 #include "MqttProtocol.h"
 #include "Gateway.h"
+#include "DeviceMqtt.h"
 #include "Log.h"
 
 MqttProtocol *mqttProtocol = NULL;
@@ -98,14 +99,58 @@ int MqttProtocol::SendMessage(string data)
 int MqttProtocol::OnAddDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnAddDevice");
-
+	// TODO:
 	return CODE_OK;
 }
 
 int MqttProtocol::OnAddFunction(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnAddFunction");
-
+	respValue["data"]["code"] = CODE_OK;
+	if (reqValue.isMember("device") && reqValue["device"].isArray())
+	{
+		Json::Value deviceJsonList = reqValue["device"];
+		for (auto deviceJson : deviceJsonList)
+		{
+			if (deviceJson.isMember("id") && deviceJson["id"].isString() &&
+					deviceJson.isMember("data") && deviceJson["data"].isObject())
+			{
+				string deviceId = deviceJson["id"].asString();
+				Json::Value devData = deviceJson["data"];
+				Device *device = gateway->getDeviceFromId(deviceId);
+				if (device)
+				{
+					DeviceMqtt *deviceMqtt = dynamic_cast<DeviceMqtt *>(device);
+					if (deviceMqtt)
+					{
+						deviceMqtt->AddFuntion(devData, true);
+					}
+					else
+					{
+						respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+						LOGW("Device id %s isn't a MQTT device", deviceId.c_str());
+					}
+				}
+				else
+				{
+					respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+					LOGW("Device id %s not found", deviceId.c_str());
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
+				LOGW("OnAddFunction %s format error", reqValue.toString().c_str());
+			}
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+		LOGW("OnAddFunction %s format error", reqValue.toString().c_str());
+	}
+	respValue["cmd"] = "AddFunctionRsp";
+	return CODE_OK;
 	return CODE_OK;
 }
 

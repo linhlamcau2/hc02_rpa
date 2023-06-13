@@ -1,9 +1,28 @@
 #include "DeviceMqtt.h"
 #include "Log.h"
+#include "Db.h"
+#include "function/FunctionZone.h"
+#include "function/FunctionFace.h"
 
 DeviceMqtt::DeviceMqtt(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, data, addr, type, version)
 {
 	protocol = MQTT_DEVICE;
+
+	// parse data to function list
+	Json::Value functionsValue;
+	if (functionsValue.parse(data) && functionsValue.isArray())
+	{
+		for (auto functionValue : functionsValue)
+		{
+			AddFuntion(functionValue, false);
+		}
+	}
+	else
+	{
+		functionsValue = Json::arrayValue;
+		data = functionsValue.toString();
+		database->DeviceUpdateData(this);
+	}
 }
 
 DeviceMqtt::~DeviceMqtt()
@@ -12,9 +31,38 @@ DeviceMqtt::~DeviceMqtt()
 		delete function;
 }
 
-void DeviceMqtt::AddFuntion(Function *function)
+void DeviceMqtt::AddFuntion(Json::Value &dataValue, bool addToDb)
 {
-	functions.push_back(function);
+	if (dataValue.isMember("type") && dataValue["type"].isString() &&
+			dataValue.isMember("id") && dataValue["id"].isString())
+	{
+		string id = dataValue["id"].asString();
+		string type = dataValue["type"].asString();
+		if (type == "Zone")
+		{
+			FunctionZone *functionZone = new FunctionZone(this, id);
+			functions.push_back(functionZone);
+		}
+		else if (type == "Face")
+		{
+			FunctionFace *functionFace = new FunctionFace(this, id);
+			functions.push_back(functionFace);
+		}
+		else
+		{
+			LOGW("Function type %s not support", type.c_str());
+		}
+	}
+	if (addToDb)
+	{
+		Json::Value functionsValue;
+		if (functionsValue.parse(data) && functionsValue.isArray())
+		{
+			functionsValue.append(dataValue);
+			data = functionsValue.toString();
+			database->DeviceUpdateData(this);
+		}
+	}
 }
 
 int DeviceMqtt::BuildTelemetryValue(Json::Value &pushDataValue)

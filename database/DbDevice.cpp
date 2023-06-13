@@ -30,12 +30,8 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				string decode = macaron::Base64::Decode(data, devData);
 				if (decode == "")
 				{
-					Json::Value devDataJson;
-					if (devDataJson.parse(devData) && devDataJson.isObject())
-					{
-						uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
-						gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false);
-					}
+					uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
+					gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false);
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -69,6 +65,12 @@ int Db::DeviceUpdate(Device *device)
 	return Sqlite_Exec(sql);
 }
 
+int Db::DeviceUpdateData(Device *device)
+{
+	string sql = "UPDATE " TABLE_NAME " SET data='" + device->GetData() + " WHERE mac='" + device->GetMac() + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::DeviceDel(Device *device)
 {
 	return DeviceDel(device->GetMac());
@@ -88,15 +90,15 @@ int Db::DeviceDelAll()
 
 int Db::DelDevExist(Device *device)
 {
-	string sql = "DELETE FROM DeviceInGroup WHERE device_id = '"+device->GetId()+"';";
+	string sql = "DELETE FROM DeviceInGroup WHERE device_id = '" + device->GetId() + "';";
 	Sqlite_Exec(sql);
-	sql = "DELETE FROM DeviceInRoom WHERE device_id = '"+device->GetId()+"';";
+	sql = "DELETE FROM DeviceInRoom WHERE device_id = '" + device->GetId() + "';";
 	Sqlite_Exec(sql);
-	sql = "DELETE FROM DeviceInSceneBle WHERE device_id = '"+device->GetId()+"';";
+	sql = "DELETE FROM DeviceInSceneBle WHERE device_id = '" + device->GetId() + "';";
 	Sqlite_Exec(sql);
-	sql = "DELETE FROM DeviceAttribute WHERE device_id = '"+device->GetId()+"';";
+	sql = "DELETE FROM DeviceAttribute WHERE device_id = '" + device->GetId() + "';";
 	Sqlite_Exec(sql);
-	sql = "DELETE FROM DeviceBleChild WHERE device_id = '"+device->GetId()+"';";
+	sql = "DELETE FROM DeviceBleChild WHERE device_id = '" + device->GetId() + "';";
 	Sqlite_Exec(sql);
 	return CODE_OK;
 }

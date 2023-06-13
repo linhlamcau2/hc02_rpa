@@ -3,15 +3,15 @@
 
 using namespace std;
 
-class FunctionZone : public Function
+class FunctionFace : public Function
 {
 protected:
 	string id;
-	uint8_t zone;
+	uint8_t face;
 
 public:
-	FunctionZone(Device *device, string id);
-	~FunctionZone();
+	FunctionFace(Device *device, string id);
+	~FunctionFace();
 
 	/**
 	 * @brief Parse raw data to funtion parameter value

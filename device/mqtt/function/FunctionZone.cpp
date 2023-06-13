@@ -7,10 +7,10 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-FunctionZone::FunctionZone(Device *device, uint32_t id) : Function(device)
+FunctionZone::FunctionZone(Device *device, string id) : Function(device)
 {
+	this->id = id;
 	zone = 0;
-	key = KEY_ATTRIBUTE_ZONE;
 }
 
 FunctionZone::~FunctionZone()
@@ -19,8 +19,17 @@ FunctionZone::~FunctionZone()
 
 int FunctionZone::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-	// TODO:
-	// jsonValue = dataValue;
+	if (dataValue.isMember("id") && dataValue["id"].isString() &&
+			dataValue.isMember("zone") && dataValue["zone"].isInt())
+	{
+		string id = dataValue["id"].asString();
+		int zone = dataValue["zone"].asInt();
+		if (this->id == id)
+		{
+			this->zone = zone;
+			BuildTelemetryValue(jsonValue);
+		}
+	}
 	return CODE_ERROR;
 }
 
@@ -33,6 +42,6 @@ bool FunctionZone::CheckData(Json::Value &dataValue, bool &rs)
 
 void FunctionZone::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	// TODO:
-	jsonValue[key] = zone;
+	jsonValue[KEY_ATTRIBUTE_ZONE_ID] = id;
+	jsonValue[KEY_ATTRIBUTE_ZONE_VALUE] = zone;
 }
