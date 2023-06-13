@@ -1964,10 +1964,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["DATA"] = dataJsonRsp;
 			if (room)
 			{
-				room->SetDataConfig(respValue.toString());
-				string ruleStr = respValue.toString();
-				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RoomAdd(room);
+				delRoom(room);
 			}
 		}
 	}

@@ -173,7 +173,7 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 		rc = sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, NULL);
 		if (rc != SQLITE_OK)
 		{
-			LOGW("SQL error: %d - %s", rc, sql.c_str());
+			LOGW("SQL error: %d - %s", rc, sqlite3_errmsg(db));
 			pthread_mutex_unlock(&mutex);
 			return rc;
 		}

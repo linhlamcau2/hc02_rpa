@@ -77,6 +77,12 @@ static void HandleOpcodeBle(void *data)
 				free(messageRsp);
 			}
 		}
+		else
+#ifdef ESP_PLATFORM
+			vTaskDelay(pdMS_TO_TICKS(200));
+#else
+			usleep(200000);
+#endif
 	}
 }
 #endif
@@ -386,13 +392,13 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	if (pthread_mutex_lock(&mutex) == 0)
 	{
 		message_rsp_list_st message_rsp_list = {
-				.status = false,
-				.opcode = opRsp,
-				.len = lenRsp,
-				.data = dataRsp,
-				.compare_data = compare_data,
-				.compare_position = compare_position,
-				.compare_len = compare_len,
+			.status = false,
+			.opcode = opRsp,
+			.len = lenRsp,
+			.data = dataRsp,
+			.compare_data = compare_data,
+			.compare_position = compare_position,
+			.compare_len = compare_len,
 		};
 		if (opRsp)
 		{
@@ -401,7 +407,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		}
 
 		message_req_st message_req = {
-				.opcode = opReq,
+			.opcode = opReq,
 		};
 		for (int i = 0; i < lenReq; i++)
 		{
@@ -1041,9 +1047,9 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 			uint16_t gwAddr;
 			uint16_t opcodeRsp;
 		} turnOnOffHeader = {
-				.devAddr = devAddr,
-				.gwAddr = 0x0001,
-				.opcodeRsp = G_ONOFF_STATUS,
+			.devAddr = devAddr,
+			.gwAddr = 0x0001,
+			.opcodeRsp = G_ONOFF_STATUS,
 		};
 		onoff_message.ble_message_header.devAddr = devAddr;
 		onoff_message.opcode = G_ONOFF_SET;
@@ -3093,8 +3099,8 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = devAddr};
+			.header = 0x12,
+			.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
 		for (int i = 0; i < 16; i++)
 		{
@@ -3122,8 +3128,8 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = gwAddr};
+			.header = 0x12,
+			.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
 		for (int i = 0; i < 16; i++)
 		{
