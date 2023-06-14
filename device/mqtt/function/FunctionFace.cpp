@@ -28,6 +28,7 @@ int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		{
 			this->faceValue = faceValue;
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
 		}
 	}
 	return CODE_ERROR;

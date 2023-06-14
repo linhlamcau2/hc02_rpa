@@ -28,6 +28,7 @@ int FunctionZone::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		{
 			this->zoneValue = zoneValue;
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
 		}
 	}
 	return CODE_ERROR;
