@@ -6,8 +6,8 @@ using namespace std;
 class FunctionFace : public Function
 {
 protected:
-	string id;
-	uint8_t face;
+	string faceId;
+	int faceValue;
 
 public:
 	FunctionFace(Device *device, string id);

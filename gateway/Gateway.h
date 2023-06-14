@@ -297,7 +297,7 @@ public:
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 
-	Device *AddNewDevice(string id, string name, string mac, string device_id, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
+	Device *AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
 	SceneDelay *AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, bool addDatabase, bool processData);

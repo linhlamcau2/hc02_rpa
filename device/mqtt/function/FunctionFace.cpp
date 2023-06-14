@@ -7,10 +7,10 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-FunctionFace::FunctionFace(Device *device, string id) : Function(device)
+FunctionFace::FunctionFace(Device *device, string faceId) : Function(device)
 {
-	this->id = id;
-	face = 0;
+	this->faceId = faceId;
+	faceValue = 0;
 }
 
 FunctionFace::~FunctionFace()
@@ -19,14 +19,14 @@ FunctionFace::~FunctionFace()
 
 int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-	if (dataValue.isMember("id") && dataValue["id"].isString() &&
-			dataValue.isMember("face") && dataValue["face"].isInt())
+	if (dataValue.isMember("faceId") && dataValue["faceId"].isString() &&
+			dataValue.isMember("faceValue") && dataValue["faceValue"].isInt())
 	{
-		string id = dataValue["id"].asString();
-		int face = dataValue["face"].asInt();
-		if (this->id == id)
+		string faceId = dataValue["faceId"].asString();
+		int faceValue = dataValue["faceValue"].asInt();
+		if (this->faceId == faceId)
 		{
-			this->face = face;
+			this->faceValue = faceValue;
 			BuildTelemetryValue(jsonValue);
 		}
 	}
@@ -42,6 +42,6 @@ bool FunctionFace::CheckData(Json::Value &dataValue, bool &rs)
 
 void FunctionFace::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_FACE_ID] = id;
-	jsonValue[KEY_ATTRIBUTE_FACE_VALUE] = face;
+	jsonValue[KEY_ATTRIBUTE_FACE_ID] = faceId;
+	jsonValue[KEY_ATTRIBUTE_FACE_VALUE] = faceValue;
 }

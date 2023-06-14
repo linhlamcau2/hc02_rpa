@@ -6,8 +6,8 @@ using namespace std;
 class FunctionZone : public Function
 {
 protected:
-	string id;
-	uint8_t zone;
+	string zoneId;
+	int zoneValue;
 
 public:
 	FunctionZone(Device *device, string id);

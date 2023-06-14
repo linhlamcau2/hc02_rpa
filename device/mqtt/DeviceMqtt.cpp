@@ -9,19 +9,15 @@ DeviceMqtt::DeviceMqtt(string id, string name, string mac, string data, uint32_t
 	protocol = MQTT_DEVICE;
 
 	// parse data to function list
-	Json::Value functionsValue;
-	if (functionsValue.parse(data) && functionsValue.isArray())
+	Json::Value dataValue;
+	if (dataValue.parse(data) && dataValue.isObject() &&
+			dataValue.isMember("functions") && dataValue["functions"].isArray())
 	{
+		Json::Value functionsValue = dataValue["functions"];
 		for (auto functionValue : functionsValue)
 		{
 			AddFuntion(functionValue, false);
 		}
-	}
-	else
-	{
-		functionsValue = Json::arrayValue;
-		data = functionsValue.toString();
-		database->DeviceUpdateData(this);
 	}
 }
 
@@ -31,13 +27,13 @@ DeviceMqtt::~DeviceMqtt()
 		delete function;
 }
 
-void DeviceMqtt::AddFuntion(Json::Value &dataValue, bool addToDb)
+void DeviceMqtt::AddFuntion(Json::Value &funcValue, bool addToDb)
 {
-	if (dataValue.isMember("type") && dataValue["type"].isString() &&
-			dataValue.isMember("id") && dataValue["id"].isString())
+	if (funcValue.isMember("type") && funcValue["type"].isString() &&
+			funcValue.isMember("id") && funcValue["id"].isString())
 	{
-		string id = dataValue["id"].asString();
-		string type = dataValue["type"].asString();
+		string id = funcValue["id"].asString();
+		string type = funcValue["type"].asString();
 		if (type == "Zone")
 		{
 			FunctionZone *functionZone = new FunctionZone(this, id);
@@ -55,11 +51,11 @@ void DeviceMqtt::AddFuntion(Json::Value &dataValue, bool addToDb)
 	}
 	if (addToDb)
 	{
-		Json::Value functionsValue;
-		if (functionsValue.parse(data) && functionsValue.isArray())
+		Json::Value dataValue;
+		if (dataValue.parse(data) && dataValue.isObject())
 		{
-			functionsValue.append(dataValue);
-			data = functionsValue.toString();
+			dataValue["functions"].append(funcValue);
+			data = dataValue.toString();
 			database->DeviceUpdateData(this);
 		}
 	}
