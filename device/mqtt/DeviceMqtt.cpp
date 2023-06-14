@@ -86,7 +86,7 @@ bool DeviceMqtt::CheckData(Json::Value &dataValue, bool &rs)
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	for (auto &function : functions)
 	{
-		if (function->CheckData(dataValue, rs) == CODE_OK)
+		if (function->CheckData(dataValue, rs))
 			return true;
 	}
 	return false;

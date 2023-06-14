@@ -91,12 +91,12 @@ bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	for (auto &module : modules)
 	{
-		if (module->CheckData(dataValue, rs) == CODE_OK)
+		if (module->CheckData(dataValue, rs))
 			return true;
 	}
 	for (auto &element : elements)
 	{
-		if (element->CheckData(dataValue, rs) == CODE_OK)
+		if (element->CheckData(dataValue, rs))
 			return true;
 	}
 	return false;
