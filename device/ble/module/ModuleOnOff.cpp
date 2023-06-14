@@ -84,7 +84,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (dataValue.isObject() &&
 			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isString())
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
