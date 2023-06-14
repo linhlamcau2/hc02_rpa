@@ -61,13 +61,13 @@ int Db::DeviceAdd(Device *device)
 
 int Db::DeviceUpdate(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + device->GetData() + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + macaron::Base64::Encode(device->GetData()) + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdateData(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data='" + device->GetData() + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData()) + "' WHERE mac='" + device->GetMac() + "';";
 	return Sqlite_Exec(sql);
 }
 
