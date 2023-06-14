@@ -2388,14 +2388,14 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 				{
 					if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
 					{
-						if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue) == 0)
+						if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, 0, 0) == 0)
 						{
 							return CODE_OK;
 						}
 					}
 					else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 					{
-						if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue) == 0)
+						if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, 0, 0) == 0)
 						{
 							return CODE_OK;
 						}
