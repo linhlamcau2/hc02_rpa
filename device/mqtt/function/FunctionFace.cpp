@@ -19,11 +19,11 @@ FunctionFace::~FunctionFace()
 
 int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-	if (dataValue.isMember("faceId") && dataValue["faceId"].isString() &&
-			dataValue.isMember("faceValue") && dataValue["faceValue"].isInt())
+	if (dataValue.isMember(KEY_ATTRIBUTE_FACE_ID) && dataValue[KEY_ATTRIBUTE_FACE_ID].isString() &&
+			dataValue.isMember(KEY_ATTRIBUTE_FACE_VALUE) && dataValue[KEY_ATTRIBUTE_FACE_VALUE].isInt())
 	{
-		string faceId = dataValue["faceId"].asString();
-		int faceValue = dataValue["faceValue"].asInt();
+		string faceId = dataValue[KEY_ATTRIBUTE_FACE_ID].asString();
+		int faceValue = dataValue[KEY_ATTRIBUTE_FACE_VALUE].asInt();
 		if (this->faceId == faceId)
 		{
 			this->faceValue = faceValue;
@@ -36,7 +36,22 @@ int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 bool FunctionFace::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-	// TODO:
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_FACE_ID) && dataValue[KEY_ATTRIBUTE_FACE_ID].isString())
+	{
+		string faceId = dataValue[KEY_ATTRIBUTE_FACE_ID].asString();
+		if (faceId == this->faceId)
+		{
+			if (dataValue.isMember("op") && dataValue["op"].isString() &&
+					dataValue.isMember(KEY_ATTRIBUTE_FACE_VALUE) && dataValue[KEY_ATTRIBUTE_FACE_VALUE].isInt())
+			{
+				string op = dataValue["op"].asString();
+				int value = dataValue[KEY_ATTRIBUTE_FACE_VALUE].asInt();
+				rs = Util::CompareNumber(op, this->faceValue, value);
+				return true;
+			}
+		}
+	}
 	return false;
 }
 
