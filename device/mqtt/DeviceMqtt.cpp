@@ -9,9 +9,11 @@ DeviceMqtt::DeviceMqtt(string id, string name, string mac, string data, uint32_t
 	protocol = MQTT_DEVICE;
 
 	// parse data to function list
-	Json::Value functionsValue;
-	if (functionsValue.parse(data) && functionsValue.isArray())
+	Json::Value dataValue;
+	if (dataValue.parse(data) && dataValue.isObject() &&
+			dataValue.isMember("functions") && dataValue["functions"].isArray())
 	{
+		Json::Value functionsValue = dataValue["functions"];
 		for (auto functionValue : functionsValue)
 		{
 			AddFuntion(functionValue, false);
@@ -19,8 +21,7 @@ DeviceMqtt::DeviceMqtt(string id, string name, string mac, string data, uint32_t
 	}
 	else
 	{
-		functionsValue = Json::arrayValue;
-		data = functionsValue.toString();
+		data = dataValue.toString();
 		database->DeviceUpdateData(this);
 	}
 }
@@ -55,11 +56,11 @@ void DeviceMqtt::AddFuntion(Json::Value &dataValue, bool addToDb)
 	}
 	if (addToDb)
 	{
-		Json::Value functionsValue;
-		if (functionsValue.parse(data) && functionsValue.isArray())
+		Json::Value dataValue;
+		if (dataValue.parse(data) && dataValue.isArray())
 		{
-			functionsValue.append(dataValue);
-			data = functionsValue.toString();
+			dataValue.append(dataValue);
+			data = dataValue.toString();
 			database->DeviceUpdateData(this);
 		}
 	}
