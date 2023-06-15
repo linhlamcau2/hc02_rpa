@@ -26,8 +26,6 @@ private:
 	string mac;
 
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	string subReqTopic;
-	string subRespTopic;
 	string pubReqTopic;
 	string pubRespTopic;
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2

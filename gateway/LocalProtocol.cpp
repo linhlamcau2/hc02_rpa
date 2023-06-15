@@ -21,8 +21,6 @@ LocalProtocol::LocalProtocol(string mac, string address, int port, string token,
 	this->mac = mac;
 
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	subReqTopic = "v2/json/req/+/+";
-	subRespTopic = "v2/json/resp/+/" + mac;
 	pubReqTopic = "v2/json/req/" + mac + "/";
 	pubRespTopic = "v2/json/resp/" + mac + "/";
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
@@ -41,8 +39,9 @@ void LocalProtocol::init()
 #endif
 	isBusy = false;
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), subReqTopic);
-	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), subRespTopic);
+	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/" + mac);
+	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
+	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), "v2/json/resp/+/" + mac);
 #else
 	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
@@ -239,7 +238,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 			}
 			else if (rs == CODE_EXIT)
 			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				LOGE("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 				exit(1);
 			}

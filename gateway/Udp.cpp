@@ -150,7 +150,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 				}
 				else if (rs == CODE_EXIT)
 				{
-					LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+					LOGE("Call %s OK, rs: %d", cmd.c_str(), rs);
 					send(respValue.toString(), si_other, slen);
 					exit(1);
 				}
