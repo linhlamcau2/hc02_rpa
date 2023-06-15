@@ -169,7 +169,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 			LOGW("UdpOnMessage message: %s", message.c_str());
 		}
 	}
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	else
 	{
 		string messageBase64;

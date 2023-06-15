@@ -12,11 +12,9 @@ class DeviceBleSwitchTouchRgb2 : public DeviceBle
 {
 private:
 	ElementButton *elementButton[2];
-#ifndef CONFIG_USE_OLD_APP
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	ElementRgb *elementRgb[2];
-#endif
-
-#ifdef CONFIG_USE_OLD_APP
+#else
 	ModuleOnOff *moduleOnOff;
 	ModuleRgb *moduleRgb;
 #endif

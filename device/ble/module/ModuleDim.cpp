@@ -40,7 +40,7 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		{
 			dim = (dataValue["VALUE"].asInt() * 65535) / 100;
 			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
+			// CheckTrigger();
 			return CODE_OK;
 		}
 	}

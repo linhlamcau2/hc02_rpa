@@ -293,12 +293,14 @@ void Gateway::init()
 
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
 		Led::SetLedService(MODE_OFF);
 	}
 	vTaskDelay(10);
+#endif
 	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
@@ -805,13 +807,13 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	dataValue["APP_KEY"] = gateway->getBleAppKey();
 	jsonValue["CMD"] = "NEW_DEVICE";
 	jsonValue["DATA"] = dataValue;
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	LocalPublish(jsonValue);
 #else
 	CloudPublish(jsonValue);
 #endif
 
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
 	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2)
 	{
@@ -1006,7 +1008,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		if (addGateway)
 		{
 			deviceList[id] = device;
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 			Device *deviceChild = NULL;
 			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE)
 			{

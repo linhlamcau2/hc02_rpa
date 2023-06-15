@@ -238,7 +238,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 			}
 			else if (rs == CODE_EXIT)
 			{
-				LOGE("Call %s OK, rs: %d", cmd.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
 				exit(1);
 			}

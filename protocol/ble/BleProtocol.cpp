@@ -38,33 +38,64 @@ BleProtocol::~BleProtocol()
 {
 }
 
-static void AddDeviceThread(void *data)
-{
-	LOGI("AddDeviceThread Start");
-	BleProtocol *bleProtocol = (BleProtocol *)data;
-	scan_device_message_t scan_device_message;
-	while (1)
-	{
-		if (bleProtocol->haveNewMac)
-		{
-			memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
-			bleProtocol->AddDevice(&scan_device_message);
-			bleProtocol->haveNewMac = false;
-		}
-		else
-		{
-			sleep(1);
-		}
-	}
-}
+// static void AddDeviceThread(void *data)
+// {
+// 	LOGI("AddDeviceThread Start");
+// 	BleProtocol *bleProtocol = (BleProtocol *)data;
+// 	scan_device_message_t scan_device_message;
+// 	while (1)
+// 	{
+// 		if (bleProtocol->haveNewMac)
+// 		{
+// 			memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
+// 			bleProtocol->AddDevice(&scan_device_message);
+// 			bleProtocol->haveNewMac = false;
+// 		}
+// 		else
+// 		{
+// 			sleep(1);
+// 		}
+// 	}
+// }
 
 #ifndef __ANDROID__
 static void HandleOpcodeBle(void *data)
 {
 	BleProtocol *bleProtocol = (BleProtocol *)data;
 	message_rsp_st *messageRsp;
+	int timeout = 0;
 	while (1)
 	{
+		if (bleProtocol->IsProvision())
+		{
+			LOGE("TP1");
+			scan_device_message_t scan_device_message;
+			if (bleProtocol->haveNewMac)
+			{
+				LOGE("TP2");
+				timeout = 0;
+				memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
+				bleProtocol->AddDevice(&scan_device_message);
+				bleProtocol->haveNewMac = false;
+			}
+			else
+			{
+				LOGE("TP3");
+				timeout++;
+				if (timeout >= 30)
+				{
+					bleProtocol->SetProvisioning(false);
+					bleProtocol->StopScan();
+				}
+				else
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#else
+					usleep(100000);
+#endif
+			}
+		}
+
 #ifdef ESP_PLATFORM
 		if (xQueueReceive(bleProtocol->opcodeMessageQueue, &messageRsp, (TickType_t)5))
 #else
@@ -101,14 +132,14 @@ void BleProtocol::init()
 	addDeviceThread.detach();
 #elif defined(ESP_PLATFORM)
 	opcodeMessageQueue = xQueueCreate(10, sizeof(message_rsp_st *));
-	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, this, 10, NULL) != pdPASS)
-	{
-		LOGE("Failed to create task");
-		Led::SetLedService(MODE_OFF);
-	}
-	vTaskDelay(10);
-	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
+	// LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
+	// if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 8192, this, 10, NULL) != pdPASS)
+	// {
+	// 	LOGE("Failed to create task");
+	// 	Led::SetLedService(MODE_OFF);
+	// }
+	// vTaskDelay(10);
+	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 15360, this, 10, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
 		Led::SetLedService(MODE_OFF);
@@ -333,7 +364,8 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 #ifdef __ANDROID__
 							CheckOpcodeException(message_rsp);
 #elif defined(ESP_PLATFORM)
-							message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
+							// message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
+							message_rsp_st *temp_message = (message_rsp_st *)heap_caps_malloc_prefer(message_rsp->len + 2, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 							memcpy(temp_message, message_rsp, message_rsp->len + 2);
 							xQueueSend(opcodeMessageQueue, (void *)&temp_message, (TickType_t)0);
 #else
@@ -699,6 +731,37 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	// #endif
 
 	return rs;
+}
+
+void BleProtocol::FunctionAddDevice()
+{
+	int timeout = 0;
+	scan_device_message_t scan_device_message;
+	while (IsProvision())
+	{
+		if (bleProtocol->haveNewMac)
+		{
+			timeout = 0;
+			memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
+			bleProtocol->AddDevice(&scan_device_message);
+			bleProtocol->haveNewMac = false;
+		}
+		else
+		{
+			timeout++;
+			if (timeout >= 30)
+			{
+				SetProvisioning(false);
+				StopScan();
+			}
+			else
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#else
+				usleep(100000);
+#endif
+		}
+	}
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -1971,9 +2034,9 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 			uint32_t data;
 			struct
 			{
-				uint32_t store : 8;					 // 8 bit not use
-				uint32_t Lux_hi : 10;				 // 10 bit lux hi
-				uint32_t Lux_low : 10;			 // 10 bit lux low
+				uint32_t store : 8;			 // 8 bit not use
+				uint32_t Lux_hi : 10;		 // 10 bit lux hi
+				uint32_t Lux_low : 10;		 // 10 bit lux low
 				uint32_t Light_Conditon : 3; // 7 bit low
 				uint32_t Pir_Conditon : 1;	 // 1 bit hight
 			};

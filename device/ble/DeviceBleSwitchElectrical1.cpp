@@ -7,16 +7,15 @@ DeviceBleSwitchElectrical1::DeviceBleSwitchElectrical1(string id, string name, s
 
 	elementButton = new ElementButton(this, addr);
 	elements.push_back(elementButton);
-#ifndef CONFIG_USE_OLD_APP
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	elementRgb = new ElementRgb(this, addr);
 	elements.push_back(elementRgb);
-#endif
-	powerSource = POWER_AC;
-
-#ifdef CONFIG_USE_OLD_APP
+#else
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
 	moduleDimonDimoff = new ModuleDimonDimoff(this, addr, 0);
 	modules.push_back(moduleDimonDimoff);
+
 #endif
+	powerSource = POWER_AC;
 }

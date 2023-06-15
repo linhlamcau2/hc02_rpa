@@ -41,7 +41,7 @@ int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			cct = (dataValue["VALUE"].asInt() * 192) + 800;
 
 			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
+			// CheckTrigger();
 			return CODE_OK;
 		}
 	}

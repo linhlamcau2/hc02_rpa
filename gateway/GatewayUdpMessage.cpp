@@ -68,7 +68,7 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcScanWifi");
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	Json::Value wifiList;
 	Json::Value wifi;
 	Json::Value wifiResp;

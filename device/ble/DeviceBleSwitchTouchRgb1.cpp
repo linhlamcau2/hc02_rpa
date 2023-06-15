@@ -7,16 +7,15 @@ DeviceBleSwitchTouchRgb1::DeviceBleSwitchTouchRgb1(string id, string name, strin
 
 	elementButton = new ElementButton(this, addr);
 	elements.push_back(elementButton);
-#ifndef CONFIG_USE_OLD_APP
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	elementRgb = new ElementRgb(this, addr);
 	elements.push_back(elementRgb);
-#endif
-	powerSource = POWER_AC;
-
-#ifdef CONFIG_USE_OLD_APP
+#else
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
 	moduleRgb = new ModuleRgb(this, addr, 0);
 	modules.push_back(moduleRgb);
 #endif
+
+	powerSource = POWER_AC;
 }

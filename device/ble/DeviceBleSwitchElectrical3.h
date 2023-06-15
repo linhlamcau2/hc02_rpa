@@ -12,11 +12,9 @@ class DeviceBleSwitchElectrical3 : public DeviceBle
 {
 private:
 	ElementButton *elementButton[3];
-#ifndef CONFIG_USE_OLD_APP
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	ElementRgb *elementRgb[3];
-#endif
-
-#ifdef CONFIG_USE_OLD_APP
+#else
 	ModuleOnOff *moduleOnOff;
 	ModuleDimonDimoff *moduleDimonDimoff;
 #endif

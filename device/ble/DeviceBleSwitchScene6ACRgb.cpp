@@ -6,7 +6,7 @@
 DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version)
 	: DeviceBle(id, name, mac, data, addr, type, version)
 {
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	moduleRgb = new ModuleRgb(this, addr, button);
 	modules.push_back(moduleRgb);
 
@@ -20,7 +20,7 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
 #endif
 }
 
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 int DeviceBleSwitchScene6ACRgb::GetButton()
 {
 	return this->button;

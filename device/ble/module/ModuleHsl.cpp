@@ -66,7 +66,7 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 				else if (this->idS == id)
 					s = dataValue["VALUE"].asInt();
 				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
+				// CheckTrigger();
 				return CODE_OK;
 			}
 		}

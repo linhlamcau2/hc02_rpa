@@ -8,20 +8,21 @@ DeviceBleSwitchTouchRgb3::DeviceBleSwitchTouchRgb3(string id, string name, strin
 	{
 		elementButton[i] = new ElementButton(this, addr + i);
 		elements.push_back(elementButton[i]);
-#ifndef CONFIG_USE_OLD_APP
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 		elementRgb[i] = new ElementRgb(this, addr + i);
 		elements.push_back(elementRgb[i]);
 #endif
 	}
-#ifndef CONFIG_USE_OLD_APP
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	countElement = 3;
 #endif
-	powerSource = POWER_AC;
 
-#ifdef CONFIG_USE_OLD_APP
+#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
 	moduleRgb = new ModuleRgb(this, addr, 0);
 	modules.push_back(moduleRgb);
 #endif
+
+	powerSource = POWER_AC;
 }

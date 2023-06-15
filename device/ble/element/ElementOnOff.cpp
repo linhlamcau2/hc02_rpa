@@ -41,7 +41,7 @@ int ElementOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		{
 			onoff = dataValue["VALUE"].asInt();
 			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
+			// CheckTrigger();
 			return CODE_OK;
 		}
 	}
