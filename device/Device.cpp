@@ -229,3 +229,14 @@ string Device::ConvertDeviceTypeToName(uint32_t type)
 {
 	return typeToNameList[type];
 }
+
+bool Device::GetIsFavorite()
+{
+	return this->isFavorite;
+}
+
+bool Device::SetIsFavorite(bool isFavorite)
+{
+	this->isFavorite = isFavorite;
+	return this->isFavorite;
+}

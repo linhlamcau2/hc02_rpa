@@ -157,6 +157,7 @@ protected:
 	int rssi;
 	protocol_e protocol;
 	string data;
+	bool isFavorite;
 	Json::Value values;
 
 public:
@@ -187,6 +188,9 @@ public:
 	bool isOnline();
 	bool isNeedCheckOnline();
 	void UpdateLastTimeActive();
+	
+	bool GetIsFavorite();
+	bool SetIsFavorite(bool isFavorite);
 
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);

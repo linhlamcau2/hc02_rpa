@@ -21,13 +21,15 @@ public:
 class SceneBle : public Object
 {
 private:
+	bool isFavorite;
 	mutex mtx;
 
 public:
 	vector<DeviceInSceneBle *> deviceList;
 	SceneBle(string id, uint32_t addr, string name);
 	~SceneBle();
-
+	bool GetIsFavorite();
+	bool SetIsFavorite(bool isFavorite);
 	int GetPositionDevice(Device *device);
 	int AddDevice(Device *device, Json::Value data, bool addOnlyDB);
 	int DelDevice(Device *device);

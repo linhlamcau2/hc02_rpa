@@ -14,6 +14,17 @@ SceneBle::SceneBle(string id, uint32_t addr, string name) : Object(id, addr, nam
 {
 }
 
+bool SceneBle::GetIsFavorite()
+{
+	return this->isFavorite;
+}
+
+bool SceneBle::SetIsFavorite(bool isFavorite)
+{
+	this->isFavorite = isFavorite;
+	return this->isFavorite;
+}
+
 SceneBle::~SceneBle()
 {
 	mtx.lock();

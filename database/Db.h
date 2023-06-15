@@ -38,6 +38,7 @@ public:
 	int DeviceDel(string mac);
 	int DeviceDelAll();
 	int DelDevExist(Device *device);
+	int DeviceUpdateFavorite(Device *device);
 
 	int DeviceAttributeRead();
 	int DeviceAttributeAdd(Device *device, int attributeId, double value);
@@ -116,6 +117,7 @@ public:
 	int SceneBleUpdateRoom(SceneBle *sceneBle, string roomId);
 	int SceneBleDel(SceneBle *sceneBle);
 	int SceneBleDelAll();
+	int SceneBleUpdateFavorite(SceneBle *scene);
 
 	int SceneDelayRead();
 	int SceneDelayAdd(SceneDelay *sceneDelay);

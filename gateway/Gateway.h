@@ -198,10 +198,12 @@ private:
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetCamList(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
@@ -211,6 +213,13 @@ private:
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue);
 
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);

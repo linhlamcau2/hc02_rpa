@@ -52,6 +52,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
@@ -80,7 +81,14 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getSceneIntoRoom", bind(&Gateway::OnGetSceneIntoRoom, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("addFavoriteScene", bind(&Gateway::OnAddFavoriteScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getDevListInGroup", bind(&Gateway::OnGetDevListInGroup, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getDevFavorite", bind(&Gateway::OnGetDevFavorite, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getSceneFavorite", bind(&Gateway::OnGetSceneFavorite, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getCamList", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -375,6 +383,46 @@ int Gateway::OnGetGroupList(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetDevListInGroup");
+	if (reqValue.isMember("groups") && reqValue["groups"].isArray() && reqValue["groups"].size() > 0)
+	{
+		Json::Value groupList;
+		Json::Value groups = reqValue["groups"];
+		for (auto &groupValue : groups)
+		{
+			Json::Value groupsData;
+			if (groupValue.isString())
+			{
+				string id = groupValue.asString();
+				groupsData["id"] = id;
+				Group *temp= getGroupFromId(id);
+				if (temp)
+				{
+					Json::Value temp_devicesList;
+					for (unsigned int i = 0; i < temp->deviceList.size(); i++)
+					{
+						DeviceInGroup *deviceInGroup = temp->deviceList[i];
+						string deviceId = deviceInGroup->device->GetId();
+						temp_devicesList.append(deviceId);
+					}
+					groupsData["devices"] = temp_devicesList;
+				}
+				else
+					respValue["data"]["code"] = CODE_NOT_FOUND_GROUP;
+			}
+			else
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
+			groupList.append(groupsData);
+		}
+		respValue["data"]["groups"] = groupList;
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getDevListInGroupRsp";
+	return CODE_OK;
+}
+
 int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetSceneList");
@@ -478,6 +526,30 @@ int Gateway::OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["rules"] = ruleData;
 	}
 	respValue["cmd"] = "getRuleInfoRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGE("OnGetCamList");
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		int type = device->GetType();
+		if(type / 10000 == 6)
+		{
+			Json::Value deviceValue;
+			deviceValue["id"] = device->GetId();
+			deviceValue["mac"] = device->GetMac();
+			Json::Value data;
+			data.parse(device->GetData());
+			deviceValue["data"] = data;
+			respValue["data"]["devices"].append(deviceValue);
+		}
+	}
+	deviceListMtx.unlock();
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getCamListRsp";
 	return CODE_OK;
 }
 
@@ -1464,6 +1536,158 @@ int Gateway::OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue)
 	else
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	respValue["cmd"] = "getSceneIntoRoomRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("devlist") && reqValue["devlist"].isArray())
+	{
+		Json::Value devs = reqValue["devlist"];
+		for (auto &temp : devs)
+		{
+			if (temp.isString())
+			{
+				string temp_dev = temp.asString();
+				Device *dev = getDeviceFromId(temp_dev);
+				if (dev)
+				{
+					for (const auto &[id, device] : deviceList)
+					{
+						if (id == temp_dev)
+						{
+							device->SetIsFavorite(true);
+							database->DeviceUpdateFavorite(device);
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "addFavoriteDevRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDelFavoriteDev(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("devlist") && reqValue["devlist"].isArray())
+	{
+		Json::Value devs = reqValue["devlist"];
+		for (auto &temp : devs)
+		{
+			if (temp.isString())
+			{
+				string temp_dev = temp.asString();
+				Device *dev = getDeviceFromId(temp_dev);
+				if (dev)
+				{
+					for (const auto &[id, device] : deviceList)
+					{
+						if (id == temp_dev)
+						{
+							device->SetIsFavorite(false);
+							database->DeviceUpdateFavorite(device);
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "delFavoriteDevRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("scenelist") && reqValue["scenelist"].isArray())
+	{
+		Json::Value scenes = reqValue["scenelist"];
+		for (auto &temp : scenes)
+		{
+			if (temp.isString())
+			{
+				string temp_scene = temp.asString();
+				SceneBle *scene = getSceneBleFromId(temp_scene);
+				if (scene)
+				{
+					for (const auto &[id, sceneBle] : sceneBleList)
+					{
+						if (id == temp_scene)
+						{
+							sceneBle->SetIsFavorite(false);
+							database->SceneBleUpdateFavorite(sceneBle);
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "addFavoriteSceneRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("scenelist") && reqValue["scenelist"].isArray())
+	{
+		Json::Value scenes = reqValue["scenelist"];
+		for (auto &temp : scenes)
+		{
+			if (temp.isString())
+			{
+				string temp_scene = temp.asString();
+				SceneBle *scene = getSceneBleFromId(temp_scene);
+				if (scene)
+				{
+					for (const auto &[id, sceneBle] : sceneBleList)
+					{
+						if (id == temp_scene)
+						{
+							sceneBle->SetIsFavorite(false);
+							database->SceneBleUpdateFavorite(sceneBle);
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "delFavoriteSceneRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue)
+{
+	Json::Value list;
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->GetIsFavorite())
+		{
+			list.append(id);
+		}			
+	}
+	respValue["data"]["devices"] = list;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getDevFavoriteRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue)
+{
+		Json::Value list;
+	for (const auto &[id, scene] : sceneBleList)
+	{
+		if (scene->GetIsFavorite())
+		{
+			list.append(id);
+		}			
+	}
+	respValue["data"]["scenes"] = list;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getSceneFavoriteRsp";
 	return CODE_OK;
 }
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
