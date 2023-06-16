@@ -68,11 +68,9 @@ static void HandleOpcodeBle(void *data)
 	{
 		if (bleProtocol->IsProvision())
 		{
-			LOGE("TP1");
 			scan_device_message_t scan_device_message;
 			if (bleProtocol->haveNewMac)
 			{
-				LOGE("TP2");
 				timeout = 0;
 				memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
 				bleProtocol->AddDevice(&scan_device_message);
@@ -80,9 +78,8 @@ static void HandleOpcodeBle(void *data)
 			}
 			else
 			{
-				LOGE("TP3");
 				timeout++;
-				if (timeout >= 30)
+				if (timeout >= 300)
 				{
 					bleProtocol->SetProvisioning(false);
 					bleProtocol->StopScan();
@@ -151,8 +148,8 @@ void BleProtocol::init()
 	thread handleOpcodeBleThread(HandleOpcodeBle, this);
 	handleOpcodeBleThread.detach();
 
-	thread addDeviceThread(AddDeviceThread, this);
-	addDeviceThread.detach();
+	// thread addDeviceThread(AddDeviceThread, this);
+	// addDeviceThread.detach();
 #endif
 }
 

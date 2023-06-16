@@ -3,33 +3,31 @@
 #include "Util.h"
 #include "Gateway.h"
 
-DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint8_t button, uint16_t version)
-	: DeviceBle(id, name, mac, data, addr, type, version)
+DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
+		: DeviceBle(id, name, mac, data, addr, type, version)
 {
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	moduleRgb = new ModuleRgb(this, addr, button);
-	modules.push_back(moduleRgb);
-
 	for (int i = 0; i < 6; i++)
 	{
+		moduleRgb[i] = new ModuleRgb(this, addr, i + 1);
+		modules.push_back(moduleRgb[i]);
 		moduleButton[i] = new ModuleButton(this, addr, i);
 		modules.push_back(moduleButton[i]);
-		idButton[i] = Util::GenIdDeviceByElement(id, i + 1);
+		idButton[i] = Util::GenIdDeviceByElement(id, i);
 	}
-	this->button = button;
-#endif
 }
 
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-int DeviceBleSwitchScene6ACRgb::GetButton()
+bool DeviceBleSwitchScene6ACRgb::CheckId(string id)
 {
-	return this->button;
+	for (auto idTemp : idButton)
+	{
+		if (idTemp == id)
+			return true;
+	}
+	return false;
 }
-#endif
 
 void DeviceBleSwitchScene6ACRgb::InputData(uint8_t *data, int len, uint32_t addr)
 {
-
 	int id = data[3];
 	values = Json::Value::null;
 	for (auto &module : modules)

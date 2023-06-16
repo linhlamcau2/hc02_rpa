@@ -180,7 +180,8 @@ public:
 	int GetRSSI();
 
 	void SetRSSI(int rssi);
-	virtual bool CheckAddr(uint32_t addr) { return false; }
+	virtual bool CheckAddr(uint32_t addr) { return this->addr == addr; }
+	virtual bool CheckId(string id) { return this->id == id; }
 	virtual string GetDeviceKey();
 
 	protocol_e GetProtocol();
@@ -188,7 +189,7 @@ public:
 	bool isOnline();
 	bool isNeedCheckOnline();
 	void UpdateLastTimeActive();
-	
+
 	bool GetIsFavorite();
 	bool SetIsFavorite(bool isFavorite);
 

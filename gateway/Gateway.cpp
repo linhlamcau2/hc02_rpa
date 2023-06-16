@@ -19,14 +19,8 @@
 #include "DeviceBleLightOnoffCctDim.h"
 #include "DeviceBleLightOnoffHslModeRGB.h"
 #include "DeviceBleLightOnoffCctDimHslModeRGB.h"
-#include "DeviceBleSwitchTouchRgb1.h"
-#include "DeviceBleSwitchTouchRgb2.h"
-#include "DeviceBleSwitchTouchRgb3.h"
-#include "DeviceBleSwitchTouchRgb4.h"
-#include "DeviceBleSwitchElectrical1.h"
-#include "DeviceBleSwitchElectrical2.h"
-#include "DeviceBleSwitchElectrical3.h"
-#include "DeviceBleSwitchElectrical4.h"
+#include "DeviceBleSwitchTouchRgb.h"
+#include "DeviceBleSwitchElectrical.h"
 #include "DeviceBleSwitchScene6DC.h"
 #include "DeviceBleSwitchScene6AC.h"
 #include "DeviceBleSwitchScene6ACRgb.h"
@@ -57,9 +51,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-	  Udp(8181)
+		: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
+			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+			Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -95,11 +89,19 @@ Device *Gateway::getDeviceFromMac(string mac)
 Device *Gateway::getDeviceFromId(string id)
 {
 	deviceListMtx.lock();
-	if (deviceList.find(id) != deviceList.end())
+	for (const auto &[id, device] : deviceList)
 	{
-		deviceListMtx.unlock();
-		return deviceList[id];
+		if (device->CheckId(id))
+		{
+			deviceListMtx.unlock();
+			return device;
+		}
 	}
+	// if (deviceList.find(id) != deviceList.end())
+	// {
+	// 	deviceListMtx.unlock();
+	// 	return deviceList[id];
+	// }
 	deviceListMtx.unlock();
 	return NULL;
 }
@@ -499,7 +501,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -909,32 +911,128 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
-		device = new DeviceBleSwitchTouchRgb1(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
-		device = new DeviceBleSwitchTouchRgb2(id, name, mac, data, addr, type, version);
+		for (int i = 1; i < 2; i++)
+		{
+			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+			if (device)
+			{
+				device->lastTimeActive = time(NULL);
+				if (addGateway)
+				{
+					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+				}
+				if (addDatabase)
+				{
+					database->DeviceAdd(device);
+				}
+			}
+		}
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
-		device = new DeviceBleSwitchTouchRgb3(id, name, mac, data, addr, type, version);
+		for (int i = 1; i < 3; i++)
+		{
+			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+			if (device)
+			{
+				device->lastTimeActive = time(NULL);
+				if (addGateway)
+				{
+					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+				}
+				if (addDatabase)
+				{
+					database->DeviceAdd(device);
+				}
+			}
+		}
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
-		device = new DeviceBleSwitchTouchRgb4(id, name, mac, data, addr, type, version);
+		for (int i = 1; i < 4; i++)
+		{
+			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+			if (device)
+			{
+				device->lastTimeActive = time(NULL);
+				if (addGateway)
+				{
+					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+				}
+				if (addDatabase)
+				{
+					database->DeviceAdd(device);
+				}
+			}
+		}
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-		device = new DeviceBleSwitchElectrical1(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
-		device = new DeviceBleSwitchElectrical2(id, name, mac, data, addr, type, version);
+		for (int i = 1; i < 2; i++)
+		{
+			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+			if (device)
+			{
+				device->lastTimeActive = time(NULL);
+				if (addGateway)
+				{
+					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+				}
+				if (addDatabase)
+				{
+					database->DeviceAdd(device);
+				}
+			}
+		}
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
-		device = new DeviceBleSwitchElectrical3(id, name, mac, data, addr, type, version);
+		for (int i = 1; i < 3; i++)
+		{
+			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+			if (device)
+			{
+				device->lastTimeActive = time(NULL);
+				if (addGateway)
+				{
+					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+				}
+				if (addDatabase)
+				{
+					database->DeviceAdd(device);
+				}
+			}
+		}
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
-		device = new DeviceBleSwitchElectrical4(id, name, mac, data, addr, type, version);
+		for (int i = 1; i < 4; i++)
+		{
+			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+			if (device)
+			{
+				device->lastTimeActive = time(NULL);
+				if (addGateway)
+				{
+					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+				}
+				if (addDatabase)
+				{
+					database->DeviceAdd(device);
+				}
+			}
+		}
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
@@ -947,7 +1045,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_AC_SCENE_CONTACT_RGB:
 	case BLE_AC_SCENE_CONTACT_RGB_SQUARE:
-		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, data, addr, type, 1, version);
+		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_TEMP_HUM_SENSOR:
 		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, version);
@@ -1008,68 +1106,11 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		if (addGateway)
 		{
 			deviceList[id] = device;
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-			Device *deviceChild = NULL;
-			if (device->GetType() == BLE_SWITCH_RGB_2 || device->GetType() == BLE_SWITCH_RGB_2_SQUARE)
-			{
-				deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_RGB_1, version);
-				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
-			}
-			else if (device->GetType() == BLE_SWITCH_ELECTRICAL_2)
-			{
-				deviceChild = new DeviceBleSwitchElectrical1(Util::GenIdDeviceByElement(id, 1), name, mac, data, addr + 1, BLE_SWITCH_ELECTRICAL_1, version);
-				deviceList[Util::GenIdDeviceByElement(id, 1)] = deviceChild;
-			}
-			else if (device->GetType() == BLE_SWITCH_RGB_3 || device->GetType() == BLE_SWITCH_RGB_3_SQUARE)
-			{
-				for (int i = 1; i <= 2; i++)
-				{
-					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
-					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
-				}
-			}
-			else if (device->GetType() == BLE_SWITCH_ELECTRICAL_3)
-			{
-				for (int i = 1; i <= 2; i++)
-				{
-					deviceChild = new DeviceBleSwitchElectrical1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_ELECTRICAL_1, version);
-					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
-				}
-			}
-			else if (device->GetType() == BLE_SWITCH_RGB_4 || device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
-			{
-				for (int i = 1; i <= 3; i++)
-				{
-					deviceChild = new DeviceBleSwitchTouchRgb1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_RGB_1, version);
-					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
-				}
-			}
-			else if (device->GetType() == BLE_SWITCH_ELECTRICAL_4)
-			{
-				for (int i = 1; i <= 3; i++)
-				{
-					deviceChild = new DeviceBleSwitchElectrical1(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, BLE_SWITCH_ELECTRICAL_1, version);
-					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
-				}
-			}
-			else if (device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
-			{
-				for (int i = 1; i <= 5; i++)
-				{
-					deviceChild = new DeviceBleSwitchScene6ACRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr, type, i + 1, version);
-					deviceList[Util::GenIdDeviceByElement(id, i)] = deviceChild;
-					// LOGE("%s, addr %04x, button %d ", Util::GenIdDeviceByElement(id, i).c_str(), addr, i+1);
-				}
-			}
-#endif
 		}
 		if (addDatabase)
 		{
 			database->DeviceAdd(device);
 		}
-
-		// if (connected)
-		// 	device->PushAttributes();
 	}
 	else
 	{
@@ -1107,11 +1148,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isString() &&
-		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1130,7 +1171,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-				timeValue.isMember("end") && timeValue["end"].isString())
+					timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1156,7 +1197,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				Json::Value timerValue = inputValue["timer"];
 				if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+						timerValue.isMember("time") && timerValue["time"].isString())
 				{
 					int repeat = timerValue["repeat"].asInt();
 					string timerStr = timerValue["time"].asString();
@@ -1178,7 +1219,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					if (deviceRuleInputValue.isObject())
 					{
 						if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+								deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 						{
 							string id = deviceRuleInputValue["id"].asString();
 							Json::Value dataValue = deviceRuleInputValue["data"];
@@ -1275,8 +1316,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
