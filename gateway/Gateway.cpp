@@ -89,7 +89,7 @@ Device *Gateway::getDeviceFromMac(string mac)
 Device *Gateway::getDeviceFromId(string id)
 {
 	deviceListMtx.lock();
-	for (const auto &[id, device] : deviceList)
+	for (const auto &[idDev, device] : deviceList)
 	{
 		if (device->CheckId(id))
 		{

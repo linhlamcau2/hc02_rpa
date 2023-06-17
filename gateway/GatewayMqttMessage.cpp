@@ -11,6 +11,7 @@
 #include "Http.h"
 #include "Config.h"
 #include "Base64.h"
+#include "DeviceBleSwitchScene6ACRgb.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
 #include "Wifi.h"
@@ -3266,9 +3267,14 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				device->DoJsonArray(properties);
-				// respValue = reqValue;
-				// return CODE_OK;
+				if (device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+				{
+					DeviceBleSwitchScene6ACRgb *deviceBleSwitchScene6ACRgb = dynamic_cast<DeviceBleSwitchScene6ACRgb *>(device);
+					if (deviceBleSwitchScene6ACRgb)
+						deviceBleSwitchScene6ACRgb->Do(properties, deviceId);
+				}
+				else
+					device->DoJsonArray(properties);
 			}
 			else
 			{

@@ -81,6 +81,7 @@ static void HandleOpcodeBle(void *data)
 				timeout++;
 				if (timeout >= 300)
 				{
+					timeout = 0;
 					bleProtocol->SetProvisioning(false);
 					bleProtocol->StopScan();
 				}
@@ -107,9 +108,9 @@ static void HandleOpcodeBle(void *data)
 		}
 		else
 #ifdef ESP_PLATFORM
-			vTaskDelay(pdMS_TO_TICKS(200));
+			vTaskDelay(pdMS_TO_TICKS(100));
 #else
-			usleep(200000);
+			usleep(100000);
 #endif
 	}
 }

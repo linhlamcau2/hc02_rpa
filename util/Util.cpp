@@ -32,11 +32,10 @@ string Util::genRandRQI(int size)
 
 string Util::GenIdDeviceByElement(string id, int element)
 {
-	if (!element)
-		return id;
-	string rt = id;
-	rt[0] += element;
-	return rt;
+    int c = id[0] - 48 + element;
+    string strTemp = to_string(c);
+    string tempId = id.substr(strTemp.length(), id.length() - strTemp.length());
+    return (strTemp + tempId);
 }
 
 string getTimeStrFromTime(time_t t)
