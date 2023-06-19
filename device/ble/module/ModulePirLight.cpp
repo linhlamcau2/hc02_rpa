@@ -78,42 +78,43 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
-			return CODE_OK;
-		}
-		uint16_t sceneId = data[5] | (data[6] << 8);
-		if (sceneId > 0)
-		{
-			SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
-			if (sceneBle)
+
+			uint16_t sceneId = data[5] | (data[6] << 8);
+			if (sceneId > 0)
 			{
-				for (int i = 0; i < sceneBle->deviceList.size(); i++)
+				SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
+				if (sceneBle)
 				{
-					DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
-					if (dev)
+					for (int i = 0; i < sceneBle->deviceList.size(); i++)
 					{
-						if (sceneBle->deviceList[i]->data.isArray())
+						DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
+						if (dev)
 						{
-							for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
+							if (sceneBle->deviceList[i]->data.isArray())
 							{
-								if (sceneBle->deviceList[i]->data[j].isObject())
+								for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
 								{
-									dev->InputData(sceneBle->deviceList[i]->data[j]);
+									if (sceneBle->deviceList[i]->data[j].isObject())
+									{
+										dev->InputData(sceneBle->deviceList[i]->data[j]);
+									}
 								}
 							}
+							else if (sceneBle->deviceList[i]->data.isObject())
+							{
+								dev->InputData(sceneBle->deviceList[i]->data);
+							}
 						}
-						else if (sceneBle->deviceList[i]->data.isObject())
+						else
 						{
-							dev->InputData(sceneBle->deviceList[i]->data);
+							LOGW("DeviceBle error");
 						}
-					}
-					else
-					{
-						LOGW("DeviceBle error");
 					}
 				}
+				else
+					LOGW("Scene not found");
 			}
-			else
-				LOGW("Scene not found");
+			return CODE_OK;
 		}
 	}
 	return CODE_ERROR;

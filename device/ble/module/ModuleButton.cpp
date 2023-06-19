@@ -67,7 +67,7 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == 0x52)
 	{
-		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE)
+		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE || data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
 		{
 			id = 10 + data_message->btId;
 			bt = data_message->mode;

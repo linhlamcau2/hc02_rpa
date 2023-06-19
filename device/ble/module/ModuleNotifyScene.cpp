@@ -32,14 +32,6 @@ int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			idScene = data_message->data[1] | (data_message->data[2] << 8);
 		}
-		else if (data_message->header == REMOTE_MODULE_AC_TYPE || data_message->header == REMOTE_MODULE_DC_TYPE)
-		{
-			idScene = data_message->data[2] | (data_message->data[3] << 8);
-		}
-		else if (data_message->header == PIR_LIGHT_TYPE)
-		{
-			idScene = data_message->data[2] | (data_message->data[3] << 8);
-		}
 		if (idScene > 0)
 		{
 			SceneBle *sceneBle = gateway->getSceneBleFromAddr(idScene);
