@@ -84,6 +84,8 @@ static void HandleOpcodeBle(void *data)
 					timeout = 0;
 					bleProtocol->SetProvisioning(false);
 					bleProtocol->StopScan();
+					string cmdStop = "{\"CMD\":\"STOP\"}";
+					gateway->LocalPublish(cmdStop);
 				}
 				else
 #ifdef ESP_PLATFORM

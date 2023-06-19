@@ -29,27 +29,42 @@ bool DeviceBleSwitchScene6ACRgb::CheckId(string id)
 void DeviceBleSwitchScene6ACRgb::InputData(uint8_t *data, int len, uint32_t addr)
 {
 	int indexButton = data[5];
-	if (indexButton >= 1 && indexButton <= 6)
+	if (data[0] == 0xe3)
 	{
+		if (indexButton >= 1 && indexButton <= 6)
+		{
+			values = Json::Value::null;
+			for (auto &module : modules)
+			{
+				if (module->InputData(data, len, values) == CODE_OK)
+					break;
+			}
+
+			Json::Value pushDataValue;
+			Json::Value deviceData;
+			Json::Value onLine;
+			onLine["ID"] = 62;
+			onLine["VALUE"] = 1;
+			values.append(onLine);
+			deviceData["DEVICE_ID"] = idButton[indexButton - 1];
+			deviceData["PROPERTIES"] = values;
+			pushDataValue["CMD"] = "DEVICE";
+			pushDataValue["DATA"].append(deviceData);
+			gateway->LocalPublish(pushDataValue);
+			gateway->CloudPublish(pushDataValue);
+		}
+	}
+	if (data[0] == 0x52)
+	{
+		LOGE("into");
 		values = Json::Value::null;
 		for (auto &module : modules)
 		{
 			if (module->InputData(data, len, values) == CODE_OK)
 				break;
 		}
-
-		Json::Value pushDataValue;
-		Json::Value deviceData;
-		Json::Value onLine;
-		onLine["ID"] = 62;
-		onLine["VALUE"] = 1;
-		values.append(onLine);
-		deviceData["DEVICE_ID"] = idButton[indexButton - 1];
-		deviceData["PROPERTIES"] = values;
-		pushDataValue["CMD"] = "DEVICE";
-		pushDataValue["DATA"].append(deviceData);
-		gateway->LocalPublish(pushDataValue);
-		gateway->CloudPublish(pushDataValue);
+		if (!values.isNull())
+			PushTelemetry(values);
 	}
 }
 
