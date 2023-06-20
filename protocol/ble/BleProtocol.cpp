@@ -272,7 +272,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		else
 		{
 			LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
-			usleep(50000);
 		}
 		break;
 	}
@@ -368,6 +367,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 							message_rsp_st *temp_message = (message_rsp_st *)heap_caps_malloc_prefer(message_rsp->len + 2, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 							memcpy(temp_message, message_rsp, message_rsp->len + 2);
 							xQueueSend(opcodeMessageQueue, (void *)&temp_message, (TickType_t)0);
+							vTaskDelay(pdMS_TO_TICKS(50));
 #else
 							message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
 							memcpy(temp_message, message_rsp, message_rsp->len + 2);
