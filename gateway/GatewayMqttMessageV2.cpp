@@ -571,6 +571,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (bleProtocol)
 	{
+		bleProtocol->SetProvisioning(true);
 		bleProtocol->StartScan();
 		respValue["data"]["code"] = CODE_OK;
 		respValue["cmd"] = "startScanBleRsp";

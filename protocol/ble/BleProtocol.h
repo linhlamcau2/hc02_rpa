@@ -7,15 +7,10 @@
 #include <atomic>
 #include <functional>
 
-#ifdef __ANDROID__
-
-#elif defined(ESP_PLATFORM)
+#ifdef ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-#else
-#include <sys/ipc.h>
-#include <sys/msg.h>
 #endif
 
 #define SYSTEM_REQ 0xFFE9
@@ -200,12 +195,8 @@ private:
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
-#ifdef __ANDROID__
-#elif defined(ESP_PLATFORM)
+#ifdef ESP_PLATFORM
 	QueueHandle_t opcodeMessageQueue;
-#else
-	key_t key;
-	int msgid;
 #endif
 	atomic<bool> haveNewMac;
 	atomic<bool> isProvisioning;
