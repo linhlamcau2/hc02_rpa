@@ -2388,7 +2388,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 	weather_outdoor_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_WEATHER_OUTDOOR;
 	weather_outdoor_screen_touch_message.temp = bswap_16(temp);
 	weather_outdoor_screen_touch_message.status = status;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_outdoor_screen_touch_message, sizeof(weather_outdoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherOutdoorScreenTouchHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_outdoor_screen_touch_message, sizeof(weather_outdoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1500, weatherOutdoorScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -2440,7 +2440,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	weather_indoor_screen_touch_message.temp = bswap_16(temp);
 	weather_indoor_screen_touch_message.hum = bswap_16(hum);
 	weather_indoor_screen_touch_message.pm25 = pm25;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_indoor_screen_touch_message, sizeof(weather_indoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, weatherIndoorScreenTouchHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_indoor_screen_touch_message, sizeof(weather_indoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1500, weatherIndoorScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -2495,7 +2495,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 	date_screen_touch_message.month = month;
 	date_screen_touch_message.date = date;
 	date_screen_touch_message.day = day;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&date_screen_touch_message, sizeof(date_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dateScreenTouchHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&date_screen_touch_message, sizeof(date_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1500, dateScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -2548,7 +2548,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 	time_screen_touch_message.hours = hours;
 	time_screen_touch_message.minute = minute;
 	time_screen_touch_message.second = second;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&time_screen_touch_message, sizeof(time_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeScreenTouchHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&time_screen_touch_message, sizeof(time_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1500, timeScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))

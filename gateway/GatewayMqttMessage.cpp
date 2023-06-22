@@ -909,6 +909,10 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+static bool compareByID(const Json::Value& obj1, const Json::Value& obj2) {
+    return obj1["ID"].asInt() > obj2["ID"].asInt();
+}
+
 int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
@@ -954,7 +958,21 @@ int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 							if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
 							{
 								string devId = deviceOutput["DEVICE_ID"].asString();
-								Json::Value property = deviceOutput["PROPERTIES"];
+								Json::Value property1 = deviceOutput["PROPERTIES"];
+								vector<Json::Value> listProperties;
+								for (int numProperty = 0 ; numProperty < property1.size(); numProperty++)
+								{
+									if (property1[numProperty].isObject())
+									{
+										listProperties.push_back(property1[numProperty]);
+									}
+								}
+								std::sort(listProperties.begin(), listProperties.end(), compareByID);
+								Json::Value property;
+								for (int i = 0 ; i < listProperties.size(); i++)
+								{
+									property.append(listProperties[i]);
+								}
 								device = getDeviceFromId(devId);
 								if (device)
 								{
@@ -3594,7 +3612,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, "or", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
+				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle, 0);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleListMtx.lock();
