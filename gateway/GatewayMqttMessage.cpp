@@ -2520,7 +2520,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 								luxHigh = data["LUX"][1].asInt();
 								if (bleProtocol)
 								{
-									if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, luxLow, luxHigh, sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, luxLow / 10, luxHigh / 10, sceneBle->GetAddr(), 0) != CODE_OK)
 									{
 										statusRsp = CODE_ERROR;
 									}
@@ -2541,7 +2541,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 					{
 						if (bleProtocol)
 						{
-							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
+							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow / 10, luxHigh / 10, sceneAfter->GetAddr(), 0) != CODE_OK)
 							{
 								statusRsp = CODE_ERROR;
 							}
@@ -2606,7 +2606,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 								luxHigh = data["LUX"][1].asInt();
 								if (bleProtocol)
 								{
-									if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, luxLow, luxHigh, sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, luxLow / 10, luxHigh / 10, sceneBle->GetAddr(), 0) != CODE_OK)
 									{
 										statusRsp = CODE_ERROR;
 									}
@@ -2627,7 +2627,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 					{
 						if (bleProtocol)
 						{
-							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow, luxHigh, sceneAfter->GetAddr(), 0) != CODE_OK)
+							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, 0, luxLow / 10, luxHigh / 10, sceneAfter->GetAddr(), 0) != CODE_OK)
 							{
 								statusRsp = CODE_ERROR;
 							}
@@ -3014,7 +3014,7 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 
 					if (bleProtocol)
 					{
-						if (bleProtocol->SetIdCombine(list[i]->device->GetAddr(), 0) != CODE_OK)
+						if (bleProtocol->SetIdCombine(list[i]->epId, 0) != CODE_OK)
 							statusRsp = "FAILED";
 					}
 					else
@@ -3594,7 +3594,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
+				rule = new Rule(eventTriggerId, "or", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle, 0);
 				rule->AddRuleOutput(ruleOutputSceneBle);
 				ruleListMtx.lock();
@@ -3625,10 +3625,13 @@ int Gateway::OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue)
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
 			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
-			ruleListMtx.lock();
-			ruleList.erase(ruleList.find(ruleId));
-			ruleListMtx.unlock();
-			return CODE_OK;
+			Rule *rule = getRuleFromId(ruleId);
+			if (rule)
+			{
+				delRule(rule);
+			}
+			else
+				LOGW("Rule %s not found", ruleId.c_str());
 		}
 		return CODE_OK;
 	}
