@@ -76,4 +76,7 @@ namespace Util
 	void SetHumOfScreenTouch(uint16_t hum);
 	uint16_t GetTempOfScreenTouch();
 	uint16_t GetHumOfScreenTouch();
+
+	bool compareByID(const Json::Value& obj1, const Json::Value& obj2);
+	Json::Value arrangeJson(Json::Value &obj);
 }

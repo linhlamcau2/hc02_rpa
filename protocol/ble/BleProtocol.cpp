@@ -174,15 +174,18 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
-			dataValue["ID"] = 5;
-			dataValue["VALUE"] = data_message->value1;
-			dataArray.append(dataValue);
-			dataValue["ID"] = 3;
-			dataValue["VALUE"] = data_message->value2;
-			dataArray.append(dataValue);
-			dataValue["ID"] = 4;
-			dataValue["VALUE"] = data_message->value3;
-			dataArray.append(dataValue);
+			if (data_message->value1 != 0 && data_message->value2 != 0 && data_message->value3 != 0)
+			{
+				dataValue["ID"] = 5;
+				dataValue["VALUE"] = data_message->value1;
+				dataArray.append(dataValue);
+				dataValue["ID"] = 3;
+				dataValue["VALUE"] = data_message->value2;
+				dataArray.append(dataValue);
+				dataValue["ID"] = 4;
+				dataValue["VALUE"] = data_message->value3;
+				dataArray.append(dataValue);
+			}
 		}
 	}
 }
@@ -365,6 +368,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 			index++;
 			l--;
 		}
+		vTaskDelay(10 / portTICK_PERIOD_MS);
 	}
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
@@ -384,13 +388,13 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	if (pthread_mutex_lock(&mutex) == 0)
 	{
 		message_rsp_list_st message_rsp_list = {
-				.status = false,
-				.opcode = opRsp,
-				.len = lenRsp,
-				.data = dataRsp,
-				.compare_data = compare_data,
-				.compare_position = compare_position,
-				.compare_len = compare_len,
+			.status = false,
+			.opcode = opRsp,
+			.len = lenRsp,
+			.data = dataRsp,
+			.compare_data = compare_data,
+			.compare_position = compare_position,
+			.compare_len = compare_len,
 		};
 		if (opRsp)
 		{
@@ -399,7 +403,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		}
 
 		message_req_st message_req = {
-				.opcode = opReq,
+			.opcode = opReq,
 		};
 		for (int i = 0; i < lenReq; i++)
 		{
@@ -1070,9 +1074,9 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 			uint16_t gwAddr;
 			uint16_t opcodeRsp;
 		} turnOnOffHeader = {
-				.devAddr = devAddr,
-				.gwAddr = 0x0001,
-				.opcodeRsp = G_ONOFF_STATUS,
+			.devAddr = devAddr,
+			.gwAddr = 0x0001,
+			.opcodeRsp = G_ONOFF_STATUS,
 		};
 		onoff_message.ble_message_header.devAddr = devAddr;
 		onoff_message.opcode = G_ONOFF_SET;
@@ -1994,9 +1998,9 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 			uint32_t data;
 			struct
 			{
-				uint32_t store : 8;					 // 8 bit not use
-				uint32_t Lux_hi : 10;				 // 10 bit lux hi
-				uint32_t Lux_low : 10;			 // 10 bit lux low
+				uint32_t store : 8;			 // 8 bit not use
+				uint32_t Lux_hi : 10;		 // 10 bit lux hi
+				uint32_t Lux_low : 10;		 // 10 bit lux low
 				uint32_t Light_Conditon : 3; // 7 bit low
 				uint32_t Pir_Conditon : 1;	 // 1 bit hight
 			};
@@ -3122,8 +3126,8 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = devAddr};
+			.header = 0x12,
+			.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
 		for (int i = 0; i < 16; i++)
 		{
@@ -3151,8 +3155,8 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = gwAddr};
+			.header = 0x12,
+			.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
 		for (int i = 0; i < 16; i++)
 		{

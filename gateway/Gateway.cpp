@@ -1659,11 +1659,14 @@ SceneDelay *Gateway::AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, b
 					if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
 					{
 						string devId = deviceOutput["DEVICE_ID"].asString();
-						Json::Value property = deviceOutput["PROPERTIES"];
+						Json::Value propertyDev = deviceOutput["PROPERTIES"];
+						Json::Value propertyDevArr = Util::arrangeJson(propertyDev);
+						if (propertyDevArr == Json::Value::null)
+							propertyDevArr = propertyDev;
 						device = getDeviceFromId(devId);
 						if (device)
 						{
-							SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, property, delay);
+							SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, propertyDevArr, delay);
 							if (sceneDelayDeviceOutput)
 							{
 								sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
@@ -1690,11 +1693,14 @@ SceneDelay *Gateway::AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, b
 					if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
 					{
 						string groupId = groupInSceneDelay["GROUP_ID"].asString();
-						Json::Value property = groupInSceneDelay["PROPERTIES"];
+						Json::Value propertyGr = groupInSceneDelay["PROPERTIES"];
+						Json::Value propertyGrArr = Util::arrangeJson(propertyGr);
+						if (propertyGrArr == Json::Value::null)
+							propertyGrArr = propertyGr;
 						group = getGroupFromId(groupId);
 						if (group)
 						{
-							SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, property, delay);
+							SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, propertyGrArr, delay);
 							if (sceneDelayGroupOutput)
 							{
 								sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);

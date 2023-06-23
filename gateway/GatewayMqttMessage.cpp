@@ -909,12 +909,9 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
-static bool compareByID(const Json::Value& obj1, const Json::Value& obj2) {
-    return obj1["ID"].asInt() > obj2["ID"].asInt();
-}
-
 int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGD("%s", reqValue.toString().c_str());
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
 	{
 		respValue["CMD"] = "CREATE_SCENE_DELAY";
@@ -958,25 +955,14 @@ int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 							if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
 							{
 								string devId = deviceOutput["DEVICE_ID"].asString();
-								Json::Value property1 = deviceOutput["PROPERTIES"];
-								vector<Json::Value> listProperties;
-								for (int numProperty = 0 ; numProperty < property1.size(); numProperty++)
-								{
-									if (property1[numProperty].isObject())
-									{
-										listProperties.push_back(property1[numProperty]);
-									}
-								}
-								std::sort(listProperties.begin(), listProperties.end(), compareByID);
-								Json::Value property;
-								for (int i = 0 ; i < listProperties.size(); i++)
-								{
-									property.append(listProperties[i]);
-								}
+								Json::Value propertyDev = deviceOutput["PROPERTIES"];
+								Json::Value propertyDevArr = Util::arrangeJson(propertyDev);
+								if (propertyDevArr == Json::Value::null)
+									propertyDevArr = propertyDev;
 								device = getDeviceFromId(devId);
 								if (device)
 								{
-									SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, property, delay);
+									SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, propertyDevArr, delay);
 									if (sceneDelayDeviceOutput)
 									{
 										sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
@@ -1012,11 +998,15 @@ int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 							if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
 							{
 								string groupId = groupInSceneDelay["GROUP_ID"].asString();
-								Json::Value property = groupInSceneDelay["PROPERTIES"];
+								Json::Value propertyGr = groupInSceneDelay["PROPERTIES"];
+								
+								Json::Value propertyGrArr = Util::arrangeJson(propertyGr);
+								if (propertyGrArr == Json::Value::null)
+									propertyGrArr = propertyGr;
 								group = getGroupFromId(groupId);
 								if (group)
 								{
-									SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, property, delay);
+									SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, propertyGrArr, delay);
 									if (sceneDelayGroupOutput)
 									{
 										sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);
@@ -1103,11 +1093,14 @@ int Gateway::OnRpcEditSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 						if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
 						{
 							string devId = deviceOutput["DEVICE_ID"].asString();
-							Json::Value property = deviceOutput["PROPERTIES"];
+							Json::Value propertyDev = deviceOutput["PROPERTIES"];
+							Json::Value propertyDevArr = Util::arrangeJson(propertyDev);
+							if (propertyDevArr == Json::Value::null)
+								propertyDevArr = propertyDev;
 							device = getDeviceFromId(devId);
 							if (device)
 							{
-								SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, property, delay);
+								SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, propertyDevArr, delay);
 								if (sceneDelayDeviceOutput)
 								{
 									sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
@@ -1139,11 +1132,14 @@ int Gateway::OnRpcEditSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 						if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
 						{
 							string groupId = groupInSceneDelay["GROUP_ID"].asString();
-							Json::Value property = groupInSceneDelay["PROPERTIES"];
+							Json::Value propertyGr = groupInSceneDelay["PROPERTIES"];
+							Json::Value propertyGrArr = Util::arrangeJson(propertyGr);
+							if (propertyGrArr == Json::Value::null)
+								propertyGrArr = propertyGr;
 							group = getGroupFromId(groupId);
 							if (group)
 							{
-								SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, property, delay);
+								SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, propertyGrArr, delay);
 								if (sceneDelayGroupOutput)
 								{
 									sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);
