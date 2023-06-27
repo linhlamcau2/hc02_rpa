@@ -342,9 +342,13 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 					Json::Value temp_devicesList;
 					for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
 					{
+						Json::Value device;
 						DeviceInRoom *deviceInRoom = temp_room->deviceList[i];
 						string deviceId = deviceInRoom->device->GetId();
-						temp_devicesList.append(deviceId);
+						Device *tempDev = getDeviceFromId(deviceId);
+						device["id"] = deviceId;
+						device["type"] = tempDev->GetType();
+						temp_devicesList.append(device);
 					}
 					temp_roomsData["devices"] = temp_devicesList;
 					roomsData.append(temp_roomsData);
