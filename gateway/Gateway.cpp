@@ -33,6 +33,7 @@
 #include "DeviceBleScreenTouch.h"
 #include "DeviceBleCurtain.h"
 #include "DeviceBleRoolDoor.h"
+#include "DeviceBleSwitchTouch.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -299,14 +300,14 @@ void Gateway::init()
 	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
-		Led::SetLedService(MODE_OFF);
+		SetLedService(false);
 	}
 	vTaskDelay(10);
 #endif
 	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
-		Led::SetLedService(MODE_OFF);
+		SetLedService(false);
 	}
 	vTaskDelay(10);
 #else
@@ -358,19 +359,15 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 			deviceListMtx.unlock();
 		}
 #ifdef ESP_PLATFORM
-		Led::SetModeLedInternet(MODE_ON);
-		Led::SetLedInternet(MODE_ON);
+		SetLedInternet(true);
 #endif
 	}
 	else
 	{
 		Util::LedInternet(false);
 #ifdef ESP_PLATFORM
-		if (Led::GetModeLedInternet() != MODE_BLINK && Led::GetModeLedInternet() != MODE_FLASH)
-		{
-			Led::SetModeLedInternet(MODE_OFF);
-			Led::SetLedInternet(MODE_OFF);
-		}
+		if (GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+			SetLedInternet(false);
 #endif
 	}
 }
@@ -911,7 +908,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
@@ -931,7 +928,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				}
 			}
 		}
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
@@ -951,7 +948,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				}
 			}
 		}
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
@@ -971,11 +968,11 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				}
 			}
 		}
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
 		for (int i = 1; i < 2; i++)
@@ -994,7 +991,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				}
 			}
 		}
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
 		for (int i = 1; i < 3; i++)
@@ -1013,7 +1010,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				}
 			}
 		}
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
 		for (int i = 1; i < 4; i++)
@@ -1032,7 +1029,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				}
 			}
 		}
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
@@ -1070,12 +1067,26 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
 		numScreenTouchs++;
 		break;
+	case BLE_SWITCH_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
 		device = new DeviceBleCurtain(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SWITCH_ROOLING_DOOR:
 		device = new DeviceBleRoolDoor(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_SWITCH_1:
+	case BLE_SWITCH_WATER_HEATER:
+		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 1);
+		break;
+	case BLE_SWITCH_2:
+		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 2);
+		break;
+	case BLE_SWITCH_3:
+		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 3);
+		break;
+	case BLE_SWITCH_4:
+		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 4);
 		break;
 
 #ifndef ESP_PLATFORM
@@ -1443,43 +1454,84 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					{
 						string devId = devInput["DEVICE_ID"].asString();
 						Json::Value devAttribute = devInput["DEVICE_ATTRIBUTE"];
-						Json::Value datasDevInput;
-						if (devAttribute.isMember("ID") && devAttribute["ID"].isInt() && devAttribute.isMember("VALUE"))
-						{
-							int id = devAttribute["ID"].asInt();
-							string op = "";
-							Json::Value values = Json::arrayValue;
-							if (devAttribute["VALUE"].isArray())
-							{
-								values = devAttribute["VALUE"];
-								op = "<>";
-							}
-							else if (devAttribute["VALUE"].isInt())
-							{
-								values.append(devAttribute["VALUE"].asInt());
-								op = "=";
-							}
-							datasDevInput["ID"] = id;
-							datasDevInput["VALUE"] = values;
-							datasDevInput["OP"] = op;
-						}
+
 						Device *deviceInputRule = getDeviceFromId(devId);
 						if (deviceInputRule)
 						{
-							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInputRule, datasDevInput);
-							if (ruleInputDevice)
+							Json::Value datasDevInput;
+							if (devAttribute.isMember("ID") && devAttribute["ID"].isInt() && devAttribute.isMember("VALUE"))
 							{
-								rule->AddRuleInput(ruleInputDevice);
+								int id = devAttribute["ID"].asInt();
+								string op = "";
+								Json::Value values = Json::arrayValue;
+								if (devAttribute["VALUE"].isArray())
+								{
+									values = devAttribute["VALUE"];
+									op = "<>";
+								}
+								else if (devAttribute["VALUE"].isInt())
+								{
+									values.append(devAttribute["VALUE"].asInt());
+									op = "=";
+								}
+
+								if (deviceInputRule->GetType() == BLE_SWITCH_RGB_1 ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_2 ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_3 ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_4 ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_WATER_HEATER ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+								{
+									if (id == BLE_ATTRIBUTE_BUTTON_1 || id == BLE_ATTRIBUTE_BUTTON_2 || id == BLE_ATTRIBUTE_BUTTON_3 || id == BLE_ATTRIBUTE_BUTTON_4)
+									{
+										Device *deviceInputRuleChild = getDeviceBleFromAddr(deviceInputRule->GetAddr() + (id - 11));
+										if (deviceInputRuleChild)
+										{
+											LOGE("Device Id: %s", deviceInputRuleChild->GetId().c_str());
+											datasDevInput["ID"] = BLE_ATTRIBUTE_ONOFF;
+											datasDevInput["VALUE"] = values;
+											datasDevInput["OP"] = op;
+
+											RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInputRuleChild, datasDevInput);
+											if (ruleInputDevice)
+											{
+												rule->AddRuleInput(ruleInputDevice);
+											}
+											else
+												LOGW("create rule input device error");
+										}
+										else
+											LOGW("Device child not found");
+									}
+								}
+								else
+								{
+									datasDevInput["ID"] = id;
+									datasDevInput["VALUE"] = values;
+									datasDevInput["OP"] = op;
+
+									RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInputRule, datasDevInput);
+									if (ruleInputDevice)
+									{
+										rule->AddRuleInput(ruleInputDevice);
+									}
+									else
+										LOGW("create rule input device error");
+								}
 							}
 							else
-							{
-								LOGW("create rule input device error");
-							}
+								LOGW("Device Attribute error");
 						}
 						else
-						{
 							LOGW("Device %s does not exsit", devId.c_str());
-						}
 					}
 				}
 			}

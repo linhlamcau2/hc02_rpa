@@ -111,7 +111,7 @@ void BleProtocol::init()
 	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 15360, this, 10, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
-		Led::SetLedService(MODE_OFF);
+		SetLedService(false);
 	}
 	vTaskDelay(10);
 #else
@@ -124,20 +124,10 @@ void BleProtocol::InitKey()
 {
 	if (GetAppKey() == "")
 		ResetBle();
-#ifdef ESP_PLATFORM
-	Led::SetModeLedInternet(MODE_OFF);
-	Led::SetLedInternet(MODE_OFF);
-#endif
 	while (GetNetKey())
 	{
 #ifdef ESP_PLATFORM
-		for (int i = 0; i < 10; i++)
-		{
-			Led::SetLedInternet(MODE_ON);
-			usleep(200000);
-			Led::SetLedInternet(MODE_OFF);
-			usleep(200000);
-		}
+		FlashLedInternet();
 #else
 		sleep(4);
 #endif
@@ -176,9 +166,12 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 		{
 			if (data_message->value1 != 0 && data_message->value2 != 0 && data_message->value3 != 0)
 			{
-				dataValue["ID"] = 5;
-				dataValue["VALUE"] = data_message->value1;
-				dataArray.append(dataValue);
+				if (data_message->value1 >= 30000)
+				{
+					dataValue["ID"] = 5;
+					dataValue["VALUE"] = data_message->value1;
+					dataArray.append(dataValue);
+				}
 				dataValue["ID"] = 3;
 				dataValue["VALUE"] = data_message->value2;
 				dataArray.append(dataValue);
@@ -268,10 +261,10 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedService = Led::GetLedService();
+	bool statusLedService = GetStatusLedService();
 	if (!buttonSignal->GetStatus())
 	{
-		Led::SetLedService(!statusLedService);
+		SetLedService(!statusLedService);
 	}
 #endif
 	int index = 0;
@@ -375,7 +368,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 #ifdef ESP_PLATFORM
 	if (!buttonSignal->GetStatus())
 	{
-		Led::SetLedService(statusLedService);
+		SetLedService(statusLedService);
 	}
 #endif
 	return l;
@@ -2917,7 +2910,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 	return CODE_ERROR;
 }
 
-int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value)
+int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t relay, uint8_t value)
 {
 	LOGD("ControlRelayOfSwitch 0x%04X, relayid %d, value %d", devAddr, relay, value);
 	uint8_t dataRsp[100];
@@ -2940,7 +2933,22 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t v
 	control_relay_switch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	control_relay_switch_message.vendorId = RD_VENDOR_ID;
 	control_relay_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH;
+	switch (type)
+	{
+	case BLE_SWITCH_1:
+	case BLE_SWITCH_WATER_HEATER:
+		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_1;
+		break;
+	case BLE_SWITCH_2:
+		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2;
+		break;
+	case BLE_SWITCH_3:
+		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3;
+		break;
+	default:
+		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4;
+		break;
+	}
 	control_relay_switch_message.relay = relay;
 	control_relay_switch_message.value = value;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, sizeof(control_relay_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlRelaySwitchHeader, 0, 7);

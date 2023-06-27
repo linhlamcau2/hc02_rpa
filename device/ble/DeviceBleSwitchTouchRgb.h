@@ -13,7 +13,8 @@ private:
 	ModuleButton *moduleButton;
 	ModuleOnOff *moduleOnOff;
 	ModuleRgb *moduleRgb;
+	uint8_t element;
 
 public:
-	DeviceBleSwitchTouchRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleSwitchTouchRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
 };

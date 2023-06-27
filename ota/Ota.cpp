@@ -16,7 +16,7 @@ int Ota::startOta(string name, string url, string sum)
 	sleep(30);
 
 	// Download file
-	string wget = "wget " + string(BASE_URL_DEV) + url;
+	string wget = "wget " + string(BASE_URL_PRO) + url;
 	system(wget.c_str());
 	sleep(10);
 

@@ -226,7 +226,7 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		DelAllSceneDelay();
 
 		HTTPRequest *httpRequest = new HTTPRequest();
-		httpRequest->setUrl(string(BASE_URL_DEV) + string(RENEW_TOKEN));
+		httpRequest->setUrl(string(BASE_URL_PRO) + string(RENEW_TOKEN));
 		httpRequest->setMethod("POST");
 
 		if (gateway->getDormitory() == "" || gateway->getRefreshToken() == "")
@@ -238,7 +238,7 @@ int Gateway::OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue)
 		{
 			httpRequest->setToken(token);
 
-			httpRequest->setUrl(string(BASE_URL_DEV) + string(HC_BACKUP_FILE_URL));
+			httpRequest->setUrl(string(BASE_URL_PRO) + string(HC_BACKUP_FILE_URL));
 			httpRequest->setMethod("POST");
 			string resultUpload = httpRequest->UploadFile(gateway->getRefreshToken(), gateway->getDormitory(), DB_NAME);
 			LOGD("%s", resultUpload.c_str());
@@ -999,7 +999,7 @@ int Gateway::OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue)
 							{
 								string groupId = groupInSceneDelay["GROUP_ID"].asString();
 								Json::Value propertyGr = groupInSceneDelay["PROPERTIES"];
-								
+
 								Json::Value propertyGrArr = Util::arrangeJson(propertyGr);
 								if (propertyGrArr == Json::Value::null)
 									propertyGrArr = propertyGr;
@@ -3073,9 +3073,40 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 			string time = data["CHANGE_AT"].asString();
 			int value = data["CHANGE_TO"].asInt();
 
-			Json::Value properties;
-			properties["ID"] = 0;
-			properties["VALUE"] = value;
+			Rule *rule = getRuleFromId(id);
+			if (rule)
+			{
+				rule->DelAllRuleInput();
+				rule->DelAllRuleOutput();
+			}
+
+			int day = Util::GetDaysCurrent();
+			int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+			switch (day)
+			{
+			case 2:
+				mon = 1;
+				break;
+			case 3:
+				tue = 1;
+				break;
+			case 4:
+				wed = 1;
+				break;
+			case 5:
+				thu = 1;
+				break;
+			case 6:
+				fri = 1;
+				break;
+			case 7:
+				sat = 1;
+				break;
+			case 8:
+				sun = 1;
+				break;
+			}
+			int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
 
 			uint8_t buttonId = 11;
 			if (btnId == "BUTTON_1")
@@ -3092,59 +3123,59 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 				buttonId = 16;
 
 			Device *deviceParent = getDeviceFromId(devId);
-			Device *deviceChild = NULL;
 			if (deviceParent)
 			{
-				deviceChild = getDeviceBleFromAddr(deviceParent->GetAddr() + (buttonId - 11));
-			}
-			else
-				LOGW("Device not found");
-
-			Rule *rule = getRuleFromId(id);
-			if (rule)
-			{
-				rule->DelAllRuleInput();
-				rule->DelAllRuleOutput();
-			}
-			if (deviceChild)
-			{
-				int day = Util::GetDaysCurrent();
-				int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
-				switch (day)
+				if (deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
 				{
-				case 2:
-					mon = 1;
-					break;
-				case 3:
-					tue = 1;
-					break;
-				case 4:
-					wed = 1;
-					break;
-				case 5:
-					thu = 1;
-					break;
-				case 6:
-					fri = 1;
-					break;
-				case 7:
-					sat = 1;
-					break;
-				case 8:
-					sun = 1;
-					break;
+					Json::Value properties;
+					properties["ID"] = 0;
+					properties["VALUE"] = value;
+					LOGW("Properties: %s", properties.toString().c_str());
+
+					Device *deviceChild = getDeviceBleFromAddr(deviceParent->GetAddr() + (buttonId - 11));
+					if (deviceChild)
+					{
+						LOGW("deviceChild: %s", deviceChild->GetId().c_str());
+						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
+						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceChild, properties, 0);
+						rule->AddRuleOutput(ruleOutputDevice);
+						ruleListMtx.lock();
+						ruleList[id] = rule;
+						ruleListMtx.unlock();
+						return CODE_OK;
+					}
+					else
+						LOGW("Device child not found");
 				}
-				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
-				RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceChild, properties, 0);
-				rule->AddRuleOutput(ruleOutputDevice);
-				ruleListMtx.lock();
-				ruleList[id] = rule;
-				ruleListMtx.unlock();
+				else
+				{
+					if (deviceParent->GetType() == BLE_SWITCH_1 ||
+						deviceParent->GetType() == BLE_SWITCH_2 ||
+						deviceParent->GetType() == BLE_SWITCH_3 ||
+						deviceParent->GetType() == BLE_SWITCH_4 ||
+						deviceParent->GetType() == BLE_SWITCH_WATER_HEATER)
+					{
+						Json::Value properties;
+						properties["ID"] = buttonId;
+						properties["VALUE"] = value;
+
+						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
+						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceParent, properties, 0);
+						rule->AddRuleOutput(ruleOutputDevice);
+						ruleListMtx.lock();
+						ruleList[id] = rule;
+						ruleListMtx.unlock();
+						return CODE_OK;
+					}
+				}
 			}
 			else
 				LOGW("Device not found");
-			return CODE_OK;
+			return CODE_ERROR;
 		}
 		else
 			LOGW("Power switch timeout failed");
@@ -3161,9 +3192,11 @@ int Gateway::OnRpcRemovePowerSwitchTimeout(Json::Value &reqValue, Json::Value &r
 		if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
 		{
 			string ruleId = dataValue["EVENT_TRIGGER_ID"].asString();
-			ruleListMtx.lock();
-			ruleList.erase(ruleList.find(ruleId));
-			ruleListMtx.unlock();
+			Rule *rule = getRuleFromId(ruleId);
+			if (rule)
+			{
+				delRule(rule);
+			}
 			return CODE_OK;
 		}
 		return CODE_OK;
@@ -3695,7 +3728,7 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		if (nameOld != "")
 		{
 			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
-			string domain = string(BASE_URL_DEV) + url;
+			string domain = string(BASE_URL_PRO) + url;
 
 			DelAllDevice();
 			DelAllGroup();

@@ -43,7 +43,12 @@
 #define RD_OPCODE_CONFIG_SEND_TIME 0x090A
 #define RD_OPCODE_CONFIG_DEL_ALL_SCENE 0x0A0A
 #define RD_OPCODE_CONFIG_SET_GROUP 0x0B0A
-#define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH 0x000B
+
+#define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_1 0x000E
+#define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2 0x000D
+#define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3 0x000C
+#define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4 0x000B
+
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
 #define RD_OPCODE_CONFIG_SET_TIMER 0x070B
@@ -274,7 +279,7 @@ public:
 
 	// switch
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
-	int ControlRelayOfSwitch(uint16_t devAddr, uint8_t relay, uint8_t value);
+	int ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t relay, uint8_t value);
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
 	int UpdateStatusRelaySwitch(uint16_t devAddr);

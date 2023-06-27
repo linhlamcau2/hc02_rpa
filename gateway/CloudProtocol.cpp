@@ -225,10 +225,10 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedInternet = Led::GetLedInternet();
+	bool statusLedInternet = GetStatusLedInternet();
 	if (!buttonSignal->GetStatus())
 	{
-		Led::SetLedInternet(!statusLedInternet);
+		SetLedInternet(!statusLedInternet);
 	}
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
@@ -283,7 +283,7 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 #ifdef ESP_PLATFORM
 	if (!buttonSignal->GetStatus())
 	{
-		Led::SetLedInternet(statusLedInternet);
+		SetLedInternet(statusLedInternet);
 	}
 #endif
 	Util::LedInternet(true);

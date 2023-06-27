@@ -13,7 +13,8 @@ private:
 	ModuleButton *moduleButton;
 	ModuleOnOff *moduleOnOff;
 	ModuleDimonDimoff *moduleDimonDimoff;
+	uint8_t element;
 
 public:
-	DeviceBleSwitchElectrical(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleSwitchElectrical(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
 };
