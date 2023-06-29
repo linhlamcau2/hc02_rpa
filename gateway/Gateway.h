@@ -236,6 +236,7 @@ public:
 	 *
 	 */
 	void ResetFactory();
+	void DelDatabase();
 
 	/**
 	 * @brief Send udp broadcast message to app when HC enters pairing mode

@@ -3,7 +3,6 @@
 #include "Log.h"
 #ifdef ESP_PLATFORM
 #include "esp_littlefs.h"
-#include "esp_spiffs.h"
 #endif
 
 #define STRINGIZE_(x) #x
@@ -18,22 +17,8 @@ Db::Db()
 
 Db::~Db()
 {
-#ifdef ESP_PLATFORM
 	if (db)
 		sqlite3_close_v2(db);
-	if (unlink(DB_NAME) != 0)
-	{
-		printf("Failed to delete file\n");
-	}
-	else
-	{
-		printf("File deleted successfully\n");
-	}
-
-	// Unmount SPIFFS
-	esp_vfs_spiffs_unregister(NULL);
-	esp_restart();
-#endif
 }
 
 void Db::init(void)

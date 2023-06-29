@@ -38,6 +38,7 @@
 #ifdef ESP_PLATFORM
 #include "Config.h"
 #include "Led.h"
+#include "esp_spiffs.h"
 #else
 #include "DeviceMqttAihub.h"
 #endif
@@ -377,6 +378,23 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 	LOGI("OnLocalConnect: %d", isConnected);
 }
 
+void Gateway::DelDatabase()
+{
+	delete database;
+#ifdef ESP_PLATFORM
+	if(unlink(DB_NAME) != 0)
+	{
+		LOGE("Failed to delete file\n");
+	}
+
+	// Unmount SPIFFS
+	esp_vfs_spiffs_unregister(NULL);
+#else
+	string rmDb = "rm " + DB_NAME;
+	system(rmDb.c_str());
+#endif
+}
+
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
@@ -387,50 +405,8 @@ void Gateway::ResetFactory()
 	}
 	else
 		LOGW("BleProtocol null");
-#ifdef ESP_PLATFORM
-	delete database;
-#else
-	deviceListMtx.lock();
-	deviceList.clear();
-	deviceListMtx.unlock();
 
-	groupListMtx.lock();
-	groupList.clear();
-	groupListMtx.unlock();
-
-	ruleListMtx.lock();
-	ruleList.clear();
-	ruleListMtx.unlock();
-
-	sceneBleListMtx.lock();
-	sceneBleList.clear();
-	sceneBleListMtx.unlock();
-
-	sceneDelayListMtx.lock();
-	sceneDelayList.clear();
-	sceneDelayListMtx.unlock();
-
-	roomListMtx.lock();
-	roomList.clear();
-	roomListMtx.unlock();
-
-	database->DeviceDelAll();
-	database->DeviceAttributeDelAll();
-	database->DeviceBleChildDelAll();
-	database->GroupDelAll();
-	database->DeviceInGroupDelAll();
-	database->RoomDelAll();
-	database->DeviceInRoomDelAll();
-	database->SceneBleDelAll();
-	database->DeviceInSceneBleDelAll();
-	database->RuleDelAll();
-
-	database->GatewayUpdateId(gateway, "");
-	database->GatewayUpdateDormitory(gateway, "");
-	gateway->setDormitory("");
-	gateway->setId("");
-	gateway->setBleAppkey("");
-#endif
+	DelDatabase();
 }
 
 void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp)

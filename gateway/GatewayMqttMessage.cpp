@@ -340,6 +340,9 @@ int Gateway::OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue)
 	respValue["DATA"] = data;
 #ifdef ESP_PLATFORM
 	Wifi::WifiStartAP();
+	esp_restart();
+#else
+	system("reboot");
 #endif
 	return CODE_EXIT;
 }
