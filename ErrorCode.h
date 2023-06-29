@@ -19,4 +19,5 @@ typedef enum
 	CODE_MEMORY_ERROR,
 	CODE_FILE_ERROR,
 	CODE_EXIT,
+	CODE_FACTORY,
 } ErrorCode;

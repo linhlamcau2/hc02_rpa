@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "Log.h"
 #include "Util.h"
+#include "Wifi.h"
 
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -89,9 +90,9 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-					payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-					payloadJson.isMember("data") && payloadJson["data"].isObject())
+				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+				payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+				payloadJson.isMember("data") && payloadJson["data"].isObject())
 			{
 				string cmd = payloadJson["cmd"].asString();
 				string rqi = payloadJson["rqi"].asString();
@@ -161,8 +162,8 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-					payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-					payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+				payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 			{
 				string cmd = payloadJson["cmd"].asString();
 				string rqi = payloadJson["rqi"].asString();
@@ -207,7 +208,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	}
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 	{
 		string cmd = payloadJson["CMD"].asString();
 		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
@@ -240,6 +241,17 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				Publish(HC_RESPONSE_TOPIC, respValue.toString());
+				exit(1);
+			}
+			else if (rs == CODE_FACTORY)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				Publish(HC_RESPONSE_TOPIC, respValue.toString());
+#ifdef ESP_PLATFORM
+				Wifi::WifiStartAP();
+#elif define (__OPENWRT__)
+				Wifi::SetModeApWifi();
+#endif			
 				exit(1);
 			}
 			else
@@ -309,9 +321,9 @@ int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue,
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopic + "all", sendValue.toString());
