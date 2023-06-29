@@ -32,6 +32,7 @@ Db::~Db()
 
 	// Unmount SPIFFS
 	esp_vfs_spiffs_unregister(NULL);
+	esp_restart();
 #endif
 }
 
