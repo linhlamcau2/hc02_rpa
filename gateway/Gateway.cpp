@@ -380,6 +380,16 @@ void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
 void Gateway::ResetFactory()
 {
 	LOGI("ResetFactory");
+	if (bleProtocol)
+	{
+		bleProtocol->ResetDelAll();
+		bleProtocol->ResetFactory();
+	}
+	else
+		LOGW("BleProtocol null");
+#ifdef ESP_PLATFORM
+	delete database;
+#else
 	deviceListMtx.lock();
 	deviceList.clear();
 	deviceListMtx.unlock();
@@ -420,13 +430,7 @@ void Gateway::ResetFactory()
 	gateway->setDormitory("");
 	gateway->setId("");
 	gateway->setBleAppkey("");
-	if (bleProtocol)
-	{
-		bleProtocol->ResetDelAll();
-		bleProtocol->ResetFactory();
-	}
-	else
-		LOGW("BleProtocol null");
+#endif
 }
 
 void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp)
