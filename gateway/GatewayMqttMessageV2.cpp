@@ -250,7 +250,7 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["data"]["code"] = CODE_OK;
-		respValue["data"]["devices"] = devicesValueRsp;
+		respValue["data"]["device"] = devicesData;
 	}
 	else
 	{
@@ -276,7 +276,7 @@ int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 	}
 	deviceListMtx.unlock();
 	respValue["data"]["code"] = CODE_OK;
-	respValue["data"]["devices"] = devicesValueRsp;
+	respValue["data"]["device"] = devicesData;
 	respValue["cmd"] = "deviceUpdate";
 	return CODE_OK;
 }

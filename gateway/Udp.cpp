@@ -120,9 +120,17 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	Json::Value payloadJson;
 	if (payloadJson.parse(message) && payloadJson.isObject())
 	{
-		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString() || payloadJson.isMember("cmd") && payloadJson["cmd"].isString())
 		{
-			string cmd = payloadJson["CMD"].asString();
+			string cmd = "";
+			if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
+			{
+				cmd = payloadJson["CMD"].asString();
+			}
+			if (payloadJson.isMember("cmd") && payloadJson["cmd"].isString())
+			{
+				cmd = payloadJson["cmd"].asString();
+			}
 			if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
 			{
 				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];

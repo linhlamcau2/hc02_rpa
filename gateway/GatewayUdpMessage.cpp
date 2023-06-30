@@ -16,6 +16,7 @@ void Gateway::initUdpMessage()
 	UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("aiHubBroadCast", bind(&Gateway::OnRpcRspHcInfo, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
@@ -257,4 +258,18 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcConnectCloud");
 	return CODE_ERROR;
+}
+
+int Gateway::OnRpcRspHcInfo(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcRspHcInfo");
+	Json::Value dataValue;
+	dataValue["mac"] = mac;
+	dataValue["ip"] = Wifi::GetIP();
+	dataValue["name"] = "RD HC";
+	dataValue["type"] = MODEL;
+	dataValue["ver"] = STR(VERSION);
+	respValue["data"] = dataValue;
+	respValue["cmd"] = "getHcInfoRsp";
+	return CODE_OK;
 }

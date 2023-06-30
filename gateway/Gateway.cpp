@@ -1047,6 +1047,11 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case MQTT_AI_HUB:
 		device = new DeviceMqttAihub(id, name, mac, data, version);
 		break;
+	case CAMERA_TUYA:
+	case CAMERA_DAHUA:
+	case CAMERA_HKVISION:
+		device = new Device(id, name, mac, data, addr, type, version);
+		break;
 #endif
 
 	default:
