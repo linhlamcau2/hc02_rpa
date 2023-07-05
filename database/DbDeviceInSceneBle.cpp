@@ -32,13 +32,13 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 						if (decode == "")
 						{
 							Json::Value devInSceneJson;
-							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
+							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isObject())
 							{
 								sceneBle->AddDevice(device, devInSceneJson, true);
 							}
 							else
 							{
-								LOGE("data json is not array");
+								LOGE("data json is not object");
 							}
 							// TODO: Check cho du lieu V2
 						}

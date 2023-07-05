@@ -1219,6 +1219,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											Group *group = getGroupFromId(id);
 											if (group)
 											{
+												group->Do(groupData);
 												for (auto &deviceInGroup : group->deviceList)
 												{
 													if (sceneBle->AddDevice(deviceInGroup->device, groupData, false) == CODE_OK)
@@ -1362,6 +1363,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											Group *group = getGroupFromId(id);
 											if (group)
 											{
+												group->Do(groupData);
 												for (auto &deviceInGroup : group->deviceList)
 												{
 													if (sceneBle->AddDevice(deviceInGroup->device, groupData, false) == CODE_OK)
