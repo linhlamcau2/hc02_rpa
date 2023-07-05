@@ -79,9 +79,9 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-		payloadJson.isMember("data") && payloadJson["data"].isObject())
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -143,8 +143,8 @@ void CloudProtocol::OnServerResp(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -241,6 +241,8 @@ int CloudProtocol::CloudPublish(Json::Value payloadJson)
 int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToCloudMessage: %s", reqValue.toString().c_str());
+	if (!connected)
+		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
@@ -248,9 +250,9 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	request_t request = {
-		.status = false,
-		.respCmd = respCmd,
-		.respValue = respValue,
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopic, sendValue.toString());
@@ -270,11 +272,13 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishBinToCloudMessage");
+	if (!connected)
+		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	request_t request = {
-		.status = false,
-		.respCmd = respCmd,
-		.respValue = respValue,
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
 	};
 	string rqi = sessionId + to_string(index);
 	requestList[rqi] = &request;
@@ -295,11 +299,13 @@ int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *p
 int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout)
 {
 	LOGD("PublishToCloudRecieveBinMessage");
+	if (!connected)
+		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	request_bin_t requestBin = {
-		.status = false,
-		.payload = payload,
-		.payloadLen = payloadLen,
+			.status = false,
+			.payload = payload,
+			.payloadLen = payloadLen,
 	};
 	requestBinList[rqi] = &requestBin;
 	Json::Value sendValue;

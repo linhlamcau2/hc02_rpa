@@ -14,7 +14,7 @@ ModuleButton::ModuleButton(Device *device, uint32_t addr) : ModuleButton(device,
 ModuleButton::ModuleButton(Device *device, uint32_t addr, int index) : Module(device, addr)
 {
 	bt = 0;
-	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr() + index;
+	this->index = index;
 	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr() + index);
 }
 
@@ -69,45 +69,47 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE || data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
 		{
-			id = 10 + data_message->btId;
-			bt = data_message->mode;
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			if (data_message->scene > 0)
+			if (data_message->btId == index + 1)
 			{
-				SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
-				if (sceneBle)
+				bt = data_message->mode;
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				if (data_message->scene > 0)
 				{
-					for (int i = 0; i < sceneBle->deviceList.size(); i++)
+					SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
+					if (sceneBle)
 					{
-						DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
-						if (dev)
+						for (int i = 0; i < sceneBle->deviceList.size(); i++)
 						{
-							if (sceneBle->deviceList[i]->data.isArray())
+							DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
+							if (dev)
 							{
-								for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
+								if (sceneBle->deviceList[i]->data.isArray())
 								{
-									if (sceneBle->deviceList[i]->data[j].isObject())
+									for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
 									{
-										dev->InputData(sceneBle->deviceList[i]->data[j]);
+										if (sceneBle->deviceList[i]->data[j].isObject())
+										{
+											dev->InputData(sceneBle->deviceList[i]->data[j]);
+										}
 									}
 								}
+								else if (sceneBle->deviceList[i]->data.isObject())
+								{
+									dev->InputData(sceneBle->deviceList[i]->data);
+								}
 							}
-							else if (sceneBle->deviceList[i]->data.isObject())
+							else
 							{
-								dev->InputData(sceneBle->deviceList[i]->data);
+								LOGW("DeviceBle error");
 							}
-						}
-						else
-						{
-							LOGW("DeviceBle error");
 						}
 					}
+					else
+						LOGW("Scene not found");
 				}
-				else
-					LOGW("Scene not found");
+				return CODE_OK;
 			}
-			return CODE_OK;
 		}
 	}
 	return CODE_ERROR;

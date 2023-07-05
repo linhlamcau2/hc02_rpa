@@ -58,8 +58,6 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		database->DeviceInGroupAdd(this, device, epId);
-
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 		if (sendBle)
 		{
@@ -72,6 +70,7 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 						mtx.lock();
 						deviceList.push_back(deviceInGroup);
 						mtx.unlock();
+						database->DeviceInGroupAdd(this, device, epId);
 						return CODE_OK;
 					}
 				}

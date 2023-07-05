@@ -56,7 +56,8 @@ void Room::SetDataConfig(string dataConfig)
 
 int Room::AddDevice(Device *device, int epId, bool sendBle)
 {
-	database->DeviceInRoomAdd(this, device);
+	if (sendBle)
+		database->DeviceInRoomAdd(this, device);
 	return Group::AddDevice(device, epId, sendBle);
 }
 

@@ -7,7 +7,7 @@ class ModuleButton : public Module
 {
 protected:
 	uint8_t bt;
-	int id;
+	uint8_t index;
 	string key;
 
 public:

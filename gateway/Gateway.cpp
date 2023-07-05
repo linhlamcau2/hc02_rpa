@@ -174,7 +174,7 @@ void Gateway::delGroup(Group *group)
 
 uint32_t Gateway::getNextGroupAddr()
 {
-	uint32_t groupAddr = 0xD000;
+	uint32_t groupAddr = 0;
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{

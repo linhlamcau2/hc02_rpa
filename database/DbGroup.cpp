@@ -2,7 +2,7 @@
 #include "Log.h"
 #include "Util.h"
 
-#define TABLE_NAME "\"Group\""
+#define TABLE_NAME "[Group]"
 
 static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 {
