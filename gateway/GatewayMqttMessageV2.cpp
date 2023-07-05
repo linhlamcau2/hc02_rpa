@@ -955,15 +955,6 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = new SceneBle(sceneId, sceneAddr, sceneName);
 		if (sceneBle)
 		{
-			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
-			{
-				string roomId = reqValue["roomId"].asString();
-				Room *room = getRoomFromId(roomId);
-				if (room)
-				{
-					room->AddSceneBle(sceneBle, true, true);
-				}
-			}
 			if (AddNewSceneBle(sceneBle, true, true))
 			{
 				Json::Value deviceList = reqValue["devices"];
@@ -988,6 +979,15 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 								failedList.append(device->GetId());
 							}
 						}
+					}
+				}
+				if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
+				{
+					string roomId = reqValue["roomId"].asString();
+					Room *room = getRoomFromId(roomId);
+					if (room)
+					{
+						room->AddSceneBle(sceneBle, true, true);
 					}
 				}
 				respValue["data"]["code"] = CODE_OK;
