@@ -18,7 +18,6 @@ private:
 	} request_t;
 	map<string, request_t *> requestList;
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	typedef struct
 	{
 		bool status;
@@ -26,9 +25,7 @@ private:
 		int *payloadLen;
 	} request_bin_t;
 	map<string, request_bin_t *> requestBinList;
-#endif
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	string subReqTopic;
 	string subRespTopic;
 	string pubReqTopic;
@@ -36,10 +33,6 @@ private:
 
 	string subBinRespTopic;
 	string pubBinReqTopic;
-#else
-	string subTopic;
-	string pubTopic;
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 	string mac;
 	atomic<bool> isBusy;
@@ -48,13 +41,9 @@ private:
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	void OnServerReq(string &topic, string &payload);
 	void OnServerResp(string &topic, string &payload);
 	void OnServerBinResp(string &topic, char *payload, int payloadLen);
-#else
-	void OnDeviceRpc(string &topic, string &payload);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
 	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive);
@@ -84,9 +73,7 @@ public:
 	int CloudPublish(string payload);
 	int CloudPublish(Json::Value payloadJson);
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	int PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
 	int PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout = 5000);
 	int PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout = 5000);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 };

@@ -16,11 +16,7 @@
 #ifdef ESP_PLATFORM
 #define VERSION 1.0.4
 #else
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #define VERSION 2.0.0
-#else
-#define VERSION 1.2.1
-#endif
 #endif
 #endif
 

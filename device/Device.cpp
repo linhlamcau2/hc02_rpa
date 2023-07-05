@@ -153,7 +153,6 @@ int Device::PushTelemetry(Json::Value &jsonValue)
 {
 	if (!jsonValue.isNull())
 	{
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 		Json::Value deviceData;
 		Json::Value devicesData;
 		Json::Value dataValue;
@@ -163,20 +162,6 @@ int Device::PushTelemetry(Json::Value &jsonValue)
 		dataValue["device"] = devicesData;
 		gateway->pushDeviceUpdateLocalV2(dataValue);
 		gateway->pushDeviceUpdateCloudV2(dataValue);
-#else
-		Json::Value pushDataValue;
-		Json::Value deviceData;
-		Json::Value onLine;
-		onLine["ID"] = 62;
-		onLine["VALUE"] = 1;
-		jsonValue.append(onLine);
-		deviceData["DEVICE_ID"] = id;
-		deviceData["PROPERTIES"] = jsonValue;
-		pushDataValue["CMD"] = "DEVICE";
-		pushDataValue["DATA"].append(deviceData);
-		gateway->LocalPublish(pushDataValue);
-		gateway->CloudPublish(pushDataValue);
-#endif
 		return CODE_OK;
 	}
 	return CODE_ERROR;

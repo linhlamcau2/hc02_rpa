@@ -50,7 +50,6 @@ int SceneBle::GetPositionDevice(Device *device)
 
 int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (addOnlyDB)
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
@@ -74,40 +73,6 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 			return CODE_OK;
 		}
 	}
-#else
-	if (addOnlyDB)
-	{
-		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
-		mtx.lock();
-		deviceList.push_back(deviceInSceneBle);
-		mtx.unlock();
-		return CODE_OK;
-	}
-	else
-	{
-		int modeRGB = 0;
-		for (Json::ArrayIndex i = 0; i < data.size(); i++)
-		{
-			Json::Value property = data[i];
-			if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
-			{
-				if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
-				{
-					modeRGB = property["VALUE"].asInt();
-					break;
-				}
-			}
-		}
-		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
-		{
-			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
-			mtx.lock();
-			deviceList.push_back(deviceInSceneBle);
-			mtx.unlock();
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }
 

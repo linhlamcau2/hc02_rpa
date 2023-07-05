@@ -1,5 +1,4 @@
 #include "Gateway.h"
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #include "Log.h"
 #include "Db.h"
 #include "Util.h"
@@ -11,15 +10,8 @@
 #include "Wifi.h"
 #include <fstream>
 
-#define ROOM_START_ADDR 0xD000
-
-static map<int, int> deviceTypeToGroupId;
-
 void Gateway::initMqttMessage()
 {
-	deviceTypeToGroupId[BLE_DOWNLIGHT_SMT] = 1;
-	deviceTypeToGroupId[BLE_DOWNLIGHT_COB_GOC_RONG] = 2;
-
 	OnDeviceRpcCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("controlGw", bind(&Gateway::OnControlGw, this, placeholders::_1, placeholders::_2));
@@ -1684,4 +1676,3 @@ int Gateway::OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue)
 	respValue["cmd"] = "getSceneFavoriteRsp";
 	return CODE_OK;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

@@ -14,7 +14,6 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 {
 	this->mac = mac;
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	subReqTopic = "v2/json/req/server/" + mac;
 	subRespTopic = "v2/json/resp/server/" + mac;
 	pubReqTopic = "v2/json/req/" + mac + "/server";
@@ -22,19 +21,6 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 
 	subBinRespTopic = "v2/bin/resp/server/" + mac + "/+/+";
 	pubBinReqTopic = "v2/bin/req/" + mac + "/server/";
-#else
-	subTopic = "/v1/server/hc/" + mac + "/json";
-	pubTopic = "/v1/hc/" + mac + "/server/json";
-
-	// willset
-	Json::Value jsonValue;
-	Json::Value datanValue;
-	datanValue["STATUS_ID"] = 0;
-	datanValue["IP_ADDRESS"] = Wifi::GetIP();
-	jsonValue["CMD"] = "HOME_CONTROLLER";
-	jsonValue["DATA"] = datanValue;
-	SetWillset(pubTopic, jsonValue.toString());
-#endif
 }
 
 CloudProtocol::~CloudProtocol()
@@ -46,13 +32,9 @@ void CloudProtocol::init()
 	Mqtt::init();
 	isBusy = false;
 	isConfig = false;
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subRespTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerBinResp, this, placeholders::_1, placeholders::_2, placeholders::_3), subBinRespTopic);
-#else
-	addActionCallback(bind(&CloudProtocol::OnDeviceRpc, this, placeholders::_1, placeholders::_2), subTopic);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -89,7 +71,7 @@ void CloudProtocol::SetConfig(bool value)
 {
 	this->isConfig = value;
 }
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+
 void CloudProtocol::OnServerReq(string &topic, string &payload)
 {
 	Json::Value respValue;
@@ -217,96 +199,6 @@ void CloudProtocol::OnServerBinResp(string &topic, char *payload, int payloadLen
 		requestBin->status = true;
 	}
 }
-#else
-void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
-{
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedInternet(false);
-	Util::LedServiceLock();
-#ifdef ESP_PLATFORM
-	bool statusLedInternet = GetStatusLedInternet();
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedInternet(!statusLedInternet);
-	}
-#endif
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
-	{
-		string cmd = payloadJson["CMD"].asString();
-		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
-		{
-			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
-			isBusy = true;
-			int rs = onRpcCallbackFunc(payloadJson, respValue);
-			isBusy = false;
-			if (rs == CODE_OK)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(pubTopic, respValue.toString());
-			}
-			else if (rs == CODE_DATA_ARRAY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				if (respValue.isArray())
-				{
-					for (auto &respV : respValue)
-					{
-						Publish(pubTopic, respV.toString());
-					}
-				}
-			}
-			else if (rs == CODE_NOT_RESPONSE)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-			}
-			else if (rs == CODE_EXIT)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(pubTopic, respValue.toString());
-				exit(1);
-			}
-			else if (rs == CODE_FACTORY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(pubTopic, respValue.toString());
-#ifdef ESP_PLATFORM
-				Wifi::WifiStartAP();
-#elif define(__OPENWRT__)
-				Wifi::SetModeApWifi();
-#endif
-				exit(1);
-			}
-			else
-			{
-				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-			}
-#ifdef ESP_PATFORM
-			vTaskDelay(1);
-#endif
-		}
-		else
-		{
-			LOGW("Method %s not registed", cmd.c_str());
-			LOGW("OnDeviceRpc payload: %s", payload.c_str());
-		}
-	}
-	else
-	{
-		LOGW("OnDeviceRpc topic: %s", topic.c_str());
-		LOGW("OnDeviceRpc payload: %s", payload.c_str());
-	}
-#ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedInternet(statusLedInternet);
-	}
-#endif
-	Util::LedInternet(true);
-	Util::LedServiceUnlock();
-}
-#endif
 
 int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
 {
@@ -338,11 +230,7 @@ int CloudProtocol::CloudPublish(string topic, char *payload, int payloadLen)
 
 int CloudProtocol::CloudPublish(string payload)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	return Publish(pubReqTopic, payload);
-#else
-	return Publish(pubTopic, payload);
-#endif
 }
 
 int CloudProtocol::CloudPublish(Json::Value payloadJson)
@@ -350,7 +238,6 @@ int CloudProtocol::CloudPublish(Json::Value payloadJson)
 	return CloudPublish(payloadJson.toString());
 }
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToCloudMessageV2: %s", reqValue.toString().c_str());
@@ -432,4 +319,3 @@ int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value 
 	LOGD("PublishToCloudRecieveBinMessageV2 rs: %d", rs);
 	return rs;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

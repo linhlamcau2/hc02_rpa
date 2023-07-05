@@ -1,7 +1,5 @@
 #pragma once
 
-#define CONFIG_USE_MESSAGE_FORMAT_V2 1
-
 #include <string>
 #include <map>
 #include <functional>
@@ -86,86 +84,7 @@ private:
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
 	void initMqttMessage();
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	// Mqtt message handle
-	int OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcHcBackup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcResetFactory(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcCheckRoom(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcAddGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcUpdateGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDelGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcSceneScreen(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcRemovePowerSwitchTimeout(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcAddDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcAddTuyaDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDelAllDevice(Json::Value &reqValue, Json::Value &respValue);
-
-	// Rule
-	int OnRpcAddRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcTapToRun(Json::Value &reqValue, Json::Value &respValue);
-
-	// HCL
-	int OnRpcCreateHCL(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDeleteHCL(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcEditHCL(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcSwitchStatusHCL(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcAddSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcAddSceneDelay(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcEditSceneDelay(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDeleteSceneDelay(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue);
-#else
+	
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
@@ -226,7 +145,6 @@ private:
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
 	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
@@ -320,12 +238,10 @@ public:
 
 	int Do(Json::Value &dataValue);
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
 	int pushNewDeviceLocalV2(Json::Value &dataValue);
 	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
 	int pushNewDeviceCloudV2(Json::Value &dataValue);
-#endif
 };
 
 extern Gateway *gateway;

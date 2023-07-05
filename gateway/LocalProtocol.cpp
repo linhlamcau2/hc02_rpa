@@ -21,10 +21,8 @@ LocalProtocol::LocalProtocol(string mac, string address, int port, string token,
 {
 	this->mac = mac;
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	pubReqTopic = "v2/json/req/" + mac + "/";
 	pubRespTopic = "v2/json/resp/" + mac + "/";
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
 LocalProtocol::~LocalProtocol()
@@ -39,13 +37,9 @@ void LocalProtocol::init()
 	Mqtt::init();
 #endif
 	isBusy = false;
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/" + mac);
 	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
 	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), "v2/json/resp/+/" + mac);
-#else
-	addActionCallback(bind(&LocalProtocol::OnLocalMessage, this, placeholders::_1, placeholders::_2), HC_CONTROL_TOPIC);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 }
 
 void LocalProtocol::localAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -78,7 +72,6 @@ void LocalProtocol::OnConnect(bool isConnected, bool isReconnect)
 	OnLocalConnect(isConnected, isReconnect);
 }
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 void LocalProtocol::OnLocalReq(string &topic, string &payload)
 {
 	Json::Value respValue;
@@ -194,94 +187,6 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 	}
 	Util::LedServiceUnlock();
 }
-#else
-void LocalProtocol::OnLocalMessage(string &topic, string &payload)
-{
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedServiceLock();
-#ifdef ESP_PLATFORM
-	bool statusLedInternet = GetStatusLedInternet();
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedInternet(!statusLedInternet);
-	}
-#endif
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
-	{
-		string cmd = payloadJson["CMD"].asString();
-		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
-		{
-			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
-			isBusy = true;
-			int rs = onLocalCallbackFunc(payloadJson, respValue);
-			isBusy = false;
-			if (rs == CODE_OK)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
-			}
-			else if (rs == CODE_DATA_ARRAY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				if (respValue.isArray())
-				{
-					for (auto &respV : respValue)
-					{
-						Publish(HC_RESPONSE_TOPIC, respV.toString());
-					}
-				}
-			}
-			else if (rs == CODE_NOT_RESPONSE)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-			}
-			else if (rs == CODE_EXIT)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
-				exit(1);
-			}
-			else if (rs == CODE_FACTORY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				Publish(HC_RESPONSE_TOPIC, respValue.toString());
-#ifdef ESP_PLATFORM
-				Wifi::WifiStartAP();
-#elif define (__OPENWRT__)
-				Wifi::SetModeApWifi();
-#endif			
-				exit(1);
-			}
-			else
-			{
-				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-			}
-#ifdef ESP_PATFORM
-			vTaskDelay(1);
-#endif
-		}
-		else
-		{
-			LOGW("Method %s not registed", cmd.c_str());
-			LOGW("OnLocalMessage payload: %s", payload.c_str());
-		}
-	}
-	else
-	{
-		LOGW("OnLocalMessage topic: %s", topic.c_str());
-		LOGW("OnLocalMessage payload: %s", payload.c_str());
-	}
-#ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedInternet(statusLedInternet);
-	}
-#endif
-	Util::LedServiceUnlock();
-}
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 int LocalProtocol::OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
 {
@@ -310,7 +215,6 @@ int LocalProtocol::LocalPublish(Json::Value &payloadJson)
 	return Publish(HC_RESPONSE_TOPIC, payloadJson.toString());
 }
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToLocalMessageV2: %s", reqValue.toString().c_str());
@@ -349,4 +253,3 @@ int LocalProtocol::PublishToLocalMessageV2(Json::Value &payloadJson)
 {
 	return Publish("HC.CONTROL.RESPONSE.V2", payloadJson.toString());
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

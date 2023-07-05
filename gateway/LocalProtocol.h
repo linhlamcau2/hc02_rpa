@@ -25,10 +25,8 @@ private:
 
 	string mac;
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	string pubReqTopic;
 	string pubRespTopic;
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 	atomic<bool> isBusy;
 
@@ -36,10 +34,8 @@ private:
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncList;
 
 	void OnLocalMessage(string &topic, string &payload);
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	void OnLocalReq(string &topic, string &payload);
 	void OnLocalResp(string &topic, string &payload);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:
 	LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive);
@@ -64,9 +60,7 @@ public:
 	int LocalPublish(string &payload);
 	int LocalPublish(Json::Value &payloadJson);
 
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	int PublishToLocalMessageV2(string &payload);
 	int PublishToLocalMessageV2(Json::Value &payloadJson);
 	int PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 1000);
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2
 };

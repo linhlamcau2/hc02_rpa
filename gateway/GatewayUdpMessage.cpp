@@ -31,8 +31,8 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		string macGw = mac;
 		string hostName = "";
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
-							  { return c == ':'; }),
-					macGw.end());
+													{ return c == ':'; }),
+								macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
 #ifdef ESP_PLATFORM
@@ -68,27 +68,6 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcScanWifi");
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	Json::Value wifiList;
-	Json::Value wifi;
-	Json::Value wifiResp;
-	gateway->StopUdpBroadcast();
-	Wifi::ScanWifi(wifiList);
-	if (wifiList.isArray())
-	{
-		for (Json::ArrayIndex i = 0; i < wifiList.size(); i++)
-		{
-			wifi = wifiList[i];
-			wifiResp["CMD"] = "HC_RESPONE";
-			wifiResp["SSID"] = wifi["SSID"];
-			wifiResp["QUALITY"] = 55;
-			wifiResp["MAC"] = wifi["MAC"];
-			wifiResp["ENCRYPTION"] = wifi["ENCRYPTION"];
-			respValue.append(wifiResp);
-		}
-	}
-	return CODE_DATA_ARRAY;
-#else
 	string rqi = "";
 	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
 	{
@@ -136,7 +115,6 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 	}
 
 	return CODE_ERROR;
-#endif
 }
 
 int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
@@ -213,8 +191,8 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 						{
 							Json::Value wifi = data["WIFI"];
 							if (wifi.isMember("SSID") && wifi["SSID"].isString() &&
-								wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
-								wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
+									wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
+									wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
 							{
 								string ssid = wifi["SSID"].asString();
 								string password = wifi["PASSWORD"].asString();
