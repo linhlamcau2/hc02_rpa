@@ -9,7 +9,6 @@
 ElementButton::ElementButton(Device *device, uint32_t addr) : Element(device, addr)
 {
 	bt = 0;
-	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr();
 	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr());
 }
 
@@ -32,20 +31,13 @@ void ElementButton::SaveAttribute()
 
 int ElementButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			bt = dataValue["VALUE"].asInt();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
+		bt = dataValue[key].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -77,55 +69,26 @@ int ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 bool ElementButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("op") && dataValue["op"].isString() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
-		{
-			uint16_t bt = 0, mode = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
-			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					bt = listValue[0].asInt();
-					mode = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					bt = listValue[0].asInt();
-				}
-				rs = Util::CompareNumber(op, this->bt, bt, mode);
-				return true;
-			}
-		}
+		int bt = dataValue[key].asInt();
+		string op = dataValue["op"].asString();
+		rs = Util::CompareNumber(op, this->bt, bt);
+		return true;
 	}
-#endif
 	return false;
 }
 
 void ElementButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[key] = bt;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = bt;
-	jsonValue.append(dataValue);
-#endif
 }
 
 int ElementButton::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(key) && dataValue[key].isInt())
 	{
@@ -136,20 +99,5 @@ int ElementButton::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-				bleProtocol->SetOnOffLight(addr, value, 0, true);
-			else
-				LOGW("BLEProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

@@ -7,7 +7,6 @@ class ElementButton : public Element
 {
 protected:
 	uint8_t bt;
-	int id;
 	string key;
 
 public:
