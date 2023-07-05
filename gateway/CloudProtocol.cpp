@@ -163,13 +163,13 @@ void CloudProtocol::OnServerResp(string &topic, string &payload)
 		else
 		{
 			LOGW("rqi %s not found", rqi.c_str());
-			LOGW("OnLocalRespV2 payload: %s", payload.c_str());
+			LOGW("OnServerResp payload: %s", payload.c_str());
 		}
 	}
 	else
 	{
-		LOGW("OnLocalRespV2 topic: %s", topic.c_str());
-		LOGW("OnLocalRespV2 payload: %s", payload.c_str());
+		LOGW("OnServerResp topic: %s", topic.c_str());
+		LOGW("OnServerResp payload: %s", payload.c_str());
 	}
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
@@ -238,9 +238,9 @@ int CloudProtocol::CloudPublish(Json::Value payloadJson)
 	return CloudPublish(payloadJson.toString());
 }
 
-int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
+int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
-	LOGD("PublishToCloudMessageV2: %s", reqValue.toString().c_str());
+	LOGD("PublishToCloudMessage: %s", reqValue.toString().c_str());
 	int rs = CODE_OK;
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
@@ -263,13 +263,13 @@ int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue,
 		rs = CODE_ERROR;
 	}
 	requestList.erase(rqi);
-	LOGD("PublishToCloudMessageV2 rs: %d", rs);
+	LOGD("PublishToCloudMessage rs: %d", rs);
 	return rs;
 }
 
-int CloudProtocol::PublishBinToCloudMessageV2(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
+int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
-	LOGD("PublishBinToCloudMessageV2");
+	LOGD("PublishBinToCloudMessage");
 	int rs = CODE_OK;
 	request_t request = {
 		.status = false,
@@ -288,13 +288,13 @@ int CloudProtocol::PublishBinToCloudMessageV2(string sessionId, int index, char 
 		rs = CODE_ERROR;
 	}
 	requestList.erase(rqi);
-	LOGD("PublishBinToCloudMessageV2 rs: %d", rs);
+	LOGD("PublishBinToCloudMessage rs: %d", rs);
 	return rs;
 }
 
-int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout)
+int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout)
 {
-	LOGD("PublishToCloudRecieveBinMessageV2");
+	LOGD("PublishToCloudRecieveBinMessage");
 	int rs = CODE_OK;
 	request_bin_t requestBin = {
 		.status = false,
@@ -316,6 +316,6 @@ int CloudProtocol::PublishToCloudRecieveBinMessageV2(string reqCmd, Json::Value 
 		rs = CODE_ERROR;
 	}
 	requestBinList.erase(rqi);
-	LOGD("PublishToCloudRecieveBinMessageV2 rs: %d", rs);
+	LOGD("PublishToCloudRecieveBinMessage rs: %d", rs);
 	return rs;
 }

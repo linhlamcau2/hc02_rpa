@@ -9,7 +9,7 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota -IsceneDelay
+INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
 DEFINES += -DCONFIG_USE_MESSAGE_FORMAT_V2=1
 # DEFINES += -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
@@ -46,7 +46,6 @@ DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard protocol/mqtt/*.cpp)
 DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard sceneBle/*.cpp)
-DEVICESRC += $(wildcard sceneDelay/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)
 DEVICESRC += $(wildcard wifi/*.cpp)

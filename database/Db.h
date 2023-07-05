@@ -118,12 +118,6 @@ public:
 	int SceneBleDel(SceneBle *sceneBle);
 	int SceneBleDelAll();
 	int SceneBleUpdateFavorite(SceneBle *scene);
-
-	int SceneDelayRead();
-	int SceneDelayAdd(SceneDelay *sceneDelay);
-	int SceneDelayUpdateData(SceneDelay *sceneDelay);
-	int SceneDelayDel(SceneDelay *sceneDelay);
-	int SceneDelayDelAll();
 };
 
 extern Db *database;

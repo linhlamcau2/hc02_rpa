@@ -16,13 +16,10 @@
 #include "Device.h"
 #include "DeviceBle.h"
 #include "SceneBle.h"
-#include "SceneDelay.h"
 #include "RuleInputTimer.h"
 #include "RuleOutputSceneBle.h"
 #include "RuleOutputDevice.h"
 #include "RuleOutputGroup.h"
-#include "SceneDelayDeviceOutput.h"
-#include "SceneDelayGroupOutput.h"
 #include "Room.h"
 
 #include "BleDefine.h"
@@ -58,13 +55,11 @@ private:
 	map<string, SceneBle *> sceneBleList;
 	map<string, Rule *> ruleList;
 	map<string, Room *> roomList;
-	map<string, SceneDelay *> sceneDelayList;
 
 	mutex deviceListMtx;
 	mutex groupListMtx;
 	mutex ruleListMtx;
 	mutex roomListMtx;
-	mutex sceneDelayListMtx;
 	mutex sceneBleListMtx;
 
 	uint8_t numScreenTouchs;
@@ -186,9 +181,6 @@ public:
 	void delSceneBle(SceneBle *sceneBle);
 	uint32_t getNextSceneBleAddr();
 
-	SceneDelay *getSceneDelayFromId(string id);
-	void delSceneDelay(SceneDelay *sceneDelay);
-
 	Rule *getRuleFromId(string id);
 	void delRule(Rule *rule);
 
@@ -222,7 +214,6 @@ public:
 	void DelAllDevice();
 	void DelAllGroup();
 	void DelAllSceneBle();
-	void DelAllSceneDelay();
 	void DelAllRule();
 	void DelAllRoom();
 
@@ -232,16 +223,15 @@ public:
 	Device *AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addGateway, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase);
-	SceneDelay *AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, bool addDatabase, bool processData);
 	Room *AddNewRoom(Room *room, bool addGateway, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase);
 
 	int Do(Json::Value &dataValue);
 
-	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
-	int pushNewDeviceLocalV2(Json::Value &dataValue);
-	int pushDeviceUpdateLocalV2(Json::Value &dataValue);
-	int pushNewDeviceCloudV2(Json::Value &dataValue);
+	int pushDeviceUpdateCloud(Json::Value &dataValue);
+	int pushNewDeviceLocal(Json::Value &dataValue);
+	int pushDeviceUpdateLocal(Json::Value &dataValue);
+	int pushNewDeviceCloud(Json::Value &dataValue);
 };
 
 extern Gateway *gateway;

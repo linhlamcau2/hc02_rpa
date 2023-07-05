@@ -100,7 +100,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
 						Publish(pubRespTopic + topics[3], respValue.toString());
-						// Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
 					}
 					else if (rs == CODE_DATA_ARRAY)
 					{
@@ -111,7 +110,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 							{
 								respV["rqi"] = rqi;
 								Publish(pubRespTopic + topics[3], respV.toString());
-								// Publish("HC.CONTROL.RESPONSE.V2", respValue.toString());
 							}
 						}
 					}
@@ -175,13 +173,13 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 				else
 				{
 					LOGW("rqi %s not found", rqi.c_str());
-					LOGW("OnLocalRespV2 payload: %s", payload.c_str());
+					LOGW("OnLocalResp payload: %s", payload.c_str());
 				}
 			}
 			else
 			{
-				LOGW("OnLocalRespV2 topic: %s", topic.c_str());
-				LOGW("OnLocalRespV2 payload: %s", payload.c_str());
+				LOGW("OnLocalResp topic: %s", topic.c_str());
+				LOGW("OnLocalResp payload: %s", payload.c_str());
 			}
 		}
 	}
@@ -215,9 +213,9 @@ int LocalProtocol::LocalPublish(Json::Value &payloadJson)
 	return Publish(HC_RESPONSE_TOPIC, payloadJson.toString());
 }
 
-int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
+int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
-	LOGD("PublishToLocalMessageV2: %s", reqValue.toString().c_str());
+	LOGD("PublishToLocalMessage: %s", reqValue.toString().c_str());
 	int rs = CODE_OK;
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
@@ -240,16 +238,16 @@ int LocalProtocol::PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue,
 		rs = CODE_ERROR;
 	}
 	requestList.erase(rqi);
-	LOGD("PublishToLocalMessageV2 rs: %d", rs);
+	LOGD("PublishToLocalMessage rs: %d", rs);
 	return rs;
 }
 
-int LocalProtocol::PublishToLocalMessageV2(string &payload)
+int LocalProtocol::PublishToLocalMessage(string &payload)
 {
 	return Publish("HC.CONTROL.RESPONSE.V2", payload);
 }
 
-int LocalProtocol::PublishToLocalMessageV2(Json::Value &payloadJson)
+int LocalProtocol::PublishToLocalMessage(Json::Value &payloadJson)
 {
 	return Publish("HC.CONTROL.RESPONSE.V2", payloadJson.toString());
 }

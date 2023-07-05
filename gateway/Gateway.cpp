@@ -238,27 +238,6 @@ uint32_t Gateway::getNextSceneBleAddr()
 	return sceneAddr;
 }
 
-SceneDelay *Gateway::getSceneDelayFromId(string id)
-{
-	sceneDelayListMtx.lock();
-	if (sceneDelayList.find(id) != sceneDelayList.end())
-	{
-		sceneDelayListMtx.unlock();
-		return sceneDelayList[id];
-	}
-	sceneDelayListMtx.unlock();
-	return NULL;
-}
-
-void Gateway::delSceneDelay(SceneDelay *sceneDelay)
-{
-	sceneDelayListMtx.lock();
-	sceneDelayList.erase(sceneDelay->GetId());
-	sceneDelayListMtx.unlock();
-	database->SceneDelayDel(sceneDelay);
-	delete sceneDelay;
-}
-
 Rule *Gateway::getRuleFromId(string id)
 {
 	ruleListMtx.lock();
@@ -359,7 +338,6 @@ void Gateway::init()
 	database->DeviceInSceneBleRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
-	database->SceneDelayRead();
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -616,8 +594,8 @@ int Gateway::CheckOnlineThread()
 			{
 				Json::Value dataValue;
 				dataValue["device"] = devicesData;
-				gateway->pushDeviceUpdateLocalV2(dataValue);
-				gateway->pushDeviceUpdateCloudV2(dataValue);
+				gateway->pushDeviceUpdateLocal(dataValue);
+				gateway->pushDeviceUpdateCloud(dataValue);
 			}
 		}
 		sleep(1);
@@ -735,7 +713,7 @@ int Gateway::GatewayConnectToCloudNotice()
 	return CloudPublish("HC.CONTROL.RESPONSE", respValue.toString());
 }
 
-static Json::Value PushNewDevMqttV2(Device *newDev)
+static Json::Value PushNewDevMqtt(Device *newDev)
 {
 	Json::Value jsonValue;
 	Json::Value devValue;
@@ -843,8 +821,8 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 #endif
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	Json::Value jsonData = PushNewDevMqttV2(scanDevice);
-	pushNewDeviceLocalV2(jsonData);
+	Json::Value jsonData = PushNewDevMqtt(scanDevice);
+	pushNewDeviceLocal(jsonData);
 #endif
 }
 
@@ -1328,101 +1306,6 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 	return sceneBle;
 }
 
-SceneDelay *Gateway::AddNewSceneDelay(SceneDelay *sceneDelay, bool addGateway, bool addDatabase, bool processData)
-{
-	if (sceneDelay)
-	{
-		if (addDatabase)
-		{
-			int rs = database->SceneDelayAdd(sceneDelay);
-			if (rs)
-			{
-				LOGW("rs: %d", rs);
-				return NULL;
-			}
-		}
-		if (addGateway)
-		{
-			sceneDelayListMtx.lock();
-			sceneDelayList[sceneDelay->GetId()] = sceneDelay;
-			sceneDelayListMtx.unlock();
-		}
-		if (processData)
-		{
-			Json::Value data = sceneDelay->GetData();
-			int delay = 0;
-			if (data.isMember("DEVICES") && data["DEVICES"].isArray())
-			{
-				Device *device = NULL;
-				for (Json::ArrayIndex i = 0; i < data["DEVICES"].size(); i++)
-				{
-					Json::Value deviceOutput = data["DEVICES"][i];
-					if (deviceOutput.isMember("DELAY") && deviceOutput["DELAY"].isInt())
-					{
-						delay = deviceOutput["DELAY"].asInt();
-					}
-					if (deviceOutput.isMember("DEVICE_ID") && deviceOutput["DEVICE_ID"].isString() && deviceOutput.isMember("PROPERTIES") && deviceOutput["PROPERTIES"].isArray())
-					{
-						string devId = deviceOutput["DEVICE_ID"].asString();
-						Json::Value propertyDev = deviceOutput["PROPERTIES"];
-						Json::Value propertyDevArr = Util::arrangeJson(propertyDev);
-						if (propertyDevArr == Json::Value::null)
-							propertyDevArr = propertyDev;
-						device = getDeviceFromId(devId);
-						if (device)
-						{
-							SceneDelayDeviceOutput *sceneDelayDeviceOutput = new SceneDelayDeviceOutput(device, propertyDevArr, delay);
-							if (sceneDelayDeviceOutput)
-							{
-								sceneDelay->AddSceneDelayOutput(sceneDelayDeviceOutput);
-							}
-						}
-					}
-					else
-					{
-						LOGW("Data device output error");
-					}
-				}
-			}
-
-			if (data.isMember("GROUPS") && data["GROUPS"].isArray())
-			{
-				Group *group = NULL;
-				for (int j = 0; j < data["GROUPS"].size(); j++)
-				{
-					Json::Value groupInSceneDelay = data["GROUPS"][j];
-					if (groupInSceneDelay.isMember("DELAY") && groupInSceneDelay["DELAY"].isInt())
-					{
-						delay = groupInSceneDelay["DELAY"].asInt();
-					}
-					if (groupInSceneDelay.isMember("GROUP_ID") && groupInSceneDelay["GROUP_ID"].isString() && groupInSceneDelay.isMember("PROPERTIES") && groupInSceneDelay["PROPERTIES"].isArray())
-					{
-						string groupId = groupInSceneDelay["GROUP_ID"].asString();
-						Json::Value propertyGr = groupInSceneDelay["PROPERTIES"];
-						Json::Value propertyGrArr = Util::arrangeJson(propertyGr);
-						if (propertyGrArr == Json::Value::null)
-							propertyGrArr = propertyGr;
-						group = getGroupFromId(groupId);
-						if (group)
-						{
-							SceneDelayGroupOutput *sceneDelayGroupOutput = new SceneDelayGroupOutput(group, propertyGrArr, delay);
-							if (sceneDelayGroupOutput)
-							{
-								sceneDelay->AddSceneDelayOutput(sceneDelayGroupOutput);
-							}
-						}
-					}
-					else
-					{
-						LOGW("Data Group output error");
-					}
-				}
-			}
-		}
-	}
-	return sceneDelay;
-}
-
 Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
 {
 	if (room)
@@ -1630,14 +1513,7 @@ void Gateway::DelAllSceneBle()
 	sceneBleList.clear();
 	sceneBleListMtx.unlock();
 }
-void Gateway::DelAllSceneDelay()
-{
-	sceneDelayListMtx.lock();
-	for (auto &[id, scene] : sceneDelayList)
-		delete scene;
-	sceneDelayList.clear();
-	sceneDelayListMtx.unlock();
-}
+
 void Gateway::DelAllRule()
 {
 	ruleListMtx.lock();
@@ -1692,22 +1568,22 @@ int Gateway::Do(Json::Value &dataValue)
 	return CODE_FORMAT_ERROR;
 }
 
-int Gateway::pushDeviceUpdateLocalV2(Json::Value &dataValue)
+int Gateway::pushDeviceUpdateLocal(Json::Value &dataValue)
 {
-	return PublishToLocalMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL, 0);
+	return PublishToLocalMessage("deviceUpdate", dataValue, "deviceUpdateRsp", NULL, 0);
 }
 
-int Gateway::pushDeviceUpdateCloudV2(Json::Value &dataValue)
+int Gateway::pushDeviceUpdateCloud(Json::Value &dataValue)
 {
-	return PublishToCloudMessageV2("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+	return PublishToCloudMessage("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
 }
 
-int Gateway::pushNewDeviceCloudV2(Json::Value &dataValue)
+int Gateway::pushNewDeviceCloud(Json::Value &dataValue)
 {
-	return PublishToCloudMessageV2("newDev", dataValue, "newDevRsp", NULL);
+	return PublishToCloudMessage("newDev", dataValue, "newDevRsp", NULL);
 }
 
-int Gateway::pushNewDeviceLocalV2(Json::Value &dataValue)
+int Gateway::pushNewDeviceLocal(Json::Value &dataValue)
 {
-	return PublishToLocalMessageV2("newDev", dataValue, "newDevRsp", NULL, 0);
+	return PublishToLocalMessage("newDev", dataValue, "newDevRsp", NULL, 0);
 }

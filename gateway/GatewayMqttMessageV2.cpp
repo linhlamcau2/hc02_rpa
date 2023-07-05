@@ -179,7 +179,7 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
-			int rs = group->DoV2(devData);
+			int rs = group->Do(devData);
 			respValue["data"]["code"] = rs;
 		}
 		else
@@ -229,9 +229,9 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnGetDeviceStatus");
 	if (reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
-		Json::Value devicesData;
-		Json::Value devices = reqValue["devices"];
-		for (auto &deviceValue : devices)
+		Json::Value devicesValueRsp;
+		Json::Value devicesValue = reqValue["devices"];
+		for (auto &deviceValue : devicesValue)
 		{
 			if (deviceValue.isString())
 			{
@@ -244,12 +244,12 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 					Json::Value deviceAttbute;
 					device->BuildTelemetryValue(deviceAttbute);
 					deviceValue["data"] = deviceAttbute;
-					devicesData.append(deviceValue);
+					devicesValueRsp.append(deviceValue);
 				}
 			}
 		}
 		respValue["data"]["code"] = CODE_OK;
-		respValue["data"]["devices"] = devicesData;
+		respValue["data"]["devices"] = devicesValueRsp;
 	}
 	else
 	{
@@ -262,7 +262,7 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetAllDeviceStatus");
-	Json::Value devicesData;
+	Json::Value devicesValueRsp;
 	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
 	{
@@ -271,11 +271,11 @@ int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value deviceAttbute;
 		device->BuildTelemetryValue(deviceAttbute);
 		deviceValue["data"] = deviceAttbute;
-		devicesData.append(deviceValue);
+		devicesValueRsp.append(deviceValue);
 	}
 	deviceListMtx.unlock();
 	respValue["data"]["code"] = CODE_OK;
-	respValue["data"]["devices"] = devicesData;
+	respValue["data"]["devices"] = devicesValueRsp;
 	respValue["cmd"] = "deviceUpdate";
 	return CODE_OK;
 }
@@ -283,7 +283,7 @@ int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetDeviceList");
-	Json::Value devicesData;
+	Json::Value devicesValueRsp;
 	for (const auto &[id, device] : deviceList)
 	{
 		Json::Value deviceValue;
@@ -292,9 +292,9 @@ int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
 		deviceValue["type"] = (Json::UInt)device->GetType();
 		deviceValue["mac"] = device->GetMac();
 		deviceValue["ver"] = device->GetVersionStr();
-		devicesData.append(deviceValue);
+		devicesValueRsp.append(deviceValue);
 	}
-	respValue["data"]["devices"] = devicesData;
+	respValue["data"]["devices"] = devicesValueRsp;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getDevListRsp";
 	return CODE_OK;
@@ -603,8 +603,8 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value successList;
 		Json::Value failedList;
-		Json::Value devices = reqValue["device"];
-		for (auto &deviceValue : devices)
+		Json::Value devicesValue = reqValue["device"];
+		for (auto &deviceValue : devicesValue)
 		{
 			if (deviceValue.isString())
 			{
@@ -684,7 +684,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value failedList;
 		string groupId = reqValue["id"].asString();
 		string groupName = reqValue["name"].asString();
-		Json::Value devices = reqValue["devices"];
+		Json::Value devicesValue = reqValue["devices"];
 		// TODO: add start address of normal group
 		int groupAddr = getNextGroupAddr();
 		Group *group = new Group(groupId, groupAddr, groupName);
@@ -701,7 +701,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 			}
 			if (AddNewGroup(group, true, true))
 			{
-				for (auto &deviceValue : devices)
+				for (auto &deviceValue : devicesValue)
 				{
 					if (deviceValue.isString())
 					{
@@ -759,11 +759,11 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value successList;
 		Json::Value failedList;
 		string groupId = reqValue["id"].asString();
-		Json::Value devices = reqValue["devices"];
+		Json::Value devicesValue = reqValue["devices"];
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
-			for (auto &deviceValue : devices)
+			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
 				{
@@ -847,11 +847,11 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 		Json::Value successList;
 		Json::Value failedList;
 		string groupId = reqValue["id"].asString();
-		Json::Value devices = reqValue["devices"];
+		Json::Value devicesValue = reqValue["devices"];
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
-			for (auto &deviceValue : devices)
+			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
 				{
@@ -1253,11 +1253,11 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 		Json::Value successList;
 		Json::Value failedList;
 		string roomId = reqValue["id"].asString();
-		Json::Value devices = reqValue["devices"];
+		Json::Value devicesValue = reqValue["devices"];
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
-			for (auto &deviceValue : devices)
+			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
 				{

@@ -10,13 +10,6 @@ Room::Room(string id, uint32_t addr, string name) : Group(id, addr, name)
 
 Room::~Room()
 {
-	mtxGroup.lock();
-	groupList.clear();
-	mtxGroup.unlock();
-
-	mtxScene.lock();
-	sceneBleList.clear();
-	mtxScene.unlock();
 }
 
 int Room::GetPositionGroup(Group *group)

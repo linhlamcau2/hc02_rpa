@@ -60,7 +60,7 @@ public:
 	int LocalPublish(string &payload);
 	int LocalPublish(Json::Value &payloadJson);
 
-	int PublishToLocalMessageV2(string &payload);
-	int PublishToLocalMessageV2(Json::Value &payloadJson);
-	int PublishToLocalMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 1000);
+	int PublishToLocalMessage(string &payload);
+	int PublishToLocalMessage(Json::Value &payloadJson);
+	int PublishToLocalMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 1000);
 };

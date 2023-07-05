@@ -42,7 +42,7 @@ int FileTransfer::uploadFile(File &file)
 		dataValue["sumAlg"] = "md5";
 		dataValue["sessionId"] = sessionId;
 		Json::Value respValue;
-		rs = gateway->PublishToCloudMessageV2("UploadFile", dataValue, "UploadFileResp", &respValue);
+		rs = gateway->PublishToCloudMessage("UploadFile", dataValue, "UploadFileResp", &respValue);
 		if (rs == CODE_OK)
 		{
 			LOGD("uploadFile respValue: %s", respValue.toString().c_str());
@@ -55,7 +55,7 @@ int FileTransfer::uploadFile(File &file)
 				{
 					uint32_t size = file.Read(fileContent, BIN_PACKAGE_SIZE);
 					Json::Value respValue;
-					rs = gateway->PublishBinToCloudMessageV2(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
+					rs = gateway->PublishBinToCloudMessage(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
 					if (rs == CODE_OK)
 					{
 						LOGD("UploadChunk respValue: %s", respValue.toString().c_str());
@@ -106,7 +106,7 @@ int FileTransfer::downloadFile(File &file)
 	dataValue["sumAlg"] = "md5";
 	dataValue["sessionId"] = sessionId;
 	Json::Value respValue;
-	rs = gateway->PublishToCloudMessageV2("DownloadFile", dataValue, "DownloadFileResp", &respValue);
+	rs = gateway->PublishToCloudMessage("DownloadFile", dataValue, "DownloadFileResp", &respValue);
 	if (rs == CODE_OK)
 	{
 		LOGD("DownloadFile respValue: %s", respValue.toString().c_str());
@@ -139,7 +139,7 @@ int FileTransfer::downloadFile(File &file)
 						string rqi = sessionId + to_string(file.chunkIndex);
 						char payload[BIN_PACKAGE_SIZE];
 						int payloadLen = BIN_PACKAGE_SIZE;
-						rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
+						rs = gateway->PublishToCloudRecieveBinMessage("DownloadBin", dataValue, rqi, payload, &payloadLen);
 						if (rs == CODE_OK)
 						{
 							file.Write(payload, payloadLen);

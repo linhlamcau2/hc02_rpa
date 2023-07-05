@@ -20,7 +20,6 @@ public:
 class Group : public Object
 {
 private:
-	Json::Value dataValue;
 	mutex mtx;
 
 public:
@@ -35,9 +34,6 @@ public:
 	int AddDevice(Device *device, int epId, bool sendBle);
 	int DelDevice(Device *device, int epId);
 
-	int Do(Json::Value &dataValue, bool ack);
-	int DoV2(Json::Value &dataValue);
-	void DoBle(bool ack);
-	void DoBleV2();
-	void DoZigbee();
+	int Do(Json::Value &dataValue, bool ack = true);
+	// int DoZigbee();
 };
