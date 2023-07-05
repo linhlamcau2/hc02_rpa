@@ -10,11 +10,10 @@ class RuleOutputGroup : public RuleOutput
 {
 private:
 	Group *group;
-	int delayTime;
 	Json::Value data;
 
 public:
-	RuleOutputGroup(Group *group, Json::Value &data, int delayTime);
+	RuleOutputGroup(Group *group, Json::Value &data);
 	~RuleOutputGroup();
 
 	void RunOutput();

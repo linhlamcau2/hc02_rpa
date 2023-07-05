@@ -20,6 +20,7 @@
 #include "RuleOutputSceneBle.h"
 #include "RuleOutputDevice.h"
 #include "RuleOutputGroup.h"
+#include "RuleOutputDelay.h"
 #include "Room.h"
 
 #include "BleDefine.h"

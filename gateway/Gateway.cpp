@@ -1128,7 +1128,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		string type = ruleValue["type"].asString();
 		int repeat = ruleValue["repeat"].asInt();
 		Json::Value inputValue = ruleValue["input"];
-		Json::Value outputValue = ruleValue["output"];
+		Json::Value outputValues = ruleValue["output"];
 		uint32_t addr = 0;
 		string name;
 		if (ruleValue.isMember("name") && ruleValue["name"].isString())
@@ -1203,56 +1203,53 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					}
 				}
 			}
-			int delayTime = 0;
-			for (Json::Value::ArrayIndex i = 0; i < outputValue.size(); i++)
+
+			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
 			{
-				Json::Value temp_outputValue = outputValue[i];
-				if (temp_outputValue.isMember("delay"))
+				Json::Value outputValue = outputValues[i];
+				if (outputValue.isMember("delay"))
 				{
-					delayTime = temp_outputValue.asInt();
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue.asInt());
+					rule->AddRuleOutput(ruleOutputDelay);
 				}
-				else if (temp_outputValue.isMember("deviceId"))
+				else if (outputValue.isMember("deviceId"))
 				{
-					if (temp_outputValue["deviceId"].isString() && temp_outputValue.isMember("data") && temp_outputValue["data"].isObject())
+					if (outputValue["deviceId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
 					{
-						Json::Value dataValue = temp_outputValue["data"];
-						string id = temp_outputValue["deviceId"].asString();
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["deviceId"].asString();
 						Device *device = gateway->getDeviceFromId(id);
 						if (device)
 						{
-							RuleOutputDevice *ruleOutput = new RuleOutputDevice(device, dataValue, delayTime);
-							rule->AddRuleOutput(ruleOutput);
-							delayTime = 0;
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
 						}
 					}
 				}
-				else if (temp_outputValue.isMember("groupId"))
+				else if (outputValue.isMember("groupId"))
 				{
-					if (temp_outputValue["groupId"].isString() && temp_outputValue.isMember("data") && temp_outputValue["data"].isObject())
+					if (outputValue["groupId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
 					{
-						Json::Value dataValue = temp_outputValue["data"];
-						string id = temp_outputValue["groupId"].asString();
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["groupId"].asString();
 						Group *group = gateway->getGroupFromId(id);
 						if (group)
 						{
-							RuleOutputGroup *ruleOutput = new RuleOutputGroup(group, dataValue, delayTime);
-							rule->AddRuleOutput(ruleOutput);
-							delayTime = 0;
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
 						}
 					}
 				}
-				else if (temp_outputValue.isMember("sceneId"))
+				else if (outputValue.isMember("sceneId"))
 				{
-					if (temp_outputValue["sceneId"].isString() && temp_outputValue.isMember("data") && temp_outputValue["data"].isObject())
+					if (outputValue["sceneId"].isString())
 					{
-						Json::Value dataValue = temp_outputValue["data"];
-						string id = temp_outputValue["sceneId"].asString();
+						string id = outputValue["sceneId"].asString();
 						SceneBle *sceneBle = gateway->getSceneBleFromId(id);
 						if (sceneBle)
 						{
-							RuleOutputSceneBle *ruleOutput = new RuleOutputSceneBle(sceneBle, delayTime);
-							rule->AddRuleOutput(ruleOutput);
-							delayTime = 0;
+							RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+							rule->AddRuleOutput(ruleOutputSceneBle);
 						}
 					}
 				}
