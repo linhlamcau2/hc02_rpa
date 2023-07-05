@@ -140,6 +140,12 @@ private:
 	int OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnNewDevice(Json::Value &reqValue, Json::Value &respValue); 
+
+	int OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue);
+
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
