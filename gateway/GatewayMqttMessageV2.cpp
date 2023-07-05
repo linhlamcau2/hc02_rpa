@@ -91,6 +91,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("updateGroupName", bind(&Gateway::OnUpdateGroupName, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("updateRoomName", bind(&Gateway::OnUpdateRoomName, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -1962,6 +1963,8 @@ int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
 			device->SetName(name);
 		}
 	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "updateDeviceNameRsp";
 	return CODE_OK;
 }
 
@@ -1977,6 +1980,8 @@ int Gateway::OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue)
 			group->SetName(name);
 		}
 	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "updateGroupNameRsp";
 	return CODE_OK;
 }
 
@@ -1992,6 +1997,30 @@ int Gateway::OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue)
 			scene->SetName(name);
 		}
 	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "updateSceneNameRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("name") && reqValue["name"].isString() && reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string id = reqValue["id"].asString();
+		string name = reqValue["name"].asString();
+		Room *room = getRoomFromId(id);
+		if (room)
+		{
+			room->SetName(name);
+		}
+		Group *group = getGroupFromId(id);
+		if (group)
+		{
+			group->SetName(name);
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "updateRoomNameRsp";
 	return CODE_OK;
 }
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
