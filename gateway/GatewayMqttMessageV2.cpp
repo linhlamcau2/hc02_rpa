@@ -1,5 +1,5 @@
-#if CONFIG_USE_MESSAGE_FORMAT_V2
 #include "Gateway.h"
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #include "Log.h"
 #include "Db.h"
 #include "Util.h"
@@ -13,8 +13,13 @@
 
 #define ROOM_START_ADDR 0xD000
 
+static map<int, int> deviceTypeToGroupId;
+
 void Gateway::initMqttMessage()
 {
+	deviceTypeToGroupId[BLE_DOWNLIGHT_SMT] = 1;
+	deviceTypeToGroupId[BLE_DOWNLIGHT_COB_GOC_RONG] = 2;
+
 	OnDeviceRpcCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("controlGw", bind(&Gateway::OnControlGw, this, placeholders::_1, placeholders::_2));
@@ -342,13 +347,13 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 					Json::Value temp_devicesList;
 					for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
 					{
-						Json::Value device;
-						DeviceInRoom *deviceInRoom = temp_room->deviceList[i];
+						Json::Value deviceValue;
+						DeviceInGroup *deviceInRoom = temp_room->deviceList[i];
 						string deviceId = deviceInRoom->device->GetId();
 						Device *tempDev = getDeviceFromId(deviceId);
-						device["id"] = deviceId;
-						device["type"] = tempDev->GetType();
-						temp_devicesList.append(device);
+						deviceValue["id"] = deviceId;
+						deviceValue["type"] = tempDev->GetType();
+						temp_devicesList.append(deviceValue);
 					}
 					temp_roomsData["devices"] = temp_devicesList;
 					roomsData.append(temp_roomsData);
@@ -401,7 +406,7 @@ int Gateway::OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue)
 			{
 				string id = groupValue.asString();
 				groupsData["id"] = id;
-				Group *temp= getGroupFromId(id);
+				Group *temp = getGroupFromId(id);
 				if (temp)
 				{
 					Json::Value temp_devicesList;
@@ -540,7 +545,7 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 	for (const auto &[id, device] : deviceList)
 	{
 		int type = device->GetType();
-		if(type / 10000 == 6)
+		if (type / 10000 == 6)
 		{
 			Json::Value deviceValue;
 			deviceValue["id"] = device->GetId();
@@ -689,16 +694,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 		string groupName = reqValue["name"].asString();
 		Json::Value devices = reqValue["devices"];
 		// TODO: add start address of normal group
-		int groupAddr = 1;
-		groupListMtx.lock();
-		for (const auto &[id, group] : groupList)
-		{
-			if (group->GetAddr() >= groupAddr)
-			{
-				groupAddr = group->GetAddr() + 1;
-			}
-		}
-		groupListMtx.unlock();
+		int groupAddr = getNextGroupAddr();
 		Group *group = new Group(groupId, groupAddr, groupName);
 		if (group)
 		{
@@ -959,16 +955,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 		string sceneId = reqValue["id"].asString();
 		string sceneName = reqValue["name"].asString();
 		// TODO: add start address of normal scene
-		int sceneAddr = 1;
-		sceneBleListMtx.lock();
-		for (const auto &[id, sceneBle] : sceneBleList)
-		{
-			if (sceneBle->GetAddr() >= sceneAddr)
-			{
-				sceneAddr = sceneBle->GetAddr() + 1;
-			}
-		}
-		sceneBleListMtx.unlock();
+		int sceneAddr = getNextSceneBleAddr();
 		SceneBle *sceneBle = new SceneBle(sceneId, sceneAddr, sceneName);
 		if (sceneBle)
 		{
@@ -1141,36 +1128,21 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 			reqValue.isMember("name") && reqValue["name"].isString() &&
 			reqValue.isMember("devices") && reqValue["devices"].isArray() &&
+			reqValue.isMember("groups") && reqValue["groups"].isArray() &&
 			reqValue.isMember("scenes") && reqValue["scenes"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
 		string roomId = reqValue["id"].asString();
 		string roomName = reqValue["name"].asString();
-		Json::Value devices = reqValue["devices"];
-		Json::Value scenes = reqValue["scenes"];
-		int roomAddr = ROOM_START_ADDR;
-
-		roomListMtx.lock();
-		for (const auto &[id, room] : roomList)
-		{
-			if (room->GetAddr() >= roomAddr)
-			{
-				roomAddr = room->GetAddr() + 200;
-			}
-		}
-		roomListMtx.unlock();
-		LOGD("roomAddr: %d", roomAddr);
-		Room *room = new Room(roomId, roomAddr, roomName);
-		Group *group = new Group(roomId, roomAddr - ROOM_START_ADDR, roomName);
+		Json::Value devicesValue = reqValue["devices"];
+		Json::Value groupsValue = reqValue["groups"];
+		Json::Value scenesValue = reqValue["scenes"];
+		Room *room = new Room(roomId, getNextGroupAddr(), roomName);
 		if (room)
 		{
-			if (AddNewRoom(room, true, true))
-				if (group)
-					if (AddNewGroup(group, true, true))
-						room->AddGroup(group, true, true);
-
-			for (auto &deviceValue : devices)
+			gateway->AddNewRoom(room, true, true);
+			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
 				{
@@ -1178,11 +1150,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						int epId = device->GetAddr();
-						database->DeviceInRoomAdd(room, device);
-						database->DeviceInGroupAdd(group, device, epId);
-						room->AddDevice(device, false);
-						group->AddDevice(device, epId, true);
+						room->AddDevice(device, device->GetAddr(), false);
 						successList.append(device->GetId());
 					}
 					else
@@ -1191,6 +1159,35 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 				}
 			}
+
+			for (auto &groupValue : groupsValue)
+			{
+				if (groupValue.isObject())
+				{
+					if (groupValue.isMember("id") && groupValue["id"].isString() &&
+							groupValue.isMember("name") && groupValue["name"].isString() &&
+							groupValue.isMember("type") && groupValue["type"].isInt())
+					{
+						string id = groupValue["id"].asString();
+						string name = groupValue["name"].asString();
+						int type = groupValue["type"].asInt();
+						Group *group = new Group(id, getNextGroupAddr(), name);
+						if (group)
+						{
+							if (AddNewGroup(group, true, true))
+								room->AddGroup(group, true, true);
+							for (auto &deviceInRoom : room->deviceList)
+							{
+								if (deviceInRoom->device->GetType() == type)
+								{
+									group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true);
+								}
+							}
+						}
+					}
+				}
+			}
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["id"] = roomId;
 			respValue["data"]["success"] = successList;
@@ -1217,11 +1214,11 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value successList;
 		Json::Value failedList;
 		string roomId = reqValue["id"].asString();
-		Json::Value devices = reqValue["devices"];
+		Json::Value devicesValue = reqValue["devices"];
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
-			for (auto &deviceValue : devices)
+			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
 				{
@@ -1229,24 +1226,16 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (room->AddDevice2(device, true))
-						{
-							database->DeviceInRoomAdd(room, device);
-							successList.append(deviceId);
-						}
-						else
-						{
-							LOGD("add to room deviceId %s error", deviceId.c_str());
-							failedList.append(deviceId);
-						}
+						room->AddDevice(device, device->GetAddr(), false);
+						successList.append(device->GetId());
 					}
 					else
 					{
-						LOGD("deviceId %s dose not exist", deviceId.c_str());
 						failedList.append(deviceId);
 					}
 				}
 			}
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -1284,7 +1273,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (room->DelDevice2(device))
+						if (room->DelDevice(device, device->GetAddr()))
 						{
 							database->DeviceInRoomDel(room, device);
 							successList.append(deviceId);
@@ -1331,7 +1320,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 		{
 			for (auto &deviceInRoom : room->deviceList)
 			{
-				if (room->DelDevice2(deviceInRoom->device))
+				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr()))
 				{
 					database->DeviceInRoomDel(room, deviceInRoom->device);
 					successList.append(deviceInRoom->device->GetId());
@@ -1672,7 +1661,7 @@ int Gateway::OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue)
 		if (device->GetIsFavorite())
 		{
 			list.append(id);
-		}			
+		}
 	}
 	respValue["data"]["devices"] = list;
 	respValue["data"]["code"] = CODE_OK;
@@ -1682,13 +1671,13 @@ int Gateway::OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue)
 {
-		Json::Value list;
+	Json::Value list;
 	for (const auto &[id, scene] : sceneBleList)
 	{
 		if (scene->GetIsFavorite())
 		{
 			list.append(id);
-		}			
+		}
 	}
 	respValue["data"]["scenes"] = list;
 	respValue["data"]["code"] = CODE_OK;

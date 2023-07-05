@@ -1,5 +1,7 @@
 #pragma once
 
+#define CONFIG_USE_MESSAGE_FORMAT_V2 1
+
 #include <string>
 #include <map>
 #include <functional>
@@ -259,10 +261,12 @@ public:
 	Group *getGroupFromId(string id);
 	Group *getGroupFromAddr(int addr);
 	void delGroup(Group *group);
+	uint32_t getNextGroupAddr();
 
 	SceneBle *getSceneBleFromId(string id);
 	SceneBle *getSceneBleFromAddr(int addr);
 	void delSceneBle(SceneBle *sceneBle);
+	uint32_t getNextSceneBleAddr();
 
 	SceneDelay *getSceneDelayFromId(string id);
 	void delSceneDelay(SceneDelay *sceneDelay);

@@ -23,7 +23,7 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				{
 					if (device)
 					{
-						room->AddDevice(device, false);
+						room->AddDevice(device, device->GetAddr(), false);
 					}
 					else
 						LOGW("Device not found %s", deviceId.c_str());

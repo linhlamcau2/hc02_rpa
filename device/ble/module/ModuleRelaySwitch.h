@@ -6,7 +6,7 @@ using namespace std;
 class ModuleRelaySwitch : public Module
 {
 protected:
-	uint8_t value;
+	uint8_t bt;
 	int id;
 	string key;
 

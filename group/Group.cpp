@@ -2,6 +2,7 @@
 #include <thread>
 #include "Log.h"
 #include "BleProtocol.h"
+#include "Db.h"
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
 #endif
@@ -59,6 +60,8 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
+		database->DeviceInGroupAdd(this, device, epId);
+
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 		if (sendBle)
 		{
@@ -182,7 +185,7 @@ void Group::DoBle(bool ack)
 		{
 			Json::Value property = dataValue[i];
 			if (property.isMember("ID") && property["ID"].isInt() &&
-				property.isMember("VALUE") && property["VALUE"].isInt())
+					property.isMember("VALUE") && property["VALUE"].isInt())
 			{
 				int idProperty = property["ID"].asInt();
 				unsigned int value = property["VALUE"].asInt();
@@ -259,8 +262,8 @@ void Group::DoBleV2()
 			bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+				dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 		{
 			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();

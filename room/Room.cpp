@@ -3,22 +3,13 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-DeviceInRoom::DeviceInRoom(Device *device)
-{
-	this->device = device;
-}
-
-Room::Room(string id, uint32_t addr, string name) : Object(id, addr, name)
+Room::Room(string id, uint32_t addr, string name) : Group(id, addr, name)
 {
 	dataConfig = "";
 }
 
 Room::~Room()
 {
-	mtxDev.lock();
-	deviceList.clear();
-	mtxDev.unlock();
-
 	mtxGroup.lock();
 	groupList.clear();
 	mtxGroup.unlock();
@@ -26,22 +17,6 @@ Room::~Room()
 	mtxScene.lock();
 	sceneBleList.clear();
 	mtxScene.unlock();
-}
-
-int Room::GetPositionDevice(Device *device)
-{
-	uint32_t deviceAddr = device->GetAddr();
-	mtxDev.lock();
-	for (uint32_t i = 0; i < deviceList.size(); i++)
-	{
-		if (deviceAddr == deviceList[i]->device->GetAddr())
-		{
-			mtxDev.unlock();
-			return i;
-		}
-	}
-	mtxDev.unlock();
-	return CODE_ERROR;
 }
 
 int Room::GetPositionGroup(Group *group)
@@ -76,130 +51,6 @@ int Room::GetPositionSceneBle(SceneBle *sceneBle)
 	return CODE_ERROR;
 }
 
-/**
- * Id room là id group tất cả thiết bị trong phòng
- * Lấy unicast room là unicast group tất cả thiết bị
- */
-int Room::AddDevice(Device *device, bool sendBle)
-{
-	if (!device)
-	{
-		return CODE_ERROR;
-	}
-	if (device->GetProtocol() == BLE_DEVICE)
-	{
-		DeviceInRoom *deviceInRoom = new DeviceInRoom(device);
-
-		if (sendBle)
-		{
-			if (bleProtocol->SetGroup(device->GetAddr(), addr + 49152) == 0)
-			{
-				if (deviceInRoom)
-				{
-					if (GetPositionDevice(device) == -1)
-					{
-						mtxDev.lock();
-						deviceList.push_back(deviceInRoom);
-						mtxDev.unlock();
-						return CODE_OK;
-					}
-				}
-			}
-			else
-			{
-				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), id.c_str());
-			}
-		}
-		else
-		{
-			if (deviceInRoom)
-			{
-				if (GetPositionDevice(device) == -1)
-				{
-					mtxDev.lock();
-					deviceList.push_back(deviceInRoom);
-					mtxDev.unlock();
-					return CODE_OK;
-				}
-			}
-		}
-	}
-	return CODE_ERROR;
-}
-
-int Room::AddDevice2(Device *device, bool sendBle)
-{
-	LOGW("AddDevice2");
-	if (!device)
-	{
-		return CODE_ERROR;
-	}
-	if (device->GetProtocol() == BLE_DEVICE)
-	{
-		DeviceInRoom *deviceInRoom = new DeviceInRoom(device);
-		if (sendBle)
-		{
-			if (bleProtocol->AddDeviceToRoom(device->GetAddr(), addr) == 0)
-			{
-				if (deviceInRoom)
-				{
-					if (GetPositionDevice(device) == -1)
-					{
-						mtxDev.lock();
-						deviceList.push_back(deviceInRoom);
-						mtxDev.unlock();
-						return CODE_OK;
-					}
-				}
-			}
-			else
-			{
-				LOGW("Add ble device %s to smart home room %s error", device->GetId().c_str(), id.c_str());
-			}
-		}
-		else
-		{
-			if (deviceInRoom)
-			{
-				if (GetPositionDevice(device) == -1)
-				{
-					mtxDev.lock();
-					deviceList.push_back(deviceInRoom);
-					mtxDev.unlock();
-					return CODE_OK;
-				}
-			}
-		}
-	}
-	return CODE_ERROR;
-}
-
-int Room::DelDevice(Device *device)
-{
-	if (!device)
-	{
-		return CODE_ERROR;
-	}
-	if (device->GetProtocol() == BLE_DEVICE)
-	{
-		int deviceIndex = GetPositionDevice(device);
-		if (deviceIndex > -1)
-		{
-			mtxDev.lock();
-			deviceList.erase(deviceList.begin() + deviceIndex);
-			mtxDev.unlock();
-		}
-		return CODE_OK;
-	}
-	return CODE_ERROR;
-}
-
-int Room::DelDevice2(Device *device)
-{
-	LOGW("DelDevice2");
-	return CODE_ERROR;
-}
-
 string Room::GetDataConfig()
 {
 	return this->dataConfig;
@@ -208,6 +59,12 @@ string Room::GetDataConfig()
 void Room::SetDataConfig(string dataConfig)
 {
 	this->dataConfig = dataConfig;
+}
+
+int Room::AddDevice(Device *device, int epId, bool sendBle)
+{
+	database->DeviceInRoomAdd(this, device);
+	return Group::AddDevice(device, epId, sendBle);
 }
 
 int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)

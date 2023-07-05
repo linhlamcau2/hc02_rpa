@@ -53,9 +53,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-	  Udp(8181)
+		: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
+			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+			Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -172,6 +172,21 @@ void Gateway::delGroup(Group *group)
 	delete group;
 }
 
+uint32_t Gateway::getNextGroupAddr()
+{
+	uint32_t groupAddr = 0xD000;
+	groupListMtx.lock();
+	for (const auto &[id, group] : groupList)
+	{
+		if (group->GetAddr() >= groupAddr)
+		{
+			groupAddr = group->GetAddr() + 1;
+		}
+	}
+	groupListMtx.unlock();
+	return groupAddr;
+}
+
 SceneBle *Gateway::getSceneBleFromId(string id)
 {
 	sceneBleListMtx.lock();
@@ -208,6 +223,21 @@ void Gateway::delSceneBle(SceneBle *sceneBle)
 	delete sceneBle;
 }
 
+uint32_t Gateway::getNextSceneBleAddr()
+{
+	uint32_t sceneAddr = 1;
+	sceneBleListMtx.lock();
+	for (const auto &[id, sceneBle] : sceneBleList)
+	{
+		if (sceneBle->GetAddr() >= sceneAddr)
+		{
+			sceneAddr = sceneBle->GetAddr() + 1;
+		}
+	}
+	sceneBleListMtx.unlock();
+	return sceneAddr;
+}
+
 SceneDelay *Gateway::getSceneDelayFromId(string id)
 {
 	sceneDelayListMtx.lock();
@@ -219,6 +249,7 @@ SceneDelay *Gateway::getSceneDelayFromId(string id)
 	sceneDelayListMtx.unlock();
 	return NULL;
 }
+
 void Gateway::delSceneDelay(SceneDelay *sceneDelay)
 {
 	sceneDelayListMtx.lock();
@@ -382,7 +413,7 @@ void Gateway::DelDatabase()
 {
 	delete database;
 #ifdef ESP_PLATFORM
-	if(unlink(DB_NAME) != 0)
+	if (unlink(DB_NAME) != 0)
 	{
 		LOGE("Failed to delete file\n");
 	}
@@ -390,7 +421,7 @@ void Gateway::DelDatabase()
 	// Unmount SPIFFS
 	esp_vfs_spiffs_unregister(NULL);
 #else
-	string rmDb = "rm " + DB_NAME;
+	string rmDb = "rm " DB_NAME;
 	system(rmDb.c_str());
 #endif
 }
@@ -478,7 +509,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -1139,11 +1170,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isString() &&
-		ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isString() &&
+			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		string type = ruleValue["type"].asString();
@@ -1162,7 +1193,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		{
 			Json::Value timeValue = ruleValue["time"];
 			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-				timeValue.isMember("end") && timeValue["end"].isString())
+					timeValue.isMember("end") && timeValue["end"].isString())
 			{
 				string startTime = timeValue["start"].asString();
 				string endTime = timeValue["end"].asString();
@@ -1188,7 +1219,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				Json::Value timerValue = inputValue["timer"];
 				if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-					timerValue.isMember("time") && timerValue["time"].isString())
+						timerValue.isMember("time") && timerValue["time"].isString())
 				{
 					int repeat = timerValue["repeat"].asInt();
 					string timerStr = timerValue["time"].asString();
@@ -1210,7 +1241,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					if (deviceRuleInputValue.isObject())
 					{
 						if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-							deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+								deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
 						{
 							string id = deviceRuleInputValue["id"].asString();
 							Json::Value dataValue = deviceRuleInputValue["data"];
@@ -1307,8 +1338,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
 {
 	if (ruleValue.isMember("EVENT_TRIGGER_ID") && ruleValue["EVENT_TRIGGER_ID"].isString() &&
-		ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
-		ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
+			ruleValue.isMember("STATUS") && ruleValue["STATUS"].isInt() &&
+			ruleValue.isMember("EACH_DAY") && ruleValue["EACH_DAY"].isArray())
 	{
 		int status = ruleValue["STATUS"].asInt();
 		string id = ruleValue["EVENT_TRIGGER_ID"].asString();
@@ -1456,19 +1487,19 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 								}
 
 								if (deviceInputRule->GetType() == BLE_SWITCH_RGB_1 ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_2 ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_3 ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_4 ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_WATER_HEATER ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
-									deviceInputRule->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
-									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
-									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
-									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
-									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
-									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_2 ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_3 ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_4 ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_WATER_HEATER ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+										deviceInputRule->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+										deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+										deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+										deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+										deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+										deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
 								{
 									if (id == BLE_ATTRIBUTE_BUTTON_1 || id == BLE_ATTRIBUTE_BUTTON_2 || id == BLE_ATTRIBUTE_BUTTON_3 || id == BLE_ATTRIBUTE_BUTTON_4)
 									{
@@ -1763,6 +1794,7 @@ Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
 			database->RoomAdd(room);
 		}
 	}
+	AddNewGroup(room, addGateway, false);
 	return room;
 }
 
