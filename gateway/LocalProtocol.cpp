@@ -38,7 +38,7 @@ void LocalProtocol::init()
 #endif
 	isBusy = false;
 	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/" + mac);
-	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
+	// addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
 	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), "v2/json/resp/+/" + mac);
 }
 

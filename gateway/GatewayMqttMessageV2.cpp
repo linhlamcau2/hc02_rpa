@@ -1190,6 +1190,56 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 				}
 
+				for (auto &sceneValue : scenesValue)
+				{
+					if (sceneValue.isObject())
+					{
+						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
+								sceneValue.isMember("name") && sceneValue["name"].isString() &&
+								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+						{
+							string id = sceneValue["id"].asString();
+							string name = sceneValue["name"].asString();
+							Json::Value groupsValue = sceneValue["groups"];
+							int sceneAddr = getNextSceneBleAddr();
+							SceneBle *sceneBle = new SceneBle(id, sceneAddr, name);
+							if (sceneBle)
+							{
+								room->AddSceneBle(sceneBle, true, true);
+								AddNewSceneBle(sceneBle, true, true);
+								for (auto &groupValue : groupsValue)
+								{
+									if (groupValue.isObject())
+									{
+										if (groupValue.isMember("id") && groupValue["id"].isString() &&
+												groupValue.isMember("data") && groupValue["data"].isObject())
+										{
+											string id = groupValue["id"].asString();
+											Json::Value groupData = groupValue["data"];
+											Group *group = getGroupFromId(id);
+											if (group)
+											{
+												for (auto &deviceInGroup : group->deviceList)
+												{
+													if (sceneBle->AddDevice(deviceInGroup->device, groupData, false) == CODE_OK)
+													{
+														database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
+														successList.append(deviceInGroup->device->GetId());
+													}
+													else
+													{
+														failedList.append(deviceInGroup->device->GetId());
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
 				respValue["data"]["code"] = CODE_OK;
 				respValue["data"]["id"] = roomId;
 				respValue["data"]["success"] = successList;
@@ -1203,7 +1253,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		else
 		{
 			respValue["data"]["code"] = CODE_ERROR;
-			LOGW("Room id %s not exist", roomId.c_str());
+			LOGW("Room id %s exist", roomId.c_str());
 		}
 	}
 	else
@@ -1224,7 +1274,6 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value failedList;
 		string roomId = reqValue["id"].asString();
 		Json::Value devicesValue = reqValue["devices"];
-		Json::Value groupsValue = reqValue["groups"];
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
@@ -1246,33 +1295,90 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 
-			for (auto &groupValue : groupsValue)
+			if (reqValue.isMember("groups") && reqValue["groups"].isArray())
 			{
-				if (groupValue.isObject())
+				Json::Value groupsValue = reqValue["groups"];
+				for (auto &groupValue : groupsValue)
 				{
-					if (groupValue.isMember("id") && groupValue["id"].isString() &&
-							groupValue.isMember("name") && groupValue["name"].isString() &&
-							groupValue.isMember("type") && groupValue["type"].isInt())
+					if (groupValue.isObject())
 					{
-						string id = groupValue["id"].asString();
-						string name = groupValue["name"].asString();
-						int type = groupValue["type"].asInt();
-						Group *group = getGroupFromId(id);
-						if (group)
+						if (groupValue.isMember("id") && groupValue["id"].isString() &&
+								groupValue.isMember("name") && groupValue["name"].isString() &&
+								groupValue.isMember("type") && groupValue["type"].isInt())
 						{
-							if (AddNewGroup(group, true, true))
-								room->AddGroup(group, true, true);
-							for (auto &deviceInRoom : room->deviceList)
+							string id = groupValue["id"].asString();
+							string name = groupValue["name"].asString();
+							int type = groupValue["type"].asInt();
+							Group *group = getGroupFromId(id);
+							if (group)
 							{
-								if (deviceInRoom->device->GetType() == type)
+								if (AddNewGroup(group, true, true))
+									room->AddGroup(group, true, true);
+								for (auto &deviceInRoom : room->deviceList)
 								{
-									group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true);
+									if (deviceInRoom->device->GetType() == type)
+									{
+										group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true);
+									}
 								}
 							}
+							else
+							{
+								LOGW("Group id %s not exist", id.c_str());
+							}
 						}
-						else
+					}
+				}
+			}
+
+			if (reqValue.isMember("scenes") && reqValue["scenes"].isArray())
+			{
+				Json::Value scenesValue = reqValue["scenes"];
+				for (auto &sceneValue : scenesValue)
+				{
+					if (sceneValue.isObject())
+					{
+						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
+								sceneValue.isMember("name") && sceneValue["name"].isString() &&
+								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
-							LOGW("Group id %s not exist", id.c_str());
+							string id = sceneValue["id"].asString();
+							string name = sceneValue["name"].asString();
+							Json::Value groupsValue = sceneValue["groups"];
+							SceneBle *sceneBle = getSceneBleFromId(id);
+							if (sceneBle)
+							{
+								room->AddSceneBle(sceneBle, true, true);
+								AddNewSceneBle(sceneBle, true, true);
+								for (auto &groupValue : groupsValue)
+								{
+									if (groupValue.isObject())
+									{
+										if (groupValue.isMember("id") && groupValue["id"].isString() &&
+												groupValue.isMember("data") && groupValue["data"].isObject())
+										{
+											string id = groupValue["id"].asString();
+											Json::Value groupData = groupValue["data"];
+											Group *group = getGroupFromId(id);
+											if (group)
+											{
+												for (auto &deviceInGroup : group->deviceList)
+												{
+													if (sceneBle->AddDevice(deviceInGroup->device, groupData, false) == CODE_OK)
+													{
+														database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
+														successList.append(deviceInGroup->device->GetId());
+													}
+													else
+													{
+														failedList.append(deviceInGroup->device->GetId());
+													}
+												}
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}
