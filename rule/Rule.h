@@ -34,8 +34,6 @@ private:
 	bool fullDay;
 	int startTime;
 	int endTime;
-	int count;
-	time_t lastTimeActive;
 
 	bool isAvailable;
 	bool isEnable;

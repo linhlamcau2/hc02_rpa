@@ -14,8 +14,6 @@ Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
-	count = 0;
-	lastTimeActive = 0;
 	timerRegisterIndex = 0;
 }
 
@@ -28,8 +26,6 @@ Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t
 	this->ruleData = ruleData;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
 	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
-	count = 0;
-	lastTimeActive = 0;
 }
 
 Rule::~Rule()
@@ -103,8 +99,6 @@ void Rule::Check()
 		{
 			LOGI("Do output rule id: %s", id.c_str());
 			RunOutput();
-			count++;
-			lastTimeActive = time(NULL);
 		}
 	}
 }

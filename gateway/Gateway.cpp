@@ -527,7 +527,7 @@ int Gateway::CheckOnlineThread()
 								// 2 chu ky khong co ban tin phan hoi thi bao offline
 								if ((device->lastTimeActive + allTimeCheck * 2 + 1) < currentTime)
 								{
-									// LOGI("Device 0x%04X offline", device->GetAddr());
+									LOGI("Device %s addr 0x%04X offline", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = false;
 									deviceStateChange = true;
 								}
@@ -538,7 +538,7 @@ int Gateway::CheckOnlineThread()
 								// 1 ngay khong co ban tin moi thi bao offline
 								if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
 								{
-									// LOGI("Device 0x%04X offline", device->GetAddr());
+									LOGI("Device %s addr 0x%04X offline", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = false;
 									deviceStateChange = true;
 								}
@@ -557,7 +557,7 @@ int Gateway::CheckOnlineThread()
 								// neu co ban tin moi trong vong 2 chu ky check thi bao online
 								if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
 								{
-									// LOGI("Device 0x%04X online", device->GetAddr());
+									LOGI("Device %s addr 0x%04X online", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = true;
 									deviceStateChange = true;
 								}
@@ -567,7 +567,7 @@ int Gateway::CheckOnlineThread()
 								// trong ngay co ban tin thi online
 								if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
 								{
-									// LOGI("Device 0x%04X online", device->GetAddr());
+									LOGI("Device %s addr 0x%04X online", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = true;
 									deviceStateChange = true;
 								}
@@ -877,7 +877,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				device->lastTimeActive = time(NULL);
 				if (addGateway)
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
@@ -897,7 +896,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				device->lastTimeActive = time(NULL);
 				if (addGateway)
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
@@ -917,7 +915,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				device->lastTimeActive = time(NULL);
 				if (addGateway)
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
@@ -940,7 +937,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				device->lastTimeActive = time(NULL);
 				if (addGateway)
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
@@ -959,7 +955,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				device->lastTimeActive = time(NULL);
 				if (addGateway)
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
@@ -978,7 +973,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				device->lastTimeActive = time(NULL);
 				if (addGateway)
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
@@ -1073,7 +1067,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 
 	if (device)
 	{
-		device->lastTimeActive = time(NULL);
 		if (addGateway)
 		{
 			deviceList[id] = device;
