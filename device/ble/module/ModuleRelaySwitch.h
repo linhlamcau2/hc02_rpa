@@ -7,11 +7,10 @@ class ModuleRelaySwitch : public Module
 {
 protected:
 	uint8_t bt;
-	uint8_t index;
 	string key;
 
 public:
-	ModuleRelaySwitch(Device *device, uint32_t addr, uint8_t relayId);
+	ModuleRelaySwitch(Device *device, uint32_t addr, uint32_t index = 0);
 	~ModuleRelaySwitch();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

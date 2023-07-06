@@ -2,10 +2,11 @@
 #include "Device.h"
 #include "Log.h"
 
-Module::Module(Device *device, uint32_t addr)
+Module::Module(Device *device, uint32_t addr, uint32_t index)
 {
 	this->device = device;
 	this->addr = addr;
+	this->index = index;
 }
 
 Module::~Module()

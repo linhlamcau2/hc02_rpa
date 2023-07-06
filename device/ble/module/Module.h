@@ -11,10 +11,11 @@ class Module
 {
 protected:
 	uint32_t addr;
+	uint32_t index;
 	Device *device;
 
 public:
-	Module(Device *device, uint32_t addr);
+	Module(Device *device, uint32_t addr, uint32_t index = 0);
 	virtual ~Module();
 
 	bool CheckAddr(uint32_t addr);

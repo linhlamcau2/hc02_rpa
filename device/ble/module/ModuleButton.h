@@ -7,12 +7,10 @@ class ModuleButton : public Module
 {
 protected:
 	uint8_t bt;
-	uint8_t index;
 	string key;
 
 public:
-	ModuleButton(Device *device, uint32_t addr);
-	ModuleButton(Device *device, uint32_t addr, int index);
+	ModuleButton(Device *device, uint32_t addr, uint32_t index = 0);
 	~ModuleButton();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

@@ -6,13 +6,12 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t index) : Module(device, addr)
+ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
 {
-	this->index = index;
 	dimOn = 0;
 	dimOff = 0;
-	keyDimOn = KEY_ATTRIBUTE_DIM_ON + to_string(addr - device->GetAddr());
-	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + to_string(addr - device->GetAddr());
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index) : "");
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index) : "");
 }
 
 ModuleDimonDimoff::~ModuleDimonDimoff()

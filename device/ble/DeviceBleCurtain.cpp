@@ -6,7 +6,7 @@ DeviceBleCurtain::DeviceBleCurtain(string id, string name, string mac, string da
 {
     moduleCurtain = new ModuleCurtain(this, addr);
     modules.push_back(moduleCurtain);
-    moduleRgb = new ModuleRgb(this, addr, 0);
+    moduleRgb = new ModuleRgb(this, addr);
     modules.push_back(moduleRgb);
     powerSource = POWER_AC;
 }

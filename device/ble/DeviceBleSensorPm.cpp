@@ -6,9 +6,7 @@ DeviceBleSensorPm::DeviceBleSensorPm(string id, string name, string mac, string 
 {
 	modulePmSensor = new ModulePmSensor(this, addr);
 	modules.push_back(modulePmSensor);
-
 	moduleTempHum = new ModuleTempHum(this, addr);
 	modules.push_back(moduleTempHum);
-
 	powerSource = POWER_BATTERY;
 }

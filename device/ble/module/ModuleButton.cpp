@@ -7,15 +7,10 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-ModuleButton::ModuleButton(Device *device, uint32_t addr) : ModuleButton(device, addr, 0)
-{
-}
-
-ModuleButton::ModuleButton(Device *device, uint32_t addr, int index) : Module(device, addr)
+ModuleButton::ModuleButton(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
-	this->index = index;
-	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr() + index);
+	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index) : "");
 }
 
 ModuleButton::~ModuleButton()

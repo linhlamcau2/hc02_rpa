@@ -6,9 +6,8 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t index) : Module(device, addr)
+ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
 {
-	this->index = index;
 	r = 0;
 	b = 0;
 	g = 0;
