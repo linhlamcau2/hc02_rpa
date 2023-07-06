@@ -33,6 +33,7 @@ int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		cct = (cct * 192) + 800;
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
 		return CODE_OK;
