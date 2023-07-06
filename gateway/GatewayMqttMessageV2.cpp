@@ -1201,8 +1201,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							string id = sceneValue["id"].asString();
 							string name = sceneValue["name"].asString();
 							Json::Value groupsValue = sceneValue["groups"];
-							int sceneAddr = getNextSceneBleAddr();
-							SceneBle *sceneBle = new SceneBle(id, sceneAddr, name);
+							SceneBle *sceneBle = new SceneBle(id, getNextSceneBleAddr(), name);
 							if (sceneBle)
 							{
 								room->AddSceneBle(sceneBle, true, true);
@@ -1268,8 +1267,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray() &&
-			reqValue.isMember("groups") && reqValue["groups"].isArray())
+			reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -1304,17 +1302,36 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("name") && groupValue["name"].isString() &&
 								groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
-							string name = groupValue["name"].asString();
 							int type = groupValue["type"].asInt();
 							Group *group = getGroupFromId(id);
+							if (!group)
+							{
+								if (groupValue.isMember("name") && groupValue["name"].isString())
+								{
+									string name = groupValue["name"].asString();
+									group = new Group(id, getNextGroupAddr(), name);
+									if (group)
+									{
+										if (AddNewGroup(group, true, true))
+											room->AddGroup(group, true, true);
+									}
+									else
+									{
+										respValue["data"]["code"] = CODE_MEMORY_ERROR;
+										LOGW("Malloc err");
+									}
+								}
+								else
+								{
+									respValue["data"]["code"] = CODE_FORMAT_ERROR;
+									LOGW("Message format err: Group name not exist");
+								}
+							}
 							if (group)
 							{
-								if (AddNewGroup(group, true, true))
-									room->AddGroup(group, true, true);
 								for (auto &deviceInRoom : room->deviceList)
 								{
 									if (deviceInRoom->device->GetType() == type)
@@ -1340,17 +1357,36 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("name") && sceneValue["name"].isString() &&
 								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
 							string id = sceneValue["id"].asString();
-							string name = sceneValue["name"].asString();
 							Json::Value groupsValue = sceneValue["groups"];
 							SceneBle *sceneBle = getSceneBleFromId(id);
+							if (!sceneBle)
+							{
+								if (sceneValue.isMember("name") && sceneValue["name"].isString())
+								{
+									string name = sceneValue["name"].asString();
+									sceneBle = new SceneBle(id, getNextSceneBleAddr(), name);
+									if (sceneBle)
+									{
+										room->AddSceneBle(sceneBle, true, true);
+										AddNewSceneBle(sceneBle, true, true);
+									}
+									else
+									{
+										respValue["data"]["code"] = CODE_MEMORY_ERROR;
+										LOGW("Malloc err");
+									}
+								}
+								else
+								{
+									respValue["data"]["code"] = CODE_FORMAT_ERROR;
+									LOGW("Message format err: Scene name not exist");
+								}
+							}
 							if (sceneBle)
 							{
-								room->AddSceneBle(sceneBle, true, true);
-								AddNewSceneBle(sceneBle, true, true);
 								for (auto &groupValue : groupsValue)
 								{
 									if (groupValue.isObject())
