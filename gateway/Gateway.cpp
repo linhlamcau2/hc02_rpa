@@ -1111,88 +1111,94 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
-		string type = ruleValue["type"].asString();
-		int repeat = ruleValue["repeat"].asInt();
+		int type = ruleValue["type"].asInt();
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValues = ruleValue["output"];
+		string name = ruleValue["name"].asString();
+		int repeat = 0;
 		uint32_t addr = 0;
-		string name;
-		if (ruleValue.isMember("name") && ruleValue["name"].isString())
-			name = ruleValue["name"].asString();
-		else
-			name = id;
-
 		Rule *rule = NULL;
-		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
-		{
-			Json::Value timeValue = ruleValue["time"];
-			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-					timeValue.isMember("end") && timeValue["end"].isString())
-			{
-				string startTime = timeValue["start"].asString();
-				string endTime = timeValue["end"].asString();
-				rule = new Rule(id, type, repeat, name, 0, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), ruleValue);
-				ruleListMtx.lock();
-				ruleList[rule->GetId()] = rule;
-				ruleListMtx.unlock();
-			}
-		}
-		if (!rule)
-		{
-			rule = new Rule(id, type, repeat, name, 0, ruleValue);
-			ruleListMtx.lock();
-			ruleList[rule->GetId()] = rule;
-			ruleListMtx.unlock();
-		}
 
-		if (rule)
+		if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+			repeat = inputValue["repeat"].asInt();
+		/*
+			- -1: Rule Time
+			- +0: Rule OR
+			- +1: Rule AND
+			- +2: Rule Time + OR
+			- +3: Rule Time + AND
+		*/
+		string logical = "or";
+		if (type == -1 || type == 3 || type == 2)
 		{
-			rule->SetStatus(true);
-			rule->UpdateData(ruleValue);
+			if (type == 3 || type == -1)
+			{
+				logical = "and";
+			}
+			else if (type == 2)
+			{
+				logical = "or";
+			}
 			if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 			{
-				Json::Value timerValue = inputValue["timer"];
-				if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-						timerValue.isMember("time") && timerValue["time"].isString())
-				{
-					int repeat = timerValue["repeat"].asInt();
-					string timerStr = timerValue["time"].asString();
-					LOGI("Have Timer: %s", timerStr.c_str());
-					int timer = Util::ConvertStrTimeToInt(timerStr);
-					if (timer > 0)
-					{
-						RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, timer, repeat);
-						rule->AddRuleInput(ruleInputTimer);
-					}
-				}
+				Json::Value timer = inputValue["timer"];
+				string endAt = "";
+				string startAt = "";
+				if (timer.isMember("start") && timer["start"].isString())
+					startAt = timer["start"].asString();
+				if (timer.isMember("end") && timer["end"].isString())
+					endAt = timer["end"].asString();
+				LOGE("endat: %d", Util::ConvertStrTimeToInt(endAt));
+				rule = new Rule(id, logical, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+				if (!rule)
+					LOGW("New rule error");
 			}
+		}
+		else if (type == 0 || type == 1 || type == -2)
+		{
+			if (repeat == 0)
+				repeat = 127;
+			if (type == 0 || type == -2)
+				logical = "or";
+			else if (type == 1)
+				logical = "and";
+			rule = new Rule(id, logical, repeat, name, addr, ruleValue);
+			if (!rule)
+				LOGW("New rule error");
+		}
+
+		bool statusRule = false;
+		if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
+			statusRule = (ruleValue["enable"].asInt() == 1) ? true : false;
+		if (rule)
+		{
+			rule->SetStatus(statusRule);
+			rule->UpdateData(ruleValue);
+
 			if (inputValue.isMember("device") && inputValue["device"].isArray())
 			{
-				Json::Value deviceRuleInputList = inputValue["device"];
-				for (Json::Value::ArrayIndex i = 0; i < deviceRuleInputList.size(); i++)
+				Json::Value devicesJson = inputValue["device"];
+				for (auto &deviceJson : devicesJson)
 				{
-					Json::Value deviceRuleInputValue = deviceRuleInputList[i];
-					if (deviceRuleInputValue.isObject())
+					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
-						if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-								deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+						string deviceId = deviceJson["id"].asString();
+						Device *deviceInRule = getDeviceFromId(deviceId);
+						if (deviceInRule)
 						{
-							string id = deviceRuleInputValue["id"].asString();
-							Json::Value dataValue = deviceRuleInputValue["data"];
-							Device *device = gateway->getDeviceFromMac(mac);
-							if (device)
-							{
-								RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, device, dataValue);
-								rule->AddRuleInput(ruleInputDevice);
-							}
+							Json::Value dataJson = deviceJson["data"];
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInRule, dataJson);
+							rule->AddRuleInput(ruleInputDevice);
 						}
+						else
+							LOGW("Device not found");
 					}
 				}
 			}
@@ -1202,7 +1208,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				Json::Value outputValue = outputValues[i];
 				if (outputValue.isMember("delay"))
 				{
-					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue.asInt());
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["delay"].asInt());
 					rule->AddRuleOutput(ruleOutputDelay);
 				}
 				else if (outputValue.isMember("deviceId"))
@@ -1261,15 +1267,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			}
 		}
 		else
-		{
-			LOGE("New rule error, out of memory");
-		}
+			LOGW("Rule null");
 		return rule;
 	}
 	else
-	{
-		LOGW("Rule format error");
-	}
+		LOGE("New rule error, out of memory");
 	return NULL;
 }
 

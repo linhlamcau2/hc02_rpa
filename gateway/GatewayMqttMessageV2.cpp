@@ -1443,7 +1443,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray())
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -1470,6 +1470,34 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							LOGD("delete from room deviceId %s error", deviceId.c_str());
 							failedList.append(deviceId);
 						}
+
+						for (auto &group : room->groupList)
+						{
+							for (auto &devInGr : group->deviceList)
+							{
+								if (devInGr->device->GetId() == device->GetId())
+								{
+									if (group->DelDevice(device, device->GetAddr()) == CODE_OK)
+									{
+										database->DeviceInGroupDel(group, device, device->GetAddr());
+									}
+								}
+							}
+						}
+
+						for (auto &sceneBle : room->sceneBleList)
+						{
+							for (auto &devInScene : sceneBle->deviceList)
+							{
+								if (devInScene->device->GetId() == device->GetId())
+								{
+									if (sceneBle->DelDevice(device) == CODE_OK)
+									{
+										database->DeviceInSceneBleDel(sceneBle, device);
+									}
+								}
+							}
+						}
 					}
 					else
 					{
@@ -1478,6 +1506,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 					}
 				}
 			}
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
