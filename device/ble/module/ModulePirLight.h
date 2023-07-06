@@ -8,8 +8,6 @@ class ModulePirLight : public Module
 protected:
 	uint16_t pir;
 	uint16_t lux;
-	int idPir;
-	int idLux;
 
 public:
 	ModulePirLight(Device *device, uint32_t addr);

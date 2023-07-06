@@ -1,10 +1,7 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "module/ModuleControlClose.h"
-#include "module/ModuleControlOpen.h"
-#include "module/ModuleControlPause.h"
-#include "module/ModuleControlPercent.h"
+#include "module/ModuleCurtain.h"
 #include "module/ModuleRgb.h"
 
 using namespace std;
@@ -12,10 +9,7 @@ using namespace std;
 class DeviceBleCurtain : public DeviceBle
 {
 private:
-    ModuleControlClose *moduleControlClose;
-    ModuleControlOpen *moduleControlOpen;
-    ModuleControlPause *moduleControlPause;
-    ModuleControlPercent *moduleControlPercent;
+    ModuleCurtain *moduleCurtain;
     ModuleRgb *moduleRgb;
 
 public:

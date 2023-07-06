@@ -3,15 +3,14 @@
 
 using namespace std;
 
-class ModuleControlOpen : public Module
+class ModuleCurtain : public Module
 {
 protected:
-	int id;
-	uint8_t value;
+	uint8_t curtain;
 
 public:
-	ModuleControlOpen(Device *device, uint32_t addr);
-	~ModuleControlOpen();
+	ModuleCurtain(Device *device, uint32_t addr);
+	~ModuleCurtain();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

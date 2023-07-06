@@ -7,7 +7,6 @@ class ModuleModeRgb : public Module
 {
 protected:
 	uint8_t mode;
-	int id;
 
 public:
 	ModuleModeRgb(Device *device, uint32_t addr);

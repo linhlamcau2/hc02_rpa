@@ -9,7 +9,7 @@ DeviceBleSwitchScene6DC::DeviceBleSwitchScene6DC(string id, string name, string 
 		moduleButton[i] = new ModuleButton(this, addr, i);
 		modules.push_back(moduleButton[i]);
 	}
-	modulePinLevel = new ModulePinLevel(this, addr);
-	modules.push_back(modulePinLevel);
+	moduleBatteryLevel = new ModuleBatteryLevel(this, addr);
+	modules.push_back(moduleBatteryLevel);
 	powerSource = POWER_BATTERY;
 }

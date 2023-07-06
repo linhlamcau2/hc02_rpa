@@ -4,16 +4,9 @@
 DeviceBleRoolDoor::DeviceBleRoolDoor(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
     : DeviceBle(id, name, mac, data, addr, type, version)
 {
-    moduleControlClose = new ModuleControlClose(this, addr);
-    modules.push_back(moduleControlClose);
-    moduleControlOpen = new ModuleControlOpen(this, addr);
-    modules.push_back(moduleControlOpen);
-    moduleControlPause = new ModuleControlPause(this, addr);
-    modules.push_back(moduleControlPause);
-    moduleControlPercent = new ModuleControlPercent(this, addr);
-    modules.push_back(moduleControlPercent);
+    moduleCurtain = new ModuleCurtain(this, addr);
+    modules.push_back(moduleCurtain);
     moduleTimeAction = new ModuleTimeActionPir(this, addr);
     modules.push_back(moduleTimeAction);
-
     powerSource = POWER_AC;
 }

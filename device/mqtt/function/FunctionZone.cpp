@@ -36,7 +36,7 @@ int FunctionZone::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 bool FunctionZone::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_ZONE_ID) && dataValue[KEY_ATTRIBUTE_ZONE_ID].isString())
 	{

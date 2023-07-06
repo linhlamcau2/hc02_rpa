@@ -83,7 +83,7 @@ void DeviceMqtt::InputData(Json::Value &dataValue)
 
 bool DeviceMqtt::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	for (auto &function : functions)
 	{
 		if (function->CheckData(dataValue, rs))

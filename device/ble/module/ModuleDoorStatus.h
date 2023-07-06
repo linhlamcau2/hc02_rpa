@@ -7,7 +7,6 @@ class ModuleDoorStatus : public Module
 {
 protected:
 	uint16_t status;
-	int id;
 
 public:
 	ModuleDoorStatus(Device *device, uint32_t addr);

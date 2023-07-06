@@ -8,8 +8,6 @@ class ModuleTempHum : public Module
 protected:
 	int temp;
 	int hum;
-	int idTemp;
-	int idHum;
 
 public:
 	ModuleTempHum(Device *device, uint32_t addr);

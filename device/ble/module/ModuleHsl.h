@@ -7,8 +7,6 @@ class ModuleHsl : public Module
 {
 protected:
 	uint16_t h, s, l;
-	int idH, idS, idL;
-	bool isH, isS, isL;
 
 public:
 	ModuleHsl(Device *device, uint32_t addr);

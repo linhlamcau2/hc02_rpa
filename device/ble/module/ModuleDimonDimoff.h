@@ -6,14 +6,12 @@ using namespace std;
 class ModuleDimonDimoff : public Module
 {
 protected:
-	uint8_t bt;
+	uint8_t index;
 	uint8_t dimOn, dimOff;
-	int idDimOn, idDimOff;
-	bool isDimOn, isDimOff;
 	string keyDimOn, keyDimOff;
 
 public:
-	ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t button = 0);
+	ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t index = 0);
 	~ModuleDimonDimoff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

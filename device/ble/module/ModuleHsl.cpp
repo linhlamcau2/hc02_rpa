@@ -11,12 +11,6 @@ ModuleHsl::ModuleHsl(Device *device, uint32_t addr) : Module(device, addr)
 	h = 0;
 	s = 0;
 	l = 0;
-	idH = BLE_ATTRIBUTE_HUE;
-	idS = BLE_ATTRIBUTE_SATURATION;
-	idL = BLE_ATTRIBUTE_LUMINANCE;
-	isH = false;
-	isS = false;
-	isL = false;
 }
 
 ModuleHsl::~ModuleHsl()
@@ -50,28 +44,18 @@ void ModuleHsl::SaveAttribute()
 
 int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idH == id || this->idL == id || this->idS == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				if (this->idH == id)
-					h = dataValue["VALUE"].asInt();
-				else if (this->idL == id)
-					l = dataValue["VALUE"].asInt();
-				else if (this->idS == id)
-					s = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				// CheckTrigger();
-				return CODE_OK;
-			}
-		}
+		h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+		s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+		l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -105,114 +89,85 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 {
-	// LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idH == id || this->idS == id || this->idL == id)
+		string op = dataValue["op"].asString();
+		if (dataValue.isMember(KEY_ATTRIBUTE_HUE))
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+			if (dataValue[KEY_ATTRIBUTE_HUE].isInt())
 			{
-				uint16_t value1 = 0, value2 = 0;
-				string op = dataValue["OP"].asString();
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() > 0)
+				int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+				rs = Util::CompareNumber(op, this->h, h);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_HUE].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_HUE];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{
-					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-					{
-						value1 = listValue[0].asInt();
-						value2 = listValue[1].asInt();
-					}
-					else if (listValue.size() == 1 && listValue[0].isInt())
-					{
-						value1 = listValue[0].asInt();
-					}
-					if (this->idH == id)
-						rs = Util::CompareNumber(op, this->h, value1, value2);
-					else if (this->idS == id)
-						rs = Util::CompareNumber(op, this->h, value1, value2);
-					else if (this->idL == id)
-						rs = Util::CompareNumber(op, this->h, value1, value2);
+					int h1 = listValue[0].asInt();
+					int h2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->h, h1, h2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(KEY_ATTRIBUTE_SATURATION))
+		{
+			if (dataValue[KEY_ATTRIBUTE_SATURATION].isInt())
+			{
+				int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+				rs = Util::CompareNumber(op, this->s, s);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_SATURATION].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_SATURATION];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int s1 = listValue[0].asInt();
+					int s2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->s, s1, s2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE))
+		{
+			if (dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+			{
+				int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+				rs = Util::CompareNumber(op, this->l, l);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_LUMINANCE].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_LUMINANCE];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int l1 = listValue[0].asInt();
+					int l2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->l, l1, l2);
 					return true;
 				}
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_HUE] = h;
 	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
 	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = idH;
-	dataValue["VALUE"] = h;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idS;
-	dataValue["VALUE"] = s;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idL;
-	dataValue["VALUE"] = l;
-	jsonValue.append(dataValue);
-#endif
-}
-
-static uint16_t value_h = 0;
-static uint16_t value_s = 0;
-static uint16_t value_l = 0;
-int ModuleHsl::DoJsonArray(Json::Value &dataValue)
-{
-	// LOGD("DoJsonArray data: %s", dataValue.toString().c_str());
-	if (dataValue.isArray())
-	{
-		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
-		{
-			Json::Value data = dataValue[i];
-			if (data.isMember("ID") && data["ID"].isInt() && data.isMember("VALUE") && data["VALUE"].isInt())
-			{
-				if (data["ID"].asInt() == BLE_ATTRIBUTE_HUE)
-				{
-					isH = true;
-					value_h = data["VALUE"].asInt();
-				}
-				else if (data["ID"].asInt() == BLE_ATTRIBUTE_SATURATION)
-				{
-					isS = true;
-					value_s = data["VALUE"].asInt();
-				}
-				else if (data["ID"].asInt() == BLE_ATTRIBUTE_LUMINANCE)
-				{
-					isL = true;
-					value_l = data["VALUE"].asInt();
-				}
-			}
-		}
-		if (isL && isS && isH)
-		{
-			if (bleProtocol)
-			{
-				bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, 0, true);
-			}
-			else
-				LOGW("BleProtocol null");
-		}
-	}
-	return CODE_ERROR;
 }
 
 int ModuleHsl::Do(Json::Value &dataValue)
 {
-	// LOGD("Module Hsl Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
 			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
@@ -229,47 +184,5 @@ int ModuleHsl::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->idH == id || this->idL == id || this->idS == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				int value = dataValue["VALUE"].asInt();
-				if (this->idH == id)
-				{
-					isH = true;
-					value_h = value;
-				}
-				else if (this->idS == id)
-				{
-					isS = true;
-					value_s = value;
-				}
-				else if (this->idL == id)
-				{
-					isL = true;
-					value_l = value;
-				}
-				if (isH && isS && isL)
-				{
-					isH = false;
-					isS = false;
-					isL = false;
-					if (bleProtocol)
-					{
-						bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, 0, true);
-					}
-					else
-						LOGW("BleProtocol null");
-					return CODE_OK;
-				}
-			}
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

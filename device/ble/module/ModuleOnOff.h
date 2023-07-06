@@ -7,8 +7,6 @@ class ModuleOnOff : public Module
 {
 protected:
 	uint8_t onoff;
-	int id;
-	string code;
 
 public:
 	ModuleOnOff(Device *device, uint32_t addr);

@@ -31,7 +31,8 @@ void ElementOnOff::SaveAttribute()
 
 int ElementOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		onoff = dataValue[key].asInt();
 		BuildTelemetryValue(jsonValue);

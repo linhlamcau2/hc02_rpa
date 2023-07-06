@@ -79,7 +79,7 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
-	// LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_CCT) &&
 			dataValue.isMember("op") && dataValue["op"].isString())
@@ -113,7 +113,7 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 
 int ElementCct::Do(Json::Value &dataValue)
 {
-	// LOGD("Do data: %s", dataValue.toString().c_str());
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{

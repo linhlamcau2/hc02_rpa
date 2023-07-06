@@ -6,9 +6,9 @@ DeviceBleDoorSensor::DeviceBleDoorSensor(string id, string name, string mac, str
 {
 	moduleDoorHangOn = new ModuleDoorHangOn(this, addr);
 	moduleDoorStatus = new ModuleDoorStatus(this, addr);
-	modulePinLevel = new ModulePinLevel(this, addr);
+	moduleBatteryLevel = new ModuleBatteryLevel(this, addr);
 	modules.push_back(moduleDoorHangOn);
 	modules.push_back(moduleDoorStatus);
-	modules.push_back(modulePinLevel);
+	modules.push_back(moduleBatteryLevel);
 	powerSource = POWER_BATTERY;
 }

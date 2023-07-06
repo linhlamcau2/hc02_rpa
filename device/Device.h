@@ -32,6 +32,7 @@
 #define KEY_ATTRIBUTE_AIR_CONDITIONER_WIND "airConditionerWind"
 #define KEY_ATTRIBUTE_AIR_CONDITIONER_MODE "airConditionerMode"
 #define KEY_ATTRIBUTE_AIR_CONDITIONER_TEMP "airConditionerTemp"
+#define KEY_ATTRIBUTE_CURTAIN "curtain"
 #define KEY_ATTRIBUTE_CURTAIN_OPEN "curtainOpen"
 #define KEY_ATTRIBUTE_CURTAIN_CLOSE "curtainClose"
 #define KEY_ATTRIBUTE_CURTAIN_PAUSE "curtainPause"

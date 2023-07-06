@@ -3,15 +3,14 @@
 
 using namespace std;
 
-class ModuleControlPause : public Module
+class ModuleBatteryLevel : public Module
 {
 protected:
-	int id;
-	uint8_t value;
+	uint16_t bat;
 
 public:
-	ModuleControlPause(Device *device, uint32_t addr);
-	~ModuleControlPause();
+	ModuleBatteryLevel(Device *device, uint32_t addr);
+	~ModuleBatteryLevel();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
@@ -58,13 +57,4 @@ public:
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
-
-	/**
-	 * @brief Do an action
-	 *
-	 * @param dataValue data of action
-	 * @return true
-	 * @return false
-	 */
-	int Do(Json::Value &dataValue);
 };

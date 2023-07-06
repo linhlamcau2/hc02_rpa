@@ -8,8 +8,6 @@ class ModuleSmoke : public Module
 protected:
 	uint8_t smoke;
 	uint8_t power;
-	int idSmoke;
-	int idPower;
 
 public:
 	ModuleSmoke(Device *device, uint32_t addr);

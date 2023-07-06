@@ -7,7 +7,6 @@ class ModuleTimeActionPir : public Module
 {
 protected:
 	uint16_t time;
-	int id;
 
 public:
 	ModuleTimeActionPir(Device *device, uint32_t addr);

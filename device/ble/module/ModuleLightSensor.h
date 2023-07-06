@@ -7,7 +7,6 @@ class ModuleLightSensor : public Module
 {
 protected:
 	uint16_t lux;
-	int id;
 
 public:
 	ModuleLightSensor(Device *device, uint32_t addr);

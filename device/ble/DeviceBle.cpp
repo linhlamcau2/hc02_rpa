@@ -88,7 +88,7 @@ void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 
 bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	for (auto &module : modules)
 	{
 		if (module->CheckData(dataValue, rs))

@@ -40,7 +40,7 @@ void ClusterOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ClusterOnoff::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (attributeOnoff->CheckData(dataValue, rs))
 		return rs;
 	return false;

@@ -36,7 +36,7 @@ int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 bool FunctionFace::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_FACE_ID) && dataValue[KEY_ATTRIBUTE_FACE_ID].isString())
 	{

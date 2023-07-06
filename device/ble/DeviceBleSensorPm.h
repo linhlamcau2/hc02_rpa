@@ -3,7 +3,7 @@
 #include "DeviceBle.h"
 #include "module/ModulePmSensor.h"
 #include "module/ModuleTempHum.h"
-#include "module/ModulePinLevel.h"
+#include "module/ModuleBatteryLevel.h"
 
 using namespace std;
 

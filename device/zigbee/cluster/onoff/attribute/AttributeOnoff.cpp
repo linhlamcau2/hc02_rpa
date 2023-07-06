@@ -42,7 +42,7 @@ void AttributeOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isMember("operator") && dataValue["operator"].isString())
 	{
 		string op = dataValue["operator"].asString();

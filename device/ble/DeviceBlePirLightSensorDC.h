@@ -3,7 +3,7 @@
 #include "DeviceBle.h"
 #include "module/ModulePirSensor.h"
 #include "module/ModuleLightSensor.h"
-#include "module/ModulePinLevel.h"
+#include "module/ModuleBatteryLevel.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
 #include <mutex>
@@ -16,7 +16,7 @@ private:
 	ModulePirLight * modulePirLight;
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
-	ModulePinLevel *modulePinLevel;
+	ModuleBatteryLevel *moduleBatteryLevel;
 	ModuleTimeActionPir *moduleTimeActionPir;
 
 public:

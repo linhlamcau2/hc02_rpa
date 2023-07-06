@@ -7,7 +7,6 @@ class ModuleDim : public Module
 {
 protected:
 	uint16_t dim;
-	int id;
 
 public:
 	ModuleDim(Device *device, uint32_t addr);

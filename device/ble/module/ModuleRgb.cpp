@@ -6,21 +6,14 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t button) : Module(device, addr)
+ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint8_t index) : Module(device, addr)
 {
-
-	bt = button;
+	this->index = index;
 	r = 0;
 	b = 0;
 	g = 0;
 	dimOn = 0;
 	dimOff = 0;
-	idR = BLE_ATTRIBUTE_R;
-	idG = BLE_ATTRIBUTE_G;
-	idB = BLE_ATTRIBUTE_B;
-	idDimOn = BLE_ATTRIBUTE_DIM_ON;
-	idDimOff = BLE_ATTRIBUTE_DIM_OFF;
-	isR = isG = isB = isDimOn = isDimOff = false;
 	keyR = KEY_ATTRIBUTE_R + to_string(addr - device->GetAddr());
 	keyG = KEY_ATTRIBUTE_G + to_string(addr - device->GetAddr());
 	keyB = KEY_ATTRIBUTE_B + to_string(addr - device->GetAddr());
@@ -69,32 +62,22 @@ void ModuleRgb::SaveAttribute()
 
 int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idB == id || this->idG == id || this->idR == id || this->idDimOff == id || this->idDimOn == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				if (this->idB == id)
-					b = dataValue["VALUE"].asInt();
-				else if (this->idG == id)
-					g = dataValue["VALUE"].asInt();
-				else if (this->idR == id)
-					r = dataValue["VALUE"].asInt();
-				else if (this->idDimOff == id)
-					dimOff = dataValue["VALUE"].asInt();
-				else if (this->idDimOn == id)
-					dimOn = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-		}
+		r = dataValue[keyR].asInt();
+		g = dataValue[keyG].asInt();
+		b = dataValue[keyB].asInt();
+		dimOn = dataValue[keyDimOn].asInt();
+		dimOff = dataValue[keyDimOff].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -132,84 +115,127 @@ int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idR == id || this->idG == id || this->idB == id || this->idDimOn == id || this->idDimOff == id)
+		string op = dataValue["op"].asString();
+		if (dataValue.isMember(keyR))
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+			if (dataValue[keyR].isInt())
 			{
-				uint16_t value1 = 0, value2 = 0;
-				string op = dataValue["OP"].asString();
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() > 0)
+				int r = dataValue[keyR].asInt();
+				rs = Util::CompareNumber(op, this->r, r);
+				return true;
+			}
+			else if (dataValue[keyR].isArray())
+			{
+				Json::Value listValue = dataValue[keyR];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{
-					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-					{
-						value1 = listValue[0].asInt();
-						value2 = listValue[1].asInt();
-					}
-					else if (listValue.size() == 1 && listValue[0].isInt())
-					{
-						value1 = listValue[0].asInt();
-					}
-					if (this->idR == id)
-						rs = Util::CompareNumber(op, this->r, value1, value2);
-					else if (this->idG == id)
-						rs = Util::CompareNumber(op, this->g, value1, value2);
-					else if (this->idB == id)
-						rs = Util::CompareNumber(op, this->b, value1, value2);
-					else if (this->idDimOn == id)
-						rs = Util::CompareNumber(op, this->dimOn, value1, value2);
-					else if (this->idDimOff == id)
-						rs = Util::CompareNumber(op, this->dimOff, value1, value2);
+					int r1 = listValue[0].asInt();
+					int r2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->r, r1, r2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(keyG))
+		{
+			if (dataValue[keyG].isInt())
+			{
+				int g = dataValue[keyG].asInt();
+				rs = Util::CompareNumber(op, this->g, g);
+				return true;
+			}
+			else if (dataValue[keyG].isArray())
+			{
+				Json::Value listValue = dataValue[keyG];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int g1 = listValue[0].asInt();
+					int g2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->g, g1, g1);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(keyB))
+		{
+			if (dataValue[keyB].isInt())
+			{
+				int b = dataValue[keyB].asInt();
+				rs = Util::CompareNumber(op, this->b, b);
+				return true;
+			}
+			else if (dataValue[keyB].isArray())
+			{
+				Json::Value listValue = dataValue[keyB];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int b1 = listValue[0].asInt();
+					int b2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->b, b1, b2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(keyDimOn))
+		{
+			if (dataValue[keyDimOn].isInt())
+			{
+				int dimOn = dataValue[keyDimOn].asInt();
+				rs = Util::CompareNumber(op, this->dimOn, dimOn);
+				return true;
+			}
+			else if (dataValue[keyDimOn].isArray())
+			{
+				Json::Value listValue = dataValue[keyDimOn];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int dimOn1 = listValue[0].asInt();
+					int dimOn2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->dimOn, dimOn1, dimOn2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(keyDimOff))
+		{
+			if (dataValue[keyDimOff].isInt())
+			{
+				int dimOff = dataValue[keyDimOff].asInt();
+				rs = Util::CompareNumber(op, this->dimOff, dimOff);
+				return true;
+			}
+			else if (dataValue[keyDimOff].isArray())
+			{
+				Json::Value listValue = dataValue[keyDimOff];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int dimOff1 = listValue[0].asInt();
+					int dimOff2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->dimOff, dimOff1, dimOff2);
 					return true;
 				}
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleRgb::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[keyR] = r;
 	jsonValue[keyG] = g;
 	jsonValue[keyB] = b;
 	jsonValue[keyDimOn] = dimOn;
 	jsonValue[keyDimOff] = dimOff;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = idR;
-	dataValue["VALUE"] = r;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idG;
-	dataValue["VALUE"] = g;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idB;
-	dataValue["VALUE"] = b;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idDimOn;
-	dataValue["VALUE"] = dimOn;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idDimOff;
-	dataValue["VALUE"] = dimOff;
-	jsonValue.append(dataValue);
-#endif
 }
 
-// TODO: viet anh recheck DoJsonArray
 int ModuleRgb::Do(Json::Value &dataValue)
 {
-	LOGD("Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
 			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
@@ -222,7 +248,7 @@ int ModuleRgb::Do(Json::Value &dataValue)
 		int b = dataValue[keyB].asInt();
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol->ControlRgbSwitch(addr, 0, b, g, r, dimOn, dimOff) == CODE_OK)
+		if (bleProtocol->ControlRgbSwitch(addr, index, b, g, r, dimOn, dimOff) == CODE_OK)
 		{
 			this->r = r;
 			this->g = g;
@@ -232,47 +258,5 @@ int ModuleRgb::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject())
-	{
-		if (dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_B)
-			{
-				isB = true;
-				b = dataValue["VALUE"].asInt();
-			}
-			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_G)
-			{
-				isG = true;
-				g = dataValue["VALUE"].asInt();
-			}
-			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_R)
-			{
-				isR = true;
-				r = dataValue["VALUE"].asInt();
-			}
-			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
-			{
-				isDimOn = true;
-				dimOn = dataValue["VALUE"].asInt();
-			}
-			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF)
-			{
-				isDimOff = true;
-				dimOff = dataValue["VALUE"].asInt();
-			}
-		}
-		if (isDimOn && isDimOff && isR && isB && isG)
-		{
-			isR = isB = isG = isDimOff = isDimOn = false;
-			if (bleProtocol)
-				bleProtocol->ControlRgbSwitch(addr, bt, b, g, r, dimOn, dimOff);
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

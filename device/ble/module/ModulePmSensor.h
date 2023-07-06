@@ -9,9 +9,6 @@ protected:
 	uint16_t pm25;
 	uint16_t pm10;
 	uint16_t pm1_0;
-	int idPm25;
-	int idPm10;
-	int idPm1_0;
 
 public:
 	ModulePmSensor(Device *device, uint32_t addr);

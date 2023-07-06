@@ -2,7 +2,7 @@
 
 #include "DeviceBle.h"
 #include "module/ModuleSmoke.h"
-#include "module/ModulePinLevel.h"
+#include "module/ModuleBatteryLevel.h"
 
 using namespace std;
 

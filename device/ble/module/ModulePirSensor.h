@@ -7,7 +7,6 @@ class ModulePirSensor : public Module
 {
 protected:
 	uint16_t pir;
-	int id;
 
 public:
 	ModulePirSensor(Device *device, uint32_t addr);

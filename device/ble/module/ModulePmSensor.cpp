@@ -11,9 +11,6 @@ ModulePmSensor::ModulePmSensor(Device *device, uint32_t addr) : Module(device, a
 	pm25 = 0;
 	pm10 = 0;
 	pm1_0 = 0;
-	idPm25 = BLE_ATTRIBUTE_PM2_5;
-	idPm10 = BLE_ATTRIBUTE_PM10;
-	idPm1_0 = BLE_ATTRIBUTE_PM1_0;
 }
 
 ModulePmSensor::~ModulePmSensor()
@@ -41,28 +38,18 @@ void ModulePmSensor::SaveAttribute()
 
 int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_PM2_5) && dataValue[KEY_ATTRIBUTE_PM2_5].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_PM10) && dataValue[KEY_ATTRIBUTE_PM10].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_PM1_0) && dataValue[KEY_ATTRIBUTE_PM1_0].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idPm25 == id || this->idPm10 == id || this->idPm1_0 == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				if (this->idPm25 == id)
-					pm25 = dataValue["VALUE"].asInt();
-				else if (this->idPm10 == id)
-					pm10 = dataValue["VALUE"].asInt();
-				else if (this->idPm1_0 == id)
-					pm1_0 = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-		}
+		pm1_0 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
+		pm10 = dataValue[KEY_ATTRIBUTE_PM10].asInt();
+		pm1_0 = dataValue[KEY_ATTRIBUTE_PM1_0].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -89,64 +76,78 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idPm25 == id || this->idPm10 == id || this->idPm1_0 == id)
+		string op = dataValue["op"].asString();
+		if (dataValue.isMember(KEY_ATTRIBUTE_PM2_5))
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			if (dataValue[KEY_ATTRIBUTE_PM2_5].isInt())
 			{
-				uint16_t value1 = 0, value2 = 0;
-				string op = dataValue["OP"].asString();
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() > 0)
+				int pm1_0 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
+				rs = Util::CompareNumber(op, this->pm1_0, pm1_0);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_PM2_5].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_PM2_5];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{
-					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-					{
-						value1 = listValue[0].asInt();
-						value2 = listValue[1].asInt();
-					}
-					else if (listValue.size() == 1 && listValue[0].isInt())
-					{
-						value1 = listValue[0].asInt();
-					}
-
-					if (this->idPm25 == id)
-						rs = Util::CompareNumber(op, this->pm25, value1, value2);
-					else if (this->idPm10 == id)
-						rs = Util::CompareNumber(op, this->pm10, value1, value2);
-					else if (this->idPm1_0 == id)
-						rs = Util::CompareNumber(op, this->pm1_0, value1, value2);
+					int pm1_01 = listValue[0].asInt();
+					int pm1_02 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->pm1_0, pm1_01, pm1_02);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(KEY_ATTRIBUTE_PM10))
+		{
+			if (dataValue[KEY_ATTRIBUTE_PM10].isInt())
+			{
+				int pm10 = dataValue[KEY_ATTRIBUTE_PM10].asInt();
+				rs = Util::CompareNumber(op, this->pm10, pm10);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_PM10].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_PM10];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int pm101 = listValue[0].asInt();
+					int pm102 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->pm10, pm101, pm102);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(KEY_ATTRIBUTE_PM1_0))
+		{
+			if (dataValue[KEY_ATTRIBUTE_PM1_0].isInt())
+			{
+				int pm1_0 = dataValue[KEY_ATTRIBUTE_PM1_0].asInt();
+				rs = Util::CompareNumber(op, this->pm1_0, pm1_0);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_PM1_0].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_PM1_0];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int pm1_01 = listValue[0].asInt();
+					int pm1_02 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->pm1_0, pm1_01, pm1_02);
 					return true;
 				}
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModulePmSensor::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_PM2_5] = pm25;
 	jsonValue[KEY_ATTRIBUTE_PM10] = pm10;
 	jsonValue[KEY_ATTRIBUTE_PM1_0] = pm1_0;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = idPm25;
-	dataValue["VALUE"] = pm25;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idPm10;
-	dataValue["VALUE"] = pm10;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idPm1_0;
-	dataValue["VALUE"] = pm1_0;
-	jsonValue.append(dataValue);
-#endif
 }

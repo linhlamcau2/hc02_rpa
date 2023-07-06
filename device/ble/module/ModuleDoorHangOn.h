@@ -7,7 +7,6 @@ class ModuleDoorHangOn : public Module
 {
 protected:
 	uint16_t hangOn;
-	int id;
 
 public:
 	ModuleDoorHangOn(Device *device, uint32_t addr);

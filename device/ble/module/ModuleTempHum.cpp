@@ -10,8 +10,6 @@ ModuleTempHum::ModuleTempHum(Device *device, uint32_t addr) : Module(device, add
 {
 	temp = 0;
 	hum = 0;
-	idTemp = BLE_ATTRIBUTE_TEMP;
-	idHum = BLE_ATTRIBUTE_HUMIDITY;
 }
 
 ModuleTempHum::~ModuleTempHum()
@@ -36,45 +34,21 @@ void ModuleTempHum::SaveAttribute()
 
 int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_TEMP) && dataValue[KEY_ATTRIBUTE_TEMP].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_HUMIDITY) && dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idTemp == id || this->idHum == id)
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				if (this->idTemp == id)
-					temp = dataValue["VALUE"].asInt();
-				else if (this->idHum == id)
-					hum = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
+		temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
+		hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
 int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	// if (data[0] == 0x52 && data[1] == 0x06 && data[2] == 0x00)
-	// {
-	// 	typedef struct
-	// 	{
-	// 		uint16_t temp;
-	// 		uint16_t hum;
-	// 	} data_message_t;
-	// 	data_message_t *data_message = (data_message_t *)&data[3];
-	// 	temp = bswap_16(data_message->temp);
-	// 	hum = bswap_16(data_message->hum);
-	// 	BuildTelemetryValue(jsonValue);
-	// 	CheckTrigger();
-	// 	return CODE_OK;
-	// }
-	// return CODE_ERROR;
-
 	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
@@ -114,57 +88,57 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idTemp == id || this->idHum == id)
+		string op = dataValue["op"].asString();
+		if (dataValue.isMember(KEY_ATTRIBUTE_TEMP))
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			if (dataValue[KEY_ATTRIBUTE_TEMP].isInt())
 			{
-				uint16_t value1 = 0, value2 = 0;
-				Json::Value listValue = dataValue["VALUE"];
-				string op = dataValue["OP"].asString();
-				if (listValue.size() > 0)
+				int temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
+				rs = Util::CompareNumber(op, this->temp, temp);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_TEMP].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_TEMP];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{
-					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-					{
-						value1 = listValue[0].asInt();
-						value2 = listValue[1].asInt();
-					}
-					else if (listValue.size() == 1 && listValue[0].isInt())
-					{
-						value1 = listValue[0].asInt();
-					}
-					if (this->idTemp == id)
-						rs = Util::CompareNumber(op, this->temp / 10, value1, value2);
-					else if (this->idHum == id)
-						rs = Util::CompareNumber(op, this->hum / 10, value1, value2);
+					int temp1 = listValue[0].asInt();
+					int temp2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->temp, temp1, temp2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(KEY_ATTRIBUTE_HUMIDITY))
+		{
+			if (dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
+			{
+				int hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
+				rs = Util::CompareNumber(op, this->hum, hum);
+				return true;
+			}
+			else if (dataValue[KEY_ATTRIBUTE_HUMIDITY].isArray())
+			{
+				Json::Value listValue = dataValue[KEY_ATTRIBUTE_HUMIDITY];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int hum1 = listValue[0].asInt();
+					int hum2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->hum, hum1, hum2);
 					return true;
 				}
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleTempHum::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_TEMP] = temp;
 	jsonValue[KEY_ATTRIBUTE_HUMIDITY] = hum;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = idTemp;
-	dataValue["VALUE"] = temp;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idHum;
-	dataValue["VALUE"] = hum;
-	jsonValue.append(dataValue);
-#endif
 }

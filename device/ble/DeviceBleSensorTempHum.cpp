@@ -5,8 +5,8 @@ DeviceBleSensorTempHum::DeviceBleSensorTempHum(string id, string name, string ma
 		: DeviceBle(id, name, mac, data, addr, BLE_TEMP_HUM_SENSOR, version)
 {
 	moduleTempHum = new ModuleTempHum(this, addr);
-	modulePinLevel = new ModulePinLevel(this, addr);
+	moduleBatteryLevel = new ModuleBatteryLevel(this, addr);
 	modules.push_back(moduleTempHum);
-	modules.push_back(modulePinLevel);
+	modules.push_back(moduleBatteryLevel);
 	powerSource = POWER_BATTERY;
 }
