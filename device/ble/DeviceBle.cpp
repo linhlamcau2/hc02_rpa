@@ -12,8 +12,6 @@ DeviceBle::~DeviceBle()
 {
 	for (auto &module : modules)
 		delete module;
-	for (auto &element : elements)
-		delete element;
 }
 
 string DeviceBle::GetDeviceKey(string data)
@@ -45,10 +43,6 @@ int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
 	{
 		module->BuildTelemetryValue(pushDataValue);
 	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValue(pushDataValue);
-	}
 	return CODE_OK;
 }
 
@@ -59,10 +53,6 @@ void DeviceBle::InputData(Json::Value &dataValue)
 	{
 		module->InputData(dataValue, values);
 	}
-	for (auto &element : elements)
-	{
-		element->InputData(dataValue, values);
-	}
 	if (!values.isNull())
 		PushTelemetry(values);
 }
@@ -72,14 +62,9 @@ void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 	values = Json::Value::null;
 	for (auto &module : modules)
 	{
-		if (module->InputData(data, len, values) == CODE_OK)
-			break;
-	}
-	for (auto &element : elements)
-	{
-		if (element->CheckAddr(addr))
+		if (module->CheckAddr(addr))
 		{
-			if (element->InputData(data, len, values) == CODE_OK)
+			if (module->InputData(data, len, values) == CODE_OK)
 				break;
 		}
 	}
@@ -94,11 +79,6 @@ bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)
 		if (module->CheckData(dataValue, rs))
 			return true;
 	}
-	for (auto &element : elements)
-	{
-		if (element->CheckData(dataValue, rs))
-			return true;
-	}
 	return false;
 }
 
@@ -107,10 +87,6 @@ int DeviceBle::Do(Json::Value &dataValue)
 	for (auto &module : modules)
 	{
 		module->Do(dataValue);
-	}
-	for (auto &element : elements)
-	{
-		element->Do(dataValue);
 	}
 	return CODE_OK;
 }

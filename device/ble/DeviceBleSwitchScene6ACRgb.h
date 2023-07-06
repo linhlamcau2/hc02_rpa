@@ -2,9 +2,7 @@
 
 #include "DeviceBle.h"
 #include "module/ModuleButton.h"
-#include "element/ElementRgb.h"
 #include "module/ModuleRgb.h"
-#include "module/ModuleButton.h"
 
 using namespace std;
 

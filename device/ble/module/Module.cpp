@@ -12,6 +12,11 @@ Module::~Module()
 {
 }
 
+bool Module::CheckAddr(uint32_t addr)
+{
+	return this->addr == addr;
+}
+
 void Module::CheckTrigger()
 {
 	LOGV("CheckTrigger");

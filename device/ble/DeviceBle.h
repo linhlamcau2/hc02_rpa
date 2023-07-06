@@ -2,7 +2,6 @@
 
 #include "Device.h"
 #include "module/Module.h"
-#include "element/Element.h"
 
 using namespace std;
 
@@ -14,7 +13,6 @@ private:
 protected:
 	int countElement;
 	vector<Module *> modules;
-	vector<Element *> elements;
 
 public:
 	DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);

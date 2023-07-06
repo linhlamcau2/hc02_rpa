@@ -1,4 +1,4 @@
-#include "ElementCct.h"
+#include "ModuleCct.h"
 #include "Log.h"
 #include "Util.h"
 #include "BleDefine.h"
@@ -6,29 +6,29 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ElementCct::ElementCct(Device *device, uint32_t addr) : Element(device, addr)
+ModuleCct::ModuleCct(Device *device, uint32_t addr) : Module(device, addr)
 {
 	cct = 0;
 }
 
-ElementCct::~ElementCct()
+ModuleCct::~ModuleCct()
 {
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ElementCct::InitAttribute(int id, double value)
+void ModuleCct::InitAttribute(int id, double value)
 {
 	if (this->id == id)
 		cct = value;
 }
 
-void ElementCct::SaveAttribute()
+void ModuleCct::SaveAttribute()
 {
 	database->DeviceAttributeAddOrReplace(device, id, cct);
 }
 #endif
 
-int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
@@ -41,7 +41,7 @@ int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
-int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
+int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -78,7 +78,7 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	return CODE_ERROR;
 }
 
-bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
+bool ModuleCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
@@ -107,12 +107,12 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
+void ModuleCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
 }
 
-int ElementCct::Do(Json::Value &dataValue)
+int ModuleCct::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&

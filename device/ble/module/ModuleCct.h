@@ -1,16 +1,16 @@
 #pragma once
-#include "Element.h"
+#include "Module.h"
 
 using namespace std;
 
-class ElementCct : public Element
+class ModuleCct : public Module
 {
 protected:
 	uint16_t cct;
 
 public:
-	ElementCct(Device *device, uint32_t addr);
-	~ElementCct();
+	ModuleCct(Device *device, uint32_t addr);
+	~ModuleCct();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

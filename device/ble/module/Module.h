@@ -17,6 +17,8 @@ public:
 	Module(Device *device, uint32_t addr);
 	virtual ~Module();
 
+	bool CheckAddr(uint32_t addr);
+
 	/**
 	 * @brief Parse raw data to element parameter value
 	 *
