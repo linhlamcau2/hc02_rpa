@@ -68,15 +68,29 @@ int ElementButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ElementButton::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
+			dataValue.isMember(key) &&
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int bt = dataValue[key].asInt();
 		string op = dataValue["op"].asString();
-		rs = Util::CompareNumber(op, this->bt, bt);
-		return true;
+		if (dataValue[key].isInt())
+		{
+			int bt = dataValue[key].asInt();
+			rs = Util::CompareNumber(op, this->bt, bt);
+			return true;
+		}
+		else if (dataValue[key].isArray())
+		{
+			Json::Value listValue = dataValue[key];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+			{
+				int bt1 = listValue[0].asInt();
+				int bt2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->bt, bt1, bt2);
+				return true;
+			}
+		}
 	}
 	return false;
 }
@@ -88,7 +102,7 @@ void ElementButton::BuildTelemetryValue(Json::Value &jsonValue)
 
 int ElementButton::Do(Json::Value &dataValue)
 {
-	// LOGD("Do data: %s", dataValue.toString().c_str());
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(key) && dataValue[key].isInt())
 	{

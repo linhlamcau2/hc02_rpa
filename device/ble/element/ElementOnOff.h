@@ -7,7 +7,6 @@ class ElementOnOff : public Element
 {
 protected:
 	uint8_t onoff;
-	int id;
 	string key;
 
 public:

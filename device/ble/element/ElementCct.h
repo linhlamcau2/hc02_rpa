@@ -7,8 +7,6 @@ class ElementCct : public Element
 {
 protected:
 	uint16_t cct;
-	int id;
-	string key;
 
 public:
 	ElementCct(Device *device, uint32_t addr);

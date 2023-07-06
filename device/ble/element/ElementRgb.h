@@ -7,8 +7,6 @@ class ElementRgb : public Element
 {
 protected:
 	uint8_t r, g, b, dimOn, dimOff;
-	int idR, idG, idB, idDimOn, idDimOff;
-	bool isR, isG, isB, isDimOn, isDimOff;
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:

@@ -9,7 +9,6 @@
 ElementCct::ElementCct(Device *device, uint32_t addr) : Element(device, addr)
 {
 	cct = 0;
-	id = BLE_ATTRIBUTE_CCT;
 }
 
 ElementCct::~ElementCct()
@@ -31,21 +30,13 @@ void ElementCct::SaveAttribute()
 
 int ElementCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			cct = (dataValue["VALUE"].asInt() * 192) + 800;
-
-			BuildTelemetryValue(jsonValue);
-			// CheckTrigger();
-			return CODE_OK;
-		}
+		cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -89,55 +80,40 @@ int ElementCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_CCT) &&
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_CCT].isInt())
 		{
-			uint16_t cct1 = 0, cct2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+			rs = Util::CompareNumber(op, this->cct, cct);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_CCT].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_CCT];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					cct1 = listValue[0].asInt();
-					cct2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					cct1 = listValue[0].asInt();
-				}
+				int cct1 = listValue[0].asInt();
+				int cct2 = listValue[1].asInt();
 				rs = Util::CompareNumber(op, this->cct, cct1, cct2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = ((cct - 800) / 192);
-	jsonValue.append(dataValue);
-#endif
 }
 
 int ElementCct::Do(Json::Value &dataValue)
 {
 	// LOGD("Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
@@ -149,23 +125,5 @@ int ElementCct::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			uint16_t cct = (value * 192) + 800;
-			if (bleProtocol)
-				bleProtocol->SetCctLight(addr, cct, 0, true);
-			else
-				LOGW("Bleprotocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }
