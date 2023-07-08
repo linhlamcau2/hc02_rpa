@@ -98,7 +98,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 			if (dataValue[KEY_ATTRIBUTE_TEMP].isInt())
 			{
 				int temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
-				rs = Util::CompareNumber(op, this->temp / 10, temp);
+				rs = Util::CompareNumber(op, this->temp, temp);
 				return true;
 			}
 			else if (dataValue[KEY_ATTRIBUTE_TEMP].isArray())
@@ -109,7 +109,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 					int temp1 = listValue[0].asInt();
 					int temp2 = listValue[1].asInt();
 					LOGE("temp1 = %d, temp2 = %d, temp = %d", temp1, temp2, this->temp);
-					rs = Util::CompareNumber(op, this->temp / 10, temp1, temp2);
+					rs = Util::CompareNumber(op, this->temp, temp1, temp2);
 					return true;
 				}
 			}
@@ -119,7 +119,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 			if (dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
 			{
 				int hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
-				rs = Util::CompareNumber(op, this->hum / 10, hum);
+				rs = Util::CompareNumber(op, this->hum, hum);
 				return true;
 			}
 			else if (dataValue[KEY_ATTRIBUTE_HUMIDITY].isArray())
@@ -129,7 +129,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					int hum1 = listValue[0].asInt();
 					int hum2 = listValue[1].asInt();
-					rs = Util::CompareNumber(op, this->hum / 10, hum1, hum2);
+					rs = Util::CompareNumber(op, this->hum, hum1, hum2);
 					return true;
 				}
 			}

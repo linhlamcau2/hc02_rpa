@@ -33,7 +33,7 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
-		dim = (dataValue[KEY_ATTRIBUTE_DIM].asInt() * 65535) / 100;
+		dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
 		return CODE_OK;
@@ -52,26 +52,24 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
 	{
+		int dim = 0;
 		if (len <= 5)
 		{
-			if (dim != data_message->dim_first)
-			{
-				dim = data_message->dim_first;
-				BuildTelemetryValue(jsonValue);
-			}
+			dim = data_message->dim_first * 100 / 65535;
 		}
 		else
 		{
-			if (dim != data_message->dim)
-			{
-				dim = data_message->dim;
-				BuildTelemetryValue(jsonValue);
-			}
+			dim = data_message->dim * 100 / 65535;
 		}
+		if (this->dim != dim)
+		{
+			this->dim = dim;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute();
 #endif
-		CheckTrigger();
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -108,7 +106,7 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_DIM] = dim * 100 / 65535;
+	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
 }
 
 int ModuleDim::Do(Json::Value &dataValue)
@@ -118,8 +116,7 @@ int ModuleDim::Do(Json::Value &dataValue)
 			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		uint16_t value = (dim * 65535) / 100;
-		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol->SetDimmingLight(addr, dim * 65535 / 100, 0, true) == CODE_OK)
 		{
 			this->dim = dim;
 			return CODE_OK;

@@ -33,7 +33,6 @@ int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		cct = (cct * 192) + 800;
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
 		return CODE_OK;
@@ -53,26 +52,24 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_CCT)
 	{
+		int cct = 0;
 		if (len <= 6)
 		{
-			if (cct != data_message->cct_first)
-			{
-				cct = data_message->cct_first;
-				BuildTelemetryValue(jsonValue);
-			}
+			cct = (data_message->cct_first - 800) / 192;
 		}
 		else
 		{
-			if (cct != data_message->cct)
-			{
-				cct = data_message->cct;
-				BuildTelemetryValue(jsonValue);
-			}
+			cct = (data_message->cct - 800) / 192;
 		}
+		if (this->cct != cct)
+		{
+			this->cct = cct;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute();
 #endif
-		CheckTrigger();
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -109,7 +106,7 @@ bool ModuleCct::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
+	jsonValue[KEY_ATTRIBUTE_CCT] = cct;
 }
 
 int ModuleCct::Do(Json::Value &dataValue)
@@ -119,8 +116,7 @@ int ModuleCct::Do(Json::Value &dataValue)
 			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		uint16_t value = (cct * 192) + 800;
-		if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol->SetCctLight(addr, (cct * 192) + 800, 0, true) == CODE_OK)
 		{
 			this->cct = cct;
 			return CODE_OK;
