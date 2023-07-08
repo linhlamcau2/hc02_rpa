@@ -251,16 +251,14 @@ string Util::ExecuteCMD(char const *command)
 		LOGE("ExecuteCMD");
 		exit(1);
 	}
-	fgets(msg_line, 100, file);
-	msg_rsp += msg_line;
 	while (1)
 	{
 		fgets(msg_line, 100, file);
+		msg_rsp += msg_line;
 		if (feof(file))
 		{
 			break;
 		}
-		msg_rsp += msg_line;
 	}
 	pclose(file);
 #endif
