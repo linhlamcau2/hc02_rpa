@@ -33,9 +33,13 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
-		onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		int temp = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		if (temp != onoff)
+		{
+			onoff = temp;
+			CheckTrigger();
+		}
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -54,17 +58,26 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (len == 3)
 		{
-			onoff = data_message->state;
+			int temp = data_message->state;
+			if (temp != onoff)
+			{
+				onoff = temp;
+				CheckTrigger();
+			}
 		}
 		else
 		{
-			onoff = data_message->onoff;
+			int temp = data_message->onoff;			
+			if (temp != onoff)
+			{
+				onoff = temp;
+				CheckTrigger();
+			}
 		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
 		return CODE_OK;
 	}
 	return CODE_ERROR;

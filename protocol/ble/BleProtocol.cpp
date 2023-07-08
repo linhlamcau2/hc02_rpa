@@ -150,35 +150,17 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 
 	if (data_message->opcode == LIGHTNESS_LINEAR_STATUS && data_message->header == 2)
 	{
-		dataValue["ID"] = 0;
-		dataValue["VALUE"] = (data_message->status_mode >> 4) & 0x0F;
-		dataArray.append(dataValue);
+		dataValue[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
 		if ((data_message->status_mode & 0x0F) == 1)
 		{
-			dataValue["ID"] = 1;
-			dataValue["VALUE"] = (data_message->value1 * 100) / 65535;
-			dataArray.append(dataValue);
-			dataValue["ID"] = 2;
-			dataValue["VALUE"] = (data_message->value2 - 800) / 192;
-			dataArray.append(dataValue);
+			dataValue[KEY_ATTRIBUTE_DIM] = (data_message->value1 *100) / 65535;
+			dataValue[KEY_ATTRIBUTE_CCT] = (data_message->value2 - 800) / 192;
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
-			if (data_message->value1 != 0 && data_message->value2 != 0 && data_message->value3 != 0)
-			{
-				if (data_message->value1 >= 30000)
-				{
-					dataValue["ID"] = 5;
-					dataValue["VALUE"] = data_message->value1;
-					dataArray.append(dataValue);
-				}
-				dataValue["ID"] = 3;
-				dataValue["VALUE"] = data_message->value2;
-				dataArray.append(dataValue);
-				dataValue["ID"] = 4;
-				dataValue["VALUE"] = data_message->value3;
-				dataArray.append(dataValue);
-			}
+			dataValue[KEY_ATTRIBUTE_HUE] = data_message->value2;
+			dataValue[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
+			dataValue[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
 		}
 	}
 }
@@ -214,15 +196,9 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
-				Json::Value dataArray = Json::arrayValue;
+				Json::Value dataArray;
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
-				if (dataArray.size() > 0)
-				{
-					for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
-					{
-						deviceBle->InputData(dataArray[i]);
-					}
-				}
+				deviceBle->InputData(dataArray);
 			}
 			else
 			{

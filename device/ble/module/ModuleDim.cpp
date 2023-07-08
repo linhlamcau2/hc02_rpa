@@ -33,9 +33,13 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
-		dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+		int temp = (dataValue[KEY_ATTRIBUTE_DIM].asInt() *100) / 65535;
+		if (temp != dim)
+		{
+			dim = temp;
+			CheckTrigger();
+		}
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -55,11 +59,19 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		int dim = 0;
 		if (len <= 5)
 		{
-			dim = data_message->dim_first * 100 / 65535;
+			if (dim != data_message->dim_first)
+			{
+				dim = (data_message->dim_first * 100) / 65535;
+				CheckTrigger();
+			}
 		}
 		else
 		{
-			dim = data_message->dim * 100 / 65535;
+			if (dim != data_message->dim)
+			{
+				dim = (data_message->dim * 100) / 65535;				
+				CheckTrigger();
+			}
 		}
 		if (this->dim != dim)
 		{
@@ -67,10 +79,9 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-		}
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }
