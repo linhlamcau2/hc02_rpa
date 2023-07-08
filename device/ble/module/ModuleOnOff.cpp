@@ -33,13 +33,13 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
-		int temp = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		if (temp != onoff)
+		uint8_t onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		if (this->onoff != onoff)
 		{
-			onoff = temp;
+			this->onoff = onoff;
+			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 		}
-		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -56,28 +56,23 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
+		uint8_t onoff = 0;
 		if (len == 3)
 		{
-			int temp = data_message->state;
-			if (temp != onoff)
-			{
-				onoff = temp;
-				CheckTrigger();
-			}
+			onoff = data_message->state;
 		}
 		else
 		{
-			int temp = data_message->onoff;			
-			if (temp != onoff)
-			{
-				onoff = temp;
-				CheckTrigger();
-			}
+			onoff = data_message->onoff;
 		}
+		if (this->onoff != onoff)
+		{
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;

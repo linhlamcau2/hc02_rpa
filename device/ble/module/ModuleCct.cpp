@@ -32,13 +32,13 @@ int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
-		int temp = (dataValue[KEY_ATTRIBUTE_CCT].asInt() - 800) / 192;
-		if (temp != cct)
+		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		if (this->cct != cct)
 		{
-			cct = temp;
+			this->cct = cct;
+			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 		}
-		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -59,19 +59,11 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		int cct = 0;
 		if (len <= 6)
 		{
-			if (cct != data_message->cct_first)
-			{
-				cct = (data_message->cct_first - 800) / 192;
-				CheckTrigger();
-			}
+			cct = (data_message->cct_first - 800) / 192;
 		}
 		else
 		{
-			if (cct != data_message->cct)
-			{
-				cct = (data_message->cct - 800) / 192;
-				CheckTrigger();
-			}
+			cct = (data_message->cct - 800) / 192;
 		}
 		if (this->cct != cct)
 		{
@@ -79,9 +71,10 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
-		return CODE_OK;
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
 		}
+		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

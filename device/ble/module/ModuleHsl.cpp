@@ -49,17 +49,17 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
 			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 	{
-		int tempH = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-		int tempS = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-		int tempL = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		if (tempH != h || tempS != s || tempL != l)
+		uint16_t h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+		uint16_t s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+		uint16_t l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+		if (this->h != h || this->s != s || this->l != l)
 		{
-			h = tempH;
-			s = tempS;
-			l = tempL;
+			this->h = h;
+			this->s = s;
+			this->l = l;
+			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 		}
-		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -82,12 +82,12 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			l = data_message->l;
 			h = data_message->h;
 			s = data_message->s;
-			CheckTrigger();
-		}
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;
