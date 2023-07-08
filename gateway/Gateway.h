@@ -127,6 +127,8 @@ private:
 	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue);
+
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue);

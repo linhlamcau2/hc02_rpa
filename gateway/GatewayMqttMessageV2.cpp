@@ -74,6 +74,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("addDevToRoom", bind(&Gateway::OnAddDeviceToRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delDevToRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnSSHRemote, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
@@ -1564,6 +1565,28 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["cmd"] = "delRoomRsp";
 	return CODE_OK;
+}
+
+int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
+		reqValue.isMember("name") && reqValue["name"].isString())
+	{
+		string devId = reqValue["id"].asString();
+		LOGW("id: %s", devId.c_str());
+		Device *device = getDeviceFromId(devId);
+		if (device)
+		{
+			LOGW("name %s", reqValue["name"].asString().c_str());
+			device->SetName(reqValue["name"].asString());
+			database->DeviceUpdate(device);
+			return CODE_OK;
+		}
+		else
+			LOGW("Device not found");
+	}
+
+	return CODE_ERROR;
 }
 
 int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)

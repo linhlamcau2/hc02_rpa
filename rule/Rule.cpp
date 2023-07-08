@@ -66,7 +66,7 @@ void Rule::Check()
 		if (Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater)
 		{
 			LOGI("Check repeater day OK");
-			if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime))
+			if ((startTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (startTime == currentTimer))
 			{
 				LOGI("Check time OK");
 				if (type == "or")
