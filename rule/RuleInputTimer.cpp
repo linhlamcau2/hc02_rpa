@@ -8,7 +8,8 @@ RuleInputTimer::RuleInputTimer(Rule *rule, int timer, int repeat)
 	this->rule = rule;
 	this->timer = timer;
 	this->repeat = repeat;
-	timerRegisterIndex = timerSchedule->RegisterTimer(timer, bind(&Rule::Check, rule));
+	if (rule)
+		timerRegisterIndex = timerSchedule->RegisterTimer(timer, rule);
 }
 
 RuleInputTimer::~RuleInputTimer()

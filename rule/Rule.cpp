@@ -26,8 +26,8 @@ Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t
 	this->startTime = startTime;
 	this->endTime = endTime;
 	this->ruleData = ruleData;
-	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
-	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
+	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, this);
+	// timerSchedule->RegisterTimer(endTime, this);
 	count = 0;
 	lastTimeActive = 0;
 }

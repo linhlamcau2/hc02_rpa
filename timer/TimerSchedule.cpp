@@ -108,6 +108,7 @@ int TimerSchedule::UnregisterTimer(int index)
 		if (timer->GetIndex() == index)
 		{
 			timerList.erase(remove(timerList.begin(), timerList.end(), timer), timerList.end());
+			delete timer;
 		}
 	}
 	mtx.unlock();
