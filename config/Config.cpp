@@ -233,7 +233,7 @@ void Config::ReadConfig()
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL CLIENT_ID_KEY, str_temp))
 		localClientId = string(str_temp);
 	else
-		localClientId = "";
+		localClientId = "hc-core";
 
 	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL USERNAME_KEY, str_temp))
 		localUsername = string(str_temp);
