@@ -67,6 +67,7 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		}
 		if (this->onoff != onoff)
 		{
+			this->onoff = onoff;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
