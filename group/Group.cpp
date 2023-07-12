@@ -25,13 +25,13 @@ Group::~Group()
 	mtx.unlock();
 }
 
-int Group::GetPositionDevice(Device *device)
+int Group::GetPositionDevice(Device *device, int epid)
 {
 	uint32_t deviceAddr = device->GetAddr();
 	mtx.lock();
 	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
-		if (deviceAddr == deviceList[i]->device->GetAddr())
+		if ((deviceAddr == deviceList[i]->device->GetAddr()) && (deviceList[i]->epId == epid))
 		{
 			mtx.unlock();
 			return i;
@@ -124,7 +124,7 @@ int Group::DelDevice(Device *device, int epId)
 		{
 			if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 			{
-				int deviceIndex = GetPositionDevice(device);
+				int deviceIndex = GetPositionDevice(device, epId);
 				if (deviceIndex > -1)
 				{
 					mtx.lock();

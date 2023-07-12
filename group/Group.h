@@ -30,7 +30,7 @@ public:
 	Group(string id, uint32_t addr, string name);
 	~Group();
 
-	int GetPositionDevice(Device *device);
+	int GetPositionDevice(Device *device, int epid);
 
 	int AddDevice(Device *device, int epId, bool sendBle);
 	int DelDevice(Device *device, int epId);

@@ -32,7 +32,7 @@ void Gateway::initMqttMessage()
 	// OnDeviceRpcCallbackRegister("CREATE_ROOM", bind(&Gateway::OnRpcCreateRoom, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("ADD_DEVICE_TO_ROOM", bind(&Gateway::OnRpcAddDevToRoom, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("REMOVE_DEVICE_FROM_ROOM", bind(&Gateway::OnRpcRemoveDevFromRoom, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRpcCallbackRegister("DELETE_ROOM", bind(&Gateway::OnRpcDeleteRoom, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DELETE_ROOM", bind(&Gateway::OnRpcDeleteRoom, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("CHECK_ROOM", bind(&Gateway::OnRpcCheckRoom, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("CREATE_GROUP", bind(&Gateway::OnRpcAddGroup, this, placeholders::_1, placeholders::_2));
@@ -536,9 +536,11 @@ int Gateway::OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 			if (rule)
 			{
 				delRule(rule);
+				dataJsonRsp["STATUS"] = "SUCCESS";
 			}
 			else
 			{
+				dataJsonRsp["STATUS"] = "FAILED";
 				LOGW("Rule not found");
 			}
 		}
@@ -3131,19 +3133,25 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 					Json::Value properties;
 					properties["ID"] = 0;
 					properties["VALUE"] = value;
-					LOGW("Properties: %s", properties.toString().c_str());
+					// LOGW("Properties: %s", properties.toString().c_str());
 
 					Device *deviceChild = getDeviceBleFromAddr(deviceParent->GetAddr() + (buttonId - 11));
 					if (deviceChild)
 					{
-						LOGW("deviceChild: %s", deviceChild->GetId().c_str());
+						// LOGW("deviceChild: %s", deviceChild->GetId().c_str());
 						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
 						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceChild, properties, 0);
-						rule->AddRuleOutput(ruleOutputDevice);
-						ruleListMtx.lock();
-						ruleList[id] = rule;
-						ruleListMtx.unlock();
-						return CODE_OK;
+						if (rule && ruleOutputDevice)
+						{
+							rule->SetStatus(true);
+							rule->AddRuleOutput(ruleOutputDevice);
+							ruleListMtx.lock();
+							ruleList[id] = rule;
+							ruleListMtx.unlock();
+							return CODE_OK;
+						}
+						else
+							LOGW("rule error");
 					}
 					else
 						LOGW("Device child not found");
@@ -3162,11 +3170,17 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 
 						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
 						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceParent, properties, 0);
-						rule->AddRuleOutput(ruleOutputDevice);
-						ruleListMtx.lock();
-						ruleList[id] = rule;
-						ruleListMtx.unlock();
-						return CODE_OK;
+						if (rule && ruleOutputDevice)
+						{
+							rule->SetStatus(true);
+							rule->AddRuleOutput(ruleOutputDevice);
+							ruleListMtx.lock();
+							ruleList[id] = rule;
+							ruleListMtx.unlock();
+							return CODE_OK;
+						}
+						else
+							LOGW("rule error");
 					}
 				}
 			}
@@ -3640,10 +3654,14 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
 				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle, 0);
-				rule->AddRuleOutput(ruleOutputSceneBle);
-				ruleListMtx.lock();
-				ruleList[eventTriggerId] = rule;
-				ruleListMtx.unlock();
+				if (rule && ruleOutputSceneBle)
+				{
+					rule->SetStatus(true);
+					rule->AddRuleOutput(ruleOutputSceneBle);
+					ruleListMtx.lock();
+					ruleList[eventTriggerId] = rule;
+					ruleListMtx.unlock();
+				}
 			}
 			else
 			{
