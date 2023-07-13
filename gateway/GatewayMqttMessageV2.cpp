@@ -1211,8 +1211,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							SceneBle *sceneBle = new SceneBle(id, getNextSceneBleAddr(), name);
 							if (sceneBle)
 							{
-								room->AddSceneBle(sceneBle, true, true);
 								AddNewSceneBle(sceneBle, true, true);
+								room->AddSceneBle(sceneBle, true, true);
 								for (auto &groupValue : groupsValue)
 								{
 									if (groupValue.isObject())
