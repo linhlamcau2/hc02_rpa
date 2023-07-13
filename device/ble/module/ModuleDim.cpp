@@ -37,9 +37,9 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (this->dim != dim)
 		{
 			this->dim = dim;
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 		}
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

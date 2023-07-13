@@ -120,7 +120,7 @@ int MqttProtocol::OnAddDevice(Json::Value &reqValue, Json::Value &respValue)
 			jsonData["type"] = type;
 			jsonData["data"] = reqValue["data"];
 			gateway->AddDeviceToScanList(device);
-			gateway->pushNewDeviceLocalV2(jsonData);
+			gateway->pushNewDeviceLocal(jsonData);
 		}
 		else
 		{

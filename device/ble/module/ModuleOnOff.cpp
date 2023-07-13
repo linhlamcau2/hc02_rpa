@@ -37,9 +37,9 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (this->onoff != onoff)
 		{
 			this->onoff = onoff;
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 		}
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

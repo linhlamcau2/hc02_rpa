@@ -76,6 +76,7 @@ private:
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	int OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
@@ -127,7 +128,6 @@ private:
 	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);

@@ -62,7 +62,7 @@ int Db::SceneBleAdd(SceneBle *sceneBle)
 
 int Db::SceneBleUpdate(SceneBle *sceneBle)
 {
-	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(sceneBle->GetAddr()) + " AND name='" + sceneBle->GetName() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(sceneBle->GetAddr()) + " AND name='" + sceneBle->GetName() + "' WHERE scene_ble_id='" + sceneBle->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

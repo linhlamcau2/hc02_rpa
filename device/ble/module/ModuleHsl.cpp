@@ -85,9 +85,9 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
 		}
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

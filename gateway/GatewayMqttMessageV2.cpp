@@ -74,7 +74,6 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("addDevToRoom", bind(&Gateway::OnAddDeviceToRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delDevToRoom", bind(&Gateway::OnDeleteDeviceFromRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delRoom", bind(&Gateway::OnDeleteRoom, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnSSHRemote, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
@@ -255,7 +254,7 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		respValue["data"]["code"] = CODE_OK;
-		respValue["data"]["device"] = devicesData;
+		respValue["data"]["device"] = devicesValueRsp;
 	}
 	else
 	{
@@ -281,7 +280,7 @@ int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 	}
 	deviceListMtx.unlock();
 	respValue["data"]["code"] = CODE_OK;
-	respValue["data"]["device"] = devicesData;
+	respValue["data"]["device"] = devicesValueRsp;
 	respValue["cmd"] = "deviceUpdate";
 	return CODE_OK;
 }
@@ -346,7 +345,7 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 					for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
 					{
 						Json::Value device;
-						DeviceInRoom *deviceInRoom = temp_room->deviceList[i];
+						DeviceInGroup *deviceInRoom = temp_room->deviceList[i];
 						string deviceId = deviceInRoom->device->GetId();
 						Device *tempDev = getDeviceFromId(deviceId);
 						device["id"] = deviceId;
@@ -1573,28 +1572,6 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
-int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
-{
-	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("name") && reqValue["name"].isString())
-	{
-		string devId = reqValue["id"].asString();
-		LOGW("id: %s", devId.c_str());
-		Device *device = getDeviceFromId(devId);
-		if (device)
-		{
-			LOGW("name %s", reqValue["name"].asString().c_str());
-			device->SetName(reqValue["name"].asString());
-			database->DeviceUpdate(device);
-			return CODE_OK;
-		}
-		else
-			LOGW("Device not found");
-	}
-
-	return CODE_ERROR;
-}
-
 int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
@@ -1978,6 +1955,7 @@ int Gateway::OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue)
 		if (group)
 		{
 			group->SetName(name);
+			database->GroupUpdate(group);
 		}
 	}
 	respValue["data"]["code"] = CODE_OK;
@@ -1995,6 +1973,7 @@ int Gateway::OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue)
 		if (scene)
 		{
 			scene->SetName(name);
+			database->SceneBleUpdate(scene);
 		}
 	}
 	respValue["data"]["code"] = CODE_OK;
@@ -2012,6 +1991,7 @@ int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
 		if (room)
 		{
 			room->SetName(name);
+			database->RoomUpdate(room, room->GetAddr());
 		}
 		Group *group = getGroupFromId(id);
 		if (group)
@@ -2023,4 +2003,3 @@ int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
 	respValue["cmd"] = "updateRoomNameRsp";
 	return CODE_OK;
 }
-#endif // CONFIG_USE_MESSAGE_FORMAT_V2

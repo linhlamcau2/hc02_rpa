@@ -162,7 +162,6 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 			dataValue[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
 			dataValue[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
 		}
-#endif
 	}
 }
 
