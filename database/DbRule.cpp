@@ -29,7 +29,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 					Json::Value ruleValue;
 					if (ruleValue.parse(ruledata) && ruleValue.isObject())
 					{
-						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						Rule *rule = gateway->AddRule(ruleValue, false);
 						if (rule)
 						{
 							rule->SetStatus(enable);

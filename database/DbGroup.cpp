@@ -24,7 +24,7 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 					group = new Group(id, addr, name);
 				if (group)
 				{
-					if (gateway->AddNewGroup(group, true, false))
+					if (gateway->AddNewGroup(group, false))
 					{
 						Room *room = gateway->getRoomFromId(roomId);
 						if (room)
@@ -70,7 +70,6 @@ int Db::GroupUpdateRoom(Group *group, string roomId)
 	string sql = "UPDATE " TABLE_NAME " SET room_id='" + roomId + "' WHERE group_id= '" + group->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
-
 
 int Db::GroupDel(Group *group)
 {

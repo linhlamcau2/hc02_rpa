@@ -348,7 +348,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				}
 				else
 				{
-					// device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, srcAddr, type, true, true);
+					// device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, srcAddr, type, true);
 				}
 				if (device)
 					gateway->AddDeviceToScanList(device);

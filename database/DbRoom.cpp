@@ -37,7 +37,7 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 					{
 						LOGW("Decode data error: %s", data.c_str());
 					}
-					if (!gateway->AddNewRoom(room, true, false))
+					if (!gateway->AddNewRoom(room, false))
 					{
 						LOGE("Add new room failed");
 					}

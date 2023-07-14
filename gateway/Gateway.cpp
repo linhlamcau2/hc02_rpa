@@ -328,7 +328,7 @@ void Gateway::init()
 
 	database->GatewayRead();
 	database->DeviceRead();
-	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
+	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
 	database->RoomRead();
@@ -826,7 +826,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 #endif
 }
 
-Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
+Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
 	Device *device = NULL;
@@ -877,14 +877,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 			}
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
@@ -896,14 +889,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 			}
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
@@ -915,14 +901,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 			}
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
@@ -937,14 +916,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 			}
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
@@ -955,14 +927,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 			}
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
@@ -973,14 +938,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			if (device)
 			{
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 			}
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
@@ -1072,10 +1030,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 
 	if (device)
 	{
-		if (addGateway)
-		{
-			deviceList[id] = device;
-		}
+		deviceList[id] = device;
 		if (addDatabase)
 		{
 			database->DeviceAdd(device);
@@ -1088,7 +1043,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	return device;
 }
 
-Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
+Group *Gateway::AddNewGroup(Group *group, bool addDatabase)
 {
 	if (group)
 	{
@@ -1101,25 +1056,22 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 				return NULL;
 			}
 		}
-		if (addGateway)
-		{
-			groupListMtx.lock();
-			groupList[group->GetId()] = group;
-			groupListMtx.unlock();
-		}
+		groupListMtx.lock();
+		groupList[group->GetId()] = group;
+		groupListMtx.unlock();
 	}
 	return group;
 }
 
-Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
+Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 {
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -1192,7 +1144,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-						deviceJson.isMember("data") && deviceJson["data"].isObject())
+							deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);
@@ -1258,12 +1210,9 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					}
 				}
 			}
-			if (addGateway)
-			{
-				ruleListMtx.lock();
-				ruleList[id] = rule;
-				ruleListMtx.unlock();
-			}
+			ruleListMtx.lock();
+			ruleList[id] = rule;
+			ruleListMtx.unlock();
 			if (addDatabase)
 			{
 				string ruleStr = ruleValue.toString();
@@ -1280,7 +1229,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 	return NULL;
 }
 
-SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase)
+SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addDatabase)
 {
 	if (sceneBle)
 	{
@@ -1293,30 +1242,24 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 				return NULL;
 			}
 		}
-		if (addGateway)
-		{
-			sceneBleListMtx.lock();
-			sceneBleList[sceneBle->GetId()] = sceneBle;
-			sceneBleListMtx.unlock();
-		}
+		sceneBleListMtx.lock();
+		sceneBleList[sceneBle->GetId()] = sceneBle;
+		sceneBleListMtx.unlock();
 	}
 	return sceneBle;
 }
 
-Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
+Room *Gateway::AddNewRoom(Room *room, bool addDatabase)
 {
 	if (room)
 	{
-		if (addGateway)
-		{
-			roomList[room->GetId()] = room;
-		}
+		roomList[room->GetId()] = room;
 		if (addDatabase)
 		{
 			database->RoomAdd(room);
 		}
 	}
-	AddNewGroup(room, addGateway, false);
+	AddNewGroup(room, false);
 	return room;
 }
 

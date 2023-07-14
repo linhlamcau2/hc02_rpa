@@ -25,7 +25,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				if (sceneBle)
 				{
 					sceneBle->SetIsFavorite(isFavorite);
-					if (gateway->AddNewSceneBle(sceneBle, true, false))
+					if (gateway->AddNewSceneBle(sceneBle, false))
 					{
 						Room *room = gateway->getRoomFromId(roomId);
 						if (room)

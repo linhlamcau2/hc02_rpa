@@ -32,7 +32,7 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				if (decode == "")
 				{
 					uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
-					Device *device = gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false);
+					Device *device = gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, false);
 					device->SetIsFavorite(isFavorite);
 				}
 			}
