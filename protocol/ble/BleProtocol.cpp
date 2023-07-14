@@ -2149,6 +2149,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 			uint16_t vendorId;
 			uint16_t header;
 			uint16_t time;
+			uint16_t future[4];
 		} time_action_rsp_message_t;
 		time_action_rsp_message_t *time_action_rsp_message = (time_action_rsp_message_t *)dataRsp;
 		if (time_action_rsp_message->header == 0x0345 && time_action_rsp_message->time == time)
@@ -2158,6 +2159,54 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 		LOGW("time action pir light resp state not match with input control");
 	}
 	LOGW("time action pir light err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
+{
+	LOGD("ModeActionPirLightSensor 0x%04X", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeActionHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+		uint8_t future[5];
+	} mode_action_message_t;
+	mode_action_message_t mode_action_message = {0};
+	memset(&mode_action_message, 0x00, sizeof(mode_action_message));
+	mode_action_message.ble_message_header.devAddr = devAddr;
+	mode_action_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_action_message.vendorId = RD_VENDOR_ID;
+	mode_action_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_action_message.header = RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR;
+	mode_action_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_action_message, sizeof(mode_action_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeActionHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+		} mode_action_rsp_message_t;
+		mode_action_rsp_message_t *mode_action_rsp_message = (mode_action_rsp_message_t *)dataRsp;
+		if (mode_action_rsp_message->header == 0x0445 && mode_action_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode action pir light resp state not match with input control");
+	}
+	LOGW("mode action pir light err");
 	return CODE_ERROR;
 }
 

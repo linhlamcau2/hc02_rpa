@@ -382,23 +382,56 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					numScreenTouchs--;
 				}
-				if (bleProtocol)
+				if (device->GetProtocol() == BLE_DEVICE)
 				{
-					if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+					DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
+					int numDeviceChild = 0;
+					if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2_SQUARE)
 					{
-						dataJsonRsp["SUCCESS"].append(device->GetId());
-						database->DeviceInGroupDelDev(device);
-						database->DeviceInSceneBleDelDev(device);
-						database->DeviceInRoomDelDev(device);
-						delDevice(device);
+						numDeviceChild = 1;
+					}
+					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+					{
+						numDeviceChild = 2;
+					}
+					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_4 || deviceBle->GetType() == BLE_SWITCH_RGB_4 || deviceBle->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+					{
+						numDeviceChild = 3;
+					}
+					if (numDeviceChild > 0)
+					{
+						string deviceChildId = "";
+						for (int i = 1; i <= numDeviceChild; i++)
+						{
+							deviceChildId = Util::GenIdDeviceByElement(deviceBle->GetId(), i);
+							Device *deviceChild = getDeviceFromId(deviceChildId);
+							if (deviceChild)
+							{
+								database->DeviceInGroupDelDev(deviceChild);
+								database->DeviceInSceneBleDelDev(deviceChild);
+								database->DeviceInRoomDelDev(deviceChild);
+							}
+						}
+					}
+
+					if (bleProtocol)
+					{
+						if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
+						{
+							dataJsonRsp["SUCCESS"].append(device->GetId());
+							database->DeviceInGroupDelDev(device);
+							database->DeviceInSceneBleDelDev(device);
+							database->DeviceInRoomDelDev(device);
+							delDevice(device);
+						}
+						else
+						{
+							dataJsonRsp["FAILED"].append(device->GetId());
+						}
 					}
 					else
-					{
-						dataJsonRsp["FAILED"].append(device->GetId());
-					}
+						LOGW("BleProtocol null");
 				}
-				else
-					LOGW("BleProtocol null");
 			}
 			else
 			{
@@ -536,14 +569,13 @@ int Gateway::OnRpcDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 			if (rule)
 			{
 				delRule(rule);
-				dataJsonRsp["STATUS"] = "SUCCESS";
 			}
 			else
 			{
-				dataJsonRsp["STATUS"] = "FAILED";
 				LOGW("Rule not found");
 			}
 		}
+		dataJsonRsp["STATUS"] = "SUCCESS";
 		respValue["DATA"] = dataJsonRsp;
 		return CODE_OK;
 	}
@@ -3745,12 +3777,12 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
 			string domain = string(BASE_URL_PRO) + url;
 
-			DelAllDevice();
-			DelAllGroup();
-			DelAllRoom();
-			DelAllRule();
-			DelAllSceneBle();
-			DelAllSceneDelay();
+			// DelAllDevice();
+			// DelAllGroup();
+			// DelAllRoom();
+			// DelAllRule();
+			// DelAllSceneBle();
+			// DelAllSceneDelay();
 #ifdef ESP_PLATFORM
 			config->SetUrlOta(domain);
 			config->SetCheckSumOta(sum);

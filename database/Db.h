@@ -56,6 +56,7 @@ public:
 	int DeviceInGroupRead();
 	int DeviceInGroupAdd(Group *group, Device *device, int epId);
 	int DeviceInGroupDel(Group *group, Device *device, int epId);
+	int DeviceInGroupDel(string groupId, string deviceId, int epId);
 	int DeviceInGroupDelDev(string deviceId);
 	int DeviceInGroupDelDev(Device *device);
 	int DeviceInGroupDelAll();

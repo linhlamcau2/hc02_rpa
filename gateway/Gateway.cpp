@@ -28,6 +28,7 @@
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
 #include "DeviceBlePirLightSensorAC.h"
+#include "DeviceBlePirLightSensorAC_CB09.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
@@ -382,7 +383,7 @@ void Gateway::DelDatabase()
 {
 	delete database;
 #ifdef ESP_PLATFORM
-	if(unlink(DB_NAME) != 0)
+	if (unlink(DB_NAME) != 0)
 	{
 		LOGE("Failed to delete file\n");
 	}
@@ -902,10 +903,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				// if (addDatabase)
+				// {
+				// 	database->DeviceAdd(device);
+				// }
 			}
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
@@ -922,10 +923,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				// if (addDatabase)
+				// {
+				// 	database->DeviceAdd(device);
+				// }
 			}
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
@@ -942,10 +943,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				// if (addDatabase)
+				// {
+				// 	database->DeviceAdd(device);
+				// }
 			}
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
@@ -965,10 +966,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				// if (addDatabase)
+				// {
+				// 	database->DeviceAdd(device);
+				// }
 			}
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
@@ -984,10 +985,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				// if (addDatabase)
+				// {
+				// 	database->DeviceAdd(device);
+				// }
 			}
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
@@ -1003,10 +1004,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 				{
 					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
 				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
+				// if (addDatabase)
+				// {
+				// 	database->DeviceAdd(device);
+				// }
 			}
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
@@ -1034,8 +1035,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
+		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, type, version);
+		break;
 	case BLE_PIR_LIGHT_SENSOR_AC_AMTRAN:
-		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, version);
+		device = new DeviceBlePirLightSensorAC_CB09(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_SMOKE_SENSOR:
 		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, version);

@@ -28,11 +28,15 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 					}
 					else
 					{
+						database->DeviceInGroupDel(groupId, deviceId, element);
 						LOGW("Device not found: %s", deviceId.c_str());
 					}
 				}
 				else
+				{
+					database->GroupDel(groupId);
 					LOGW("Group not found: %s", groupId.c_str());
+				}
 			}
 			else if (s == SQLITE_DONE)
 			{
@@ -63,6 +67,12 @@ int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 int Db::DeviceInGroupDel(Group *group, Device *device, int epId)
 {
 	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id= '" + group->GetId() + "' AND device_id='" + device->GetId() + "' AND element = " + to_string(epId) + ";";
+	return Sqlite_Exec(sql);
+}
+
+int Db::DeviceInGroupDel(string groupId, string deviceId, int epId)
+{
+	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id= '" + groupId + "' AND device_id='" + deviceId + "' AND element = " + to_string(epId) + ";";
 	return Sqlite_Exec(sql);
 }
 

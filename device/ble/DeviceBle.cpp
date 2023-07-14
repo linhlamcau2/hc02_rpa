@@ -39,6 +39,11 @@ string DeviceBle::GetDeviceKey()
 	return deviceKey;
 }
 
+int DeviceBle::GetCountElement()
+{
+	return this->countElement;;
+}
+
 int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	for (auto &module : modules)
