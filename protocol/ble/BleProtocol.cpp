@@ -422,7 +422,7 @@ string BleProtocol::GetAppKey()
 		{
 			appKey[i] = appKeyDefault[i];
 		}
-		string appkey = Util::arrayToString844412((uint8_t *)appKey);
+		string appkey = Util::uuidToStr((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
 		gateway->setBleAppkey(appkey);
@@ -485,11 +485,11 @@ int BleProtocol::GetNetKey()
 			}
 			SetNetKey();
 			SetGwKey();
-			string netkeyStr = Util::arrayToString844412((uint8_t *)netKey);
+			string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
 			LOGD("New ble_netkey: %s", netkeyStr.c_str());
 			database->GatewayUpdateNetKey(gateway, netkeyStr);
 
-			string devicekeyGwStr = Util::arrayToString844412((uint8_t *)gwKey);
+			string devicekeyGwStr = Util::uuidToStr((uint8_t *)gwKey);
 			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
 			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
 
@@ -640,7 +640,7 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						{
 							deviceType = convertDeviceType(deviceType);
 							Json::Value devKeyJson;
-							devKeyJson["devicekey"] = Util::arrayToString844412((uint8_t *)deviceKey);
+							devKeyJson["devicekey"] = Util::uuidToStr((uint8_t *)deviceKey);
 							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true);
 							if (device)
 							{

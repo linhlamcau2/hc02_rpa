@@ -51,7 +51,7 @@ namespace Util
 	string GetCurrentTimeStr();
 
 	string uuidToStr(uint8_t *uuid);
-	string arrayToString844412(uint8_t *array);
+	string GenUuidFromMac(string mac);
 
 	void LedInternet(bool value);
 	void LedService(bool value);
@@ -77,6 +77,6 @@ namespace Util
 	uint16_t GetTempOfScreenTouch();
 	uint16_t GetHumOfScreenTouch();
 
-	bool compareByID(const Json::Value& obj1, const Json::Value& obj2);
+	bool compareByID(const Json::Value &obj1, const Json::Value &obj2);
 	Json::Value arrangeJson(Json::Value &obj);
 }

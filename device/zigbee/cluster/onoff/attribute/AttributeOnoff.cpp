@@ -84,11 +84,11 @@ int AttributeOnoff::Do(Json::Value &dataValue)
 	{
 		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		LOGD("Do onoff: %d", onoff);
-		// if (AttributeOnoff->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
-		// {
-		// 	this->onoff = onoff;
-		// 	return CODE_OK;
-		// }
+		if (zigbeeProtocol->ZCLOnoffDevice(cluster->getDevice()->GetAddr(), onoff) == CODE_OK)
+		{
+			this->onoff = onoff;
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }

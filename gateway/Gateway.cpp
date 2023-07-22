@@ -734,24 +734,6 @@ int Gateway::GatewayConnectToCloudNotice()
 	return CloudPublish("HC.CONTROL.RESPONSE", respValue.toString());
 }
 
-static Json::Value PushNewDevMqtt(Device *newDev)
-{
-	Json::Value jsonValue;
-	Json::Value devValue;
-	devValue["id"] = newDev->GetId();
-	devValue["addr"] = newDev->GetAddr();
-	devValue["type"] = newDev->GetType();
-	devValue["ver"] = newDev->GetVersionStr();
-	devValue["mac"] = newDev->GetMac();
-	string data = newDev->GetData();
-	string devKey = "";
-	Json::Value json;
-	json.parse(data);
-	devValue["data"] = json;
-	jsonValue["device"].append(devValue);
-	return jsonValue;
-}
-
 void Gateway::AddDeviceToScanList(Device *scanDevice)
 {
 	Json::Value jsonValue;
@@ -766,32 +748,27 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	{
 		database->DelDevExist(temp_dev);
 	}
-	string data = scanDevice->GetData();
-	string devKey = "";
-	Json::Value json;
-	if (json.parse(data) && json.isObject())
-	{
-		if (json.isMember("devicekey") && json["devicekey"].isString())
-		{
-			devKey = json["devicekey"].asString();
-		}
-	}
 
-	dataValue["DEVICE_ID"] = scanDevice->GetId();
-	dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
-	dataValue["DEVICE_TYPE_ID"] = (int)scanDevice->GetType();
-	dataValue["MAC_ADDRESS"] = scanDevice->GetMac();
-	dataValue["FIRMWARE_VERSION"] = scanDevice->GetVersionStr();
-	dataValue["DEVICE_KEY"] = devKey;
-	dataValue["NET_KEY"] = gateway->getBleNetKey();
-	dataValue["APP_KEY"] = gateway->getBleAppKey();
-	jsonValue["CMD"] = "NEW_DEVICE";
-	jsonValue["DATA"] = dataValue;
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	LocalPublish(jsonValue);
-#else
-	CloudPublish(jsonValue);
-#endif
+	Json::Value devValue;
+	devValue["id"] = scanDevice->GetId();
+	devValue["addr"] = scanDevice->GetAddr();
+	devValue["ver"] = scanDevice->GetVersionStr();
+	devValue["mac"] = scanDevice->GetMac();
+	devValue["data"] = scanDevice->GetData();
+	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG)
+	{
+		devValue["type"] = BLE_SWITCH_ONOFF;
+	}
+	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_TEMP_HUM)
+	{
+		devValue["type"] = BLE_TEMP_HUM_SENSOR;
+	}
+	else
+	{
+		devValue["type"] = scanDevice->GetType();
+	}
+	jsonValue["device"].append(devValue);
+	pushNewDeviceLocal(jsonValue);
 
 #ifndef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
@@ -840,10 +817,6 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 			LocalPublish(jsonValue);
 		}
 	}
-#endif
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	Json::Value jsonData = PushNewDevMqtt(scanDevice);
-	pushNewDeviceLocal(jsonData);
 #endif
 }
 

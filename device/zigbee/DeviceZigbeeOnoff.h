@@ -12,6 +12,4 @@ private:
 
 public:
 	DeviceZigbeeOnoff(string id, string name, string mac, uint32_t addr);
-	
-	int Do(Json::Value &dataValue);
 };

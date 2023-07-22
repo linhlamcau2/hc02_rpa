@@ -194,6 +194,7 @@ void Device::InitDeviceModelList()
 {
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
+	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_TEMP_HUM, "lumi.sens", "Cam biet nhiet do do am");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_WLEAK_AQ1, "lumi.sensor_wleak.aq1", "Cam bien ro nuoc");
 	RegisterDeviceModel(ZIGBEE_PIR_RH3040, "RH3040", "Cảm biến chuyển động Zigbee");
 	RegisterDeviceModel(ZIGBEE_TELINK_TLSR82xx, "TLSR82xx", "Đèn Telink Zigbee");
