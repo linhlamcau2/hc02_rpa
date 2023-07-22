@@ -1036,8 +1036,10 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 #ifdef CONFIG_ENABLE_ZIGBEE
 	case ZIGBEE_LUMI_PLUG:
 		device = new DeviceZigbeeOnoff(id, name, mac, addr);
+		break;
 	case ZIGBEE_TELINK_TLSR82xx:
 		device = new DeviceZigbeeTelinkOnoff(id, name, mac, addr);
+		break;
 #endif
 
 	default:

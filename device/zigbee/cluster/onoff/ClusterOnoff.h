@@ -14,9 +14,4 @@ private:
 protected:
 public:
 	ClusterOnoff(Device *device, uint8_t endpoint);
-
-	void InitAttribute(int attributeId, double value);
-	void ParseData(uint8_t *data, int len, Json::Value &jsonValue);
-	bool CheckData(Json::Value &dataValue, bool &rs);
-	void BuildTelemetryValue(Json::Value &jsonValue);
 };

@@ -1,56 +1,71 @@
 #include "AttributeOnoff.h"
-#include "Log.h"
+#include "../ClusterOnoff.h"
 #include "Util.h"
-#include "zigbee/cluster/Cluster.h"
 #include "Device.h"
-#include "Db.h"
+#include "ZigbeeProtocol.h"
 
-AttributeOnoff::AttributeOnoff(Cluster *cluster) : Attribute(cluster)
+AttributeOnoff::AttributeOnoff(Cluster *cluster) : Attribute(ATTRIBUTE_ONOFF, cluster)
 {
 }
 
-void AttributeOnoff::InitAttribute(int attributeId, double value)
+int AttributeOnoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-	// if (attributeId == parameterToId["onoff"])
-	// 	onoff = value;
+	return CODE_ERROR;
 }
 
-void AttributeOnoff::SaveAttribute()
+int AttributeOnoff::InputData(uint8_t *data, int len, Json::Value &jsonValue, int *lenRemain)
 {
-	// database->DeviceAttributeAddOrReplace(cluster->getDevice(), parameterToId["onoff1"], onoff);
-}
-
-void AttributeOnoff::ParseData(uint8_t *data, int len, Json::Value &jsonValue)
-{
-	uint8_t dataType = data[0];
-	switch (dataType)
+	typedef struct __attribute__((packed))
 	{
-	case 0x10:
-		onoff = data[1];
-		SaveAttribute();
-		BuildTelemetryValue(jsonValue);
-		if (cluster && cluster->getDevice())
+		uint16_t attrID;
+		uint8_t dataType;
+		uint8_t data[];
+	} AttributeMessage_st;
+	AttributeMessage_st *attributeMessage = (AttributeMessage_st *)data;
+	if (len > sizeof(AttributeMessage_st))
+	{
+		if (bswap_16(attributeMessage->attrID) == ATTRIBUTE_ONOFF)
 		{
-			cluster->getDevice()->CheckTrigger();
+			if (attributeMessage->dataType == 0x10)
+			{
+				if (lenRemain)
+				{
+					*lenRemain = len - sizeof(AttributeMessage_st) - getSizeOfDataType(attributeMessage->dataType);
+					onoff = attributeMessage->data[0];
+					BuildTelemetryValue(jsonValue);
+					CheckTrigger();
+					return CODE_OK;
+				}
+			}
 		}
-		break;
-
-	default:
-		break;
 	}
+	return CODE_ERROR;
 }
 
 bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isMember("operator") && dataValue["operator"].isString())
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) &&
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		string op = dataValue["operator"].asString();
-		if (dataValue.isMember("onoff") && dataValue["onoff"].isInt())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 		{
-			int onoff = dataValue["onoff"].asInt();
-			rs = Util::CompareNumber(op, this->onoff, onoff, 0);
+			int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+			rs = Util::CompareNumber(op, this->onoff, onoff);
 			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_ONOFF].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_ONOFF];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+			{
+				int onoff1 = listValue[0].asInt();
+				int onoff2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->onoff, onoff1, onoff2);
+				return true;
+			}
 		}
 	}
 	return false;
@@ -58,8 +73,22 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 
 void AttributeOnoff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	// Json::Value dataValue;
-	// dataValue["ID"] = parameterToId["onoff"];
-	// dataValue["VALUE"] = onoff;
-	// jsonValue.append(dataValue);
+	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
+}
+
+int AttributeOnoff::Do(Json::Value &dataValue)
+{
+	LOGV("Do data: %s", dataValue.toString().c_str());
+	if (zigbeeProtocol && dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+	{
+		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		LOGD("Do onoff: %d", onoff);
+		// if (AttributeOnoff->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+		// {
+		// 	this->onoff = onoff;
+		// 	return CODE_OK;
+		// }
+	}
+	return CODE_ERROR;
 }

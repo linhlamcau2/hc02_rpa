@@ -6,39 +6,7 @@ DeviceZigbeeTelinkOnoff::DeviceZigbeeTelinkOnoff(string id, string name, string 
 		: DeviceZigbee(id, name, mac, addr, ZIGBEE_TELINK_TLSR82xx)
 {
 	clusterOnoff = new ClusterOnoff(this, 1);
-}
-
-int DeviceZigbeeTelinkOnoff::BuildTelemetryValue(Json::Value &pushDataValue)
-{
-	clusterOnoff->BuildTelemetryValue(pushDataValue);
-	return CODE_OK;
-}
-
-void DeviceZigbeeTelinkOnoff::InputData(uint8_t *data, int len, uint32_t addr)
-{
-	values = Json::Value::null;
-	uint16_t clusterId = (data[0] << 8) | data[1];
-	LOGD("clusterId: 0x%04X", clusterId);
-	if (clusterId == CLUSTER_ONOFF)
-	{
-		clusterOnoff->ParseData(data + 2, len, values);
-	}
-	else
-	{
-		LOGW("Cluster 0x%04X not handle", clusterId);
-	}
-	// if (values != Json::Value::null)
-	// {
-	// 	PushTelemetry(values);
-	// }
-}
-
-bool DeviceZigbeeTelinkOnoff::CheckData(Json::Value &dataValue, bool &rs)
-{
-	LOGV("CheckData data: %s", dataValue.toString().c_str());
-	if (clusterOnoff->CheckData(dataValue, rs))
-		return rs;
-	return false;
+	clusters.push_back(clusterOnoff);
 }
 
 int DeviceZigbeeTelinkOnoff::Do(Json::Value &dataValue)

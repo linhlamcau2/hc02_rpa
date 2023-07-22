@@ -151,14 +151,14 @@ typedef function<int(uint8_t *buff, uint16_t len)> OnCmdCallbackFunc;
 class ZigbeeProtocol : public Uart
 {
 private:
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t type;
 		uint8_t status;
 		uint8_t rev;
 	} message_acknowledge_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// uint8_t header;
 		uint16_t type;
@@ -167,7 +167,7 @@ private:
 		uint8_t payload[];
 	} message_req_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// uint8_t header;
 		uint16_t type;
@@ -176,7 +176,7 @@ private:
 		uint8_t payload[];
 	} message_rsp_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t status;
 		uint16_t reqType;
@@ -185,7 +185,7 @@ private:
 		uint8_t *payload;
 	} message_rsp_list_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t dstAddrMode;
 		uint8_t dstAddr[2];
@@ -193,7 +193,7 @@ private:
 		uint8_t dstEp;
 	} ZCLCmdHdr_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t srcAddr;
 		uint8_t srcEp;
