@@ -192,30 +192,30 @@ int Group::Do(Json::Value &dataValue, bool ack)
 }
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-void Group::DoZigbee()
-{
-	if (zigbeeProtocol && dataValue.isObject())
-	{
-		if (dataValue.isMember("method") && dataValue["method"].isString())
-		{
-			string method = dataValue["method"].asString();
-			if (method == "TurnOn")
-			{
-				zigbeeProtocol->ZCLOnoffGroup(addr, 0);
-			}
-			else if (method == "TurnOff")
-			{
-				zigbeeProtocol->ZCLOnoffGroup(addr, 1);
-			}
-			else if (method == "Toggle")
-			{
-				zigbeeProtocol->ZCLOnoffGroup(addr, 2);
-			}
-			else
-			{
-				LOGW("Zigbee Group not handle method %s", method.c_str());
-			}
-		}
-	}
-}
+// void Group::DoZigbee()
+// {
+// 	if (zigbeeProtocol && dataValue.isObject())
+// 	{
+// 		if (dataValue.isMember("method") && dataValue["method"].isString())
+// 		{
+// 			string method = dataValue["method"].asString();
+// 			if (method == "TurnOn")
+// 			{
+// 				zigbeeProtocol->ZCLOnoffGroup(addr, 0);
+// 			}
+// 			else if (method == "TurnOff")
+// 			{
+// 				zigbeeProtocol->ZCLOnoffGroup(addr, 1);
+// 			}
+// 			else if (method == "Toggle")
+// 			{
+// 				zigbeeProtocol->ZCLOnoffGroup(addr, 2);
+// 			}
+// 			else
+// 			{
+// 				LOGW("Zigbee Group not handle method %s", method.c_str());
+// 			}
+// 		}
+// 	}
+// }
 #endif

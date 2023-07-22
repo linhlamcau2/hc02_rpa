@@ -68,8 +68,10 @@ int main(int argc, char *argv[])
 	bleProtocol->init();
 
 #ifdef CONFIG_ENABLE_ZIGBEE
+	Device::InitDeviceModelList();
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
+	zigbeeProtocol->CommissionFormation();
 #endif
 
 	string mac = Wifi::GetMacAddress();

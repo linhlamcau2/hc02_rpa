@@ -30,11 +30,28 @@ ZigbeeProtocol::~ZigbeeProtocol()
 {
 }
 
+void ZigbeeProtocol::HandleOpcodeBleThread()
+{
+	message_rsp_st *message_rsp = NULL;
+	while (1)
+	{
+		if (GetOpcodeExceptionMessage(&message_rsp) == CODE_OK)
+		{
+			CheckOpcodeException(message_rsp);
+			free(message_rsp);
+		}
+		usleep(100000);
+	}
+}
+
 void ZigbeeProtocol::init()
 {
 	RegisterCmdCallback(ZBHCI_CMD_NODES_DEV_ANNCE_IND, bind(&ZigbeeProtocol::OnDeviceAnnounce, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_REPORT_MSG_RCV, bind(&ZigbeeProtocol::OnReportAttribute, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_ATTR_READ_RSP, bind(&ZigbeeProtocol::OnReadAttributeResp, this, placeholders::_1, placeholders::_2));
+
+	thread handleOpcodeBleThread(bind(&ZigbeeProtocol::HandleOpcodeBleThread, this));
+	handleOpcodeBleThread.detach();
 }
 
 int ZigbeeProtocol::RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc)
@@ -55,6 +72,20 @@ static uint8_t checCrC(uint16_t type, uint16_t len, uint8_t *payload)
 		crc8 ^= payload[i];
 	}
 	return crc8;
+}
+
+int ZigbeeProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
+{
+	int rs = CODE_ERROR;
+	vectorCheckOpcodeMtx.lock();
+	if (messageCheckOpcodeList.size() > 0)
+	{
+		*data = messageCheckOpcodeList[messageCheckOpcodeList.size() - 1];
+		messageCheckOpcodeList.pop_back();
+		rs = CODE_OK;
+	}
+	vectorCheckOpcodeMtx.unlock();
+	return rs;
 }
 
 void ZigbeeProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -118,7 +149,12 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 			}
 			else
 			{
-				CheckOpcodeException(message_rsp);
+				message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(message_rsp->len + 2);
+				memcpy(messageCheckOpcode, message_rsp, message_rsp->len + 2);
+				vectorCheckOpcodeMtx.lock();
+				messageCheckOpcodeList.push_back(messageCheckOpcode);
+				vectorCheckOpcodeMtx.unlock();
+				// CheckOpcodeException(messageCheckOpcode);
 			}
 		}
 		lenRemain -= payloadLen + 7;
@@ -204,15 +240,15 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 		ZCLCmdRspHdr_st *zclCmdRspHdr = (ZCLCmdRspHdr_st *)buff;
 		uint16_t srcAddr = bswap_16(zclCmdRspHdr->srcAddr);
 		LOGD("srcAddr: 0x%04X, srcEp: %d, dstEp: %d, seqNum: %d", srcAddr, zclCmdRspHdr->srcEp, zclCmdRspHdr->dstEp, zclCmdRspHdr->seqNum);
-		// DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
-		// if (deviceZigbee)
-		// {
-		// 	deviceZigbee->DeviceInputData(buff + 5, len - 5);
-		// }
-		// else
-		// {
-		// 	LOGW("Zigbee device 0x%04X not found", srcAddr);
-		// }
+		DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
+		if (deviceZigbee)
+		{
+			deviceZigbee->InputData(buff + 5, len - 5);
+		}
+		else
+		{
+			LOGW("Zigbee device 0x%04X not found", srcAddr);
+		}
 		return CODE_OK;
 	}
 	else
@@ -348,7 +384,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				}
 				else
 				{
-					// device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, srcAddr, type, true);
+					device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, "", srcAddr, type, zclVersion | appVersion << 8, true);
 				}
 				if (device)
 					gateway->AddDeviceToScanList(device);

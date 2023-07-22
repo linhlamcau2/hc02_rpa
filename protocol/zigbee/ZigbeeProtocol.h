@@ -202,11 +202,18 @@ private:
 	} ZCLCmdRspHdr_st;
 
 	vector<message_rsp_list_st *> messageRespList;
+
+	mutex vectorCheckOpcodeMtx;
+	vector<message_rsp_st *> messageCheckOpcodeList;
+
 	map<uint16_t, OnCmdCallbackFunc> onCmdCallbackFuncList;
 	map<uint16_t, string> scanList;
 
-	int RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc);
+	void HandleOpcodeBleThread();
+	int GetOpcodeExceptionMessage(message_rsp_st **data);
 	void CheckOpcodeException(message_rsp_st *message);
+
+	int RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc);
 	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout);
 

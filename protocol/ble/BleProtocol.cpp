@@ -153,7 +153,7 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 		dataValue[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
 		if ((data_message->status_mode & 0x0F) == 1)
 		{
-			dataValue[KEY_ATTRIBUTE_DIM] = (data_message->value1 *100) / 65535;
+			dataValue[KEY_ATTRIBUTE_DIM] = (data_message->value1 * 100) / 65535;
 			dataValue[KEY_ATTRIBUTE_CCT] = (data_message->value2 - 800) / 192;
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
@@ -243,14 +243,17 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 		SetLedService(!statusLedService);
 	}
 #endif
-	int index = 0;
 	while (l >= 4)
 	{
-		if ((d[index] | d[index + 1] << 8) >= 3)
+		message_rsp = (message_rsp_st *)d;
+		if (message_rsp->len >= 3)
 		{
-			if (d[index + 2] == 0x80 || d[index + 2] == 0x90 || d[index + 2] == 0x91 || d[index + 2] == 0x92 || d[index + 2] == 0xfa)
+			if (message_rsp->magic == 0x80 ||
+					message_rsp->magic == 0x90 ||
+					message_rsp->magic == 0x91 ||
+					message_rsp->magic == 0x92 ||
+					message_rsp->magic == 0xfa)
 			{
-				message_rsp = (message_rsp_st *)&d[index];
 				is_dupplicate = false;
 				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
 				{
@@ -328,13 +331,13 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 			}
 			else
 			{
-				index++;
+				d++;
 				l--;
 			}
 		}
 		else
 		{
-			index++;
+			d++;
 			l--;
 		}
 #ifdef ESP_PLATFORM

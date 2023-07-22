@@ -179,6 +179,9 @@ public:
 	Device *getDeviceFromMac(string mac);
 	Device *getDeviceFromId(string id);
 	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
+#ifdef CONFIG_ENABLE_ZIGBEE
+	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
+#endif
 	void delDevice(Device *device);
 
 	Group *getGroupFromId(string id);

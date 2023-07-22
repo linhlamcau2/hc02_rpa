@@ -127,6 +127,27 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 	return NULL;
 }
 
+#ifdef CONFIG_ENABLE_ZIGBEE
+DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
+{
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->CheckAddr(addr) && device->GetProtocol() == ZIGBEE_DEVICE)
+		{
+			DeviceZigbee *deviceZigbee = dynamic_cast<DeviceZigbee *>(device);
+			if (deviceZigbee)
+			{
+				deviceListMtx.unlock();
+				return deviceZigbee;
+			}
+		}
+	}
+	deviceListMtx.unlock();
+	return NULL;
+}
+#endif
+
 void Gateway::delDevice(Device *device)
 {
 	deviceListMtx.lock();
@@ -1012,21 +1033,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 #endif
 
+#ifdef CONFIG_ENABLE_ZIGBEE
+	case ZIGBEE_LUMI_PLUG:
+		device = new DeviceZigbeeOnoff(id, name, mac, addr);
+	case ZIGBEE_TELINK_TLSR82xx:
+		device = new DeviceZigbeeTelinkOnoff(id, name, mac, addr);
+#endif
+
 	default:
 		LOGW("Add new device not support type: 0x%04X", type);
 		break;
 	}
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-	if (type == ZIGBEE_LUMI_PLUG)
-	{
-		device = new DeviceZigbeeOnoff(id, name, mac, addr);
-	}
-	else if (type == ZIGBEE_TELINK_TLSR82xx)
-	{
-		device = new DeviceZigbeeTelinkOnoff(id, name, mac, addr);
-	}
-#endif
 
 	if (device)
 	{
