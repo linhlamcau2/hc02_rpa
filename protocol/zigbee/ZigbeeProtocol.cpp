@@ -80,8 +80,8 @@ int ZigbeeProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 	vectorCheckOpcodeMtx.lock();
 	if (messageCheckOpcodeList.size() > 0)
 	{
-		*data = messageCheckOpcodeList[messageCheckOpcodeList.size() - 1];
-		messageCheckOpcodeList.pop_back();
+		*data = messageCheckOpcodeList[0];
+		messageCheckOpcodeList.erase(messageCheckOpcodeList.begin());
 		rs = CODE_OK;
 	}
 	vectorCheckOpcodeMtx.unlock();
@@ -248,6 +248,76 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 		else
 		{
 			LOGW("Zigbee device 0x%04X not found", srcAddr);
+			int clusterLen = len - sizeof(ZCLCmdRspHdr_st);
+			typedef struct __attribute__((packed))
+			{
+				uint16_t clusterId;
+				uint8_t attrNum;
+				uint8_t data[];
+			} ClusterMessage_st;
+			ClusterMessage_st *clusterMessage = (ClusterMessage_st *)zclCmdRspHdr->data;
+
+			int attrLen = clusterLen - sizeof(ClusterMessage_st);
+			typedef struct __attribute__((packed))
+			{
+				uint16_t attrID;
+				uint8_t dataType;
+				uint8_t data[];
+			} AttrMessage_st;
+			AttrMessage_st *attrMessage = NULL;
+
+			if (clusterLen > sizeof(ClusterMessage_st))
+			{
+				LOGD("clusterMessage->clusterId: 0x%04X, clusterMessage->attrNum: %d", bswap_16(clusterMessage->clusterId), clusterMessage->attrNum);
+				uint8_t *attrData = clusterMessage->data;
+				if (bswap_16(clusterMessage->clusterId) == 0x0000)
+				{
+					string model;
+					uint8_t appVersion = 0, zclVersion = 0;
+					for (int i = 0; i < clusterMessage->attrNum; i++)
+					{
+						attrMessage = (AttrMessage_st *)attrData;
+						LOGD("Attribute ID: 0x%04X", bswap_16(attrMessage->attrID));
+						if (bswap_16(attrMessage->attrID) == 0x0001)
+						{
+							if (attrMessage->dataType == ZIGBEE_DATATYPE_UINT8)
+							{
+								appVersion = attrMessage->data[0];
+								LOGW("appVersion: %d", appVersion);
+							}
+						}
+						else if (bswap_16(attrMessage->attrID) == 0x0005)
+						{
+							if (attrMessage->dataType == ZIGBEE_DATATYPE_STRING)
+							{
+								for (int i = 0; i < attrMessage->data[0]; i++)
+								{
+									model += attrMessage->data[i + 1];
+								}
+								LOGW("model: %s", model.c_str());
+							}
+						}
+						int dataSize = getSizeOfDataType(&attrMessage->dataType);
+						attrData += 3 + dataSize;
+						attrLen -= 3 + dataSize;
+					}
+
+					if (!model.empty())
+					{
+						uint32_t type = Device::ConvertModelToDeviceType(model);
+						string mac = scanList[srcAddr];
+						scanList.erase(srcAddr);
+						LOGI("addr: 0x%04X, type: 0x%04X, mac: %s", srcAddr, type, mac.c_str());
+						if (type && mac != "")
+						{
+							Device *device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, "", srcAddr, type, zclVersion | appVersion << 8, true);
+							if (device)
+								gateway->AddDeviceToScanList(device);
+						}
+					}
+					return CODE_OK;
+				}
+			}
 		}
 		return CODE_OK;
 	}

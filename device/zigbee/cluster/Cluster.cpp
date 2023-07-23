@@ -1,5 +1,6 @@
 #include "Cluster.h"
 #include <byteswap.h>
+#include "ZigbeeDataTypes.h"
 
 Cluster::Cluster(uint16_t id, Device *device, uint8_t endpoint)
 {
@@ -25,16 +26,20 @@ int Cluster::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	return CODE_OK;
 }
 
-int getSizeOfDataType(uint8_t dataType)
+int getSizeOfDataType(uint8_t *dataType)
 {
-	switch (dataType)
+	switch (dataType[0])
 	{
-	case 0x10:
-	case 0x20:
+	case ZIGBEE_DATATYPE_BOOL:
+	case ZIGBEE_DATATYPE_UINT8:
+	case ZIGBEE_DATATYPE_ENUM8:
 		return 1;
 
+	case ZIGBEE_DATATYPE_STRING:
+		return dataType[1] + 1;
+
 	default:
-		LOGW("getSizeOfDataType not check");
+		LOGW("getSizeOfDataType not check type 0x%02X", dataType);
 		return 0;
 	}
 }
@@ -81,7 +86,7 @@ int Cluster::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				{
 					attributeMessage = (AttributeMessage_st *)attrData;
 					LOGD("Attribute ID: 0x%04X", bswap_16(attributeMessage->attrID));
-					int dataSize = getSizeOfDataType(attributeMessage->dataType);
+					int dataSize = getSizeOfDataType(&attributeMessage->dataType);
 					attrData += 3 + dataSize;
 					attrLen -= 3 + dataSize;
 				}

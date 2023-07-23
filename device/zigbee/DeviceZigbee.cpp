@@ -28,13 +28,20 @@ void DeviceZigbee::InputData(Json::Value &dataValue)
 
 void DeviceZigbee::InputData(uint8_t *data, int len)
 {
+	int rs = CODE_ERROR;
 	values = Json::Value::null;
 	for (auto &cluster : clusters)
 	{
 		if (cluster->InputData(data, len, values) == CODE_OK)
+		{
+			rs = CODE_OK;
 			break;
+		}
 	}
-	PushTelemetry(values);
+	if (rs == CODE_OK)
+		PushTelemetry(values);
+	else
+		LOGW("Cluster data not handle")
 }
 
 bool DeviceZigbee::CheckData(Json::Value &dataValue, bool &rs)

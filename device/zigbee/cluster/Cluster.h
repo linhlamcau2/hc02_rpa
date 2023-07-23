@@ -11,7 +11,7 @@
 
 using namespace std;
 
-int getSizeOfDataType(uint8_t dataType);
+int getSizeOfDataType(uint8_t *dataType);
 
 class Device;
 class Cluster

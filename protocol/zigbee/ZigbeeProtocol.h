@@ -199,6 +199,7 @@ private:
 		uint8_t srcEp;
 		uint8_t dstEp;
 		uint8_t seqNum;
+		uint8_t data[];
 	} ZCLCmdRspHdr_st;
 
 	vector<message_rsp_list_st *> messageRespList;

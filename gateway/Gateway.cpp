@@ -46,8 +46,14 @@
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
+#include "DeviceZigbeeLumiSensorMagnet.h"
+#include "DeviceZigbeeLumiSensorSwitch.h"
+#include "DeviceZigbeeLumiSensorTempHum.h"
+#include "DeviceZigbeeLumiSensorWleakAQ1.h"
 #include "DeviceZigbeeOnoff.h"
-#include "DeviceZigbeeTelinkOnoff.h"
+
+#include "DeviceZigbeeTuyaSensorMagnet.h"
+#include "DeviceZigbeeTuyaSensorPir.h"
 #endif
 
 Gateway *gateway = NULL;
@@ -755,13 +761,27 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["ver"] = scanDevice->GetVersionStr();
 	devValue["mac"] = scanDevice->GetMac();
 	devValue["data"] = scanDevice->GetData();
-	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG)
+	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
+			scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
 	{
 		devValue["type"] = BLE_SWITCH_ONOFF;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_TEMP_HUM)
 	{
 		devValue["type"] = BLE_TEMP_HUM_SENSOR;
+	}
+	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_WLEAK_AQ1)
+	{
+		devValue["type"] = BLE_SMOKE_SENSOR;
+	}
+	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
+					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
+	{
+		devValue["type"] = BLE_DOOR_SENSOR;
+	}
+	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040)
+	{
+		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
 	}
 	else
 	{
@@ -1007,11 +1027,27 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 #endif
 
 #ifdef CONFIG_ENABLE_ZIGBEE
+	case ZIGBEE_LUMI_SENSOR_MAGNET:
+		device = new DeviceZigbeeLumiSensorMagnet(id, name, mac, addr);
+		break;
+	case ZIGBEE_LUMI_SENSOR_SWITCH:
+		device = new DeviceZigbeeLumiSensorSwitch(id, name, mac, addr);
+		break;
+	case ZIGBEE_LUMI_SENSOR_TEMP_HUM:
+		device = new DeviceZigbeeLumiSensorTempHum(id, name, mac, addr);
+		break;
+	case ZIGBEE_LUMI_SENSOR_WLEAK_AQ1:
+		device = new DeviceZigbeeLumiSensorWleakAQ1(id, name, mac, addr);
+		break;
 	case ZIGBEE_LUMI_PLUG:
 		device = new DeviceZigbeeOnoff(id, name, mac, addr);
 		break;
-	case ZIGBEE_TELINK_TLSR82xx:
-		device = new DeviceZigbeeTelinkOnoff(id, name, mac, addr);
+
+	case ZIGBEE_TUYA_SENSOR_MAGNET_TY0203:
+		device = new DeviceZigbeeTuyaSensorMagnet(id, name, mac, addr);
+		break;
+	case ZIGBEE_TUYA_SENSOR_PIR_RH3040:
+		device = new DeviceZigbeeTuyaSensorPir(id, name, mac, addr);
 		break;
 #endif
 

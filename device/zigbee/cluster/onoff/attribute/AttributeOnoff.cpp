@@ -30,7 +30,7 @@ int AttributeOnoff::InputData(uint8_t *data, int len, Json::Value &jsonValue, in
 			{
 				if (lenRemain)
 				{
-					*lenRemain = len - sizeof(AttributeMessage_st) - getSizeOfDataType(attributeMessage->dataType);
+					*lenRemain = len - sizeof(AttributeMessage_st) - getSizeOfDataType(&attributeMessage->dataType);
 					onoff = attributeMessage->data[0];
 					BuildTelemetryValue(jsonValue);
 					CheckTrigger();
