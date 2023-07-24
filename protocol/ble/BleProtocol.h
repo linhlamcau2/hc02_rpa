@@ -197,6 +197,8 @@ private:
 	uint8_t deviceKey[16];
 	uint16_t nextAddr;
 
+	bool isMacExists(string macDev);
+
 	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
@@ -207,6 +209,7 @@ public:
 	atomic<bool> haveNewMac;
 	atomic<bool> isProvisioning;
 	scan_device_message_t scanDeviceMessage;
+	vector <string> listMac;
 
 #ifdef ESP_PLATFORM
 	BleProtocol(int num, int txPin, int rxPin, int baudrate);

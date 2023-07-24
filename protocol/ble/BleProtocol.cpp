@@ -51,14 +51,14 @@ static void HandleOpcodeBle(void *data)
 			if (bleProtocol->haveNewMac)
 			{
 				timeout = 0;
+				bleProtocol->haveNewMac = false;
 				memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
 				bleProtocol->AddDevice(&scan_device_message);
-				bleProtocol->haveNewMac = false;
 			}
 			else
 			{
 				timeout++;
-				if (timeout >= 300)
+				if (timeout >= 120)
 				{
 					timeout = 0;
 					bleProtocol->SetProvisioning(false);
@@ -483,7 +483,7 @@ int BleProtocol::GetNetKey()
 		memcpy(&pro_net_info.netKey[0], &dataRsp[1], sizeof(pro_net_info_t));
 
 		uint32_t ivIndex = bswap_32(pro_net_info.iv_index);
-		if ((ivIndex == 0x11223344) || (ivIndex == 0))
+		if ((ivIndex == 0x11223344))
 		{
 			// database->GatewayUpdateIvIndex(gateway, ivIndex);
 			for (int i = 0; i < 16; i++)
@@ -634,6 +634,16 @@ void BleProtocol::SetProvisioning(bool isProvision)
 	this->isProvisioning = isProvision;
 }
 
+bool BleProtocol::isMacExists(string macDev)
+{
+	for (auto mac: listMac)
+	{
+		if (macDev == mac)
+		return true;
+	}
+	return false;
+}
+
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
 	LOGD("AddDevice");
@@ -644,6 +654,10 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	uint32_t deviceType = 0;
 	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
 	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
+	if (isMacExists(mac))
+	{
+		return CODE_ERROR;
+	}
 	LOGI("Scan device mac 0x%s, rssi: %i", mac.c_str(), scan_device_message->rssi);
 	int rs = CODE_ERROR;
 	if (IsProvision() && !SelectMac(scan_device_message->mac))
@@ -665,6 +679,7 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 							if (device)
 							{
 								gateway->AddDeviceToScanList(device);
+								listMac.push_back(mac);
 								rs = CODE_OK;
 							}
 						}

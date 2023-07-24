@@ -422,6 +422,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 							database->DeviceInGroupDelDev(device);
 							database->DeviceInSceneBleDelDev(device);
 							database->DeviceInRoomDelDev(device);
+							bleProtocol->listMac.erase(remove(bleProtocol->listMac.begin(), bleProtocol->listMac.end(), device->GetMac()), bleProtocol->listMac.end());
 							delDevice(device);
 						}
 						else
@@ -3115,6 +3116,9 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 			int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
 			switch (day)
 			{
+			case 1:
+				sun = 1;
+				break;
 			case 2:
 				mon = 1;
 				break;
@@ -3132,9 +3136,6 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 				break;
 			case 7:
 				sat = 1;
-				break;
-			case 8:
-				sun = 1;
 				break;
 			}
 			int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
@@ -3661,6 +3662,9 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 				int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
 				switch (day)
 				{
+				case 1:
+					sun = 1;
+					break;
 				case 2:
 					mon = 1;
 					break;
@@ -3678,9 +3682,6 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				case 7:
 					sat = 1;
-					break;
-				case 8:
-					sun = 1;
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
