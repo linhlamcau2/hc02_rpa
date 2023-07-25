@@ -32,6 +32,7 @@ ZigbeeProtocol::~ZigbeeProtocol()
 
 void ZigbeeProtocol::HandleOpcodeBleThread()
 {
+	LOGI("Start HandleOpcodeBleThread");
 	message_rsp_st *message_rsp = NULL;
 	while (1)
 	{
@@ -216,7 +217,7 @@ int ZigbeeProtocol::OnDeviceAnnounce(uint8_t *buff, uint16_t len)
 		LOGW("DeviceAnnounce format error");
 		return CODE_ERROR;
 	}
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t nwkAddr;
 		uint8_t ieeeAddr[8];
@@ -331,14 +332,14 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 {
 	LOGI("OnReadAttributeResp");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t clusterID;
 		uint8_t attrNum;
 		uint8_t attrList[];
 	} ReadAttributeResp_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t attrID;
 		uint8_t status;
@@ -516,7 +517,7 @@ int ZigbeeProtocol::SetChannel(uint8_t channel)
 int ZigbeeProtocol::DiscoverySimpleDescription(uint16_t addr, uint8_t endpoint)
 {
 	LOGD("DiscoverySimpleDescription");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t dstAddr;
 		uint16_t nwkAddrOfInterest;
@@ -542,7 +543,7 @@ int ZigbeeProtocol::DiscoverySimpleDescription(uint16_t addr, uint8_t endpoint)
 int ZigbeeProtocol::DiscoveryActiveEndpoint(uint16_t addr)
 {
 	LOGD("DiscoveryActiveEndpoint");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t dstAddr;
 		uint16_t nwkAddrOfInterest;
@@ -566,7 +567,7 @@ int ZigbeeProtocol::DiscoveryActiveEndpoint(uint16_t addr)
 int ZigbeeProtocol::PermitJoin(uint8_t duration)
 {
 	LOGD("PermitJoin");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t dstAddr;
 		uint8_t permitDuration;
@@ -591,31 +592,27 @@ int ZigbeeProtocol::PermitJoin(uint8_t duration)
 int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 {
 	LOGD("ReadAttribute");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
-
-		uint8_t profileID[2];
+		uint16_t profileID;
 		uint8_t direction;
-		uint8_t clusterID[2];
+		uint16_t clusterID;
 		uint8_t attrNum;
 		uint16_t attrList[32];
 	} read_attribute_req_t;
 	read_attribute_req_t read_attribute_req;
 	read_attribute_req.dstAddrMode = 2;
-	read_attribute_req.dstAddr[0] = (uint8_t)((addr >> 8) & 0xFF);
-	read_attribute_req.dstAddr[1] = (uint8_t)(addr & 0xFF);
+	read_attribute_req.dstAddr = bswap_16(addr);
 	read_attribute_req.srcEp = 0x01;
 	read_attribute_req.dstEp = 0xFF;
-	read_attribute_req.profileID[0] = (uint8_t)((PROFILE_ZHA >> 8) & 0xFF);
-	read_attribute_req.profileID[1] = (uint8_t)(PROFILE_ZHA & 0xFF);
+	read_attribute_req.profileID = bswap_16(PROFILE_ZHA);
 	read_attribute_req.direction = 0;
-	read_attribute_req.clusterID[0] = (uint8_t)(CLUSTER_GENERAL_BASIC & 0xFF);
-	read_attribute_req.clusterID[1] = (uint8_t)((CLUSTER_GENERAL_BASIC >> 8) & 0xFF);
+	read_attribute_req.clusterID = bswap_16(CLUSTER_GENERAL_BASIC);
 	read_attribute_req.attrNum = 5;
 	read_attribute_req.attrList[0] = ATTRIBUTE_BASIC_ZCLVersion;
 	read_attribute_req.attrList[1] = ATTRIBUTE_BASIC_ApplicationVersion;
@@ -638,29 +635,24 @@ int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 int ZigbeeProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 {
 	LOGD("AddGroup");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
-
-		uint8_t groupId[2];
-		uint8_t groupName[2];
+		uint16_t groupId;
+		uint16_t groupName;
 	} add_group_t;
 	add_group_t add_group;
 
 	add_group.dstAddrMode = 2;
-	add_group.dstAddr[0] = (uint8_t)((devAddr >> 8) & 0xFF);
-	add_group.dstAddr[1] = (uint8_t)(devAddr & 0xFF);
+	add_group.dstAddr = bswap_16(devAddr);
 	add_group.srcEp = 0x01;
 	add_group.dstEp = epId;
-
-	add_group.groupId[0] = (uint8_t)((groupId >> 8) & 0xFF);
-	add_group.groupId[1] = (uint8_t)(groupId & 0xFF);
-	add_group.groupName[0] = 'a';
-	add_group.groupName[1] = 'b';
+	add_group.groupId = bswap_16(groupId);
+	add_group.groupName = bswap_16(0x4142);
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_GROUP_ADD, (uint8_t *)&add_group, 9, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
 	if (rs == CODE_OK)
@@ -677,26 +669,33 @@ int ZigbeeProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 int ZigbeeProtocol::ZCLOnoffDevice(uint16_t devAddr, uint8_t func)
 {
 	LOGD("ZCLOnoffDevice");
-	if (func > 2)
+	uint16_t codeFunc;
+	if (func == 0)
+		codeFunc = ZBHCI_CMD_ZCL_ONOFF_OFF;
+	else if (func == 1)
+		codeFunc = ZBHCI_CMD_ZCL_ONOFF_ON;
+	else if (func == 2)
+		codeFunc = ZBHCI_CMD_ZCL_ONOFF_TOGGLE;
+	else
 	{
+		return CODE_ERROR;
 		LOGW("ZCLOnoffDevice func not match: %d", func);
 	}
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
 	} zcl_onoff_t;
 	zcl_onoff_t zcl_onoff;
 	zcl_onoff.dstAddrMode = 2;
-	zcl_onoff.dstAddr[0] = (uint8_t)((devAddr >> 8) & 0xFF);
-	zcl_onoff.dstAddr[1] = (uint8_t)(devAddr & 0xFF);
+	zcl_onoff.dstAddr = bswap_16(devAddr);
 	zcl_onoff.srcEp = 0x01;
 	zcl_onoff.dstEp = 0xFF;
 
-	int rs = SendMessage(ZBHCI_CMD_ZCL_ONOFF_ON + func, (uint8_t *)&zcl_onoff, 5, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
+	int rs = SendMessage(codeFunc, (uint8_t *)&zcl_onoff, 5, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
 	if (rs == CODE_OK)
 	{
 		LOGD("ZCLOnoffDevice ok");
@@ -715,17 +714,16 @@ int ZigbeeProtocol::ZCLOnoffGroup(uint16_t groupAddr, uint8_t func)
 	{
 		LOGW("ZCLOnoffGroup func not match: %d", func);
 	}
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 	} zcl_onoff_t;
 	zcl_onoff_t zcl_onoff;
 	zcl_onoff.dstAddrMode = 1;
-	zcl_onoff.dstAddr[0] = (uint8_t)((groupAddr >> 8) & 0xFF);
-	zcl_onoff.dstAddr[1] = (uint8_t)(groupAddr & 0xFF);
+	zcl_onoff.dstAddr = bswap_16(groupAddr);
 	zcl_onoff.srcEp = 0x01;
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ONOFF_ON + func, (uint8_t *)&zcl_onoff, 4, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);

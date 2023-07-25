@@ -156,7 +156,7 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 		len = 50;
 	for (int i = 0; i < len; i++)
 	{
-		sprintf(buff + i * 2, "%02X", data[i]);
+		sprintf(buff + i * 2, "%02x", data[i]);
 	}
 	return string(buff);
 }
