@@ -35,6 +35,10 @@ int getSizeOfDataType(uint8_t *dataType)
 	case ZIGBEE_DATATYPE_ENUM8:
 		return 1;
 
+	case ZIGBEE_DATATYPE_UINT16:
+	case ZIGBEE_DATATYPE_INT16:
+		return 2;
+
 	case ZIGBEE_DATATYPE_STRING:
 		return dataType[1] + 1;
 

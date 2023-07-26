@@ -1,4 +1,4 @@
-ZIGBEE ?= OFF
+ZIGBEE ?= ON
 
 CC ?= gcc
 CXX ?= g++
@@ -24,6 +24,10 @@ ifeq ($(ZIGBEE),ON)
 	DEVICESRC += $(wildcard device/zigbee/cluster/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/attribute/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/attribute/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/attribute/*.cpp)
 endif
 
 DEVICESRC += $(wildcard button/*.cpp)
