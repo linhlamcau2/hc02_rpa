@@ -18,6 +18,6 @@ void SceneDelayGroupOutput::RunOutput()
 	if (group)
 	{
 		sleep(delayTime);
-		group->Do(data, true);
+		group->Do(data, false);
 	}
 }

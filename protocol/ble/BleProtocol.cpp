@@ -164,21 +164,15 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
-			if (data_message->value1 != 0 && data_message->value2 != 0 && data_message->value3 != 0)
-			{
-				if (data_message->value1 >= 30000)
-				{
-					dataValue["ID"] = 5;
-					dataValue["VALUE"] = data_message->value1;
-					dataArray.append(dataValue);
-				}
-				dataValue["ID"] = 3;
-				dataValue["VALUE"] = data_message->value2;
-				dataArray.append(dataValue);
-				dataValue["ID"] = 4;
-				dataValue["VALUE"] = data_message->value3;
-				dataArray.append(dataValue);
-			}
+			dataValue["ID"] = 5;
+			dataValue["VALUE"] = data_message->value1;
+			dataArray.append(dataValue);
+			dataValue["ID"] = 3;
+			dataValue["VALUE"] = data_message->value2;
+			dataArray.append(dataValue);
+			dataValue["ID"] = 4;
+			dataValue["VALUE"] = data_message->value3;
+			dataArray.append(dataValue);
 		}
 	}
 }
@@ -1129,7 +1123,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.onoff = onoff;
 		onoff_message.rev2 = 0;
 		onoff_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1233,7 +1227,7 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 		dim_message.dim = dim;
 		dim_message.offset = 0;
 		dim_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1306,7 +1300,7 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 			cct_message.offset[count] = 0;
 		}
 		cct_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&cct_message, sizeof(cct_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&cct_message, sizeof(cct_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1343,7 +1337,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.s = S;
 		hsl_message.offset = 0;
 		hsl_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, hslHeader, 0, 6);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, hslHeader, 0, 6);
 		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
@@ -1372,7 +1366,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.s = S;
 		hsl_message.offset = 0;
 		hsl_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1434,7 +1428,7 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 		dimcct_message.cct = cct;
 		dimcct_message.offset = 0;
 		dimcct_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, sizeof(dimcct_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, sizeof(dimcct_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;

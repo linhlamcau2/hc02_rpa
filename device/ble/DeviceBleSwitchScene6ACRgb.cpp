@@ -56,7 +56,6 @@ void DeviceBleSwitchScene6ACRgb::InputData(uint8_t *data, int len, uint32_t addr
 	}
 	if (data[0] == 0x52)
 	{
-		LOGE("into");
 		values = Json::Value::null;
 		for (auto &module : modules)
 		{

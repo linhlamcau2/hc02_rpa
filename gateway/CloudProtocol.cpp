@@ -226,7 +226,7 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedInternet = GetStatusLedInternet();
-	if (!buttonSignal->GetStatus())
+	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
 	{
 		SetLedInternet(!statusLedInternet);
 	}
@@ -288,8 +288,8 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		}
 		else
 		{
-			LOGW("Method %s not registed", cmd.c_str());
-			LOGW("OnDeviceRpc payload: %s", payload.c_str());
+			// LOGW("Method %s not registed", cmd.c_str());
+			// LOGW("OnDeviceRpc payload: %s", payload.c_str());
 		}
 	}
 	else
@@ -298,7 +298,7 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		LOGW("OnDeviceRpc payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
+	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
 	{
 		SetLedInternet(statusLedInternet);
 	}

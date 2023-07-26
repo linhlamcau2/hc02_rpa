@@ -202,7 +202,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
 	bool statusLedInternet = GetStatusLedInternet();
-	if (!buttonSignal->GetStatus())
+	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
 	{
 		SetLedInternet(!statusLedInternet);
 	}
@@ -274,7 +274,7 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		LOGW("OnLocalMessage payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
+	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
 	{
 		SetLedInternet(statusLedInternet);
 	}
