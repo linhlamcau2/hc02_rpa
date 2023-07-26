@@ -353,11 +353,13 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 		uint16_t srcAddr = bswap_16(zclCmdRspHdr->srcAddr);
 		LOGD("srcAddr: 0x%04X, srcEp: %d, dstEp: %d, seqNum: %d", srcAddr, zclCmdRspHdr->srcEp, zclCmdRspHdr->dstEp, zclCmdRspHdr->seqNum)
 
-		ReadAttributeResp_st *readAttributeResp = (ReadAttributeResp_st *)(buff + 5);
+		ReadAttributeResp_st *readAttributeResp = (ReadAttributeResp_st *)zclCmdRspHdr->data;
 		uint16_t clusterID = bswap_16(readAttributeResp->clusterID);
+		uint8_t attrNum = readAttributeResp->attrNum;
+		LOGD("clusterID: 0x%04X, attrNum: %d", clusterID, attrNum);
 		Attribute_st *attribute = (Attribute_st *)readAttributeResp->attrList;
 		uint16_t attrID;
-		uint8_t dataLen = 0;
+		int dataLen = 0;
 		if (clusterID == CLUSTER_GENERAL_BASIC)
 		{
 			uint8_t zclVersion = 0;
@@ -366,7 +368,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 			string modelIdentifier = "";
 			uint8_t powerSource = 0;
 			messageLen -= 8;
-			for (int i = 0; i < readAttributeResp->attrNum; i++)
+			for (int i = 0; i < attrNum; i++)
 			{
 				if (messageLen < 5)
 				{
@@ -374,7 +376,6 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 					rs = 1;
 					break;
 				}
-				dataLen = 0;
 				attrID = bswap_16(attribute->attrID);
 				LOGD("attrID: 0x%04X", attrID);
 				if (attribute->status == ZIGBEE_SUCCESS)
@@ -384,7 +385,6 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 						if (attribute->dataType == ZIGBEE_DATATYPE_UINT8)
 						{
 							zclVersion = attribute->data[0];
-							dataLen = 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ApplicationVersion)
@@ -392,7 +392,6 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 						if (attribute->dataType == ZIGBEE_DATATYPE_UINT8)
 						{
 							appVersion = attribute->data[0];
-							dataLen = 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ManufacturerName)
@@ -403,7 +402,6 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 							{
 								manufacturerName += attribute->data[j];
 							}
-							dataLen = attribute->data[0] + 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ModelIdentifier)
@@ -414,7 +412,6 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 							{
 								modelIdentifier += attribute->data[j];
 							}
-							dataLen = attribute->data[0] + 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_PowerSource)
@@ -422,7 +419,6 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 						if (attribute->dataType == ZIGBEE_DATATYPE_ENUM8)
 						{
 							powerSource = attribute->data[0];
-							dataLen = 1;
 						}
 					}
 					else
@@ -434,6 +430,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				{
 					LOGW("Read Attribute response status err: %d, id: 0x%04X", attribute->status, attrID);
 				}
+				dataLen = getSizeOfDataType(&attribute->dataType);
 				attribute = (Attribute_st *)((uint8_t *)attribute + dataLen + 4);
 				messageLen -= dataLen + 4;
 			}
