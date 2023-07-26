@@ -160,7 +160,7 @@ private:
 
 	typedef struct __attribute__((packed))
 	{
-		// uint8_t header;
+		uint8_t header;
 		uint16_t type;
 		uint16_t len;
 		uint8_t crc;
@@ -169,7 +169,7 @@ private:
 
 	typedef struct __attribute__((packed))
 	{
-		// uint8_t header;
+		uint8_t header;
 		uint16_t type;
 		uint16_t len;
 		uint8_t crc;

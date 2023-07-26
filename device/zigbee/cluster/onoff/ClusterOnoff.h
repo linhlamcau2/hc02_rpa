@@ -13,5 +13,5 @@ private:
 
 protected:
 public:
-	ClusterOnoff(Device *device, uint8_t endpoint);
+	ClusterOnoff(Device *device, uint8_t endpoint, string onoffKey);
 };

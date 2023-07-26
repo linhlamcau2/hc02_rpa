@@ -19,11 +19,6 @@ ZigbeeProtocol *zigbeeProtocol = NULL;
 
 ZigbeeProtocol::ZigbeeProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 {
-	if (Open(baudrate) < 0)
-	{
-		LOGE("Open uart error")
-		exit(1);
-	}
 }
 
 ZigbeeProtocol::~ZigbeeProtocol()
@@ -47,6 +42,9 @@ void ZigbeeProtocol::HandleOpcodeBleThread()
 
 void ZigbeeProtocol::init()
 {
+	Uart::init();
+	usleep(100000);
+
 	RegisterCmdCallback(ZBHCI_CMD_NODES_DEV_ANNCE_IND, bind(&ZigbeeProtocol::OnDeviceAnnounce, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_REPORT_MSG_RCV, bind(&ZigbeeProtocol::OnReportAttribute, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_ATTR_READ_RSP, bind(&ZigbeeProtocol::OnReadAttributeResp, this, placeholders::_1, placeholders::_2));
@@ -118,12 +116,11 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	LOGD("OnMessage len: %d", len);
 	uint8_t *message = data;
 	int lenRemain = len;
-	message_rsp_st *message_rsp = NULL;
+	message_rsp_st *message_rsp = (message_rsp_st *)message;
 	Util::LedZigbee(false);
 	Util::LedServiceLock();
-	while (lenRemain >= 7 && message[0] == MESSAGE_HEADER)
+	while (lenRemain >= sizeof(message_rsp_st) && message_rsp->header == MESSAGE_HEADER)
 	{
-		message_rsp = (message_rsp_st *)(message + 1);
 		uint16_t type = bswap_16(message_rsp->type);
 		uint16_t payloadLen = bswap_16(message_rsp->len);
 		if (message_rsp->payload[payloadLen] == MESSAGE_TAIL)
@@ -158,8 +155,9 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 				// CheckOpcodeException(messageCheckOpcode);
 			}
 		}
-		lenRemain -= payloadLen + 7;
-		message += payloadLen + 7;
+		lenRemain -= payloadLen + sizeof(message_rsp_st) + 1;
+		message += payloadLen + sizeof(message_rsp_st) + 1;
+		message_rsp = (message_rsp_st *)message;
 	}
 	Util::LedZigbee(true);
 	Util::LedServiceUnlock();
@@ -180,8 +178,8 @@ int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, ui
 		messageRespList.push_back(&message_rsp_list);
 	}
 
-	buff[0] = MESSAGE_HEADER;
-	message_req_st *message_req = (message_req_st *)(buff + 1);
+	message_req_st *message_req = (message_req_st *)buff;
+	message_req->header = MESSAGE_HEADER;
 	message_req->type = bswap_16(opReq);
 	message_req->len = bswap_16(lenReq);
 	message_req->crc = checCrC(opReq, lenReq, dataReq);

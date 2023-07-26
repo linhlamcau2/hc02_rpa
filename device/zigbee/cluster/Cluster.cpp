@@ -39,7 +39,7 @@ int getSizeOfDataType(uint8_t *dataType)
 		return dataType[1] + 1;
 
 	default:
-		LOGW("getSizeOfDataType not check type 0x%02X", dataType);
+		LOGW("getSizeOfDataType not check type 0x%02X", dataType[0]);
 		return 0;
 	}
 }

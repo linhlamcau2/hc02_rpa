@@ -41,7 +41,15 @@ void DeviceZigbee::InputData(uint8_t *data, int len)
 	if (rs == CODE_OK)
 		PushTelemetry(values);
 	else
-		LOGW("Cluster data not handle")
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t clusterId;
+			uint8_t attrNum;
+		} ClusterMessage_st;
+		ClusterMessage_st *clusterMessage = (ClusterMessage_st *)data;
+		LOGW("Cluster id 0x%04X data not handle", bswap_16(clusterMessage->clusterId));
+	}
 }
 
 bool DeviceZigbee::CheckData(Json::Value &dataValue, bool &rs)

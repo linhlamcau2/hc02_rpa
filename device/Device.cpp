@@ -199,7 +199,6 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_MAGNET, "lumi.sensor_magnet", "Cam bien cua");
 	RegisterDeviceModel(ZIGBEE_TUYA_SENSOR_MAGNET_TY0203, "TY0203", "Cam bien cua Tuya");
 	RegisterDeviceModel(ZIGBEE_TUYA_SENSOR_PIR_RH3040, "RH3040", "Cảm biến chuyển động Zigbee");
-	RegisterDeviceModel(ZIGBEE_TELINK_TLSR82xx, "TLSR82xx", "Đèn Telink Zigbee");
 }
 
 void Device::RegisterDeviceModel(uint32_t type, string model, string name)

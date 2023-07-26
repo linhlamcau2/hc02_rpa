@@ -4,8 +4,9 @@
 #include "Device.h"
 #include "ZigbeeProtocol.h"
 
-AttributeOnoff::AttributeOnoff(Cluster *cluster) : Attribute(ATTRIBUTE_ONOFF, cluster)
+AttributeOnoff::AttributeOnoff(Cluster *cluster, string onoffKey) : Attribute(ATTRIBUTE_ONOFF, cluster)
 {
+	this->onoffKey = onoffKey;
 }
 
 int AttributeOnoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
@@ -46,19 +47,19 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) &&
+			dataValue.isMember(onoffKey) &&
 			dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
-		if (dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		if (dataValue[onoffKey].isInt())
 		{
-			int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+			int onoff = dataValue[onoffKey].asInt();
 			rs = Util::CompareNumber(op, this->onoff, onoff);
 			return true;
 		}
-		else if (dataValue[KEY_ATTRIBUTE_ONOFF].isArray())
+		else if (dataValue[onoffKey].isArray())
 		{
-			Json::Value listValue = dataValue[KEY_ATTRIBUTE_ONOFF];
+			Json::Value listValue = dataValue[onoffKey];
 			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
 				int onoff1 = listValue[0].asInt();
@@ -73,16 +74,16 @@ bool AttributeOnoff::CheckData(Json::Value &dataValue, bool &rs)
 
 void AttributeOnoff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
+	jsonValue[onoffKey] = onoff;
 }
 
 int AttributeOnoff::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (zigbeeProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+			dataValue.isMember(onoffKey) && dataValue[onoffKey].isInt())
 	{
-		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		int onoff = dataValue[onoffKey].asInt();
 		LOGD("Do onoff: %d", onoff);
 		if (zigbeeProtocol->ZCLOnoffDevice(cluster->getDevice()->GetAddr(), onoff) == CODE_OK)
 		{

@@ -7,9 +7,10 @@ class AttributeOnoff : public Attribute
 {
 private:
 	uint8_t onoff;
+	string onoffKey;
 
 public:
-	AttributeOnoff(Cluster *cluster);
+	AttributeOnoff(Cluster *cluster, string onoffKey);
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
