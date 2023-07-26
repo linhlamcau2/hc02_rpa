@@ -26,7 +26,7 @@ int AttributeOnoff::InputData(uint8_t *data, int len, Json::Value &jsonValue, in
 	AttributeMessage_st *attributeMessage = (AttributeMessage_st *)data;
 	if (len > sizeof(AttributeMessage_st))
 	{
-		if (bswap_16(attributeMessage->attrID) == ATTRIBUTE_ONOFF)
+		if (bswap_16(attributeMessage->attrID) == id)
 		{
 			if (attributeMessage->dataType == ZIGBEE_DATATYPE_BOOL)
 			{

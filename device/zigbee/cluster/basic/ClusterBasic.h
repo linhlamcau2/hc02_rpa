@@ -1,6 +1,6 @@
 #pragma once
 #include "zigbee/cluster/Cluster.h"
-// #include "attribute/AttributeOnoff.h"
+#include "attribute/AttributeModel.h"
 
 #define ATTRIBUTE_BASIC_ZCLVersion 0x0000
 #define ATTRIBUTE_BASIC_ApplicationVersion 0x0001
@@ -16,11 +16,9 @@ using namespace std;
 class ClusterBasic : public Cluster
 {
 private:
-	// AttributeOnoff *attributeOnoff;
+	AttributeModel *attributeModel;
 
 protected:
 public:
-	ClusterBasic(Device *device);
-
-	void ParseData(uint8_t *data, int len, Json::Value &jsonValue);
+	ClusterBasic(Device *device, string modelKey);
 };

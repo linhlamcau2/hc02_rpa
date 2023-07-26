@@ -67,13 +67,13 @@ int Cluster::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 	if (len > sizeof(ClusterMessage_st))
 	{
-		LOGD("clusterMessage->clusterId: 0x%04X, clusterMessage->attrNum: %d", bswap_16(clusterMessage->clusterId), clusterMessage->attrNum);
 		uint8_t *attrData = data + 3;
 		int attrLen = len - 3;
 		int lenRemain = 0;
 		int oldLen;
 		if (bswap_16(clusterMessage->clusterId) == id)
 		{
+			LOGD("clusterMessage->clusterId: 0x%04X, clusterMessage->attrNum: %d", bswap_16(clusterMessage->clusterId), clusterMessage->attrNum);
 			for (int i = 0; i < clusterMessage->attrNum; i++)
 			{
 				oldLen = attrLen;
@@ -89,7 +89,7 @@ int Cluster::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				if (oldLen == attrLen)
 				{
 					attributeMessage = (AttributeMessage_st *)attrData;
-					LOGD("Attribute ID: 0x%04X", bswap_16(attributeMessage->attrID));
+					LOGW("Attribute ID: 0x%04X not handle", bswap_16(attributeMessage->attrID));
 					int dataSize = getSizeOfDataType(&attributeMessage->dataType);
 					attrData += 3 + dataSize;
 					attrLen -= 3 + dataSize;

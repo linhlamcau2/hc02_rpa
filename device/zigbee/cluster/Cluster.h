@@ -25,7 +25,7 @@ protected:
 	vector<Attribute *> attributes;
 
 public:
-	Cluster(uint16_t id, Device *device, uint8_t endpoint);
+	Cluster(uint16_t id, Device *device, uint8_t endpoint = 1);
 
 	Device *getDevice() { return device; }
 
