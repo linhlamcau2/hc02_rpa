@@ -1337,7 +1337,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.s = S;
 		hsl_message.offset = 0;
 		hsl_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, hslHeader, 0, 6);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, hslHeader, 0, 6);
 		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))

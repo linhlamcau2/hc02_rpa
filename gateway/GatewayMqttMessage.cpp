@@ -1437,7 +1437,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							Group *groupInScene = gateway->getGroupFromId(idGroup);
 							if (groupInScene)
 							{
-								groupInScene->Do(properties, true);
+								groupInScene->Do(properties, false);
 							}
 							else
 							{
@@ -1669,7 +1669,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 								Group *groupOfGw = gateway->getGroupFromId(groupIdInScene);
 								if (groupOfGw)
 								{
-									groupOfGw->Do(properties, true);
+									groupOfGw->Do(properties, false);
 								}
 								else
 								{
