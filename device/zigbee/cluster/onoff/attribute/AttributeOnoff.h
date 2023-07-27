@@ -1,5 +1,5 @@
 #pragma once
-#include "zigbee/cluster/Attribute.h"
+#include "cluster/Attribute.h"
 
 using namespace std;
 

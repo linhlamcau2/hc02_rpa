@@ -1,6 +1,5 @@
 #include "Cluster.h"
 #include <byteswap.h>
-#include "ZigbeeDataTypes.h"
 
 Cluster::Cluster(uint16_t id, Device *device, uint8_t endpoint)
 {
@@ -30,19 +29,19 @@ int getSizeOfDataType(uint8_t *dataType)
 {
 	switch (dataType[0])
 	{
-	case ZIGBEE_DATATYPE_BOOL:
-	case ZIGBEE_DATATYPE_UINT8:
-	case ZIGBEE_DATATYPE_ENUM8:
+	case ZCL_DATA_TYPE_BOOLEAN:
+	case ZCL_DATA_TYPE_UINT8:
+	case ZCL_DATA_TYPE_ENUM8:
 		return 1;
 
-	case ZIGBEE_DATATYPE_UINT16:
-	case ZIGBEE_DATATYPE_INT16:
+	case ZCL_DATA_TYPE_UINT16:
+	case ZCL_DATA_TYPE_INT16:
 		return 2;
 
-	case ZIGBEE_DATATYPE_STRING:
+	case ZCL_DATA_TYPE_CHAR_STR:
 		return dataType[1] + 1;
 
-	case ZIGBEE_DATATYPE_STRUCT:
+	case ZCL_DATA_TYPE_STRUCT:
 	{
 		typedef struct __attribute__((packed))
 		{

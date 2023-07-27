@@ -12,8 +12,7 @@
 #include <Db.h>
 #include "DeviceZigbee.h"
 
-#include "zigbee/cluster/basic/ClusterBasic.h"
-#include "zigbee/ZigbeeDataTypes.h"
+#include "cluster/basic/ClusterBasic.h"
 
 ZigbeeProtocol *zigbeeProtocol = NULL;
 
@@ -279,7 +278,7 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 						LOGD("Attribute ID: 0x%04X", bswap_16(attrMessage->attrID));
 						if (bswap_16(attrMessage->attrID) == 0x0001)
 						{
-							if (attrMessage->dataType == ZIGBEE_DATATYPE_UINT8)
+							if (attrMessage->dataType == ZCL_DATA_TYPE_UINT8)
 							{
 								appVersion = attrMessage->data[0];
 								LOGW("appVersion: %d", appVersion);
@@ -287,7 +286,7 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 						}
 						else if (bswap_16(attrMessage->attrID) == 0x0005)
 						{
-							if (attrMessage->dataType == ZIGBEE_DATATYPE_STRING)
+							if (attrMessage->dataType == ZCL_DATA_TYPE_CHAR_STR)
 							{
 								for (int i = 0; i < attrMessage->data[0]; i++)
 								{
@@ -360,7 +359,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 		Attribute_st *attribute = (Attribute_st *)readAttributeResp->attrList;
 		uint16_t attrID;
 		int dataLen = 0;
-		if (clusterID == CLUSTER_GENERAL_BASIC)
+		if (clusterID == ZCL_CLUSTER_GEN_BASIC)
 		{
 			uint8_t zclVersion = 0;
 			uint8_t appVersion = 0;
@@ -382,21 +381,21 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				{
 					if (attrID == ATTRIBUTE_BASIC_ZCLVersion)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_UINT8)
+						if (attribute->dataType == ZCL_DATA_TYPE_UINT8)
 						{
 							zclVersion = attribute->data[0];
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ApplicationVersion)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_UINT8)
+						if (attribute->dataType == ZCL_DATA_TYPE_UINT8)
 						{
 							appVersion = attribute->data[0];
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ManufacturerName)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_STRING)
+						if (attribute->dataType == ZCL_DATA_TYPE_CHAR_STR)
 						{
 							for (int j = 1; j <= attribute->data[0]; j++)
 							{
@@ -406,7 +405,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ModelIdentifier)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_STRING)
+						if (attribute->dataType == ZCL_DATA_TYPE_CHAR_STR)
 						{
 							for (int j = 1; j <= attribute->data[0]; j++)
 							{
@@ -416,7 +415,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 					}
 					else if (attrID == ATTRIBUTE_BASIC_PowerSource)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_ENUM8)
+						if (attribute->dataType == ZCL_DATA_TYPE_ENUM8)
 						{
 							powerSource = attribute->data[0];
 						}
@@ -607,7 +606,7 @@ int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 	read_attribute_req.dstEp = 0xFF;
 	read_attribute_req.profileID = bswap_16(PROFILE_ZHA);
 	read_attribute_req.direction = 0;
-	read_attribute_req.clusterID = bswap_16(CLUSTER_GENERAL_BASIC);
+	read_attribute_req.clusterID = bswap_16(ZCL_CLUSTER_GEN_BASIC);
 	read_attribute_req.attrNum = 5;
 	read_attribute_req.attrList[0] = bswap_16(ATTRIBUTE_BASIC_ZCLVersion);
 	read_attribute_req.attrList[1] = bswap_16(ATTRIBUTE_BASIC_ApplicationVersion);

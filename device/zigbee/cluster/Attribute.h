@@ -4,6 +4,7 @@
 #include "json.h"
 #include "ErrorCode.h"
 #include "Log.h"
+#include "ZigbeeDefine.h"
 
 using namespace std;
 

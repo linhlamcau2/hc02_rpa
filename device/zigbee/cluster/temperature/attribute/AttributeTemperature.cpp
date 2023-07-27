@@ -3,7 +3,6 @@
 #include "Util.h"
 #include "Device.h"
 #include "ZigbeeProtocol.h"
-#include "ZigbeeDataTypes.h"
 
 AttributeTemperature::AttributeTemperature(Cluster *cluster, string temperatureKey) : Attribute(ATTRIBUTE_TEMPERATURE, cluster)
 {
@@ -28,7 +27,7 @@ int AttributeTemperature::InputData(uint8_t *data, int len, Json::Value &jsonVal
 	{
 		if (bswap_16(attributeMessage->attrID) == id)
 		{
-			if (attributeMessage->dataType == ZIGBEE_DATATYPE_INT16)
+			if (attributeMessage->dataType == ZCL_DATA_TYPE_INT16)
 			{
 				if (lenRemain)
 				{

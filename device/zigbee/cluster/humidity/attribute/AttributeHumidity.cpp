@@ -3,7 +3,6 @@
 #include "Util.h"
 #include "Device.h"
 #include "ZigbeeProtocol.h"
-#include "ZigbeeDataTypes.h"
 
 AttributeHumidity::AttributeHumidity(Cluster *cluster, string humidityKey) : Attribute(ATTRIBUTE_HUMIDITY, cluster)
 {
@@ -28,7 +27,7 @@ int AttributeHumidity::InputData(uint8_t *data, int len, Json::Value &jsonValue,
 	{
 		if (bswap_16(attributeMessage->attrID) == id)
 		{
-			if (attributeMessage->dataType == ZIGBEE_DATATYPE_UINT16)
+			if (attributeMessage->dataType == ZCL_DATA_TYPE_UINT16)
 			{
 				if (lenRemain)
 				{

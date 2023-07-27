@@ -1,5 +1,5 @@
 #pragma once
-#include "zigbee/cluster/Cluster.h"
+#include "cluster/Cluster.h"
 #include "attribute/AttributeTemperature.h"
 
 #define ATTRIBUTE_TEMPERATURE 0x0000

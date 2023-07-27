@@ -4,14 +4,6 @@
 #include "json.h"
 #include "Attribute.h"
 
-#define PROFILE_ZHA 0x0104
-
-#define CLUSTER_GENERAL_BASIC 0x0000
-#define CLUSTER_ONOFF 0x0006
-#define CLUSTER_ILLUMINANCE 0x0400
-#define CLUSTER_TEMPERATURE 0x0402
-#define CLUSTER_HUMIDITY 0x0405
-
 using namespace std;
 
 int getSizeOfDataType(uint8_t *dataType);

@@ -1,5 +1,5 @@
 #pragma once
-#include "zigbee/cluster/Cluster.h"
+#include "cluster/Cluster.h"
 #include "attribute/AttributeIlluminance.h"
 
 #define ATTRIBUTE_ILLUMINANCE 0x0000

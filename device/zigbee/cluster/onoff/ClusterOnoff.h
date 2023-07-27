@@ -1,5 +1,5 @@
 #pragma once
-#include "zigbee/cluster/Cluster.h"
+#include "cluster/Cluster.h"
 #include "attribute/AttributeOnoff.h"
 
 #define ATTRIBUTE_ONOFF 0x0000

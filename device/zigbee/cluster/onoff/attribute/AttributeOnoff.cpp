@@ -3,7 +3,6 @@
 #include "Util.h"
 #include "Device.h"
 #include "ZigbeeProtocol.h"
-#include "ZigbeeDataTypes.h"
 
 AttributeOnoff::AttributeOnoff(Cluster *cluster, string onoffKey) : Attribute(ATTRIBUTE_ONOFF, cluster)
 {
@@ -28,7 +27,7 @@ int AttributeOnoff::InputData(uint8_t *data, int len, Json::Value &jsonValue, in
 	{
 		if (bswap_16(attributeMessage->attrID) == id)
 		{
-			if (attributeMessage->dataType == ZIGBEE_DATATYPE_BOOL)
+			if (attributeMessage->dataType == ZCL_DATA_TYPE_BOOLEAN)
 			{
 				if (lenRemain)
 				{

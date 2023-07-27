@@ -3,7 +3,6 @@
 #include "Util.h"
 #include "Device.h"
 #include "ZigbeeProtocol.h"
-#include "ZigbeeDataTypes.h"
 
 AttributeModel::AttributeModel(Cluster *cluster, string modelKey) : Attribute(ATTRIBUTE_BASIC_ModelIdentifier, cluster)
 {
@@ -28,7 +27,7 @@ int AttributeModel::InputData(uint8_t *data, int len, Json::Value &jsonValue, in
 	{
 		if (bswap_16(attributeMessage->attrID) == id)
 		{
-			if (attributeMessage->dataType == ZIGBEE_DATATYPE_STRING)
+			if (attributeMessage->dataType == ZCL_DATA_TYPE_CHAR_STR)
 			{
 				if (lenRemain)
 				{

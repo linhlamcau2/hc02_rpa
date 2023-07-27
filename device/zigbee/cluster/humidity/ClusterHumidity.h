@@ -1,5 +1,5 @@
 #pragma once
-#include "zigbee/cluster/Cluster.h"
+#include "cluster/Cluster.h"
 #include "attribute/AttributeHumidity.h"
 
 #define ATTRIBUTE_HUMIDITY 0x0000

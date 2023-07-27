@@ -1,5 +1,5 @@
 #pragma once
-#include "zigbee/cluster/Cluster.h"
+#include "cluster/Cluster.h"
 #include "attribute/AttributeModel.h"
 
 #define ATTRIBUTE_BASIC_ZCLVersion 0x0000
