@@ -1,4 +1,4 @@
-ZIGBEE ?= ON
+ZIGBEE ?= OFF
 
 CC ?= gcc
 CXX ?= g++

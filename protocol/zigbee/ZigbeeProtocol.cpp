@@ -609,11 +609,11 @@ int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 	read_attribute_req.direction = 0;
 	read_attribute_req.clusterID = bswap_16(CLUSTER_GENERAL_BASIC);
 	read_attribute_req.attrNum = 5;
-	read_attribute_req.attrList[0] = ATTRIBUTE_BASIC_ZCLVersion;
-	read_attribute_req.attrList[1] = ATTRIBUTE_BASIC_ApplicationVersion;
-	read_attribute_req.attrList[2] = ATTRIBUTE_BASIC_ManufacturerName;
-	read_attribute_req.attrList[3] = ATTRIBUTE_BASIC_ModelIdentifier;
-	read_attribute_req.attrList[4] = ATTRIBUTE_BASIC_PowerSource;
+	read_attribute_req.attrList[0] = bswap_16(ATTRIBUTE_BASIC_ZCLVersion);
+	read_attribute_req.attrList[1] = bswap_16(ATTRIBUTE_BASIC_ApplicationVersion);
+	read_attribute_req.attrList[2] = bswap_16(ATTRIBUTE_BASIC_ManufacturerName);
+	read_attribute_req.attrList[3] = bswap_16(ATTRIBUTE_BASIC_ModelIdentifier);
+	read_attribute_req.attrList[4] = bswap_16(ATTRIBUTE_BASIC_PowerSource);
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ATTR_READ, (uint8_t *)&read_attribute_req, 11 + 2 * read_attribute_req.attrNum, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
 	if (rs == CODE_OK)
