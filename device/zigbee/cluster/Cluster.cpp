@@ -42,6 +42,27 @@ int getSizeOfDataType(uint8_t *dataType)
 	case ZIGBEE_DATATYPE_STRING:
 		return dataType[1] + 1;
 
+	case ZIGBEE_DATATYPE_STRUCT:
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t numberOfElement;
+			uint8_t data[];
+		} DataType_st;
+		DataType_st *dataStruct = (DataType_st *)dataType;
+		uint8_t *data = dataStruct->data;
+		int dataLen = 2;
+		int dataSize = 0;
+		for (int i = 0; i < dataStruct->numberOfElement; i++)
+		{
+			dataSize = getSizeOfDataType(data);
+			dataLen += 1 + dataSize;
+			data += 1 + dataSize;
+		}
+		LOGW("Data struct: %d", dataSize);
+		return dataLen;
+	}
+
 	default:
 		LOGW("getSizeOfDataType not check type 0x%02X", dataType[0]);
 		return 0;

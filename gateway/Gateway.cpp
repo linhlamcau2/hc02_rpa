@@ -54,6 +54,7 @@
 
 #include "DeviceZigbeeTuyaSensorMagnet.h"
 #include "DeviceZigbeeTuyaSensorPir.h"
+#include "DeviceZigbeeTuyaSensorHumanPresence.h"
 #endif
 
 Gateway *gateway = NULL;
@@ -779,7 +780,8 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	{
 		devValue["type"] = BLE_DOOR_SENSOR;
 	}
-	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040)
+	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
+					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
 	{
 		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
 	}
@@ -1048,6 +1050,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case ZIGBEE_TUYA_SENSOR_PIR_RH3040:
 		device = new DeviceZigbeeTuyaSensorPir(id, name, mac, addr);
+		break;
+	case ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225:
+		device = new DeviceZigbeeTuyaSensorHumanPresence(id, name, mac, addr);
 		break;
 #endif
 

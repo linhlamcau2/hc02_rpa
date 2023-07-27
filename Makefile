@@ -30,6 +30,8 @@ ifeq ($(ZIGBEE),ON)
 	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/attribute/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/attribute/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/illuminance/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/illuminance/attribute/*.cpp)
 endif
 
 DEVICESRC += $(wildcard button/*.cpp)
