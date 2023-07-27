@@ -55,10 +55,9 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 	// // TODO: Check exsit
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
 	// 	return CODE_ERROR;
-
+	DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
 		if (sendBle)
 		{
 			if (bleProtocol)
@@ -92,6 +91,13 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 				return CODE_OK;
 			}
 		}
+	}
+	else
+	{
+		mtx.lock();
+		deviceList.push_back(deviceInGroup);
+		mtx.unlock();
+		return CODE_OK;
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

@@ -216,7 +216,7 @@ int Mqtt::Publish(string topic, const char *payload, int payloadLen)
 	}
 	else
 	{
-		LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
+		// LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
 		return CODE_ERROR;
 	}
 }
@@ -247,7 +247,7 @@ void Mqtt::on_connect(int rc)
 
 void Mqtt::on_disconnect(int rc)
 {
-	LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
+	// LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
 	connected = false;
 	try
 	{

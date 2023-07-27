@@ -352,7 +352,7 @@ void Gateway::init()
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
-	LOGI("OnCloudConnect: %d", isConnected);
+	// LOGI("OnCloudConnect: %d", isConnected);
 	if (isConnected)
 	{
 		Util::LedInternet(true);
@@ -875,10 +875,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		for (int i = 1; i < 2; i++)
 		{
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			}
+			// if (device)
+			// {
+			// 	if (addGateway)
+			// 	{
+			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+			// 	}
+			// 	if (addDatabase)
+			// 	{
+			// 		database->DeviceAdd(device);
+			// 	}
+			// }
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
 		break;
@@ -887,10 +894,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		for (int i = 1; i < 3; i++)
 		{
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			}
+			// if (device)
+			// {
+			// 	if (addGateway)
+			// 	{
+			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+			// 	}
+			// 	if (addDatabase)
+			// 	{
+			// 		database->DeviceAdd(device);
+			// 	}
+			// }
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
 		break;
@@ -899,10 +913,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		for (int i = 1; i < 4; i++)
 		{
 			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			}
+			// if (device)
+			// {
+			// 	if (addGateway)
+			// 	{
+			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+			// 	}
+			// 	if (addDatabase)
+			// 	{
+			// 		database->DeviceAdd(device);
+			// 	}
+			// }
 		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
 		break;
@@ -914,10 +935,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		for (int i = 1; i < 2; i++)
 		{
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			}
+			// if (device)
+			// {
+			// 	if (addGateway)
+			// 	{
+			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+			// 	}
+			// 	if (addDatabase)
+			// 	{
+			// 		database->DeviceAdd(device);
+			// 	}
+			// }
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
 		break;
@@ -925,10 +953,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		for (int i = 1; i < 3; i++)
 		{
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			}
+			// if (device)
+			// {
+			// 	if (addGateway)
+			// 	{
+			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+			// 	}
+			// 	if (addDatabase)
+			// 	{
+			// 		database->DeviceAdd(device);
+			// 	}
+			// }
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
 		break;
@@ -936,10 +971,17 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		for (int i = 1; i < 4; i++)
 		{
 			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			}
+			// if (device)
+			// {
+			// 	if (addGateway)
+			// 	{
+			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
+			// 	}
+			// 	if (addDatabase)
+			// 	{
+			// 		database->DeviceAdd(device);
+			// 	}
+			// }
 		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
 		break;

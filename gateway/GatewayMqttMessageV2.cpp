@@ -539,22 +539,30 @@ int Gateway::OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGE("OnGetCamList");
-	deviceListMtx.lock();
-	for (const auto &[id, device] : deviceList)
+	Json::Value roomData;
+	for (const auto &[id, room] : roomList)
 	{
-		int type = device->GetType();
-		if (type / 10000 == 6)
+		Json::Value temp_devicesList;
+		for (unsigned int i = 0; i < room->deviceList.size(); i++)
 		{
-			Json::Value deviceValue;
-			deviceValue["id"] = device->GetId();
-			deviceValue["mac"] = device->GetMac();
-			Json::Value data;
-			data.parse(device->GetData());
-			deviceValue["data"] = data;
-			respValue["data"]["devices"].append(deviceValue);
+			Json::Value dvList;
+			DeviceInGroup *deviceInRoom = room->deviceList[i];
+			int type = deviceInRoom->device->GetType();
+			if (type / 10000 == 6)
+			{
+				Json::Value deviceValue;
+				deviceValue["id"] = deviceInRoom->device->GetId();
+				deviceValue["mac"] = deviceInRoom->device->GetMac();
+				Json::Value data;
+				data.parse(deviceInRoom->device->GetData());
+				deviceValue["data"] = data;
+				temp_devicesList["camList"].append(deviceValue);
+			}
 		}
+		temp_devicesList["id"] = id;
+		roomData.append(temp_devicesList);
 	}
-	deviceListMtx.unlock();
+	respValue["data"]["room"] = roomData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getCamListRsp";
 	return CODE_OK;
@@ -1122,10 +1130,10 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("name") && reqValue["name"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray() &&
-			reqValue.isMember("groups") && reqValue["groups"].isArray() &&
-			reqValue.isMember("scenes") && reqValue["scenes"].isArray())
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray() &&
+		reqValue.isMember("groups") && reqValue["groups"].isArray() &&
+		reqValue.isMember("scenes") && reqValue["scenes"].isArray())
 	{
 		Json::Value successList;
 		Json::Value failedList;
@@ -1165,8 +1173,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("name") && groupValue["name"].isString() &&
-								groupValue.isMember("type") && groupValue["type"].isInt())
+							groupValue.isMember("name") && groupValue["name"].isString() &&
+							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
 							string name = groupValue["name"].asString();
@@ -1202,8 +1210,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("name") && sceneValue["name"].isString() &&
-								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+							sceneValue.isMember("name") && sceneValue["name"].isString() &&
+							sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
 							string id = sceneValue["id"].asString();
 							string name = sceneValue["name"].asString();
@@ -1218,7 +1226,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (groupValue.isObject())
 									{
 										if (groupValue.isMember("id") && groupValue["id"].isString() &&
-												groupValue.isMember("data") && groupValue["data"].isObject())
+											groupValue.isMember("data") && groupValue["data"].isObject())
 										{
 											string id = groupValue["id"].asString();
 											Json::Value groupData = groupValue["data"];
@@ -1309,7 +1317,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("type") && groupValue["type"].isInt())
+							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
 							int type = groupValue["type"].asInt();
@@ -1364,7 +1372,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+							sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
 							string id = sceneValue["id"].asString();
 							Json::Value groupsValue = sceneValue["groups"];
@@ -1399,7 +1407,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (groupValue.isObject())
 									{
 										if (groupValue.isMember("id") && groupValue["id"].isString() &&
-												groupValue.isMember("data") && groupValue["data"].isObject())
+											groupValue.isMember("data") && groupValue["data"].isObject())
 										{
 											string id = groupValue["id"].asString();
 											Json::Value groupData = groupValue["data"];
