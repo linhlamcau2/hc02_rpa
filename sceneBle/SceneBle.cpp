@@ -1,5 +1,4 @@
 #include "SceneBle.h"
-#include <thread>
 #include "Log.h"
 #include "BleProtocol.h"
 #include "BleDefine.h"

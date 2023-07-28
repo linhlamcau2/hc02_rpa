@@ -29,14 +29,59 @@ int getSizeOfDataType(uint8_t *dataType)
 {
 	switch (dataType[0])
 	{
+	case ZCL_DATA_TYPE_NO_DATA:
+		return 0;
+
+	case ZCL_DATA_TYPE_DATA8:
 	case ZCL_DATA_TYPE_BOOLEAN:
+	case ZCL_DATA_TYPE_BITMAP8:
 	case ZCL_DATA_TYPE_UINT8:
+	case ZCL_DATA_TYPE_INT8:
 	case ZCL_DATA_TYPE_ENUM8:
 		return 1;
 
+	case ZCL_DATA_TYPE_DATA16:
+	case ZCL_DATA_TYPE_BITMAP16:
 	case ZCL_DATA_TYPE_UINT16:
 	case ZCL_DATA_TYPE_INT16:
+	case ZCL_DATA_TYPE_ENUM16:
 		return 2;
+
+	case ZCL_DATA_TYPE_DATA24:
+	case ZCL_DATA_TYPE_BITMAP24:
+	case ZCL_DATA_TYPE_UINT24:
+	case ZCL_DATA_TYPE_INT24:
+		return 3;
+
+	case ZCL_DATA_TYPE_DATA32:
+	case ZCL_DATA_TYPE_BITMAP32:
+	case ZCL_DATA_TYPE_UINT32:
+	case ZCL_DATA_TYPE_INT32:
+		return 4;
+
+	case ZCL_DATA_TYPE_DATA40:
+	case ZCL_DATA_TYPE_BITMAP40:
+	case ZCL_DATA_TYPE_UINT40:
+	case ZCL_DATA_TYPE_INT40:
+		return 5;
+
+	case ZCL_DATA_TYPE_DATA48:
+	case ZCL_DATA_TYPE_BITMAP48:
+	case ZCL_DATA_TYPE_UINT48:
+	case ZCL_DATA_TYPE_INT48:
+		return 6;
+
+	case ZCL_DATA_TYPE_DATA56:
+	case ZCL_DATA_TYPE_BITMAP56:
+	case ZCL_DATA_TYPE_UINT56:
+	case ZCL_DATA_TYPE_INT56:
+		return 7;
+
+	case ZCL_DATA_TYPE_DATA64:
+	case ZCL_DATA_TYPE_BITMAP64:
+	case ZCL_DATA_TYPE_UINT64:
+	case ZCL_DATA_TYPE_INT64:
+		return 8;
 
 	case ZCL_DATA_TYPE_CHAR_STR:
 		return dataType[1] + 1;

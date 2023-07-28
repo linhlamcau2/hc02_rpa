@@ -57,6 +57,7 @@ static void HandleOpcodeBle(void *data)
 			}
 			else
 			{
+				// TODO: sua lai cach tinh 30s
 				timeout++;
 				if (timeout >= 300)
 				{
@@ -66,12 +67,6 @@ static void HandleOpcodeBle(void *data)
 					string cmdStop = "{\"CMD\":\"STOP\"}";
 					gateway->LocalPublish(cmdStop);
 				}
-				else
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#else
-					usleep(100000);
-#endif
 			}
 		}
 
@@ -84,9 +79,8 @@ static void HandleOpcodeBle(void *data)
 				free(messageRsp);
 			}
 		}
-		else
-			vTaskDelay(pdMS_TO_TICKS(100));
 #endif
+		usleep(100000);
 	}
 }
 
@@ -122,16 +116,16 @@ void BleProtocol::init()
 
 void BleProtocol::InitKey()
 {
-	if (GetAppKey() == "")
-		ResetBle();
-	while (GetNetKey())
-	{
-#ifdef ESP_PLATFORM
-		FlashLedInternet();
-#else
-		sleep(4);
-#endif
-	}
+		if (GetAppKey() == "")
+			ResetBle();
+		while (GetNetKey())
+		{
+	#ifdef ESP_PLATFORM
+			FlashLedInternet();
+	#else
+			sleep(4);
+	#endif
+		}
 }
 
 static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
