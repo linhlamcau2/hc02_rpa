@@ -1478,7 +1478,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 										Device *deviceInputRuleChild = getDeviceBleFromAddr(deviceInputRule->GetAddr() + (id - 11));
 										if (deviceInputRuleChild)
 										{
-											LOGE("Device Id: %s", deviceInputRuleChild->GetId().c_str());
+											// LOGE("Device Id: %s", deviceInputRuleChild->GetId().c_str());
 											datasDevInput["ID"] = BLE_ATTRIBUTE_ONOFF;
 											datasDevInput["VALUE"] = values;
 											datasDevInput["OP"] = op;
