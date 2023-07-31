@@ -6,11 +6,11 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 {
 	for (int i = 0; i < element; i++)
 	{
-		moduleButton = new ModuleButton(this, addr + i);
+		moduleButton = new ModuleButton(this, addr + i, i);
 		modules.push_back(moduleButton);
 	}
-	moduleOnOff = new ModuleOnOff(this, addr);
-	modules.push_back(moduleOnOff);
+	moduleDimonDimoff = new ModuleDimonDimoff(this, addr);
+	modules.push_back(moduleDimonDimoff);
 	moduleRgb = new ModuleRgb(this, addr);
 	modules.push_back(moduleRgb);
 	powerSource = POWER_AC;

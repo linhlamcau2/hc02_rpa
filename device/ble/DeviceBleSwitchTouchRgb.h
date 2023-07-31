@@ -2,7 +2,7 @@
 
 #include "DeviceBle.h"
 #include "module/ModuleButton.h"
-#include "module/ModuleOnOff.h"
+#include "module/ModuleDimonDimoff.h"
 #include "module/ModuleRgb.h"
 
 using namespace std;
@@ -11,7 +11,7 @@ class DeviceBleSwitchTouchRgb : public DeviceBle
 {
 private:
 	ModuleButton *moduleButton;
-	ModuleOnOff *moduleOnOff;
+	ModuleDimonDimoff *moduleDimonDimoff;
 	ModuleRgb *moduleRgb;
 
 public:

@@ -10,7 +10,8 @@
 ModuleButton::ModuleButton(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
-	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index) : "");
+	key = KEY_ATTRIBUTE_BUTTON + to_string(index);
+	LOGE("--------------------------%s---------------------%d", key.c_str(), index);
 }
 
 ModuleButton::~ModuleButton()
@@ -99,6 +100,13 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				return CODE_OK;
 			}
 		}
+	}
+	else if (data_message->opcode == 0x82)
+	{
+		bt = data_message->header >> 8;
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
+		return CODE_OK;
 	}
 	return CODE_ERROR;
 }
