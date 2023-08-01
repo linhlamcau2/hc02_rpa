@@ -888,9 +888,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
-		for (int i = 1; i < 2; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+		// for (int i = 1; i < 2; i++)
+		// {
+		// 	device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			// if (device)
 			// {
 			// 	if (addGateway)
@@ -902,14 +902,14 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			// 		database->DeviceAdd(device);
 			// 	}
 			// }
-		}
+		// }
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
-		for (int i = 1; i < 3; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+		// for (int i = 1; i < 3; i++)
+		// {
+		// 	device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			// if (device)
 			// {
 			// 	if (addGateway)
@@ -921,14 +921,14 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			// 		database->DeviceAdd(device);
 			// 	}
 			// }
-		}
+		// }
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
-		for (int i = 1; i < 4; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+		// for (int i = 1; i < 4; i++)
+		// {
+		// 	device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			// if (device)
 			// {
 			// 	if (addGateway)
@@ -940,7 +940,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			// 		database->DeviceAdd(device);
 			// 	}
 			// }
-		}
+		// }
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
@@ -948,9 +948,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
-		for (int i = 1; i < 2; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+		// for (int i = 1; i < 2; i++)
+		// {
+		// 	device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			// if (device)
 			// {
 			// 	if (addGateway)
@@ -962,13 +962,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			// 		database->DeviceAdd(device);
 			// 	}
 			// }
-		}
+		// }
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
-		for (int i = 1; i < 3; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+		// for (int i = 1; i < 3; i++)
+		// {
+		// 	device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			// if (device)
 			// {
 			// 	if (addGateway)
@@ -980,13 +980,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			// 		database->DeviceAdd(device);
 			// 	}
 			// }
-		}
+		// }
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
-		for (int i = 1; i < 4; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
+		// for (int i = 1; i < 4; i++)
+		// {
+		// 	device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
 			// if (device)
 			// {
 			// 	if (addGateway)
@@ -998,7 +998,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 			// 		database->DeviceAdd(device);
 			// 	}
 			// }
-		}
+		// }
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_DC_SCENE_CONTACT:
@@ -1601,4 +1601,14 @@ int Gateway::pushNewDeviceCloud(Json::Value &dataValue)
 int Gateway::pushNewDeviceLocal(Json::Value &dataValue)
 {
 	return PublishToLocalMessage("newDev", dataValue, "newDevRsp", NULL, 0);
+}
+
+int Gateway::pushStartAddHc(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("startAddHc", dataValue, "startAddHcRsp", NULL, 0);
+}
+
+int Gateway::pushStopAddHc(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
 }

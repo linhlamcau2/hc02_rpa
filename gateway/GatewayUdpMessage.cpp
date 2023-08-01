@@ -173,7 +173,9 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					dormitoryId = data["DORMITORY_ID"].asString();
 					database->GatewayUpdateDormitory(gateway, dormitoryId);
-#ifndef ESP_PLATFORM
+					Json::Value jsonData;
+					jsonData["data"] = Json::objectValue;
+					gateway->pushStartAddHc(jsonData);
 					if (Wifi::GetIP().compare("10.10.10.1") != 0)
 					{
 						LOGI("Hc have IP: %s", Wifi::GetIP().c_str());
@@ -187,7 +189,6 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 					}
 					else
 					{
-#endif
 						if (data.isMember("WIFI"))
 						{
 							Json::Value wifi = data["WIFI"];
@@ -217,6 +218,9 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 									respValue["FROM"] = fromRsp;
 								}
 								GatewayConnectToCloudNotice();
+								Json::Value jsonData;
+								jsonData["data"] = Json::objectValue;
+								gateway->pushStopAddHc(jsonData);
 								return CODE_OK;
 							}
 							else
@@ -224,13 +228,11 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 								LOGW("OnUdpHcSetup don't have wifi data");
 							}
 						}
-#ifndef ESP_PLATFORM
 						else
 						{
 							LOGW("OnUdpHcSetup don't have wifi object");
 						}
 					}
-#endif
 				}
 				else
 				{
