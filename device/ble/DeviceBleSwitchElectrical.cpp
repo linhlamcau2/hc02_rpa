@@ -7,7 +7,7 @@ DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, str
 	countElement = element;
 	for (int i = 0; i < element; i++)
 	{
-		moduleOnOff = new ModuleOnOff(this, addr + i, i);
+		moduleOnOff = new ModuleOnOff(this, addr + i, KEY_ATTRIBUTE_BUTTON, i);
 		modules.push_back(moduleOnOff);
 		moduleDimonDimoff = new ModuleDimonDimoff(this, addr + i, i);
 		modules.push_back(moduleDimonDimoff);

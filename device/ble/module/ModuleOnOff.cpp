@@ -6,10 +6,10 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
+ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr, string onoffKey, uint32_t index) : Module(device, addr, index)
 {
 	onoff = 0;
-	key = KEY_ATTRIBUTE_ONOFF + (index ? to_string(index + 1) : "");
+	key = onoffKey + (index ? to_string(index + 1) : "");
 }
 
 ModuleOnOff::~ModuleOnOff()

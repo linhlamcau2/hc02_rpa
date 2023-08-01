@@ -11,7 +11,7 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 	countElement = element;
 	for (int i = 0; i < element; i++)
 	{
-		moduleOnOff = new ModuleOnOff(this, addr + i, i);
+		moduleOnOff = new ModuleOnOff(this, addr + i, KEY_ATTRIBUTE_BUTTON, i);
 		modules.push_back(moduleOnOff);
 		moduleRgb = new ModuleRgb(this, addr + i, i);
 		modules.push_back(moduleRgb);

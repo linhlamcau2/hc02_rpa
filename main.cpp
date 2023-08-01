@@ -44,7 +44,7 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-	log_set_level(LOG_VERBOSE);
+	log_set_level(LOG_DEBUG);
 	LOGI("Start");
 
 	buttonSignal = new ButtonSignal();
