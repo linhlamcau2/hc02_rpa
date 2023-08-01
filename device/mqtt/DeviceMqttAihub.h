@@ -7,5 +7,5 @@ using namespace std;
 class DeviceMqttAihub : public DeviceMqtt
 {
 public:
-	DeviceMqttAihub(string id, string name, string mac, string data, uint16_t version);
+	DeviceMqttAihub(string id, string name, string mac, Json::Value &dataJson, uint16_t version);
 };

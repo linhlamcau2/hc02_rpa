@@ -553,9 +553,7 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value deviceValue;
 				deviceValue["id"] = deviceInRoom->device->GetId();
 				deviceValue["mac"] = deviceInRoom->device->GetMac();
-				Json::Value data;
-				data.parse(deviceInRoom->device->GetData());
-				deviceValue["data"] = data;
+				deviceValue["data"] = deviceInRoom->device->GetData();
 				temp_devicesList["camList"].append(deviceValue);
 			}
 		}
@@ -1964,7 +1962,7 @@ int Gateway::OnNewDevice(Json::Value &reqValue, Json::Value &respValue)
 				string name = temp["name"].asString();
 				string mac = temp["mac"].asString();
 				int type = temp["type"].asInt();
-				AddNewDevice(id, name, mac, temp["data"].toString(), 0, type, 0, true);
+				AddNewDevice(id, name, mac, temp["data"], 0, type, 0, true);
 			}
 		}
 	}

@@ -32,7 +32,9 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				if (decode == "")
 				{
 					uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
-					Device *device = gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, false);
+					Json::Value dataJson;
+					dataJson.parse(devData);
+					Device *device = gateway->AddNewDevice(id, name, mac, dataJson, addr, type, u16version, false);
 					device->SetIsFavorite(isFavorite);
 				}
 			}
@@ -57,19 +59,19 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData().toString()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "')";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdate(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + macaron::Base64::Encode(device->GetData()) + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + macaron::Base64::Encode(device->GetData().toString()) + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdateData(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData()) + "' WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData().toString()) + "' WHERE mac='" + device->GetMac() + "';";
 	return Sqlite_Exec(sql);
 }
 

@@ -171,8 +171,8 @@ protected:
 	uint16_t version;
 	int rssi;
 	protocol_e protocol;
-	string data;
 	bool isFavorite;
+	Json::Value dataJson;
 	Json::Value values;
 
 public:
@@ -184,14 +184,14 @@ public:
 	time_t lastTimeCheckActive;
 
 public:
-	Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	Device(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
 	string GetMac();
 	uint32_t GetType();
 	uint16_t GetVersion();
 	string GetVersionStr();
-	string GetData();
+	Json::Value GetData();
 	int GetRSSI();
 
 	void SetRSSI(int rssi);

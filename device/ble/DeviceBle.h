@@ -15,10 +15,10 @@ protected:
 	vector<Module *> modules;
 
 public:
-	DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBle(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
 	~DeviceBle();
 	
-	string GetDeviceKey(string data);
+	string GetDeviceKey(Json::Value &dataJson);
 	string GetDeviceKey();
 
 	virtual bool CheckAddr(uint32_t addr);

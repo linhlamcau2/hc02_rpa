@@ -1,8 +1,8 @@
 #include "DeviceBleDoorSensor.h"
 #include "Log.h"
 
-DeviceBleDoorSensor::DeviceBleDoorSensor(string id, string name, string mac, string data, uint32_t addr, uint16_t version)
-		: DeviceBle(id, name, mac, data, addr, BLE_DOOR_SENSOR, version)
+DeviceBleDoorSensor::DeviceBleDoorSensor(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint16_t version)
+		: DeviceBle(id, name, mac, dataJson, addr, BLE_DOOR_SENSOR, version)
 {
 	moduleDoorHangOn = new ModuleDoorHangOn(this, addr);
 	moduleDoorStatus = new ModuleDoorStatus(this, addr);

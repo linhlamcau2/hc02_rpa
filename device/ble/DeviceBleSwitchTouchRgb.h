@@ -15,5 +15,5 @@ private:
 	ModuleRgb *moduleRgb;
 
 public:
-	DeviceBleSwitchTouchRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
+	DeviceBleSwitchTouchRgb(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
 };

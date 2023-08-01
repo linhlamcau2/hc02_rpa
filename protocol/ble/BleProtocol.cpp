@@ -638,9 +638,9 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						if (IsProvision() && !GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
 						{
 							deviceType = convertDeviceType(deviceType);
-							Json::Value devKeyJson;
-							devKeyJson["devicekey"] = Util::uuidToStr((uint8_t *)deviceKey);
-							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true);
+							Json::Value dataJson;
+							dataJson["devicekey"] = Util::uuidToStr((uint8_t *)deviceKey);
+							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Device::ConvertDeviceTypeToName(deviceType), mac, dataJson, nextAddr, deviceType, version, true);
 							if (device)
 							{
 								gateway->AddDeviceToScanList(device);
