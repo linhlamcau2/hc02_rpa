@@ -27,8 +27,8 @@ int FunctionZone::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (this->zoneId == zoneId)
 		{
 			this->zoneValue = zoneValue;
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
 		}
 	}
 	return CODE_ERROR;

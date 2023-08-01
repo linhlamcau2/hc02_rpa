@@ -36,8 +36,8 @@ int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_PIR) && dataValue[KEY_ATTRIBUTE_PIR].isInt())
 	{
 		pir = dataValue[KEY_ATTRIBUTE_PIR].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -54,8 +54,8 @@ int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)&data[3];
 		pir = (data_message->pir);
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		uint16_t sceneId = data[5] | (data[6] << 8);
 		if (sceneId > 0)
 		{

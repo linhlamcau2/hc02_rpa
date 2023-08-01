@@ -33,8 +33,8 @@ int ModuleDoorHangOn::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_HANGON) && dataValue[KEY_ATTRIBUTE_HANGON].isInt())
 	{
 		hangOn = dataValue[KEY_ATTRIBUTE_HANGON].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -45,8 +45,8 @@ int ModuleDoorHangOn::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x04)
 	{
 		hangOn = data[3];
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

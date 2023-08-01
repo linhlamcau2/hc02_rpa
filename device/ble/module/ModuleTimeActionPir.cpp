@@ -34,8 +34,8 @@ int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValu
 			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
 		time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -46,8 +46,8 @@ int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x03)
 	{
 		time = data[5] | (data[6] << 8);
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

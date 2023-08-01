@@ -46,8 +46,8 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		pm1_0 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
 		pm10 = dataValue[KEY_ATTRIBUTE_PM10].asInt();
 		pm1_0 = dataValue[KEY_ATTRIBUTE_PM1_0].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -67,8 +67,8 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		pm25 = bswap_16(data_message->pm25);
 		pm10 = bswap_16(data_message->pm10);
 		pm1_0 = bswap_16(data_message->pm1_0);
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

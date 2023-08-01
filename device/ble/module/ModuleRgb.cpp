@@ -13,11 +13,11 @@ ModuleRgb::ModuleRgb(Device *device, uint32_t addr, uint32_t index) : Module(dev
 	g = 0;
 	dimOn = 0;
 	dimOff = 0;
-	keyR = KEY_ATTRIBUTE_R + to_string(addr - device->GetAddr());
-	keyG = KEY_ATTRIBUTE_G + to_string(addr - device->GetAddr());
-	keyB = KEY_ATTRIBUTE_B + to_string(addr - device->GetAddr());
-	keyDimOn = KEY_ATTRIBUTE_DIM_ON + to_string(addr - device->GetAddr());
-	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + to_string(addr - device->GetAddr());
+	keyR = KEY_ATTRIBUTE_R + (index ? to_string(index+1) : "");
+	keyG = KEY_ATTRIBUTE_G + (index ? to_string(index+1) : "");
+	keyB = KEY_ATTRIBUTE_B + (index ? to_string(index+1) : "");
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index+1) : "");
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index+1) : "");
 }
 
 ModuleRgb::~ModuleRgb()
@@ -73,8 +73,8 @@ int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		b = dataValue[keyB].asInt();
 		dimOn = dataValue[keyDimOn].asInt();
 		dimOff = dataValue[keyDimOff].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -105,8 +105,8 @@ int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

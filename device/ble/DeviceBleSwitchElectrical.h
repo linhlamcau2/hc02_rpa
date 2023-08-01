@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "module/ModuleButton.h"
 #include "module/ModuleOnOff.h"
 #include "module/ModuleDimonDimoff.h"
 
@@ -10,7 +9,6 @@ using namespace std;
 class DeviceBleSwitchElectrical : public DeviceBle
 {
 private:
-	ModuleButton *moduleButton;
 	ModuleOnOff *moduleOnOff;
 	ModuleDimonDimoff *moduleDimonDimoff;
 

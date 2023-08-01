@@ -34,8 +34,8 @@ int ModuleBatteryLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue
 			dataValue.isMember(KEY_ATTRIBUTE_BATTERY) && dataValue[KEY_ATTRIBUTE_BATTERY].isInt())
 	{
 		bat = dataValue[KEY_ATTRIBUTE_BATTERY].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -46,8 +46,8 @@ int ModuleBatteryLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue
 	if (data[0] == 0x52 && data[1] == 0x01 && data[2] == 0x00)
 	{
 		bat = data[4];
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

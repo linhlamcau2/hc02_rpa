@@ -33,8 +33,8 @@ int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_DOOR) && dataValue[KEY_ATTRIBUTE_DOOR].isInt())
 	{
 		status = dataValue[KEY_ATTRIBUTE_DOOR].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -45,8 +45,8 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
 	{
 		status = data[3];
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

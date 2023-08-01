@@ -10,7 +10,7 @@
 ModuleButton::ModuleButton(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
-	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index) : "");
+	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index + 1) : "");
 }
 
 ModuleButton::~ModuleButton()
@@ -35,8 +35,8 @@ int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		bt = dataValue[key].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -102,9 +102,13 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	}
 	else if (data_message->opcode == 0x82)
 	{
-		bt = data_message->header >> 8;
-		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
+		int bt = data_message->header >> 8;
+		if (this->bt != bt)
+		{
+			this->bt = bt;
+			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -142,20 +146,4 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[key] = bt;
-}
-
-int ModuleButton::Do(Json::Value &dataValue)
-{
-	LOGV("Do data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
-	{
-		int bt = dataValue[key].asInt();
-		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
-		{
-			this->bt = bt;
-			return CODE_OK;
-		}
-	}
-	return CODE_ERROR;
 }

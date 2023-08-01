@@ -55,8 +55,6 @@
 #define KEY_ATTRIBUTE_FACE_ID "faceId"
 #define KEY_ATTRIBUTE_FACE_VALUE "faceValue"
 
-#define MAX_NUM_ELEMENT_DEVICE 6 
-
 using namespace std;
 
 typedef enum

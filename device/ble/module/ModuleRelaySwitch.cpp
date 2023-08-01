@@ -8,7 +8,7 @@
 ModuleRelaySwitch::ModuleRelaySwitch(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
-	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index) : "");
+	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index + 1) : "");
 }
 
 ModuleRelaySwitch::~ModuleRelaySwitch()
@@ -33,8 +33,8 @@ int ModuleRelaySwitch::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		bt = dataValue[key].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -59,11 +59,7 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			{
 				if (data_message->relayId == index)
 				{
-					this->bt = data_message->value;
-
-#ifdef CONFIG_SAVE_ATTRIBUTE
-					SaveAttribute();
-#endif
+					bt = data_message->value;
 					BuildTelemetryValue(jsonValue);
 					CheckTrigger();
 					return CODE_OK;
@@ -80,15 +76,12 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint8_t relayId;
 			uint8_t value;
 		} data_message_t;
-		data_message_t *data_message1 = (data_message_t *)data;
-		if (data_message1->header == 0x000e || data_message1->header == 0x000d || data_message1->header == 0x000c || data_message1->header == 0x000b)
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->header == 0x000e || data_message->header == 0x000d || data_message->header == 0x000c || data_message->header == 0x000b)
 		{
-			if (data_message1->relayId == index)
+			if (data_message->relayId == index)
 			{
-				this->bt = data_message1->value;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
-#endif
+				bt = data_message->value;
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
 				return CODE_OK;

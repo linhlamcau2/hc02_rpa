@@ -34,8 +34,8 @@ int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
 	{
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -72,8 +72,8 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			} data_message_t;
 			data_message_t *data_message = (data_message_t *)&data[3];
 			lux = CalculateLux(bswap_16(data_message->lux));
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
 			return false;
 		}
 	}
