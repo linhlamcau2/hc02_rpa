@@ -791,55 +791,6 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 	jsonValue["device"].append(devValue);
 	pushNewDeviceLocal(jsonValue);
-
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
-	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2)
-	{
-		dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), 1);
-		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
-		dataValue["BUTTON_ID"] = 12;
-		jsonValue["DATA"] = dataValue;
-		LocalPublish(jsonValue);
-	}
-	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3)
-	{
-		for (int i = 1; i <= 2; i++)
-		{
-			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
-			dataValue["BUTTON_ID"] = 11 + i;
-			jsonValue["DATA"] = dataValue;
-			LocalPublish(jsonValue);
-		}
-	}
-	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_4)
-	{
-		for (int i = 1; i <= 3; i++)
-		{
-			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
-			dataValue["BUTTON_ID"] = 11 + i;
-			jsonValue["DATA"] = dataValue;
-			LocalPublish(jsonValue);
-		}
-	}
-	else if (scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB || scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
-	{
-		for (int i = 1; i <= 5; i++)
-		{
-			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
-			dataValue["BUTTON_ID"] = 11 + i;
-			jsonValue["DATA"] = dataValue;
-			LocalPublish(jsonValue);
-		}
-	}
-#endif
 }
 
 Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addDatabase)
@@ -888,59 +839,14 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
-		for (int i = 1; i < 2; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			// if (device)
-			// {
-			// 	if (addGateway)
-			// 	{
-			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			// 	}
-			// 	if (addDatabase)
-			// 	{
-			// 		database->DeviceAdd(device);
-			// 	}
-			// }
-		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
-		for (int i = 1; i < 3; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			// if (device)
-			// {
-			// 	if (addGateway)
-			// 	{
-			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			// 	}
-			// 	if (addDatabase)
-			// 	{
-			// 		database->DeviceAdd(device);
-			// 	}
-			// }
-		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
-		for (int i = 1; i < 4; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			// if (device)
-			// {
-			// 	if (addGateway)
-			// 	{
-			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			// 	}
-			// 	if (addDatabase)
-			// 	{
-			// 		database->DeviceAdd(device);
-			// 	}
-			// }
-		}
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
@@ -948,57 +854,12 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
-		for (int i = 1; i < 2; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			// if (device)
-			// {
-			// 	if (addGateway)
-			// 	{
-			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			// 	}
-			// 	if (addDatabase)
-			// 	{
-			// 		database->DeviceAdd(device);
-			// 	}
-			// }
-		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
-		for (int i = 1; i < 3; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			// if (device)
-			// {
-			// 	if (addGateway)
-			// 	{
-			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			// 	}
-			// 	if (addDatabase)
-			// 	{
-			// 		database->DeviceAdd(device);
-			// 	}
-			// }
-		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
-		for (int i = 1; i < 4; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			// if (device)
-			// {
-			// 	if (addGateway)
-			// 	{
-			// 		deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-			// 	}
-			// 	if (addDatabase)
-			// 	{
-			// 		database->DeviceAdd(device);
-			// 	}
-			// }
-		}
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_DC_SCENE_CONTACT:
@@ -1086,7 +947,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case ZIGBEE_LUMI_PLUG:
 		device = new DeviceZigbeeOnoff(id, name, mac, addr);
 		break;
-
 	case ZIGBEE_TUYA_SENSOR_MAGNET_TY0203:
 		device = new DeviceZigbeeTuyaSensorMagnet(id, name, mac, addr);
 		break;
