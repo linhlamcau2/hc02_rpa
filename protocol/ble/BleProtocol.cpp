@@ -38,10 +38,9 @@ BleProtocol::~BleProtocol()
 {
 }
 
-static void HandleOpcodeBle(void *data)
+static void AddDeviceThread(void *data)
 {
 	BleProtocol *bleProtocol = (BleProtocol *)data;
-	message_rsp_st *messageRsp;
 	int timeout = 0;
 	while (1)
 	{
@@ -69,49 +68,47 @@ static void HandleOpcodeBle(void *data)
 				}
 			}
 		}
+		usleep(100000);
+	}
+}
 
-#ifdef ESP_PLATFORM
-		if (xQueueReceive(bleProtocol->opcodeMessageQueue, &messageRsp, (TickType_t)5))
+static void HandleOpcodeBle(void *data)
+{
+	BleProtocol *bleProtocol = (BleProtocol *)data;
+	message_rsp_st *message_rsp = NULL;
+	while (1)
+	{
+		if (bleProtocol->GetOpcodeExceptionMessage(&message_rsp) == CODE_OK)
 		{
-			if (messageRsp)
-			{
-				bleProtocol->CheckOpcodeException(messageRsp);
-				free(messageRsp);
-			}
+			bleProtocol->CheckOpcodeException(message_rsp);
+			free(message_rsp);
 		}
-#endif
 		usleep(100000);
 	}
 }
 
 void BleProtocol::init()
 {
-	if (pthread_mutex_init(&mutex, NULL) != 0)
-	{
-		LOGE("Failed to initialize the mutex");
-	}
 	Uart::init();
-	usleep(100000); // wait uart rx thread start
-
 #ifdef ESP_PLATFORM
-	opcodeMessageQueue = xQueueCreate(10, sizeof(message_rsp_st *));
-	// LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	// if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 8192, this, 10, NULL) != pdPASS)
-	// {
-	// 	LOGE("Failed to create task");
-	// 	Led::SetLedService(MODE_OFF);
-	// }
-	// vTaskDelay(10);
-	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 15360, this, 10, NULL) != pdPASS)
+	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 5120, this, 10, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
 		SetLedService(false);
 	}
-	vTaskDelay(10);
+	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		SetLedService(false);
+	}
 #else
+	thread addDeviceThreadThread(AddDeviceThread, this);
+	addDeviceThreadThread.detach();
 	thread handleOpcodeBleThread(HandleOpcodeBle, this);
 	handleOpcodeBleThread.detach();
 #endif
+
+	usleep(100000); // wait for thread start
 }
 
 void BleProtocol::InitKey()
@@ -157,6 +154,20 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 			dataValue[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
 		}
 	}
+}
+
+int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
+{
+	int rs = CODE_ERROR;
+	vectorCheckOpcodeMtx.lock();
+	if (messageCheckOpcodeList.size() > 0)
+	{
+		*data = messageCheckOpcodeList[0];
+		messageCheckOpcodeList.erase(messageCheckOpcodeList.begin());
+		rs = CODE_OK;
+	}
+	vectorCheckOpcodeMtx.unlock();
+	return rs;
 }
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -248,6 +259,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 					message_rsp->magic == 0x92 ||
 					message_rsp->magic == 0xfa)
 			{
+				uint16_t packageLen = message_rsp->len + 2;
 				is_dupplicate = false;
 				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
 				{
@@ -291,18 +303,18 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 								}
 							}
 						}
-						if (gateway)
+						vectorCheckOpcodeMtx.lock();
+						if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
 						{
 #ifdef ESP_PLATFORM
-							// message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
-							message_rsp_st *temp_message = (message_rsp_st *)heap_caps_malloc_prefer(message_rsp->len + 2, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
-							memcpy(temp_message, message_rsp, message_rsp->len + 2);
-							xQueueSend(opcodeMessageQueue, (void *)&temp_message, (TickType_t)0);
-							vTaskDelay(pdMS_TO_TICKS(50));
+							message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
-							CheckOpcodeException(message_rsp);
+							message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
 #endif
+							memcpy(messageCheckOpcode, message_rsp, packageLen);
+							messageCheckOpcodeList.push_back(messageCheckOpcode);
 						}
+						vectorCheckOpcodeMtx.unlock();
 					}
 					else if (message_rsp->len < 2 && message_rsp->len > 36)
 					{
@@ -315,30 +327,12 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 						break;
 					}
 				}
-				else
-				{
-					// LOGW("dupplicate");
-				}
 				old_message_rsp = message_rsp;
-				l -= message_rsp->len + 2;
-				d += message_rsp->len + 2;
-			}
-			else
-			{
-				d++;
-				l--;
+				l -= packageLen;
+				d += packageLen;
 			}
 		}
-		else
-		{
-			d++;
-			l--;
-		}
-#ifdef ESP_PLATFORM
-		vTaskDelay(10 / portTICK_PERIOD_MS);
-#else
 		usleep(10000);
-#endif
 	}
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
@@ -353,54 +347,50 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 
 int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data, int compare_position, int compare_len)
 {
-	// mtxWaitSendUart.lock();
+	mtxWaitSendUart.lock();
 	int rs = CODE_OK;
-	if (pthread_mutex_lock(&mutex) == 0)
+	message_rsp_list_st message_rsp_list = {
+			.status = false,
+			.opcode = opRsp,
+			.len = lenRsp,
+			.data = dataRsp,
+			.compare_data = compare_data,
+			.compare_position = compare_position,
+			.compare_len = compare_len,
+	};
+	if (opRsp)
 	{
-		message_rsp_list_st message_rsp_list = {
-				.status = false,
-				.opcode = opRsp,
-				.len = lenRsp,
-				.data = dataRsp,
-				.compare_data = compare_data,
-				.compare_position = compare_position,
-				.compare_len = compare_len,
-		};
-		if (opRsp)
-		{
-			// TODO: add mutex
-			messageRespList.push_back(&message_rsp_list);
-		}
-
-		message_req_st message_req = {
-				.opcode = opReq,
-		};
-		for (int i = 0; i < lenReq; i++)
-		{
-			message_req.data[i] = dataReq[i];
-		}
-
-		Write((uint8_t *)&message_req, lenReq + 2);
-
-		if (opRsp)
-		{
-			while (!message_rsp_list.status && timeout--)
-			{
-				usleep(1000);
-			}
-			if (!message_rsp_list.status)
-			{
-				rs = CODE_ERROR;
-			}
-			messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
-		}
-		else
-		{
-			usleep(1000 * timeout);
-		}
-		// mtxWaitSendUart.unlock();
-		pthread_mutex_unlock(&mutex);
+		// TODO: add mutex
+		messageRespList.push_back(&message_rsp_list);
 	}
+
+	message_req_st message_req = {
+			.opcode = opReq,
+	};
+	for (int i = 0; i < lenReq; i++)
+	{
+		message_req.data[i] = dataReq[i];
+	}
+
+	Write((uint8_t *)&message_req, lenReq + 2);
+
+	if (opRsp)
+	{
+		while (!message_rsp_list.status && timeout--)
+		{
+			usleep(1000);
+		}
+		if (!message_rsp_list.status)
+		{
+			rs = CODE_ERROR;
+		}
+		messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
+	}
+	else
+	{
+		usleep(1000 * timeout);
+	}
+	mtxWaitSendUart.unlock();
 	return rs;
 	// return Write(dataReq, lenReq);
 }
@@ -610,6 +600,7 @@ void BleProtocol::SetProvisioning(bool isProvision)
 
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
+	// TODO: convert to non-blocking func
 	LOGD("AddDevice");
 	// #ifdef ESP_PLATFORM
 	// 	Led::TaskLedService(MODE_BLINK);
@@ -665,37 +656,6 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	// #endif
 
 	return rs;
-}
-
-void BleProtocol::FunctionAddDevice()
-{
-	int timeout = 0;
-	scan_device_message_t scan_device_message;
-	while (IsProvision())
-	{
-		if (bleProtocol->haveNewMac)
-		{
-			timeout = 0;
-			memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
-			bleProtocol->AddDevice(&scan_device_message);
-			bleProtocol->haveNewMac = false;
-		}
-		else
-		{
-			timeout++;
-			if (timeout >= 30)
-			{
-				SetProvisioning(false);
-				StopScan();
-			}
-			else
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#else
-				usleep(100000);
-#endif
-		}
-	}
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)

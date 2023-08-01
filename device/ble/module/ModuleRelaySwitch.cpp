@@ -55,7 +55,10 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)data;
 		if (data_message->vendorId == RD_VENDOR_ID)
 		{
-			if (data_message->header == 0x000e || data_message->header == 0x000d || data_message->header == 0x000c || data_message->header == 0x000b)
+			if (data_message->header == 0x000e ||
+					data_message->header == 0x000d ||
+					data_message->header == 0x000c ||
+					data_message->header == 0x000b)
 			{
 				if (data_message->relayId == index)
 				{
@@ -82,8 +85,8 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (data_message->relayId == index)
 			{
 				bt = data_message->value;
-				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
+				BuildTelemetryValue(jsonValue);
 				return CODE_OK;
 			}
 		}

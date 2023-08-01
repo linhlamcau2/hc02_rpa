@@ -122,6 +122,7 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	{
 		uint16_t type = bswap_16(message_rsp->type);
 		uint16_t payloadLen = bswap_16(message_rsp->len);
+		uint16_t packageLen = payloadLen + sizeof(message_rsp_st) + 1;
 		if (message_rsp->payload[payloadLen] == MESSAGE_TAIL)
 		{
 			// LOGD("message_rsp->type: 0x%04X, message_rsp->len: %d", type, payloadLen);
@@ -146,16 +147,18 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 			}
 			else
 			{
-				message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(message_rsp->len + 2);
-				memcpy(messageCheckOpcode, message_rsp, message_rsp->len + 2);
 				vectorCheckOpcodeMtx.lock();
-				messageCheckOpcodeList.push_back(messageCheckOpcode);
+				if (messageCheckOpcodeList.size() < ZIGBEE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+				{
+					message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+					memcpy(messageCheckOpcode, message_rsp, packageLen);
+					messageCheckOpcodeList.push_back(messageCheckOpcode);
+				}
 				vectorCheckOpcodeMtx.unlock();
-				// CheckOpcodeException(messageCheckOpcode);
 			}
 		}
-		lenRemain -= payloadLen + sizeof(message_rsp_st) + 1;
-		message += payloadLen + sizeof(message_rsp_st) + 1;
+		lenRemain -= packageLen;
+		message += packageLen;
 		message_rsp = (message_rsp_st *)message;
 	}
 	Util::LedZigbee(true);

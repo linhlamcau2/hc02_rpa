@@ -6,7 +6,6 @@
 #include "module/ModuleBatteryLevel.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
-#include <mutex>
 
 using namespace std;
 

@@ -13,5 +13,5 @@ private:
 	ModuleDimonDimoff *moduleDimonDimoff;
 
 public:
-	DeviceBleSwitchElectrical(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
+	DeviceBleSwitchElectrical(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, uint8_t countElement);
 };

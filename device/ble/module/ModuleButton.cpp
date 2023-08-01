@@ -55,13 +55,15 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == 0x52)
 	{
-		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE || data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
+		if (data_message->header == REMOTE_MODULE_DC_TYPE ||
+				data_message->header == REMOTE_MODULE_AC_TYPE ||
+				data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
 		{
 			if (data_message->btId == index + 1)
 			{
 				bt = data_message->mode;
-				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
+				BuildTelemetryValue(jsonValue);
 				if (data_message->scene > 0)
 				{
 					SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
@@ -99,17 +101,6 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				return CODE_OK;
 			}
 		}
-	}
-	else if (data_message->opcode == 0x82)
-	{
-		int bt = data_message->header >> 8;
-		if (this->bt != bt)
-		{
-			this->bt = bt;
-			CheckTrigger();
-			BuildTelemetryValue(jsonValue);
-		}
-		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

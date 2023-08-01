@@ -6,6 +6,7 @@
 #include "Uart.h"
 #include <atomic>
 #include <functional>
+#include <mutex>
 
 #ifdef ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
@@ -185,8 +186,11 @@ private:
 	} ble_message_header_t;
 
 	vector<message_rsp_list_st *> messageRespList;
-	// mutex mtxWaitSendUart;
-	pthread_mutex_t mutex;
+	mutex mtxWaitSendUart;
+
+#define BLE_CHECK_OPCODE_BUFFER_MAX_SIZE 20
+	mutex vectorCheckOpcodeMtx;
+	vector<message_rsp_st *> messageCheckOpcodeList;
 
 	// TODO: Add init state
 	pro_net_info_t pro_net_info;
@@ -200,9 +204,6 @@ private:
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
-#ifdef ESP_PLATFORM
-	QueueHandle_t opcodeMessageQueue;
-#endif
 	atomic<bool> haveNewMac;
 	atomic<bool> isProvisioning;
 	scan_device_message_t scanDeviceMessage;
@@ -214,6 +215,8 @@ public:
 #endif
 	virtual ~BleProtocol();
 	void init();
+
+	int GetOpcodeExceptionMessage(message_rsp_st **data);
 	void CheckOpcodeException(message_rsp_st *message);
 
 	void InitKey();
@@ -229,7 +232,6 @@ public:
 
 	bool IsProvision();
 	void SetProvisioning(bool isProvision);
-	void FunctionAddDevice();
 	int AddDevice(scan_device_message_t *scan_device_message);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
