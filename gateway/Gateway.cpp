@@ -1019,64 +1019,31 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValues = ruleValue["output"];
 		string name = ruleValue["name"].asString();
-		int repeat = 0;
+		int repeat = 255;
 		uint32_t addr = 0;
 		Rule *rule = NULL;
-
-		if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject() &&
+				inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+		{
+			Json::Value timer = inputValue["timer"];
+			string endAt = "";
+			string startAt = "";
+			if (timer.isMember("start") && timer["start"].isString())
+				startAt = timer["start"].asString();
+			if (timer.isMember("end") && timer["end"].isString())
+				endAt = timer["end"].asString();
 			repeat = inputValue["repeat"].asInt();
-		/*
-			- -1: Rule Time
-			- +0: Rule OR
-			- +1: Rule AND
-			- +2: Rule Time + OR
-			- +3: Rule Time + AND
-		*/
-		string logical = "or";
-		if (type == -1 || type == 3 || type == 2)
-		{
-			if (type == 3 || type == -1)
-			{
-				logical = "and";
-			}
-			else if (type == 2)
-			{
-				logical = "or";
-			}
-			if (inputValue.isMember("timer") && inputValue["timer"].isObject())
-			{
-				Json::Value timer = inputValue["timer"];
-				string endAt = "";
-				string startAt = "";
-				if (timer.isMember("start") && timer["start"].isString())
-					startAt = timer["start"].asString();
-				if (timer.isMember("end") && timer["end"].isString())
-					endAt = timer["end"].asString();
-				rule = new Rule(id, logical, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
-				if (!rule)
-					LOGW("New rule error");
-			}
+			rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
 		}
-		else if (type == 0 || type == 1 || type == -2)
+		else
 		{
-			if (repeat == 0)
-				repeat = 127;
-			if (type == 0 || type == -2)
-				logical = "or";
-			else if (type == 1)
-				logical = "and";
-			rule = new Rule(id, logical, repeat, name, addr, ruleValue);
-			if (!rule)
-				LOGW("New rule error");
+			rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
 		}
 
-		bool statusRule = false;
-		if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
-			statusRule = (ruleValue["enable"].asInt() == 1) ? true : false;
 		if (rule)
 		{
-			rule->SetStatus(statusRule);
-			rule->UpdateData(ruleValue);
+			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
+				rule->SetStatus(ruleValue["enable"].asInt());
 
 			if (inputValue.isMember("device") && inputValue["device"].isArray())
 			{
@@ -1120,6 +1087,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
 							rule->AddRuleOutput(ruleOutputDevice);
 						}
+						else
+							LOGW("Device not found");
 					}
 				}
 				else if (outputValue.isMember("groupId"))

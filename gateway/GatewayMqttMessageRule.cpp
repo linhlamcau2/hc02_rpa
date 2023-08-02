@@ -91,21 +91,17 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 		if (rule)
 		{
 			delRule(rule);
-			rule = AddRule(reqValue, true);
-			if (rule)
-			{
-				LOGI("Edit Rule %s", rule->GetId().c_str());
-				rule->Check();
-				rs = CODE_OK;
-			}
-			else
-			{
-				rs = CODE_FORMAT_ERROR;
-			}
+		}
+		rule = AddRule(reqValue, true);
+		if (rule)
+		{
+			LOGI("Edit Rule %s", rule->GetId().c_str());
+			rule->Check();
+			rs = CODE_OK;
 		}
 		else
 		{
-			rs = CODE_NOT_FOUND_RULE;
+			rs = CODE_FORMAT_ERROR;
 		}
 	}
 	else

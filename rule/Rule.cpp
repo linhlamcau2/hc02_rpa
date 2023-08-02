@@ -7,25 +7,26 @@
 #include "Sntp.h"
 #endif
 
-Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
+	isEnable = true;
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
 	this->ruleData = ruleData;
+	isEnable = true;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
-	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
 }
 
 Rule::~Rule()
@@ -48,7 +49,7 @@ Json::Value Rule::GetRuleData()
 	return ruleData;
 }
 
-string Rule::GetType()
+RuleType Rule::GetType()
 {
 	return type;
 }
@@ -66,7 +67,7 @@ void Rule::Check()
 			if ((startTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (startTime == currentTimer))
 			{
 				LOGD("Check time OK");
-				if (type == "or")
+				if (type == RULE_TYPE_OR || type == RULE_TYPE_TIME_OR)
 				{
 					checkRuleInputResult = false;
 					for (auto &ruleInput : ruleInputList)
@@ -78,7 +79,7 @@ void Rule::Check()
 						}
 					}
 				}
-				else if (type == "and")
+				else if (type == RULE_TYPE_AND || type == RULE_TYPE_TIME_AND)
 				{
 					checkRuleInputResult = true;
 					for (auto &ruleInput : ruleInputList)
