@@ -60,15 +60,12 @@ void Rule::Check()
 		bool checkRuleInputResult = false;
 		int currentTimer = Util::GetCurrentTimer();
 		int currentWeekDay = Util::GetCurrentWeekDay();
-		LOGI("currentWeekDay : %d", currentWeekDay);
-		LOGI("currenWeekDay convert: %d", Util::ConvertWeekDayToIntCompare(currentWeekDay));
-		LOGI("repeater : 0x%02X", repeater);
-		if (Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater)
+		if (Util::CheckDayInWeek(currentWeekDay, repeater))
 		{
-			LOGI("Check repeater day OK");
+			LOGD("Check repeater day OK");
 			if ((startTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (startTime == currentTimer))
 			{
-				LOGI("Check time OK");
+				LOGD("Check time OK");
 				if (type == "or")
 				{
 					checkRuleInputResult = false;

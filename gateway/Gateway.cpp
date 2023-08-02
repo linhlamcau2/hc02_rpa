@@ -1052,7 +1052,6 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 					startAt = timer["start"].asString();
 				if (timer.isMember("end") && timer["end"].isString())
 					endAt = timer["end"].asString();
-				LOGE("endat: %d", Util::ConvertStrTimeToInt(endAt));
 				rule = new Rule(id, logical, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
 				if (!rule)
 					LOGW("New rule error");
