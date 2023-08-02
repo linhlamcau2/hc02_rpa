@@ -71,83 +71,81 @@ private:
 	int GatewayConnectToCloudNotice();
 
 	// Udp message handle
-	void initUdpMessage();
+	void InitUdpMessage();
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue);
-
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
-	void initMqttMessage();
-
-	// Bản tin điều khiển
+	// Device
+	void InitMqttMessageDevice();
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue);
-	int OnControlGw(Json::Value &reqValue, Json::Value &respValue);
-	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
-	// int OnRequestDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue);
-	// Bản tin cấu hình
-	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
-	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetCamList(Json::Value &reqValue, Json::Value &respValue);
+	int OnNewDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue);
+
+	// Group
+	void InitMqttMessageGroup();
+	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetGroupList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceGroupBle(Json::Value &deviceList, Json::Value &respSuccessList, Json::Value &respFailList, Group *group);
 	int OnCreateGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSuccessList, Json::Value &respFailList, Group *group);
 	int OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
-	// thieu scene controller
-	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue);
 
-	// int OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
-	// int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
-	// int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
+	// Room
+	void InitMqttMessageRoom();
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetGroupList(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetCamList(Json::Value &reqValue, Json::Value &respValue);
-
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue);
-	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
-	int OnDelFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
-	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetDevFavorite(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnNewDevice(Json::Value &reqValue, Json::Value &respValue);
-
-	int OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue);
-	int OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue);
-	int OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue);
 	int OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue);
 
-	// Cấu hình HC
+	// Rule
+	void InitMqttMessageRule();
+	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
+
+	// Scene
+	void InitMqttMessageScene();
+	int OnControlScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue);
+
+	// Hc
+	void InitMqttMessageHc();
+	int OnControlHc(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue);
+	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 

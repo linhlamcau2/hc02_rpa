@@ -330,8 +330,13 @@ void Gateway::init()
 	LocalProtocol::init();
 	Udp::init();
 
-	initUdpMessage();
-	initMqttMessage();
+	InitUdpMessage();
+	InitMqttMessageDevice();
+	InitMqttMessageGroup();
+	InitMqttMessageRoom();
+	InitMqttMessageRule();
+	InitMqttMessageScene();
+	InitMqttMessageHc();
 
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
