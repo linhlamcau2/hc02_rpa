@@ -311,7 +311,8 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 						LOGI("addr: 0x%04X, type: 0x%04X, mac: %s", srcAddr, type, mac.c_str());
 						if (type && mac != "")
 						{
-							Device *device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, "", srcAddr, type, zclVersion | appVersion << 8, true);
+							Json::Value dataJson;
+							Device *device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, dataJson, srcAddr, type, zclVersion | appVersion << 8, true);
 							if (device)
 								gateway->AddDeviceToScanList(device);
 						}
@@ -452,7 +453,8 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				}
 				else
 				{
-					device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, "", srcAddr, type, zclVersion | appVersion << 8, true);
+					Json::Value dataJson;
+					device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, dataJson, srcAddr, type, zclVersion | appVersion << 8, true);
 				}
 				if (device)
 					gateway->AddDeviceToScanList(device);

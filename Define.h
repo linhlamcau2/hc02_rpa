@@ -45,5 +45,11 @@
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
+#ifdef __OPENWRT__
 #define ZIGBEE_UART_PORT "/dev/ttyS0"
+#elif defined(__ANDROID__)
+#define BLE_UART_PORT "/dev/ttyS4"
+#else
+#define ZIGBEE_UART_PORT "/dev/ttyUSB1"
+#endif
 #endif

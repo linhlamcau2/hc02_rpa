@@ -934,28 +934,28 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 	case ZIGBEE_LUMI_SENSOR_MAGNET:
-		device = new DeviceZigbeeLumiSensorMagnet(id, name, mac, addr);
+		device = new DeviceZigbeeLumiSensorMagnet(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_LUMI_SENSOR_SWITCH:
-		device = new DeviceZigbeeLumiSensorSwitch(id, name, mac, addr);
+		device = new DeviceZigbeeLumiSensorSwitch(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_LUMI_SENSOR_TEMP_HUM:
-		device = new DeviceZigbeeLumiSensorTempHum(id, name, mac, addr);
+		device = new DeviceZigbeeLumiSensorTempHum(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_LUMI_SENSOR_WLEAK_AQ1:
-		device = new DeviceZigbeeLumiSensorWleakAQ1(id, name, mac, addr);
+		device = new DeviceZigbeeLumiSensorWleakAQ1(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_LUMI_PLUG:
-		device = new DeviceZigbeeOnoff(id, name, mac, addr);
+		device = new DeviceZigbeeOnoff(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_TUYA_SENSOR_MAGNET_TY0203:
-		device = new DeviceZigbeeTuyaSensorMagnet(id, name, mac, addr);
+		device = new DeviceZigbeeTuyaSensorMagnet(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_TUYA_SENSOR_PIR_RH3040:
-		device = new DeviceZigbeeTuyaSensorPir(id, name, mac, addr);
+		device = new DeviceZigbeeTuyaSensorPir(id, name, mac, dataJson, addr);
 		break;
 	case ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225:
-		device = new DeviceZigbeeTuyaSensorHumanPresence(id, name, mac, addr);
+		device = new DeviceZigbeeTuyaSensorHumanPresence(id, name, mac, dataJson, addr);
 		break;
 #endif
 

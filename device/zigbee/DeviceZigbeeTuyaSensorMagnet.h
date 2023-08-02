@@ -8,5 +8,5 @@ class DeviceZigbeeTuyaSensorMagnet : public DeviceZigbee
 {
 private:
 public:
-	DeviceZigbeeTuyaSensorMagnet(string id, string name, string mac, uint32_t addr);
+	DeviceZigbeeTuyaSensorMagnet(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
 };

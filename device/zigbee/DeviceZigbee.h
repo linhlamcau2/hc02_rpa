@@ -11,7 +11,7 @@ protected:
 	vector<Cluster *> clusters;
 
 public:
-	DeviceZigbee(string id, string name, string mac, uint32_t addr, uint32_t type);
+	DeviceZigbee(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue);
 
