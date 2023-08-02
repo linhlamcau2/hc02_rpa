@@ -2,13 +2,6 @@
 #include "Log.h"
 #include "Db.h"
 #include "Util.h"
-#include "Ota.h"
-#include "BleProtocol.h"
-#include "BleDefine.h"
-#include "Http.h"
-#include "Base64.h"
-#include "Wifi.h"
-#include <fstream>
 
 void Gateway::InitMqttMessageRule()
 {
@@ -16,9 +9,11 @@ void Gateway::InitMqttMessageRule()
 	// OnDeviceRpcCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getRuleList", bind(&Gateway::OnGetRuleList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("activeRule", bind(&Gateway::OnActiveRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
 }
 
@@ -86,6 +81,42 @@ int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
+{
+	int rs = CODE_ERROR;
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string ruleId = reqValue["id"].asString();
+		Rule *rule = getRuleFromId(ruleId);
+		if (rule)
+		{
+			delRule(rule);
+			rule = AddRule(reqValue, true);
+			if (rule)
+			{
+				LOGI("Edit Rule %s", rule->GetId().c_str());
+				rule->Check();
+				rs = CODE_OK;
+			}
+			else
+			{
+				rs = CODE_FORMAT_ERROR;
+			}
+		}
+		else
+		{
+			rs = CODE_NOT_FOUND_RULE;
+		}
+	}
+	else
+	{
+		rs = CODE_FORMAT_ERROR;
+	}
+	respValue["data"]["code"] = rs;
+	respValue["cmd"] = "editRuleRsp";
+	return CODE_OK;
+}
+
 int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString())
@@ -107,6 +138,24 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
 	respValue["cmd"] = "delRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnActiveRule(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
+			reqValue.isMember("status") && reqValue["status"].isInt())
+	{
+		string id = reqValue["id"].asString();
+		int status = reqValue["status"].asInt();
+		Rule *rule = getRuleFromId(id);
+		if (rule)
+		{
+			rule->SetStatus(status);
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "activeRuleRsp";
 	return CODE_OK;
 }
 

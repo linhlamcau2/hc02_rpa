@@ -1,14 +1,9 @@
 #include "Gateway.h"
 #include "Log.h"
-#include "Db.h"
-#include "Util.h"
-#include "Ota.h"
-#include "BleProtocol.h"
-#include "BleDefine.h"
-#include "Http.h"
-#include "Base64.h"
 #include "Wifi.h"
+#include "Base64.h"
 #include <fstream>
+#include <string.h>
 
 void Gateway::InitMqttMessageHc()
 {

@@ -124,7 +124,9 @@ private:
 	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnEditRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnActiveRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
 
 	// Scene
