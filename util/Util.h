@@ -42,8 +42,7 @@ namespace Util
 	uint8_t CalCrc(uint8_t length, uint8_t *data);
 	string setString(const char *value);
 	string ConvertU32ToHexString(uint8_t *data, int len);
-	int ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun);
-	int ConvertWeekDayToIntCompare(int day);
+	int CheckDayInWeek(int day, int repeater);
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(string op, int a, int b, int c = 0);
 

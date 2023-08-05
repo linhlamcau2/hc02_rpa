@@ -17,5 +17,5 @@ private:
 	ModuleCct *moduleCct;
 
 public:
-	DeviceBleLightOnoffCctDim(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffCctDim(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
 };

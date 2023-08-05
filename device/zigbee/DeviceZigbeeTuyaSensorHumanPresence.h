@@ -11,5 +11,5 @@ private:
 	ClusterIlluminance *clusterIlluminance;
 
 public:
-	DeviceZigbeeTuyaSensorHumanPresence(string id, string name, string mac, uint32_t addr);
+	DeviceZigbeeTuyaSensorHumanPresence(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
 };

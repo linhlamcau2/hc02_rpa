@@ -3,14 +3,14 @@
 
 using namespace std;
 
-class AttributeModel : public Attribute
+class AttributeAppVer : public Attribute
 {
 private:
-	string model;
-	string modelKey;
+	uint8_t appVer;
+	string appVerKey;
 
 public:
-	AttributeModel(Cluster *cluster, string modelKey);
+	AttributeAppVer(Cluster *cluster, string appVerKey);
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 

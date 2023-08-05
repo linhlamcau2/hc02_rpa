@@ -204,6 +204,7 @@ private:
 
 	vector<message_rsp_list_st *> messageRespList;
 
+#define ZIGBEE_CHECK_OPCODE_BUFFER_MAX_SIZE 20
 	mutex vectorCheckOpcodeMtx;
 	vector<message_rsp_st *> messageCheckOpcodeList;
 

@@ -34,8 +34,8 @@ int ModuleCurtain::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) && dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
 	{
 		curtain = dataValue[KEY_ATTRIBUTE_CURTAIN].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -67,8 +67,8 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

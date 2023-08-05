@@ -6,7 +6,6 @@
 #include "module/ModuleBatteryLevel.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
-#include <mutex>
 
 using namespace std;
 
@@ -20,5 +19,5 @@ private:
 	ModuleTimeActionPir *moduleTimeActionPir;
 
 public:
-	DeviceBlePirLightSensorDC(string id, string name, string mac, string data, uint32_t addr, uint16_t version);
+	DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint16_t version);
 };

@@ -44,7 +44,9 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-	log_set_level(LOG_VERBOSE);
+#ifndef __ANDROID__
+	log_set_level(LOG_DEBUG);
+#endif
 	LOGI("Start");
 
 	buttonSignal = new ButtonSignal();
@@ -71,13 +73,13 @@ int main(int argc, char *argv[])
 	Device::InitDeviceModelList();
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
-	zigbeeProtocol->CommissionFormation();
+	// zigbeeProtocol->CommissionFormation();
 #endif
 
 	string mac = Wifi::GetMacAddress();
 	// string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId() + mac, config->GetUsername() + mac, config->GetPassword(), config->GetKeepAlive(),
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "minihub-" + mac, "minihub-" + mac, config->GetPassword(), config->GetKeepAlive(),
 												config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 

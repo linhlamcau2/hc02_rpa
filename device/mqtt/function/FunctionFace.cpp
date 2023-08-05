@@ -27,8 +27,8 @@ int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (this->faceId == faceId)
 		{
 			this->faceValue = faceValue;
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
 		}
 	}
 	return CODE_ERROR;

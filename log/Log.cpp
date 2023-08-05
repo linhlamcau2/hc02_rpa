@@ -1,3 +1,4 @@
+#ifndef __ANDROID__
 /*
  * log.c
  *
@@ -49,3 +50,5 @@ char* log_cut_str(char* full_path, uint8_t len) {
 	ptr = full_path + (k - len);
 	return ptr;
 }
+
+#endif /* __ANDROID__ */

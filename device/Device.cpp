@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include <Util.h>
 
-Device::Device(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
+Device::Device(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
 	this->mac = mac;
 	this->type = type;
-	this->data = data;
+	this->dataJson = dataJson;
 	this->version = version;
 	powerSource = POWER_UNKNOWN;
 
@@ -27,9 +27,9 @@ string Device::GetMac()
 	return mac;
 }
 
-string Device::GetData()
+Json::Value Device::GetData()
 {
-	return data;
+	return dataJson;
 }
 
 string Device::GetDeviceKey()

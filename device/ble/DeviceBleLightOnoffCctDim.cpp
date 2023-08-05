@@ -1,10 +1,10 @@
 #include "DeviceBleLightOnoffCctDim.h"
 #include "Log.h"
 
-DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
-	: DeviceBle(id, name, mac, data, addr, type, version)
+DeviceBleLightOnoffCctDim::DeviceBleLightOnoffCctDim(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version)
+	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
-	moduleOnOff = new ModuleOnOff(this, addr);
+	moduleOnOff = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
 	moduleDim = new ModuleDim(this, addr);
 	moduleCallScene = new ModuleCallScene(this, addr);
 	moduleCct = new ModuleCct(this, addr + 1);

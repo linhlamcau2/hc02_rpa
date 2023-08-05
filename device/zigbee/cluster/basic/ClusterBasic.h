@@ -1,6 +1,7 @@
 #pragma once
 #include "cluster/Cluster.h"
-#include "attribute/AttributeModel.h"
+#include "attribute/AttributeAppVer.h"
+#include "attribute/AttributeModelId.h"
 
 #define ATTRIBUTE_BASIC_ZCLVersion 0x0000
 #define ATTRIBUTE_BASIC_ApplicationVersion 0x0001
@@ -16,9 +17,10 @@ using namespace std;
 class ClusterBasic : public Cluster
 {
 private:
-	AttributeModel *attributeModel;
+	AttributeAppVer *attributeAppVer;
+	AttributeModelId *attributeModelId;
 
 protected:
 public:
-	ClusterBasic(Device *device, string modelKey);
+	ClusterBasic(Device *device);
 };

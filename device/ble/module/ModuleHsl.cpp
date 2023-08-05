@@ -49,17 +49,11 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
 			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 	{
-		uint16_t h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
-		uint16_t s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
-		uint16_t l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		if (this->h != h || this->s != s || this->l != l)
-		{
-			this->h = h;
-			this->s = s;
-			this->l = l;
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-		}
+		h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
+		s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
+		l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
+		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -77,16 +71,10 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_HSL)
 	{
-		if ((l != data_message->l) || (h != data_message->h) || (s != data_message->s))
-		{
-			l = data_message->l;
-			h = data_message->h;
-			s = data_message->s;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute();
-#endif
-			CheckTrigger();
-		}
+		l = data_message->l;
+		h = data_message->h;
+		s = data_message->s;
+		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

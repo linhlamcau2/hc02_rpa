@@ -40,8 +40,8 @@ int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		smoke = dataValue[KEY_ATTRIBUTE_SMOKE].asInt();
 		power = dataValue[KEY_ATTRIBUTE_SMOKE_PIN].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -59,8 +59,8 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)&data[3];
 		smoke = (data_message->smoke);
 		power = (data_message->power);
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

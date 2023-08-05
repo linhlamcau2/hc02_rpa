@@ -11,5 +11,5 @@ private:
 	ClusterOnoff *clusterOnoff;
 
 public:
-	DeviceZigbeeOnoff(string id, string name, string mac, uint32_t addr);
+	DeviceZigbeeOnoff(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
 };

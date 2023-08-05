@@ -7,9 +7,10 @@ class ModuleOnOff : public Module
 {
 protected:
 	uint8_t onoff;
+	string key;
 
 public:
-	ModuleOnOff(Device *device, uint32_t addr);
+	ModuleOnOff(Device *device, uint32_t addr, string onoffKey = "", uint32_t index = 0);
 	~ModuleOnOff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

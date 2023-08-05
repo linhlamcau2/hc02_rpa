@@ -42,8 +42,8 @@ int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		pir = dataValue[KEY_ATTRIBUTE_PIR].asInt();
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -64,8 +64,8 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		lux = data_message->lux;
 		if (lux > 0 && len > 7)
 		{
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
 
 			uint16_t sceneId = data[5] | (data[6] << 8);
 			if (sceneId > 0)

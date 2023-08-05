@@ -161,39 +161,28 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 	return string(buff);
 }
 
-int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+int Util::CheckDayInWeek(int day, int repeater)
 {
-	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
-}
-
-int Util::ConvertWeekDayToIntCompare(int day)
-{
-	int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+	int byte;
 	switch (day)
 	{
-	case 0:
-		sun = 1;
+	case 0: // sun
+		byte = 6;
 		break;
-	case 1:
-		mon = 1;
+	case 1: // mon
+	case 2: // tue
+	case 3: // wed
+	case 4: // thu
+	case 5: // fri
+	case 6: // sat
+		byte = day - 1;
 		break;
-	case 2:
-		tue = 1;
-		break;
-	case 3:
-		wed = 1;
-		break;
-	case 4:
-		thu = 1;
-		break;
-	case 5:
-		fri = 1;
-		break;
-	case 6:
-		sat = 1;
-		break;
+	default:
+		return false;
 	}
-	return ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+	if (repeater & (1 << byte))
+		return true;
+	return false;
 }
 
 vector<string> Util::splitString(string str, char splitter)

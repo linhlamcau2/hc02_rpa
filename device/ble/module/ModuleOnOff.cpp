@@ -6,9 +6,10 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr) : Module(device, addr)
+ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr, string onoffKey, uint32_t index) : Module(device, addr, index)
 {
 	onoff = 0;
+	key = onoffKey + (index ? to_string(index + 1) : "");
 }
 
 ModuleOnOff::~ModuleOnOff()
@@ -31,14 +32,10 @@ void ModuleOnOff::SaveAttribute()
 int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+			dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		uint8_t onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		if (this->onoff != onoff)
-		{
-			this->onoff = onoff;
-			CheckTrigger();
-		}
+		onoff = dataValue[key].asInt();
+		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -56,7 +53,6 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
-		uint8_t onoff = 0;
 		if (len == 3)
 		{
 			onoff = data_message->state;
@@ -65,14 +61,7 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			onoff = data_message->onoff;
 		}
-		if (this->onoff != onoff)
-		{
-			this->onoff = onoff;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute();
-#endif
-			CheckTrigger();
-		}
+		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -83,19 +72,19 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) &&
+			dataValue.isMember(key) &&
 			dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
-		if (dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		if (dataValue[key].isInt())
 		{
-			int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+			int onoff = dataValue[key].asInt();
 			rs = Util::CompareNumber(op, this->onoff, onoff);
 			return true;
 		}
-		else if (dataValue[KEY_ATTRIBUTE_ONOFF].isArray())
+		else if (dataValue[key].isArray())
 		{
-			Json::Value listValue = dataValue[KEY_ATTRIBUTE_ONOFF];
+			Json::Value listValue = dataValue[key];
 			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
 				int onoff1 = listValue[0].asInt();
@@ -110,16 +99,16 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
+	jsonValue[key] = onoff;
 }
 
 int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+			dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
+		int onoff = dataValue[key].asInt();
 		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
 		{
 			this->onoff = onoff;

@@ -11,5 +11,5 @@ private:
 	ClusterBasic *clusterBasic;
 
 public:
-	DeviceZigbeeLumiSensorWleakAQ1(string id, string name, string mac, uint32_t addr);
+	DeviceZigbeeLumiSensorWleakAQ1(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
 };

@@ -7,7 +7,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#define DEBUG_ENABLE 1
+#define DEBUG_ENABLE 0
 
 static void HandleInMessage(Uart *uart);
 
@@ -30,7 +30,7 @@ void Uart::init()
 {
 	if (Open(baudrate) < 0)
 	{
-		LOGE("Open uart error")
+		LOGE("Open uart error");
 		exit(1);
 	}
 }

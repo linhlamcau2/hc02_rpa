@@ -35,13 +35,13 @@ void ModuleTempHum::SaveAttribute()
 int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-		dataValue.isMember(KEY_ATTRIBUTE_TEMP) && dataValue[KEY_ATTRIBUTE_TEMP].isInt() &&
-		dataValue.isMember(KEY_ATTRIBUTE_HUMIDITY) && dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_TEMP) && dataValue[KEY_ATTRIBUTE_TEMP].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_HUMIDITY) && dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
 	{
 		temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
 		hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -66,8 +66,8 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (data_message->value1[0] & 0x80)
 				temp = (-1) * temp;
 			hum = (data_message->value2[0] << 8) | data_message->value2[1];
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
 			Util::SetTempOfScreenTouch(temp);
 			Util::SetHumOfScreenTouch(hum);
 			return CODE_OK;
@@ -78,8 +78,8 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			temp = (data[7] << 8) | data[8];
 			if (data[5] == 0xff)
 				temp = (-1) * temp;
-			BuildTelemetryValue(jsonValue);
 			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
 			return CODE_OK;
 		}
 	}
@@ -90,7 +90,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-		dataValue.isMember("op") && dataValue["op"].isString())
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(KEY_ATTRIBUTE_TEMP))

@@ -122,6 +122,7 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	{
 		uint16_t type = bswap_16(message_rsp->type);
 		uint16_t payloadLen = bswap_16(message_rsp->len);
+		uint16_t packageLen = payloadLen + sizeof(message_rsp_st) + 1;
 		if (message_rsp->payload[payloadLen] == MESSAGE_TAIL)
 		{
 			// LOGD("message_rsp->type: 0x%04X, message_rsp->len: %d", type, payloadLen);
@@ -146,16 +147,18 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 			}
 			else
 			{
-				message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(message_rsp->len + 2);
-				memcpy(messageCheckOpcode, message_rsp, message_rsp->len + 2);
 				vectorCheckOpcodeMtx.lock();
-				messageCheckOpcodeList.push_back(messageCheckOpcode);
+				if (messageCheckOpcodeList.size() < ZIGBEE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+				{
+					message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+					memcpy(messageCheckOpcode, message_rsp, packageLen);
+					messageCheckOpcodeList.push_back(messageCheckOpcode);
+				}
 				vectorCheckOpcodeMtx.unlock();
-				// CheckOpcodeException(messageCheckOpcode);
 			}
 		}
-		lenRemain -= payloadLen + sizeof(message_rsp_st) + 1;
-		message += payloadLen + sizeof(message_rsp_st) + 1;
+		lenRemain -= packageLen;
+		message += packageLen;
 		message_rsp = (message_rsp_st *)message;
 	}
 	Util::LedZigbee(true);
@@ -308,7 +311,8 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 						LOGI("addr: 0x%04X, type: 0x%04X, mac: %s", srcAddr, type, mac.c_str());
 						if (type && mac != "")
 						{
-							Device *device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, "", srcAddr, type, zclVersion | appVersion << 8, true);
+							Json::Value dataJson;
+							Device *device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, dataJson, srcAddr, type, zclVersion | appVersion << 8, true);
 							if (device)
 								gateway->AddDeviceToScanList(device);
 						}
@@ -449,7 +453,8 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				}
 				else
 				{
-					device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, "", srcAddr, type, zclVersion | appVersion << 8, true);
+					Json::Value dataJson;
+					device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Device::ConvertDeviceTypeToName(type), mac, dataJson, srcAddr, type, zclVersion | appVersion << 8, true);
 				}
 				if (device)
 					gateway->AddDeviceToScanList(device);

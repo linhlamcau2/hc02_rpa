@@ -33,12 +33,8 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
-		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		if (this->dim != dim)
-		{
-			this->dim = dim;
-			CheckTrigger();
-		}
+		dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -56,7 +52,6 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
 	{
-		int dim = 0;
 		if (len <= 5)
 		{
 			dim = data_message->dim_first * 100 / 65535;
@@ -65,14 +60,7 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			dim = data_message->dim * 100 / 65535;
 		}
-		if (this->dim != dim)
-		{
-			this->dim = dim;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute();
-#endif
-			CheckTrigger();
-		}
+		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

@@ -10,8 +10,8 @@ ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint32_t addr, uint32_t ind
 {
 	dimOn = 0;
 	dimOff = 0;
-	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index) : "");
-	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index) : "");
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index+1) : "");
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index+1) : "");
 }
 
 ModuleDimonDimoff::~ModuleDimonDimoff()
@@ -46,8 +46,8 @@ int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		dimOn = dataValue[keyDimOn].asInt();
 		dimOff = dataValue[keyDimOff].asInt();
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -75,8 +75,8 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

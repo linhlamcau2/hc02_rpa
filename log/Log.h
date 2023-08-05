@@ -8,6 +8,31 @@
 #ifndef LOG_H__
 #define LOG_H__
 
+#ifdef __ANDROID__
+
+#include <android/log.h>
+
+// typedef enum android_LogPriority
+// {
+// 	ANDROID_LOG_UNKNOWN = 0,
+// 	ANDROID_LOG_DEFAULT, /* only for SetMinPriority() */
+// 	ANDROID_LOG_VERBOSE,
+// 	ANDROID_LOG_DEBUG,
+// 	ANDROID_LOG_INFO,
+// 	ANDROID_LOG_WARN,
+// 	ANDROID_LOG_ERROR,
+// 	ANDROID_LOG_FATAL,
+// 	ANDROID_LOG_SILENT, /* only for SetMinPriority(); must be last */
+// } android_LogPriority;
+
+#define LOGV(...) ((void)__android_log_print(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
+#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
+#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
+
+#else
+
 #include <stdint.h>
 #include <stdarg.h>
 #include <time.h>
@@ -88,4 +113,5 @@ char* log_cut_str(char* full_path, uint8_t len);
 }
 #endif
 
+#endif /* __ANDROID__ */
 #endif /* LOG_H__ */

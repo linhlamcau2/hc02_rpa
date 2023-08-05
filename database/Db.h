@@ -17,7 +17,7 @@ class Db
 
 private:
 	sqlite3 *db;
-	pthread_mutex_t mutex;
+	mutex mtx;
 
 	int Sqlite_Exec(string &sql);
 	int ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));

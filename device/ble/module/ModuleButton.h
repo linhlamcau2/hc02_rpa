@@ -58,13 +58,4 @@ public:
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
-
-	/**
-	 * @brief Do an action
-	 *
-	 * @param dataValue data of action
-	 * @return true
-	 * @return false
-	 */
-	int Do(Json::Value &dataValue);
 };

@@ -9,7 +9,7 @@
 #include "mongoose.h"
 #endif
 
-void Gateway::initUdpMessage()
+void Gateway::InitUdpMessage()
 {
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));

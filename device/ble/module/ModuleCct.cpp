@@ -32,13 +32,9 @@ int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
-		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		if (this->cct != cct)
-		{
-			this->cct = cct;
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-		}
+		cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
+		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -56,7 +52,6 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_CCT)
 	{
-		int cct = 0;
 		if (len <= 6)
 		{
 			cct = (data_message->cct_first - 800) / 192;
@@ -65,14 +60,7 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			cct = (data_message->cct - 800) / 192;
 		}
-		if (this->cct != cct)
-		{
-			this->cct = cct;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute();
-#endif
-			CheckTrigger();
-		}
+		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
