@@ -139,7 +139,7 @@ private:
 	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
-	int OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue);
 
 	// Hc

@@ -17,7 +17,7 @@ void Gateway::InitMqttMessageScene()
 	OnLocalCallbackRegister("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("addFavoriteScene", bind(&Gateway::OnAddFavoriteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getSceneFavorite", bind(&Gateway::OnGetSceneFavorite, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
 }
 
@@ -305,7 +305,7 @@ int Gateway::OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
-int Gateway::OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnGetFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 {
 	Json::Value list;
 	for (const auto &[id, scene] : sceneBleList)
@@ -317,7 +317,7 @@ int Gateway::OnGetSceneFavorite(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["scenes"] = list;
 	respValue["data"]["code"] = CODE_OK;
-	respValue["cmd"] = "getSceneFavoriteRsp";
+	respValue["cmd"] = "getFavoriteSceneRsp";
 	return CODE_OK;
 }
 
