@@ -1,20 +1,20 @@
-#include "AttributeModel.h"
+#include "AttributeModelId.h"
 #include "../ClusterBasic.h"
 #include "Util.h"
 #include "Device.h"
 #include "ZigbeeProtocol.h"
 
-AttributeModel::AttributeModel(Cluster *cluster, string modelKey) : Attribute(ATTRIBUTE_BASIC_ModelIdentifier, cluster)
+AttributeModelId::AttributeModelId(Cluster *cluster, string modelIdKey) : Attribute(ATTRIBUTE_BASIC_ModelIdentifier, cluster)
 {
-	this->modelKey = modelKey;
+	this->modelIdKey = modelIdKey;
 }
 
-int AttributeModel::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+int AttributeModelId::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	return CODE_ERROR;
 }
 
-int AttributeModel::InputData(uint8_t *data, int len, Json::Value &jsonValue, int *lenRemain)
+int AttributeModelId::InputData(uint8_t *data, int len, Json::Value &jsonValue, int *lenRemain)
 {
 	typedef struct __attribute__((packed))
 	{
@@ -48,7 +48,7 @@ int AttributeModel::InputData(uint8_t *data, int len, Json::Value &jsonValue, in
 	return CODE_ERROR;
 }
 
-void AttributeModel::BuildTelemetryValue(Json::Value &jsonValue)
+void AttributeModelId::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[modelKey] = model;
+	jsonValue[modelIdKey] = model;
 }

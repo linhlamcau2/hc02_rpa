@@ -90,6 +90,7 @@ int getSizeOfDataType(uint8_t *dataType)
 	{
 		typedef struct __attribute__((packed))
 		{
+			uint8_t dataType;
 			uint16_t numberOfElement;
 			uint8_t data[];
 		} DataType_st;
