@@ -9,15 +9,15 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
-DEFINES += -DCONFIG_USE_MESSAGE_FORMAT_V2=1
-# DEFINES += -DCONFIG_SAVE_ATTRIBUTE
-# DEFINES += -D__OPENWRT__
-LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
+INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
+DEFINES 		+= -DCONFIG_USE_MESSAGE_FORMAT_V2=1
+# DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
+# DEFINES 	+= -D__OPENWRT__
+LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -luci -lcurl
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
-	DEFINES += -DCONFIG_ENABLE_ZIGBEE=1
+	DEFINES 	+= -DCONFIG_ENABLE_ZIGBEE=1
 
 	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)
@@ -83,7 +83,7 @@ $(BUILD_PATH)/%.o: %.c
 	
 install: $(APP)
 	install -d $(DESTDIR)$(PREFIX)/bin/
-	install -m 644 $(APP) $(DESTDIR)$(PREFIX)/bin/
+	install -m 744 $(APP) $(DESTDIR)$(PREFIX)/bin/
 
 clean: 
 	rm -rf $(APP) $(BUILD_PATH)

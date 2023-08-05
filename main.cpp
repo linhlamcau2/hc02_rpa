@@ -44,7 +44,9 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
+#ifndef __ANDROID__
 	log_set_level(LOG_DEBUG);
+#endif
 	LOGI("Start");
 
 	buttonSignal = new ButtonSignal();
