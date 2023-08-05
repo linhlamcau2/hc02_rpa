@@ -1436,3 +1436,13 @@ int Gateway::pushNewDeviceLocal(Json::Value &dataValue)
 {
 	return PublishToLocalMessage("newDev", dataValue, "newDevRsp", NULL, 0);
 }
+
+int Gateway::pushStartAddHc(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("startAddHc", dataValue, "startAddHcRsp", NULL, 0);
+}
+
+int Gateway::pushStopAddHc(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
+}

@@ -245,6 +245,8 @@ public:
 	int pushNewDeviceLocal(Json::Value &dataValue);
 	int pushDeviceUpdateLocal(Json::Value &dataValue);
 	int pushNewDeviceCloud(Json::Value &dataValue);
+	int pushStartAddHc(Json::Value &dataValue);
+	int pushStopAddHc(Json::Value &dataValue);
 };
 
 extern Gateway *gateway;
