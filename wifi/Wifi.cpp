@@ -171,7 +171,7 @@ int Wifi::ConnectToWifi(string ssid, string password, string encryption)
 		system("uci set wireless.wifinet1=wifi-iface >> /output.txt 2>&1");
 		system(string("uci set wireless.wifinet1.ssid=\"" + ssid + "\" >> /output.txt 2>&1").c_str());
 		system("uci set wireless.wifinet1.mode='sta' >> /output.txt 2>&1");
-		system("uci set wireless.wifinet1.network='wwan' >> /output.txt 2>&1");
+		system("uci set wireless.wifinet1.network='wan' >> /output.txt 2>&1");
 		system("uci set wireless.wifinet1.device='radio0' >> /output.txt 2>&1");
 		system(string("uci set wireless.wifinet1.key='" + password + "' >> /output.txt 2>&1").c_str());
 		system(string("uci set wireless.wifinet1.encryption='" + encry + "' >> /output.txt 2>&1").c_str());

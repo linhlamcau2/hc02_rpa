@@ -2575,9 +2575,21 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 			uint8_t percent;
 		} control_rsp_message_t;
 		control_rsp_message_t *control_rsp_message = (control_rsp_message_t *)dataRsp;
-		if (control_rsp_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && control_rsp_message->type == type && control_rsp_message->percent == percent)
+		if (control_rsp_message->header == RD_OPCODE_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED && control_rsp_message->type == type)
 		{
-			return CODE_OK;
+			if (type == PERCENT)
+			{
+				if (control_rsp_message->percent == percent)
+				{
+					return CODE_OK;
+				}
+				LOGW("control resp opened error");
+				return CODE_ERROR;
+			}
+			else
+			{
+				return CODE_OK;
+			}
 		}
 		LOGW("control resp state not match with input control");
 	}

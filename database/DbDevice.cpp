@@ -65,7 +65,7 @@ int Db::DeviceAdd(Device *device)
 
 int Db::DeviceUpdate(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + macaron::Base64::Encode(device->GetData().toString()) + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + device->GetName() + "' WHERE mac='" + device->GetMac() + "';";
 	return Sqlite_Exec(sql);
 }
 

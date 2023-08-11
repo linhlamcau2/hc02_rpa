@@ -1,0 +1,49 @@
+#pragma once
+#include "Module.h"
+
+using namespace std;
+
+class ModuleSelectMotor : public Module
+{
+protected:
+    uint8_t motor;
+public:
+    ModuleSelectMotor(Device *device, uint32_t);
+    ~ModuleSelectMotor();
+#ifdef CONFIG_SAVE_ATTRIBUTE
+	/**
+	 * @brief Init parameter value from database after system start
+	 *
+	 * @param attributeId id of attribute
+	 * @param value value of attribute
+	 */
+	void InitAttribute(int attributeId, double value);
+
+	/**
+	 * @brief Save parameter value to database
+	 *
+	 */
+	void SaveAttribute();
+#endif
+
+	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
+
+	/**
+	 * @brief Parse raw data to module parameter value
+	 *
+	 * @param data data from device driver (uart)
+	 * @param len length of data
+	 * @param jsonValue json value to put parameter after parsing
+	 * @return true if data include this module opcode
+	 * @return false
+	 */
+	int InputData(uint8_t *data, int len, Json::Value &jsonValue);
+
+	/**
+	 * @brief Build telemetry message with this module
+	 *
+	 * @param jsonValue
+	 */
+	void BuildTelemetryValue(Json::Value &jsonValue);
+    int Do(Json::Value &dataValue);
+};

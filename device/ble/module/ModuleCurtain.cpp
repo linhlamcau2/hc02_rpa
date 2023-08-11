@@ -53,14 +53,14 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 
-	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN) && ((data_message->header & 0x00FF) == PERCENT)) ||
+	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)) ||
 			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PERCENT))
 	{
 		if (data_message->opcode == 0x52)
 		{
 			curtain = (data_message->header >> 8) & 0xFF;
 		}
-		else if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
+		if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
 		{
 			curtain = data_message->curtain;
 		}
@@ -88,7 +88,7 @@ bool ModuleCurtain::CheckData(Json::Value &dataValue, bool &rs)
 			rs = Util::CompareNumber(op, this->curtain, curtain);
 			return true;
 		}
-		else if (dataValue[KEY_ATTRIBUTE_CURTAIN].isArray())
+		if (dataValue[KEY_ATTRIBUTE_CURTAIN].isArray())
 		{
 			Json::Value listValue = dataValue[KEY_ATTRIBUTE_CURTAIN];
 			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
@@ -105,20 +105,46 @@ bool ModuleCurtain::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleCurtain::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_CURTAIN] = curtain;
+	jsonValue[KEY_ATTRIBUTE_CURTAIN_OPENED] = curtain;
 }
 
 int ModuleCurtain::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
-	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) && dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
+	if (bleProtocol && dataValue.isObject())
 	{
-		int curtain = dataValue[KEY_ATTRIBUTE_CURTAIN].asInt();
-		if (bleProtocol->ControlOpenClosePausePercent(addr, PERCENT, (uint8_t)curtain) == CODE_OK)
+		uint8_t mode = -1;
+		int value = -1;
+		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
 		{
-			this->curtain = curtain;
-			return CODE_OK;
+			mode = OPEN;
+			value = dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].asInt();
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_CLOSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].isInt())
+		{
+			mode = CLOSE;
+			value = dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].asInt();
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_PAUSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].isInt())
+		{
+			mode = PAUSE;
+			value = dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].asInt();
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPENED) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].isInt())
+		{
+			mode = PERCENT;
+			value = dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].asInt();
+		}
+		if (mode != -1 && value != -1)
+		{
+			if (bleProtocol->ControlOpenClosePausePercent(addr, mode, (uint8_t)value) == CODE_OK)
+			{
+				if (mode == PERCENT)
+				{
+					this->curtain = value;
+				}
+				return CODE_OK;
+			}
 		}
 	}
 	return CODE_ERROR;

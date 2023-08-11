@@ -357,6 +357,7 @@ int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
 		if (device)
 		{
 			device->SetName(name);
+			database->DeviceUpdate(device);
 		}
 	}
 	respValue["data"]["code"] = CODE_OK;
