@@ -7,12 +7,10 @@ DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, str
 	this->countElement = countElement;
 	for (int i = 0; i < countElement; i++)
 	{
-		moduleButton = new ModuleButton(this, addr + i, i);
-		modules.push_back(moduleButton);
+		moduleOnOff = new ModuleOnOff(this, addr + i, KEY_ATTRIBUTE_BUTTON, i);
+		modules.push_back(moduleOnOff);
 		moduleDimonDimoff = new ModuleDimonDimoff(this, addr + i, i);
 		modules.push_back(moduleDimonDimoff);
 	}
-	// moduleOnOff = new ModuleOnOff(this, addr);
-	// modules.push_back(moduleOnOff);
 	powerSource = POWER_AC;
 }
