@@ -1,7 +1,7 @@
 #include "DeviceBle.h"
 #include "Log.h"
 
-DeviceBle::DeviceBle(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, dataJson, addr, type, version)
+DeviceBle::DeviceBle(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, dataJson, addr, type, version)
 {
 	protocol = BLE_DEVICE;
 	countElement = 1;
@@ -26,7 +26,7 @@ string DeviceBle::GetDeviceKey(Json::Value &dataJson)
 	return deviceKey;
 }
 
-bool DeviceBle::CheckAddr(uint32_t addr)
+bool DeviceBle::CheckAddr(uint16_t addr)
 {
 	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
 }
@@ -56,7 +56,7 @@ void DeviceBle::InputData(Json::Value &dataValue)
 		PushTelemetry(values);
 }
 
-void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBle::InputData(uint8_t *data, int len, uint16_t addr)
 {
 	values = Json::Value::null;
 	for (auto &module : modules)

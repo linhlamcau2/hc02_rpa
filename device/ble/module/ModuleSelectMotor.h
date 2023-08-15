@@ -8,7 +8,7 @@ class ModuleSelectMotor : public Module
 protected:
     uint8_t motor;
 public:
-    ModuleSelectMotor(Device *device, uint32_t);
+    ModuleSelectMotor(Device *device, uint16_t addr);
     ~ModuleSelectMotor();
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**

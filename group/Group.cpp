@@ -15,7 +15,7 @@ DeviceInGroup::DeviceInGroup(Device *device, int epId)
 	this->epId = epId;
 }
 
-Group::Group(string id, uint32_t addr, string name) : Object(id, addr, name)
+Group::Group(string id, uint16_t addr, string name) : Object(id, addr, name)
 {
 }
 

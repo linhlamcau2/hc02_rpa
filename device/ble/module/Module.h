@@ -10,15 +10,15 @@ class Device;
 class Module
 {
 protected:
-	uint32_t addr;
+	uint16_t addr;
 	uint32_t index;
 	Device *device;
 
 public:
-	Module(Device *device, uint32_t addr, uint32_t index = 0);
+	Module(Device *device, uint16_t addr, uint32_t index = 0);
 	virtual ~Module();
 
-	bool CheckAddr(uint32_t addr);
+	bool CheckAddr(uint16_t addr);
 
 	/**
 	 * @brief Parse raw data to element parameter value

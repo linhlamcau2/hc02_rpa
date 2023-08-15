@@ -11,5 +11,5 @@ private:
 	ModuleButton *moduleButton[6];
 
 public:
-	DeviceBleSwitchScene6AC(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint16_t version);
+	DeviceBleSwitchScene6AC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version);
 };

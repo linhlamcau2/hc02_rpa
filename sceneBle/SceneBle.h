@@ -26,7 +26,7 @@ private:
 
 public:
 	vector<DeviceInSceneBle *> deviceList;
-	SceneBle(string id, uint32_t addr, string name);
+	SceneBle(string id, uint16_t addr, string name);
 	~SceneBle();
 	bool GetIsFavorite();
 	bool SetIsFavorite(bool isFavorite);

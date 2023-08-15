@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleLightSensor::ModuleLightSensor(Device *device, uint32_t addr) : Module(device, addr)
+ModuleLightSensor::ModuleLightSensor(Device *device, uint16_t addr) : Module(device, addr)
 {
 	lux = 0;
 }

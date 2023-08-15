@@ -1,6 +1,6 @@
 #include "DeviceZigbeeLumiSensorMagnet.h"
 
-DeviceZigbeeLumiSensorMagnet::DeviceZigbeeLumiSensorMagnet(string id, string name, string mac, Json::Value &dataJson, uint32_t addr)
+DeviceZigbeeLumiSensorMagnet::DeviceZigbeeLumiSensorMagnet(string id, string name, string mac, Json::Value &dataJson, uint16_t addr)
 		: DeviceZigbee(id, name, mac, dataJson, addr, ZIGBEE_LUMI_SENSOR_MAGNET)
 {
 	clusterBasic = new ClusterBasic(this);

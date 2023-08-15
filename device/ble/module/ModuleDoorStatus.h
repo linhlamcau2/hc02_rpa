@@ -9,7 +9,7 @@ protected:
 	uint16_t status;
 
 public:
-	ModuleDoorStatus(Device *device, uint32_t addr);
+	ModuleDoorStatus(Device *device, uint16_t addr);
 	~ModuleDoorStatus();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

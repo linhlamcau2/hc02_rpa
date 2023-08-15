@@ -16,7 +16,7 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int addr = sqlite3_column_int(stmt, index++);
+				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				Group *group = gateway->getGroupFromId(id);

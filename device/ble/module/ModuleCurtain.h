@@ -9,7 +9,7 @@ protected:
 	uint8_t curtain;
 
 public:
-	ModuleCurtain(Device *device, uint32_t addr);
+	ModuleCurtain(Device *device, uint16_t addr);
 	~ModuleCurtain();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

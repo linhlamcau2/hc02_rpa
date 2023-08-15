@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleTempHum::ModuleTempHum(Device *device, uint32_t addr) : Module(device, addr)
+ModuleTempHum::ModuleTempHum(Device *device, uint16_t addr) : Module(device, addr)
 {
 	temp = 0;
 	hum = 0;

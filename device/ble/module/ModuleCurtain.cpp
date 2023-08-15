@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleCurtain::ModuleCurtain(Device *device, uint32_t addr) : Module(device, addr)
+ModuleCurtain::ModuleCurtain(Device *device, uint16_t addr) : Module(device, addr)
 {
 	curtain = 0;
 }

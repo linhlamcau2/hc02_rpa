@@ -9,7 +9,7 @@ protected:
 	uint8_t mode;
 
 public:
-	ModuleModeRgb(Device *device, uint32_t addr);
+	ModuleModeRgb(Device *device, uint16_t addr);
 	~ModuleModeRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

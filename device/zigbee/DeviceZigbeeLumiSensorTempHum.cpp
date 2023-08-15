@@ -1,6 +1,6 @@
 #include "DeviceZigbeeLumiSensorTempHum.h"
 
-DeviceZigbeeLumiSensorTempHum::DeviceZigbeeLumiSensorTempHum(string id, string name, string mac, Json::Value &dataJson, uint32_t addr)
+DeviceZigbeeLumiSensorTempHum::DeviceZigbeeLumiSensorTempHum(string id, string name, string mac, Json::Value &dataJson, uint16_t addr)
 		: DeviceZigbee(id, name, mac, dataJson, addr, ZIGBEE_LUMI_SENSOR_TEMP_HUM)
 {
 	clusterBasic = new ClusterBasic(this);

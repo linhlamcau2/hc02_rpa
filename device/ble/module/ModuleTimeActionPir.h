@@ -9,7 +9,7 @@ protected:
 	uint16_t time;
 
 public:
-	ModuleTimeActionPir(Device *device, uint32_t addr);
+	ModuleTimeActionPir(Device *device, uint16_t addr);
 	~ModuleTimeActionPir();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

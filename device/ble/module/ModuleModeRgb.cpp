@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleModeRgb::ModuleModeRgb(Device *device, uint32_t addr) : Module(device, addr)
+ModuleModeRgb::ModuleModeRgb(Device *device, uint16_t addr) : Module(device, addr)
 {
 	mode = 0;
 }

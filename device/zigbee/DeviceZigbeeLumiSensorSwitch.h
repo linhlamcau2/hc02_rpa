@@ -13,5 +13,5 @@ private:
 	ClusterOnoff *clusterOnoff;
 
 public:
-	DeviceZigbeeLumiSensorSwitch(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
+	DeviceZigbeeLumiSensorSwitch(string id, string name, string mac, Json::Value &dataJson, uint16_t addr);
 };

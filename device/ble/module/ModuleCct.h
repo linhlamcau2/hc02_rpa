@@ -9,7 +9,7 @@ protected:
 	uint16_t cct;
 
 public:
-	ModuleCct(Device *device, uint32_t addr);
+	ModuleCct(Device *device, uint16_t addr);
 	~ModuleCct();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

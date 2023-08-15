@@ -15,5 +15,5 @@ private:
     ModuleSelectMotor *moduleSelectMotor;
 
 public:
-	DeviceBleCurtain(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleCurtain(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 };

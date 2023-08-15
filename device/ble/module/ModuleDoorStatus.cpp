@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDoorStatus::ModuleDoorStatus(Device *device, uint32_t addr) : Module(device, addr)
+ModuleDoorStatus::ModuleDoorStatus(Device *device, uint16_t addr) : Module(device, addr)
 {
 	status = 0;
 }

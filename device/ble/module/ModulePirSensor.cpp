@@ -8,7 +8,7 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-ModulePirSensor::ModulePirSensor(Device *device, uint32_t addr) : Module(device, addr)
+ModulePirSensor::ModulePirSensor(Device *device, uint16_t addr) : Module(device, addr)
 {
 	pir = 0;
 }

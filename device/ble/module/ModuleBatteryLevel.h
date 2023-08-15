@@ -9,7 +9,7 @@ protected:
 	uint16_t bat;
 
 public:
-	ModuleBatteryLevel(Device *device, uint32_t addr);
+	ModuleBatteryLevel(Device *device, uint16_t addr);
 	~ModuleBatteryLevel();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

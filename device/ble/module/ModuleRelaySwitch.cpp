@@ -5,7 +5,7 @@
 #include "Device.h"
 #include "BleProtocol.h"
 
-ModuleRelaySwitch::ModuleRelaySwitch(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
+ModuleRelaySwitch::ModuleRelaySwitch(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
 	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index + 1) : "");

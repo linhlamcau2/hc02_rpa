@@ -47,8 +47,8 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, RuleType type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData);
-	Rule(string id, RuleType type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData);
+	Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData);
+	Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData);
 	~Rule();
 
 	Json::Value GetRuleData();

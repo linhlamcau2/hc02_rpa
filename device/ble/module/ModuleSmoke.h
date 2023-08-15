@@ -10,7 +10,7 @@ protected:
 	uint8_t power;
 
 public:
-	ModuleSmoke(Device *device, uint32_t addr);
+	ModuleSmoke(Device *device, uint16_t addr);
 	~ModuleSmoke();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

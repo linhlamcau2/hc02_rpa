@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleCct::ModuleCct(Device *device, uint32_t addr) : Module(device, addr)
+ModuleCct::ModuleCct(Device *device, uint16_t addr) : Module(device, addr)
 {
 	cct = 0;
 }

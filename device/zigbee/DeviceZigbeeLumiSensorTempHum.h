@@ -15,5 +15,5 @@ private:
 	ClusterHumidity *clusterHumidity;
 
 public:
-	DeviceZigbeeLumiSensorTempHum(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
+	DeviceZigbeeLumiSensorTempHum(string id, string name, string mac, Json::Value &dataJson, uint16_t addr);
 };

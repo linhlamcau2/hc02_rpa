@@ -10,7 +10,7 @@ protected:
 	string keyDimOn, keyDimOff;
 
 public:
-	ModuleDimonDimoff(Device *device, uint32_t addr, uint32_t index = 0);
+	ModuleDimonDimoff(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleDimonDimoff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

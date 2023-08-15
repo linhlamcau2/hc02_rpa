@@ -19,7 +19,7 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				string mac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				uint32_t addr = sqlite3_column_int(stmt, index++);
+				uint16_t addr = sqlite3_column_int(stmt, index++);
 				uint32_t type = sqlite3_column_int(stmt, index++);
 				string firmware_version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string hardware_version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));

@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint32_t addr, uint32_t index) : Module(device, addr, index)
+ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
 	dimOn = 0;
 	dimOff = 0;

@@ -10,7 +10,7 @@ protected:
 	uint16_t lux;
 
 public:
-	ModulePirLight(Device *device, uint32_t addr);
+	ModulePirLight(Device *device, uint16_t addr);
 	~ModulePirLight();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

@@ -11,7 +11,7 @@ protected:
 	uint16_t pm1_0;
 
 public:
-	ModulePmSensor(Device *device, uint32_t addr);
+	ModulePmSensor(Device *device, uint16_t addr);
 	~ModulePmSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

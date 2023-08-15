@@ -10,7 +10,7 @@ protected:
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
-	ModuleRgb(Device *device, uint32_t addr, uint32_t index = 0);
+	ModuleRgb(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

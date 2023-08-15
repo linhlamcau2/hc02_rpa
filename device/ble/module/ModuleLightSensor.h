@@ -9,7 +9,7 @@ protected:
 	uint16_t lux;
 
 public:
-	ModuleLightSensor(Device *device, uint32_t addr);
+	ModuleLightSensor(Device *device, uint16_t addr);
 	~ModuleLightSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

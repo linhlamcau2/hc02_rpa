@@ -12,7 +12,7 @@ protected:
 	uint16_t value;
 
 public:
-	ModuleCallScene(Device *device, uint32_t addr);
+	ModuleCallScene(Device *device, uint16_t addr);
 	~ModuleCallScene();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

@@ -12,7 +12,7 @@ protected:
 	vector<Function *> functions;
 
 public:
-	DeviceMqtt(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceMqtt(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 	~DeviceMqtt();
 
 	void AddFuntion(Json::Value &dataValue, bool addToDb);

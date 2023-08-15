@@ -115,7 +115,7 @@ Device *Gateway::getDeviceFromId(string id)
 	return NULL;
 }
 
-DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
+DeviceBle *Gateway::getDeviceBleFromAddr(uint16_t addr)
 {
 	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
@@ -135,7 +135,7 @@ DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
 }
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint32_t addr)
+DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint16_t addr)
 {
 	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
@@ -176,7 +176,7 @@ Group *Gateway::getGroupFromId(string id)
 	return NULL;
 }
 
-Group *Gateway::getGroupFromAddr(int addr)
+Group *Gateway::getGroupFromAddr(uint16_t addr)
 {
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
@@ -227,7 +227,7 @@ SceneBle *Gateway::getSceneBleFromId(string id)
 	return NULL;
 }
 
-SceneBle *Gateway::getSceneBleFromAddr(int addr)
+SceneBle *Gateway::getSceneBleFromAddr(uint16_t addr)
 {
 	sceneBleListMtx.lock();
 	for (const auto &[id, sceneBle] : sceneBleList)
@@ -799,7 +799,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	pushNewDeviceLocal(jsonValue);
 }
 
-Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, bool addDatabase)
+Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
 	Device *device = NULL;
@@ -1020,7 +1020,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		Json::Value outputValues = ruleValue["output"];
 		string name = ruleValue["name"].asString();
 		int repeat = 255;
-		uint32_t addr = 0;
+		uint16_t addr = 0;
 		Rule *rule = NULL;
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject() &&
 				inputValue.isMember("repeat") && inputValue["repeat"].isInt())

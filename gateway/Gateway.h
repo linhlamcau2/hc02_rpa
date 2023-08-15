@@ -178,19 +178,19 @@ public:
 
 	Device *getDeviceFromMac(string mac);
 	Device *getDeviceFromId(string id);
-	DeviceBle *getDeviceBleFromAddr(uint32_t addr);
+	DeviceBle *getDeviceBleFromAddr(uint16_t addr);
 #ifdef CONFIG_ENABLE_ZIGBEE
-	DeviceZigbee *getDeviceZigbeeFromAddr(uint32_t addr);
+	DeviceZigbee *getDeviceZigbeeFromAddr(uint16_t addr);
 #endif
 	void delDevice(Device *device);
 
 	Group *getGroupFromId(string id);
-	Group *getGroupFromAddr(int addr);
+	Group *getGroupFromAddr(uint16_t addr);
 	void delGroup(Group *group);
 	uint32_t getNextGroupAddr();
 
 	SceneBle *getSceneBleFromId(string id);
-	SceneBle *getSceneBleFromAddr(int addr);
+	SceneBle *getSceneBleFromAddr(uint16_t addr);
 	void delSceneBle(SceneBle *sceneBle);
 	uint32_t getNextSceneBleAddr();
 
@@ -233,7 +233,7 @@ public:
 	void OnTimerTest();
 	void PushRelayState(uint8_t relay);
 
-	Device *AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, bool addDatabase);
+	Device *AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, bool addDatabase);
 	Group *AddNewGroup(Group *group, bool addDatabase);
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addDatabase);
 	Room *AddNewRoom(Room *room, bool addDatabase);

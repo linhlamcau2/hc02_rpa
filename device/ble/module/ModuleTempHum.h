@@ -10,7 +10,7 @@ protected:
 	int hum;
 
 public:
-	ModuleTempHum(Device *device, uint32_t addr);
+	ModuleTempHum(Device *device, uint16_t addr);
 	~ModuleTempHum();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

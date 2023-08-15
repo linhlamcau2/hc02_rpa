@@ -9,7 +9,7 @@ protected:
 	uint16_t hangOn;
 
 public:
-	ModuleDoorHangOn(Device *device, uint32_t addr);
+	ModuleDoorHangOn(Device *device, uint16_t addr);
 	~ModuleDoorHangOn();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

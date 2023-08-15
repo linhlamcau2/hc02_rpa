@@ -152,8 +152,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 		string groupName = reqValue["name"].asString();
 		Json::Value devicesValue = reqValue["devices"];
 		// TODO: add start address of normal group
-		int groupAddr = getNextGroupAddr();
-		Group *group = new Group(groupId, groupAddr, groupName);
+		Group *group = new Group(groupId, getNextGroupAddr(), groupName);
 		if (group)
 		{
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())

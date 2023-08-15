@@ -1,6 +1,6 @@
 #include "DeviceZigbeeLumiSensorSwitch.h"
 
-DeviceZigbeeLumiSensorSwitch::DeviceZigbeeLumiSensorSwitch(string id, string name, string mac, Json::Value &dataJson, uint32_t addr)
+DeviceZigbeeLumiSensorSwitch::DeviceZigbeeLumiSensorSwitch(string id, string name, string mac, Json::Value &dataJson, uint16_t addr)
 		: DeviceZigbee(id, name, mac, dataJson, addr, ZIGBEE_LUMI_SENSOR_SWITCH)
 {
 	clusterBasic = new ClusterBasic(this);

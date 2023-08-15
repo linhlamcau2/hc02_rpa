@@ -3,7 +3,7 @@
 #include "Log.h"
 #include "Util.h"
 
-DeviceBlePirLightSensorDC::DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint16_t version)
+DeviceBlePirLightSensorDC::DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version)
 		: DeviceBle(id, name, mac, dataJson, addr, BLE_PIR_LIGHT_SENSOR_DC, version)
 {
 	modulePirLight = new ModulePirLight(this, addr);

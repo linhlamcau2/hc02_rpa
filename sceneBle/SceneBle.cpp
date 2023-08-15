@@ -9,7 +9,7 @@ DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 	this->data = data;
 }
 
-SceneBle::SceneBle(string id, uint32_t addr, string name) : Object(id, addr, name)
+SceneBle::SceneBle(string id, uint16_t addr, string name) : Object(id, addr, name)
 {
 }
 

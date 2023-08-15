@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleHsl::ModuleHsl(Device *device, uint32_t addr) : Module(device, addr)
+ModuleHsl::ModuleHsl(Device *device, uint16_t addr) : Module(device, addr)
 {
 	h = 0;
 	s = 0;

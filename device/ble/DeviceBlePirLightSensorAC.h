@@ -17,5 +17,5 @@ private:
 	ModuleTimeActionPir *moduleTimeActionPir;
 
 public:
-	DeviceBlePirLightSensorAC(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint16_t version);
+	DeviceBlePirLightSensorAC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version);
 };

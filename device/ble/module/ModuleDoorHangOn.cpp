@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDoorHangOn::ModuleDoorHangOn(Device *device, uint32_t addr) : Module(device, addr)
+ModuleDoorHangOn::ModuleDoorHangOn(Device *device, uint16_t addr) : Module(device, addr)
 {
 	hangOn = 0;
 }

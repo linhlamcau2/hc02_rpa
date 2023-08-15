@@ -182,7 +182,7 @@ public:
 	time_t lastTimeCheckActive;
 
 public:
-	Device(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
+	Device(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 	virtual ~Device();
 
 	string GetMac();
@@ -193,7 +193,7 @@ public:
 	int GetRSSI();
 
 	void SetRSSI(int rssi);
-	virtual bool CheckAddr(uint32_t addr) { return this->addr == addr; }
+	virtual bool CheckAddr(uint16_t addr) { return this->addr == addr; }
 	virtual bool CheckId(string id) { return this->id == id; }
 	virtual string GetDeviceKey();
 
@@ -211,7 +211,7 @@ public:
 
 	virtual int BuildAttributesValue(Json::Value &pushDataValue);
 
-	void DeviceInputData(uint8_t *data, int len, uint32_t addr);
+	void DeviceInputData(uint8_t *data, int len, uint16_t addr);
 
 	virtual void InitAttribute(int attributeId, double value) {}
 	virtual void CheckTrigger();
@@ -231,7 +231,7 @@ public:
 	// virtual void Getstatus(Json::Value &jsonValue) {}
 
 	virtual void InputData(Json::Value &dataValue) {}
-	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0){};
+	virtual void InputData(uint8_t *data, int len, uint16_t addr = 0){};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }

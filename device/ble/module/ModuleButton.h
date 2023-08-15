@@ -10,7 +10,7 @@ protected:
 	string key;
 
 public:
-	ModuleButton(Device *device, uint32_t addr, uint32_t index = 0);
+	ModuleButton(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleButton();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

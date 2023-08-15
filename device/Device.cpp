@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <Util.h>
 
-Device::Device(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
+Device::Device(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version) : Object(id, addr, name)
 {
 	this->mac = mac;
 	this->type = type;
@@ -100,7 +100,7 @@ int Device::BuildAttributesValue(Json::Value &pushDataValue)
 	return CODE_OK;
 }
 
-void Device::DeviceInputData(uint8_t *data, int len, uint32_t addr)
+void Device::DeviceInputData(uint8_t *data, int len, uint16_t addr)
 {
 	InputData(data, len, addr);
 }

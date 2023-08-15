@@ -2,7 +2,7 @@
 #include "Device.h"
 #include "Log.h"
 
-Module::Module(Device *device, uint32_t addr, uint32_t index)
+Module::Module(Device *device, uint16_t addr, uint32_t index)
 {
 	this->device = device;
 	this->addr = addr;
@@ -13,7 +13,7 @@ Module::~Module()
 {
 }
 
-bool Module::CheckAddr(uint32_t addr)
+bool Module::CheckAddr(uint16_t addr)
 {
 	return this->addr == addr;
 }

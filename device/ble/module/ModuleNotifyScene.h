@@ -10,7 +10,7 @@ protected:
 	uint16_t idScene;
 
 public:
-	ModuleNotifyScene(Device *device, uint32_t addr);
+	ModuleNotifyScene(Device *device, uint16_t addr);
 	~ModuleNotifyScene();
 
 	/**

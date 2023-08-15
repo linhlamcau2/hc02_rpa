@@ -8,7 +8,7 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-ModulePirLight::ModulePirLight(Device *device, uint32_t addr) : Module(device, addr)
+ModulePirLight::ModulePirLight(Device *device, uint16_t addr) : Module(device, addr)
 {
 	pir = 0;
 	lux = 0;

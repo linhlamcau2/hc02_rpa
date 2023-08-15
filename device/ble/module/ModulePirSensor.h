@@ -9,7 +9,7 @@ protected:
 	uint16_t pir;
 
 public:
-	ModulePirSensor(Device *device, uint32_t addr);
+	ModulePirSensor(Device *device, uint16_t addr);
 	~ModulePirSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

@@ -7,7 +7,7 @@
 #include "Sntp.h"
 #endif
 
-Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
@@ -18,7 +18,7 @@ Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint32
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;

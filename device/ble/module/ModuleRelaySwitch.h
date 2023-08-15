@@ -10,7 +10,7 @@ protected:
 	string key;
 
 public:
-	ModuleRelaySwitch(Device *device, uint32_t addr, uint32_t index = 0);
+	ModuleRelaySwitch(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleRelaySwitch();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE

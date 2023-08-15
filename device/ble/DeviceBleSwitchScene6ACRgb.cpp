@@ -3,7 +3,7 @@
 #include "Util.h"
 #include "Gateway.h"
 
-DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version)
+DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version)
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
 	for (int i = 0; i < 6; i++)
@@ -26,7 +26,7 @@ bool DeviceBleSwitchScene6ACRgb::CheckId(string id)
 	return false;
 }
 
-void DeviceBleSwitchScene6ACRgb::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBleSwitchScene6ACRgb::InputData(uint8_t *data, int len, uint16_t addr)
 {
 	int indexButton = data[5];
 	if (data[0] == 0xe3)

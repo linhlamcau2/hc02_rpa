@@ -7,7 +7,7 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-ModuleCallScene::ModuleCallScene(Device *device, uint32_t addr) : Module(device, addr)
+ModuleCallScene::ModuleCallScene(Device *device, uint16_t addr) : Module(device, addr)
 {
 	idScene = 0;
 	id = 0;

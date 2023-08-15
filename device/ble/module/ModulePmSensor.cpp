@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModulePmSensor::ModulePmSensor(Device *device, uint32_t addr) : Module(device, addr)
+ModulePmSensor::ModulePmSensor(Device *device, uint16_t addr) : Module(device, addr)
 {
 	pm25 = 0;
 	pm10 = 0;

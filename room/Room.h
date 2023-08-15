@@ -22,7 +22,7 @@ public:
 	vector<SceneBle *> sceneBleList;
 	vector<Group *> groupList;
 
-	Room(string id, uint32_t addr, string name);
+	Room(string id, uint16_t addr, string name);
 	~Room();
 
 	int GetPositionDevice(Device *device);

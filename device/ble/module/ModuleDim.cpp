@@ -6,7 +6,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDim::ModuleDim(Device *device, uint32_t addr) : Module(device, addr)
+ModuleDim::ModuleDim(Device *device, uint16_t addr) : Module(device, addr)
 {
 	dim = 0;
 }

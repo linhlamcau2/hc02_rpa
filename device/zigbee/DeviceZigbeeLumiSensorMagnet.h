@@ -13,5 +13,5 @@ private:
 	ClusterOnoff *clusterOnoff;
 
 public:
-	DeviceZigbeeLumiSensorMagnet(string id, string name, string mac, Json::Value &dataJson, uint32_t addr);
+	DeviceZigbeeLumiSensorMagnet(string id, string name, string mac, Json::Value &dataJson, uint16_t addr);
 };

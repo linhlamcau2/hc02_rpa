@@ -3,7 +3,7 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-Room::Room(string id, uint32_t addr, string name) : Group(id, addr, name)
+Room::Room(string id, uint16_t addr, string name) : Group(id, addr, name)
 {
 	dataConfig = "";
 }
