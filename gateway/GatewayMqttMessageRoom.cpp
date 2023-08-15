@@ -523,6 +523,33 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					failedList.append(deviceInRoom->device->GetId());
 				}
 			}
+
+			// Delete all group
+			for (auto &groupInRoom : room->groupList)
+			{
+				for (auto &deviceInGroup : groupInRoom->deviceList)
+				{
+					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()))
+					{
+						database->DeviceInGroupDel(groupInRoom, deviceInGroup->device, deviceInGroup->device->GetAddr());
+					}
+				}
+				delGroup(groupInRoom);
+			}
+
+			// Delete all scene
+			for (auto &sceneInRoom : room->sceneBleList)
+			{
+				for (auto &deviceInScene : sceneInRoom->deviceList)
+				{
+					if (sceneInRoom->DelDevice(deviceInScene->device) == CODE_OK)
+					{
+						database->DeviceInSceneBleDel(sceneInRoom, deviceInScene->device);
+					}
+				}
+				delSceneBle(sceneInRoom);
+			}
+
 			database->RoomDel(room);
 			delete room;
 			respValue["data"]["code"] = CODE_OK;
