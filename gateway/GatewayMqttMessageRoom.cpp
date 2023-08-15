@@ -436,7 +436,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (room->DelDevice(device, device->GetAddr()))
+						if (room->DelDevice(device, device->GetAddr()) == CODE_OK)
 						{
 							database->DeviceInRoomDel(room, device);
 							successList.append(deviceId);
@@ -512,7 +512,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 		{
 			for (auto &deviceInRoom : room->deviceList)
 			{
-				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr()))
+				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr()) == CODE_OK)
 				{
 					database->DeviceInRoomDel(room, deviceInRoom->device);
 					successList.append(deviceInRoom->device->GetId());
@@ -529,7 +529,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			{
 				for (auto &deviceInGroup : groupInRoom->deviceList)
 				{
-					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()))
+					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()) == CODE_OK)
 					{
 						database->DeviceInGroupDel(groupInRoom, deviceInGroup->device, deviceInGroup->device->GetAddr());
 					}

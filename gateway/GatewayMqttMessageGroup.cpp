@@ -323,7 +323,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 					if (device)
 					{
 						int deviceAddr = device->GetAddr();
-						if (group->DelDevice(device, deviceAddr))
+						if (group->DelDevice(device, deviceAddr) == CODE_OK)
 						{
 							database->DeviceInGroupDel(group, device, deviceAddr);
 							successList.append(deviceId);
@@ -370,7 +370,7 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 		{
 			for (auto &deviceInGroup : group->deviceList)
 			{
-				if (group->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()))
+				if (group->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()) == CODE_OK)
 				{
 					database->DeviceInGroupDel(group, deviceInGroup->device, deviceInGroup->device->GetAddr());
 					successList.append(deviceInGroup->device->GetId());
