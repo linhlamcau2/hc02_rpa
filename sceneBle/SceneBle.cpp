@@ -70,7 +70,6 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
-			LOGE("mode rgb: %d", modeRGB);
 		}
 		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
 		{
