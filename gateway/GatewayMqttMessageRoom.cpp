@@ -20,6 +20,7 @@ void Gateway::InitMqttMessageRoom()
 	OnLocalCallbackRegister("getGroupIntoRoom", bind(&Gateway::OnGetGroupIntoRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getSceneIntoRoom", bind(&Gateway::OnGetSceneIntoRoom, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("updateRoomName", bind(&Gateway::OnUpdateRoomName, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("checkRoom", bind(&Gateway::OnCheckRoom, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
@@ -90,20 +91,24 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
+	respValue["cmd"] = "createRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("name") && reqValue["name"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray() &&
-			reqValue.isMember("groups") && reqValue["groups"].isArray() &&
-			reqValue.isMember("scenes") && reqValue["scenes"].isArray())
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray() &&
+		reqValue.isMember("groups") && reqValue["groups"].isArray() &&
+		reqValue.isMember("scenes") && reqValue["scenes"].isArray())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string roomId = reqValue["id"].asString();
 		string roomName = reqValue["name"].asString();
 		Json::Value devicesValue = reqValue["devices"];
 		Json::Value groupsValue = reqValue["groups"];
 		Json::Value scenesValue = reqValue["scenes"];
 		respValue["data"]["code"] = CODE_ERROR;
+
+		map<string, bool> devicesStatusConfig;
+
 		Room *room = getRoomFromId(roomId);
 		if (!room)
 		{
@@ -116,16 +121,16 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (deviceValue.isString())
 					{
 						string deviceId = deviceValue.asString();
+						devicesStatusConfig[deviceId] = true;
+
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							room->AddDevice(device, device->GetAddr(), true, true);
-							successList.append(device->GetId());
+							if (room->AddDevice(device, device->GetAddr(), true, true) != CODE_OK)
+								devicesStatusConfig[deviceId] = false;
 						}
 						else
-						{
-							failedList.append(deviceId);
-						}
+							LOGW("Device %s not found", deviceId.c_str());
 					}
 				}
 
@@ -134,8 +139,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("name") && groupValue["name"].isString() &&
-								groupValue.isMember("type") && groupValue["type"].isInt())
+							groupValue.isMember("name") && groupValue["name"].isString() &&
+							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
 							string name = groupValue["name"].asString();
@@ -152,7 +157,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									{
 										if (deviceInRoom->device->GetType() == type)
 										{
-											group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true);
+											if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
+												if (devicesStatusConfig[deviceInRoom->device->GetId()])
+													devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 										}
 									}
 								}
@@ -171,8 +178,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("name") && sceneValue["name"].isString() &&
-								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+							sceneValue.isMember("name") && sceneValue["name"].isString() &&
+							sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
 							string id = sceneValue["id"].asString();
 							string name = sceneValue["name"].asString();
@@ -187,7 +194,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (groupValue.isObject())
 									{
 										if (groupValue.isMember("id") && groupValue["id"].isString() &&
-												groupValue.isMember("data") && groupValue["data"].isObject())
+											groupValue.isMember("data") && groupValue["data"].isObject())
 										{
 											string id = groupValue["id"].asString();
 											Json::Value groupData = groupValue["data"];
@@ -197,15 +204,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 												group->Do(groupData);
 												for (auto &deviceInGroup : group->deviceList)
 												{
-													if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) == CODE_OK)
-													{
-														// database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
-														successList.append(deviceInGroup->device->GetId());
-													}
-													else
-													{
-														failedList.append(deviceInGroup->device->GetId());
-													}
+													if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) != CODE_OK)
+														if (devicesStatusConfig[deviceInGroup->device->GetId()])
+															devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 												}
 											}
 										}
@@ -216,6 +217,13 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 				}
 
+				for (auto &[id, status] : devicesStatusConfig)
+				{
+					if (status)
+						successList.append(id);
+					else
+						failedList.append(id);
+				}
 				respValue["data"]["code"] = CODE_OK;
 				respValue["data"]["id"] = roomId;
 				respValue["data"]["success"] = successList;
@@ -224,6 +232,12 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 			else
 			{
 				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+			}
+
+			if (room)
+			{
+				room->SetDataConfig(respValue.toString());
+				database->RoomAdd(room);
 			}
 		}
 		else
@@ -236,19 +250,22 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 	{
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
-	respValue["cmd"] = "createRoomRsp";
 	return CODE_OK;
 }
 
 int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 {
+	respValue["cmd"] = "addDevToRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray())
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string roomId = reqValue["id"].asString();
 		Json::Value devicesValue = reqValue["devices"];
+
+		map<string, bool> devicesStatusConfig;
+
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
@@ -257,16 +274,15 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 				if (deviceValue.isString())
 				{
 					string deviceId = deviceValue.asString();
+					devicesStatusConfig[deviceId] = true;
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						room->AddDevice(device, device->GetAddr(), true, true);
-						successList.append(device->GetId());
+						if (room->AddDevice(device, device->GetAddr(), true, true) != CODE_OK)
+							devicesStatusConfig[deviceId] = false;
 					}
 					else
-					{
-						failedList.append(deviceId);
-					}
+						LOGW("Device %s not found", deviceId.c_str());
 				}
 			}
 
@@ -278,7 +294,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("type") && groupValue["type"].isInt())
+							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
 							int type = groupValue["type"].asInt();
@@ -312,7 +328,9 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 								{
 									if (deviceInRoom->device->GetType() == type)
 									{
-										group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true);
+										if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
+											if (devicesStatusConfig[deviceInRoom->device->GetId()])
+												devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 									}
 								}
 							}
@@ -333,7 +351,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+							sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
 							string id = sceneValue["id"].asString();
 							Json::Value groupsValue = sceneValue["groups"];
@@ -368,7 +386,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (groupValue.isObject())
 									{
 										if (groupValue.isMember("id") && groupValue["id"].isString() &&
-												groupValue.isMember("data") && groupValue["data"].isObject())
+											groupValue.isMember("data") && groupValue["data"].isObject())
 										{
 											string id = groupValue["id"].asString();
 											Json::Value groupData = groupValue["data"];
@@ -378,15 +396,9 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 												group->Do(groupData);
 												for (auto &deviceInGroup : group->deviceList)
 												{
-													if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) == CODE_OK)
-													{
-														// database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
-														successList.append(deviceInGroup->device->GetId());
-													}
-													else
-													{
-														failedList.append(deviceInGroup->device->GetId());
-													}
+													if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) != CODE_OK)
+														if (devicesStatusConfig[deviceInGroup->device->GetId()])
+															devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 												}
 											}
 										}
@@ -398,9 +410,22 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 
+			for (auto &[id, status] : devicesStatusConfig)
+			{
+				if (status)
+					successList.append(id);
+				else
+					failedList.append(id);
+			}
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
+
+			if (room)
+			{
+				room->SetDataConfig(respValue.toString());
+				database->RoomAdd(room);
+			}
 		}
 		else
 		{
@@ -412,19 +437,20 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 	{
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
-	respValue["cmd"] = "addDevToRoomRsp";
 	return CODE_OK;
 }
 
 int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue)
 {
+	respValue["cmd"] = "delDevFromRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray())
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string roomId = reqValue["id"].asString();
 		Json::Value devicesValue = reqValue["devices"];
+		map<string, bool> devicesStatusConfig;
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
@@ -433,19 +459,12 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 				if (deviceValue.isString())
 				{
 					string deviceId = deviceValue.asString();
+					devicesStatusConfig[deviceId] = true;
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (room->DelDevice(device, device->GetAddr(), true, true) == CODE_OK)
-						{
-							// database->DeviceInRoomDel(room, device);
-							successList.append(deviceId);
-						}
-						else
-						{
-							LOGD("delete from room deviceId %s error", deviceId.c_str());
-							failedList.append(deviceId);
-						}
+						if (room->DelDevice(device, device->GetAddr(), true, true) != CODE_OK)
+							devicesStatusConfig[deviceId] = false;
 
 						for (auto &group : room->groupList)
 						{
@@ -453,10 +472,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							{
 								if (devInGr->device->GetId() == device->GetId())
 								{
-									if (group->DelDevice(device, device->GetAddr(), true, true) == CODE_OK)
-									{
-										// database->DeviceInGroupDel(group, device, device->GetAddr());
-									}
+									if (group->DelDevice(device, device->GetAddr(), true, true) != CODE_OK)
+										if (devicesStatusConfig[device->GetId()])
+											devicesStatusConfig[device->GetId()] = false;
 								}
 							}
 						}
@@ -467,10 +485,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							{
 								if (devInScene->device->GetId() == device->GetId())
 								{
-									if (sceneBle->DelDevice(device, true, true) == CODE_OK)
-									{
-										// database->DeviceInSceneBleDel(sceneBle, device);
-									}
+									if (sceneBle->DelDevice(device, true, true) != CODE_OK)
+										if (devicesStatusConfig[device->GetId()])
+											devicesStatusConfig[device->GetId()] = false;
 								}
 							}
 						}
@@ -482,10 +499,22 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 					}
 				}
 			}
-
+			for (auto &[id, status] : devicesStatusConfig)
+			{
+				if (status)
+					successList.append(id);
+				else
+					failedList.append(id);
+			}
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
+
+			if (room)
+			{
+				room->SetDataConfig(respValue.toString());
+				database->RoomAdd(room);
+			}
 		}
 		else
 		{
@@ -496,7 +525,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 	{
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 	}
-	respValue["cmd"] = "delDevFromRoomRsp";
+
 	return CODE_OK;
 }
 
@@ -504,24 +533,23 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string roomId = reqValue["id"].asString();
+		map<string, bool> devicesStatusConfig;
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
 			for (auto &deviceInRoom : room->deviceList)
 			{
-				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) == CODE_OK)
-				{
-					// database->DeviceInRoomDel(room, deviceInRoom->device);
-					successList.append(deviceInRoom->device->GetId());
-				}
-				else
-				{
-					LOGD("delete from room deviceId %s error", deviceInRoom->device->GetId().c_str());
-					failedList.append(deviceInRoom->device->GetId());
-				}
+				devicesStatusConfig[deviceInRoom->device->GetId()] = true;
+			}
+
+			for (auto &deviceInRoom : room->deviceList)
+			{
+				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
+					if (devicesStatusConfig[deviceInRoom->device->GetId()])
+						devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 			}
 
 			// Delete all group
@@ -529,10 +557,9 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			{
 				for (auto &deviceInGroup : groupInRoom->deviceList)
 				{
-					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) == CODE_OK)
-					{
-						// database->DeviceInGroupDel(groupInRoom, deviceInGroup->device, deviceInGroup->device->GetAddr());
-					}
+					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) != CODE_OK)
+						if (devicesStatusConfig[deviceInGroup->device->GetId()])
+							devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 				}
 				delGroup(groupInRoom);
 			}
@@ -542,15 +569,22 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			{
 				for (auto &deviceInScene : sceneInRoom->deviceList)
 				{
-					if (sceneInRoom->DelDevice(deviceInScene->device, true, true) == CODE_OK)
-					{
-						// database->DeviceInSceneBleDel(sceneInRoom, deviceInScene->device);
-					}
+					if (sceneInRoom->DelDevice(deviceInScene->device, true, true) != CODE_OK)
+						if (devicesStatusConfig[deviceInScene->device->GetId()])
+							devicesStatusConfig[deviceInScene->device->GetId()] = false;
 				}
 				delSceneBle(sceneInRoom);
 			}
 
 			delRoom(room);
+
+			for (auto &[id, status] : devicesStatusConfig)
+			{
+				if (status)
+					successList.append(id);
+				else
+					failedList.append(id);
+			}
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -659,4 +693,30 @@ int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "updateRoomNameRsp";
 	return CODE_OK;
+}
+
+int Gateway::OnCheckRoom(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string id = reqValue["id"].asString();
+		Room *room = getRoomFromId(id);
+		if (room)
+		{
+			Json::Value dataRsp;
+			if (dataRsp.parse(room->GetDataConfig()) && dataRsp.isObject())
+			{
+				respValue = dataRsp;
+				return CODE_OK;
+			}
+			else
+				LOGW("Data error: %s", dataRsp.toString().c_str());
+		}
+		else
+			LOGW("Room %s not found", id.c_str());
+	}
+	else
+		LOGW("Data error: %s", reqValue.toString().c_str());
+
+	return CODE_ERROR;
 }

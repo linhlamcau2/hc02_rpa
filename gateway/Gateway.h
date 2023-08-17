@@ -118,6 +118,7 @@ private:
 	int OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue);
+	int OnCheckRoom(Json::Value &reqValue, Json::Value &respValue);
 
 	// Rule
 	void InitMqttMessageRule();
