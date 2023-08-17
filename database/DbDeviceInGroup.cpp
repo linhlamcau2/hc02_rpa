@@ -24,7 +24,7 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 				{
 					if (device)
 					{
-						group->AddDevice(device, element, false);
+						group->AddDevice(device, element, false, false);
 					}
 					else
 					{

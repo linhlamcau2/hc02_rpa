@@ -305,6 +305,11 @@ void Gateway::delRoom(Room *room)
 	roomList.erase(room->GetId());
 	roomListMtx.unlock();
 	database->RoomDel(room);
+
+	groupListMtx.lock();
+	groupList.erase(room->GetId());
+	groupListMtx.unlock();
+
 	delete room;
 }
 

@@ -31,7 +31,7 @@ public:
 	bool GetIsFavorite();
 	bool SetIsFavorite(bool isFavorite);
 	int GetPositionDevice(Device *device);
-	int AddDevice(Device *device, Json::Value data, bool addOnlyDB);
-	int DelDevice(Device *device);
+	int AddDevice(Device *device, Json::Value data, bool sendBle, bool addDb);
+	int DelDevice(Device *device, bool sendBle, bool delDb);
 	int Do();
 };

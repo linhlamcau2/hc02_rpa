@@ -1420,7 +1420,7 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 
 int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 {
-	LOGD("Set scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
+	LOGD("Set scene addr: 0x%04X to scene: 0x%04X, modergb: %d", devAddr, scene, modeRgb);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t setSceneHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x45};

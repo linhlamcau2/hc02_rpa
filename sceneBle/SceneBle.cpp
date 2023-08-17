@@ -2,6 +2,7 @@
 #include "Log.h"
 #include "BleProtocol.h"
 #include "BleDefine.h"
+#include "Db.h"
 
 DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 {
@@ -47,37 +48,66 @@ int SceneBle::GetPositionDevice(Device *device)
 	return CODE_ERROR;
 }
 
-int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
+int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool addDb)
 {
-	if (addOnlyDB)
+	if (!device)
+		return CODE_ERROR;
+
+	if (!sendBle)
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+		mtx.lock();
 		deviceList.push_back(deviceInSceneBle);
+		mtx.unlock();
+		if (addDb)
+			database->DeviceInSceneBleAdd(this, device, data.toString());
 		return CODE_OK;
 	}
 	else
 	{
 		int modeRGB = 0;
 		if (data.isObject() &&
-				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
+			LOGE("mode rgb: %d", modeRGB);
 		}
-		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
+		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
 		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			mtx.lock();
 			deviceList.push_back(deviceInSceneBle);
 			mtx.unlock();
+			if (addDb)
+				database->DeviceInSceneBleAdd(this, device, data.toString());
 			return CODE_OK;
 		}
 	}
 	return CODE_ERROR;
 }
 
-int SceneBle::DelDevice(Device *device)
+int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 {
-	if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == 0)
+	if (!device)
+		return CODE_ERROR;
+		
+	if (delDb)
+		database->DeviceInSceneBleDel(this, device);
+	if (sendBle)
+	{
+		if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == CODE_OK)
+		{
+			int deviceIndex = GetPositionDevice(device);
+			if (deviceIndex > -1)
+			{
+				mtx.lock();
+				deviceList.erase(deviceList.begin() + deviceIndex);
+				mtx.unlock();
+			}
+			return CODE_OK;
+		}
+	}
+	else
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)

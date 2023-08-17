@@ -47,7 +47,7 @@ int Group::GetPositionDevice(Device *device)
  * @return true success
  * @return false fail
  */
-int Group::AddDevice(Device *device, int epId, bool sendBle)
+int Group::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 {
 	if (!device)
 		return CODE_ERROR;
@@ -69,7 +69,8 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 						mtx.lock();
 						deviceList.push_back(deviceInGroup);
 						mtx.unlock();
-						database->DeviceInGroupAdd(this, device, epId);
+						if (addDb)
+							database->DeviceInGroupAdd(this, device, epId);
 						return CODE_OK;
 					}
 				}
@@ -88,6 +89,8 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 				mtx.lock();
 				deviceList.push_back(deviceInGroup);
 				mtx.unlock();
+				if (addDb)
+					database->DeviceInGroupAdd(this, device, epId);
 				return CODE_OK;
 			}
 		}
@@ -122,26 +125,46 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 	return CODE_ERROR;
 }
 
-int Group::DelDevice(Device *device, int epId)
+int Group::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
 {
+	if (!device)
+		return CODE_ERROR;
+
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
-		if (bleProtocol)
+		if (delDb)
+			database->DeviceInGroupDel(this, device, epId);
+			
+		if (sendBle)
 		{
-			if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
+			if (bleProtocol)
 			{
-				int deviceIndex = GetPositionDevice(device);
-				if (deviceIndex > -1)
+				if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 				{
-					mtx.lock();
-					deviceList.erase(deviceList.begin() + deviceIndex);
-					mtx.unlock();
+					int deviceIndex = GetPositionDevice(device);
+					if (deviceIndex > -1)
+					{
+						mtx.lock();
+						deviceList.erase(deviceList.begin() + deviceIndex);
+						mtx.unlock();
+					}
+					return CODE_OK;
 				}
-				return CODE_OK;
 			}
+			else
+				LOGW("BleProtocol null");
 		}
 		else
-			LOGW("BleProtocol null");
+		{
+			int deviceIndex = GetPositionDevice(device);
+			if (deviceIndex > -1)
+			{
+				mtx.lock();
+				deviceList.erase(deviceList.begin() + deviceIndex);
+				mtx.unlock();
+			}
+			return CODE_OK;
+		}
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -180,8 +203,8 @@ int Group::Do(Json::Value &dataValue, bool ack)
 			bleProtocol->SetCctLight(addr + ID_START, cct, 0, ack);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-				dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			dataValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && dataValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 		{
 			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();

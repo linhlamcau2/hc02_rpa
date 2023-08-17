@@ -54,11 +54,22 @@ void Room::SetDataConfig(string dataConfig)
 	this->dataConfig = dataConfig;
 }
 
-int Room::AddDevice(Device *device, int epId, bool sendBle)
+int Room::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 {
-	if (sendBle)
+	if (!device)
+		return CODE_ERROR;
+	if (addDb)
 		database->DeviceInRoomAdd(this, device);
-	return Group::AddDevice(device, epId, sendBle);
+	return Group::AddDevice(device, epId, sendBle, false);
+}
+
+int Room::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
+{
+	if (!device)
+		return CODE_ERROR;
+	if (delDb)
+		database->DeviceInRoomDel(this, device);
+	return Group::DelDevice(device, epId, sendBle, false);
 }
 
 int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
@@ -84,7 +95,7 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
  * Don't delete in database
  * Function main delete record in database
  */
-int Room::DelGroup(Group *group)
+int Room::DelGroup(Group *group, bool delDb)
 {
 	int position = GetPositionGroup(group);
 	if (position > -1)
@@ -92,6 +103,8 @@ int Room::DelGroup(Group *group)
 		mtxGroup.lock();
 		groupList.erase(groupList.begin() + position);
 		mtxGroup.unlock();
+		if (delDb)
+			database->GroupUpdateRoom(group, "");
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -119,7 +132,7 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 /**
  * Don't delete in database same DelGroup
  */
-int Room::DelSceneBle(SceneBle *sceneBle)
+int Room::DelSceneBle(SceneBle *sceneBle, bool delDb)
 {
 	int position = GetPositionSceneBle(sceneBle);
 	if (position > -1)
@@ -127,6 +140,8 @@ int Room::DelSceneBle(SceneBle *sceneBle)
 		mtxScene.lock();
 		sceneBleList.erase(sceneBleList.begin() + position);
 		mtxScene.unlock();
+		if (delDb)
+			database->SceneBleUpdateRoom(sceneBle, "");
 		return CODE_OK;
 	}
 	return CODE_ERROR;

@@ -34,7 +34,7 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 							Json::Value devInSceneJson;
 							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isObject())
 							{
-								sceneBle->AddDevice(device, devInSceneJson, true);
+								sceneBle->AddDevice(device, devInSceneJson, false, false);
 							}
 							else
 							{

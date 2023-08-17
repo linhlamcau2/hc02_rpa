@@ -31,8 +31,8 @@ public:
 
 	int GetPositionDevice(Device *device);
 
-	int AddDevice(Device *device, int epId, bool sendBle);
-	int DelDevice(Device *device, int epId);
+	int AddDevice(Device *device, int epId, bool sendBle, bool addDb);
+	int DelDevice(Device *device, int epId, bool sendBle, bool delDB);
 
 	int Do(Json::Value &dataValue, bool ack = true);
 	// int DoZigbee();

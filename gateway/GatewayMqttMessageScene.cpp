@@ -136,9 +136,9 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							if (sceneBle->AddDevice(device, deviceProperties, false) == CODE_OK)
+							if (sceneBle->AddDevice(device, deviceProperties, true, true) == CODE_OK)
 							{
-								database->DeviceInSceneBleAdd(sceneBle, device, deviceProperties.toString());
+								// database->DeviceInSceneBleAdd(sceneBle, device, deviceProperties.toString());
 								successList.append(device->GetId());
 							}
 							else
@@ -192,9 +192,9 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 		{
 			for (auto &deviceInScene : sceneBle->deviceList)
 			{
-				if (sceneBle->DelDevice(deviceInScene->device) == CODE_OK)
+				if (sceneBle->DelDevice(deviceInScene->device, true, true) == CODE_OK)
 				{
-					database->DeviceInSceneBleDel(sceneBle, deviceInScene->device);
+					// database->DeviceInSceneBleDel(sceneBle, deviceInScene->device);
 					successList.append(deviceInScene->device->GetId());
 				}
 				else

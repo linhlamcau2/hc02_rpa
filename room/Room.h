@@ -28,11 +28,12 @@ public:
 	int GetPositionDevice(Device *device);
 	int GetPositionGroup(Group *group);
 	int GetPositionSceneBle(SceneBle *sceneBle);
-	int AddDevice(Device *device, int epId, bool sendBle);
+	int AddDevice(Device *device, int epId, bool sendBle, bool addDb);
+	int DelDevice(Device *device, int epId, bool sendBle, bool delDb);
 	int AddGroup(Group *group, bool isAddGateway, bool isAddDatabase);
-	int DelGroup(Group *group);
+	int DelGroup(Group *group, bool delDb);
 	int AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase);
-	int DelSceneBle(SceneBle *sceneBle);
+	int DelSceneBle(SceneBle *sceneBle, bool delDb);
 
 	string GetDataConfig();
 	void SetDataConfig(string dataConfig);

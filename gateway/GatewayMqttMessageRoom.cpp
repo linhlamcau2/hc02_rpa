@@ -119,7 +119,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							room->AddDevice(device, device->GetAddr(), true);
+							room->AddDevice(device, device->GetAddr(), true, true);
 							successList.append(device->GetId());
 						}
 						else
@@ -152,7 +152,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									{
 										if (deviceInRoom->device->GetType() == type)
 										{
-											group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true);
+											group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true);
 										}
 									}
 								}
@@ -197,9 +197,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 												group->Do(groupData);
 												for (auto &deviceInGroup : group->deviceList)
 												{
-													if (sceneBle->AddDevice(deviceInGroup->device, groupData, false) == CODE_OK)
+													if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) == CODE_OK)
 													{
-														database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
+														// database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
 														successList.append(deviceInGroup->device->GetId());
 													}
 													else
@@ -260,7 +260,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						room->AddDevice(device, device->GetAddr(), true);
+						room->AddDevice(device, device->GetAddr(), true, true);
 						successList.append(device->GetId());
 					}
 					else
@@ -312,7 +312,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 								{
 									if (deviceInRoom->device->GetType() == type)
 									{
-										group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true);
+										group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true);
 									}
 								}
 							}
@@ -378,9 +378,9 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 												group->Do(groupData);
 												for (auto &deviceInGroup : group->deviceList)
 												{
-													if (sceneBle->AddDevice(deviceInGroup->device, groupData, false) == CODE_OK)
+													if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) == CODE_OK)
 													{
-														database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
+														// database->DeviceInSceneBleAdd(sceneBle, deviceInGroup->device, groupData.toString());
 														successList.append(deviceInGroup->device->GetId());
 													}
 													else
@@ -436,9 +436,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (room->DelDevice(device, device->GetAddr()) == CODE_OK)
+						if (room->DelDevice(device, device->GetAddr(), true, true) == CODE_OK)
 						{
-							database->DeviceInRoomDel(room, device);
+							// database->DeviceInRoomDel(room, device);
 							successList.append(deviceId);
 						}
 						else
@@ -453,9 +453,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							{
 								if (devInGr->device->GetId() == device->GetId())
 								{
-									if (group->DelDevice(device, device->GetAddr()) == CODE_OK)
+									if (group->DelDevice(device, device->GetAddr(), true, true) == CODE_OK)
 									{
-										database->DeviceInGroupDel(group, device, device->GetAddr());
+										// database->DeviceInGroupDel(group, device, device->GetAddr());
 									}
 								}
 							}
@@ -467,9 +467,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							{
 								if (devInScene->device->GetId() == device->GetId())
 								{
-									if (sceneBle->DelDevice(device) == CODE_OK)
+									if (sceneBle->DelDevice(device, true, true) == CODE_OK)
 									{
-										database->DeviceInSceneBleDel(sceneBle, device);
+										// database->DeviceInSceneBleDel(sceneBle, device);
 									}
 								}
 							}
@@ -512,9 +512,9 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 		{
 			for (auto &deviceInRoom : room->deviceList)
 			{
-				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr()) == CODE_OK)
+				if (room->DelDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) == CODE_OK)
 				{
-					database->DeviceInRoomDel(room, deviceInRoom->device);
+					// database->DeviceInRoomDel(room, deviceInRoom->device);
 					successList.append(deviceInRoom->device->GetId());
 				}
 				else
@@ -529,9 +529,9 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			{
 				for (auto &deviceInGroup : groupInRoom->deviceList)
 				{
-					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr()) == CODE_OK)
+					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) == CODE_OK)
 					{
-						database->DeviceInGroupDel(groupInRoom, deviceInGroup->device, deviceInGroup->device->GetAddr());
+						// database->DeviceInGroupDel(groupInRoom, deviceInGroup->device, deviceInGroup->device->GetAddr());
 					}
 				}
 				delGroup(groupInRoom);
@@ -542,16 +542,15 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			{
 				for (auto &deviceInScene : sceneInRoom->deviceList)
 				{
-					if (sceneInRoom->DelDevice(deviceInScene->device) == CODE_OK)
+					if (sceneInRoom->DelDevice(deviceInScene->device, true, true) == CODE_OK)
 					{
-						database->DeviceInSceneBleDel(sceneInRoom, deviceInScene->device);
+						// database->DeviceInSceneBleDel(sceneInRoom, deviceInScene->device);
 					}
 				}
 				delSceneBle(sceneInRoom);
 			}
 
-			database->RoomDel(room);
-			delete room;
+			delRoom(room);
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
