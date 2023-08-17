@@ -119,7 +119,12 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							room->AddDevice(device, device->GetAddr(), true, true);
+							int temp = device->GetType()/10000;
+							if (device->GetProtocol() == BLE_DEVICE && temp == 1)
+							{
+								room->AddDevice(device, device->GetAddr(), true, true);
+							}
+							room->AddDevice(device, device->GetAddr(), false, true);
 							successList.append(device->GetId());
 						}
 						else
@@ -260,7 +265,12 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						room->AddDevice(device, device->GetAddr(), true, true);
+						int temp = device->GetType()/10000;
+						if (device->GetProtocol() == BLE_DEVICE && temp == 1)
+						{
+							room->AddDevice(device, device->GetAddr(), true, true);
+						}
+						room->AddDevice(device, device->GetAddr(), false, true);
 						successList.append(device->GetId());
 					}
 					else
