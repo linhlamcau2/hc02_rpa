@@ -120,17 +120,17 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	Json::Value payloadJson;
 	if (payloadJson.parse(message) && payloadJson.isObject())
 	{
-		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString() || payloadJson.isMember("cmd") && payloadJson["cmd"].isString())
+		string cmd = "";
+		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
-			string cmd = "";
-			if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
-			{
-				cmd = payloadJson["CMD"].asString();
-			}
-			if (payloadJson.isMember("cmd") && payloadJson["cmd"].isString())
-			{
-				cmd = payloadJson["cmd"].asString();
-			}
+			cmd = payloadJson["CMD"].asString();
+		}
+		else if (payloadJson.isMember("cmd") && payloadJson["cmd"].isString())
+		{
+			cmd = payloadJson["cmd"].asString();
+		}
+		if (cmd != "")
+		{
 			if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
 			{
 				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
@@ -182,7 +182,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 int Udp::send(string message, struct sockaddr_in *si_other, int slen)
 {
 	LOGI("Send message to IP: %s:%i, len: %d",
-		 inet_ntoa(si_other->sin_addr), ntohs(si_other->sin_port), slen);
+			 inet_ntoa(si_other->sin_addr), ntohs(si_other->sin_port), slen);
 	LOGD("send message: %s", message.c_str());
 	// now reply the client with the same data
 	if (sendto(fd, message.c_str(), message.length(), 0, (struct sockaddr *)si_other, slen) == -1)
