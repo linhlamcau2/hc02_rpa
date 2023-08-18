@@ -208,10 +208,11 @@ int Gateway::OnNewDevice(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value device = reqValue["device"];
 		for (auto &temp : device)
 		{
-			if (reqValue.isMember("id") && reqValue["id"].isString() &&
-					reqValue.isMember("name") && reqValue["name"].isString() &&
-					reqValue.isMember("mac") && reqValue["mac"].isString() &&
-					reqValue.isMember("type") && reqValue["type"].isInt())
+			if (temp.isMember("id") && temp["id"].isString() &&
+					temp.isMember("name") && temp["name"].isString() &&
+					temp.isMember("mac") && temp["mac"].isString() &&
+					temp.isMember("type") && temp["type"].isInt() &&
+					temp.isMember("data") && temp["data"].isObject())
 			{
 				string id = temp["id"].asString();
 				string name = temp["name"].asString();
