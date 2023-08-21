@@ -28,7 +28,7 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlDevice");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("data") && reqValue["data"].isObject())
+		reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		string deviceId = reqValue["id"].asString();
 		Json::Value devData = reqValue["data"];
@@ -76,8 +76,8 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 			bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
 		}
 		if (reqValue.isMember(KEY_ATTRIBUTE_HUE) && reqValue[KEY_ATTRIBUTE_HUE].isInt() &&
-				reqValue.isMember(KEY_ATTRIBUTE_SATURATION) && reqValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
-				reqValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && reqValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
+			reqValue.isMember(KEY_ATTRIBUTE_SATURATION) && reqValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
+			reqValue.isMember(KEY_ATTRIBUTE_LUMINANCE) && reqValue[KEY_ATTRIBUTE_LUMINANCE].isInt())
 		{
 			int h = reqValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = reqValue[KEY_ATTRIBUTE_SATURATION].asInt();
@@ -209,10 +209,10 @@ int Gateway::OnNewDevice(Json::Value &reqValue, Json::Value &respValue)
 		for (auto &temp : device)
 		{
 			if (temp.isMember("id") && temp["id"].isString() &&
-					temp.isMember("name") && temp["name"].isString() &&
-					temp.isMember("mac") && temp["mac"].isString() &&
-					temp.isMember("type") && temp["type"].isInt() &&
-					temp.isMember("data") && temp["data"].isObject())
+				temp.isMember("name") && temp["name"].isString() &&
+				temp.isMember("mac") && temp["mac"].isString() &&
+				temp.isMember("type") && temp["type"].isInt() &&
+				temp.isMember("data") && temp["data"].isObject())
 			{
 				string id = temp["id"].asString();
 				string name = temp["name"].asString();
@@ -244,14 +244,10 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 				if (device)
 				{
 					if (bleProtocol)
-					{
 						bleProtocol->ResetDev(device->GetAddr());
-						database->DeviceDel(device->GetMac());
-						LOGD("remove deviceId: %s", deviceId.c_str());
-						successList.append(deviceId);
-					}
-					else
-						LOGW("BleProtocol null");
+
+					delDevice(device);
+					successList.append(deviceId);
 				}
 				else
 				{

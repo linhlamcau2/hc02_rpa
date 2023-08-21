@@ -56,6 +56,9 @@ int Group::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
 	// 	return CODE_ERROR;
 	DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+	if (!deviceInGroup)
+		return CODE_ERROR;
+
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		if (sendBle)
@@ -64,15 +67,14 @@ int Group::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 			{
 				if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 				{
-					if (deviceInGroup)
-					{
-						mtx.lock();
+					mtx.lock();
+					if (GetPositionDevice(device) == CODE_ERROR)
 						deviceList.push_back(deviceInGroup);
-						mtx.unlock();
-						if (addDb)
-							database->DeviceInGroupAdd(this, device, epId);
-						return CODE_OK;
-					}
+					mtx.unlock();
+
+					if (addDb)
+						database->DeviceInGroupAdd(this, device, epId);
+					return CODE_OK;
 				}
 				else
 				{
@@ -84,21 +86,21 @@ int Group::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 		}
 		else
 		{
-			if (deviceInGroup)
-			{
-				mtx.lock();
+			mtx.lock();
+			if (GetPositionDevice(device) == CODE_ERROR)
 				deviceList.push_back(deviceInGroup);
-				mtx.unlock();
-				if (addDb)
-					database->DeviceInGroupAdd(this, device, epId);
-				return CODE_OK;
-			}
+			mtx.unlock();
+
+			if (addDb)
+				database->DeviceInGroupAdd(this, device, epId);
+			return CODE_OK;
 		}
 	}
 	else
 	{
 		mtx.lock();
-		deviceList.push_back(deviceInGroup);
+		if (GetPositionDevice(device) == CODE_ERROR)
+			deviceList.push_back(deviceInGroup);
 		mtx.unlock();
 		return CODE_OK;
 	}
@@ -134,7 +136,7 @@ int Group::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
 	{
 		if (delDb)
 			database->DeviceInGroupDel(this, device, epId);
-			
+
 		if (sendBle)
 		{
 			if (bleProtocol)

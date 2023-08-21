@@ -11,6 +11,7 @@ void Gateway::InitMqttMessageScene()
 
 	OnLocalCallbackRegister("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("editScene", bind(&Gateway::OnEditScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
@@ -110,11 +111,11 @@ int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("name") && reqValue["name"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray())
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string sceneId = reqValue["id"].asString();
 		string sceneName = reqValue["name"].asString();
 		// TODO: add start address of normal scene
@@ -128,8 +129,8 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				for (auto &deviceValue : deviceList)
 				{
 					if (deviceValue.isObject() &&
-							deviceValue.isMember("id") && deviceValue["id"].isString() &&
-							deviceValue.isMember("data") && deviceValue["data"].isObject())
+						deviceValue.isMember("id") && deviceValue["id"].isString() &&
+						deviceValue.isMember("data") && deviceValue["data"].isObject())
 					{
 						Json::Value deviceProperties = deviceValue["data"];
 						string deviceId = deviceValue["id"].asString();
@@ -158,9 +159,11 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 					}
 				}
 				respValue["data"]["code"] = CODE_OK;
-				respValue["data"]["id"] = sceneAddr;
+				respValue["data"]["addr"] = sceneAddr;
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
+
+				printScene();
 			}
 			else
 			{
@@ -180,6 +183,118 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
+	{
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
+		string sceneId = reqValue["id"].asString();
+		string sceneName = reqValue["name"].asString();
+		SceneBle *sceneBle = getSceneBleFromId(sceneId);
+		if (sceneBle)
+		{
+			vector<Device *> devsInScene; // list dev in scene
+			for (auto &devs : sceneBle->deviceList)
+			{
+				devsInScene.push_back(devs->device);
+			}
+			vector<Device *> listDevicesAdd; // list new dev add scene
+			vector<Device *> listDevicesDel; // list old dev del scene
+			vector<Device *> devsEditScene;	 // list dev in msg edit scene
+
+			Json::Value deviceList = reqValue["devices"];
+			map<Device *, Json::Value> listData;
+			for (auto &deviceValue : deviceList)
+			{
+				if (deviceValue.isObject() &&
+					deviceValue.isMember("id") && deviceValue["id"].isString() &&
+					deviceValue.isMember("data") && deviceValue["data"].isObject())
+				{
+					Json::Value deviceProperties = deviceValue["data"];
+					string deviceId = deviceValue["id"].asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
+					{
+						listData[device] = deviceProperties;
+						devsEditScene.push_back(device);
+					}
+				}
+			}
+
+			// Find list device del scene
+			for (auto &item : devsInScene)
+			{
+				if (find(devsEditScene.begin(), devsEditScene.end(), item) == devsEditScene.end())
+				{
+					listDevicesDel.push_back(item);
+				}
+			}
+			
+			//Find list deivce add scene
+			for (auto &item : devsEditScene)
+			{
+				if (find(devsInScene.begin(), devsInScene.end(), item) == devsInScene.end())
+				{
+					listDevicesAdd.push_back(item);
+				}
+			}
+
+			for (auto &item : listDevicesAdd)
+			{
+				if (sceneBle->AddDevice(item, listData[item], true, true) == CODE_OK)
+				{
+					successList.append(item->GetId());
+				}
+				else
+				{
+					failedList.append(item->GetId());
+				}
+			}
+
+			for (auto &item : listDevicesDel)
+			{
+				if (sceneBle->DelDevice(item, true, true) == CODE_OK)
+				{
+					successList.append(item->GetId());
+				}
+				else
+				{
+					failedList.append(item->GetId());
+				}
+			}
+
+			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
+			{
+				string roomId = reqValue["roomId"].asString();
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					room->AddSceneBle(sceneBle, true, true);
+				}
+			}
+			respValue["data"]["code"] = CODE_OK;
+			respValue["data"]["id"] = sceneId;
+			respValue["data"]["success"] = successList;
+			respValue["data"]["failed"] = failedList;
+
+			printScene();
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_NOT_FOUND_SCENE;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "editSceneRsp";
+	return CODE_OK;
+}
+
 int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString())
@@ -190,7 +305,8 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
-			for (auto &deviceInScene : sceneBle->deviceList)
+			vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
+			for (auto &deviceInScene : devicesInSceneBle)
 			{
 				if (sceneBle->DelDevice(deviceInScene->device, true, true) == CODE_OK)
 				{
@@ -203,6 +319,8 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			delSceneBle(sceneBle);
+
+			printScene();
 
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
@@ -338,4 +456,3 @@ int Gateway::OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue)
 	respValue["cmd"] = "updateSceneNameRsp";
 	return CODE_OK;
 }
-

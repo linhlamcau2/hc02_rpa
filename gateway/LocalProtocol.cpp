@@ -82,6 +82,7 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 		if (topics[4] == mac || topics[4] == "all")
 		{
 			Util::LedServiceLock();
+			LOGE("Payload: %s", payload.c_str());
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
 				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 				payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
@@ -99,6 +100,7 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
+						LOGD("local publish: %s: %s",(pubRespTopic + topics[3]).c_str(), respValue.toString().c_str());
 						Publish(pubRespTopic + topics[3], respValue.toString());
 					}
 					else if (rs == CODE_DATA_ARRAY)

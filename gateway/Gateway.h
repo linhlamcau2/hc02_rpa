@@ -136,6 +136,7 @@ private:
 	int OnGetSceneList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnEditScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
@@ -150,6 +151,7 @@ private:
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
+	int OnVersionHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 
 public:
@@ -248,6 +250,11 @@ public:
 	int pushNewDeviceCloud(Json::Value &dataValue);
 	int pushStartAddHc(Json::Value &dataValue);
 	int pushStopAddHc(Json::Value &dataValue);
+
+	// debug
+	void printGroup();
+	void printScene();
+	void printRoom();
 };
 
 extern Gateway *gateway;

@@ -1072,6 +1072,27 @@ Response:
     }
 }
 ```
+### II.1.2. Request version HC: server->HC
+Request:
+```json
+{
+  "cmd": "versionHc",
+  "rqi": "abc123456",
+  "data": {}
+}
+```
+
+Response:
+```json
+{
+    "cmd": "versionHcRsp",
+    "rqi": "abc123456",
+    "data": {
+        "code": 0,
+        "version":"1.0.9"
+    }
+}
+```
 ### II.8. Công tắc liên thông
 #### II.8.1 Thêm công tắc liên thông
 Request:

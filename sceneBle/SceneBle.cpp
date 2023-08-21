@@ -53,12 +53,17 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 	if (!device)
 		return CODE_ERROR;
 
+	DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+	if (!deviceInSceneBle)
+		return CODE_ERROR;
+	bool isExist = false;
 	if (!sendBle)
 	{
-		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 		mtx.lock();
-		deviceList.push_back(deviceInSceneBle);
+		if (GetPositionDevice(device) == CODE_ERROR)
+			deviceList.push_back(deviceInSceneBle);
 		mtx.unlock();
+
 		if (addDb)
 			database->DeviceInSceneBleAdd(this, device, data.toString());
 		return CODE_OK;
@@ -73,10 +78,11 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 		}
 		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
 		{
-			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			mtx.lock();
-			deviceList.push_back(deviceInSceneBle);
+			if (GetPositionDevice(device) == CODE_ERROR)
+				deviceList.push_back(deviceInSceneBle);
 			mtx.unlock();
+
 			if (addDb)
 				database->DeviceInSceneBleAdd(this, device, data.toString());
 			return CODE_OK;
@@ -89,7 +95,7 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 {
 	if (!device)
 		return CODE_ERROR;
-		
+
 	if (delDb)
 		database->DeviceInSceneBleDel(this, device);
 	if (sendBle)

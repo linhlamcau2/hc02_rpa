@@ -60,9 +60,9 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
-			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -155,12 +155,56 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint16_t addr)
 }
 #endif
 
+//Del dev in all group, scenBle, room
 void Gateway::delDevice(Device *device)
 {
 	deviceListMtx.lock();
 	deviceList.erase(device->GetId());
 	deviceListMtx.unlock();
 	database->DeviceDel(device);
+
+	groupListMtx.lock();
+	for (auto &[id, grp] : groupList)
+	{
+		for (auto &dev : grp->deviceList)
+		{
+			if (device == dev->device)
+			{
+				grp->deviceList.erase(remove(grp->deviceList.begin(), grp->deviceList.end(), dev), grp->deviceList.end());
+			}
+		}
+	}
+	groupListMtx.unlock();
+	database->DeviceInGroupDelDev(device);
+
+	sceneBleListMtx.lock();
+	for (auto &[id, sble] : sceneBleList)
+	{
+		for (auto &dev : sble->deviceList)
+		{
+			if (device == dev->device)
+			{
+				sble->deviceList.erase(remove(sble->deviceList.begin(), sble->deviceList.end(), dev), sble->deviceList.end());
+			}
+		}
+	}
+	sceneBleListMtx.unlock();
+	database->DeviceInSceneBleDelDev(device);
+
+	roomListMtx.lock();
+	for (auto &[id, room] : roomList)
+	{
+		for (auto &dev : room->deviceList)
+		{
+			if (device == dev->device)
+			{
+				room->deviceList.erase(remove(room->deviceList.begin(), room->deviceList.end(), dev), room->deviceList.end());
+			}
+		}
+	}
+	roomListMtx.unlock();
+	database->DeviceInRoomDelDev(device);
+
 	delete device;
 }
 
@@ -197,6 +241,20 @@ void Gateway::delGroup(Group *group)
 	groupList.erase(group->GetId());
 	groupListMtx.unlock();
 	database->GroupDel(group);
+
+	roomListMtx.lock();
+	for (auto &[id, room] : roomList)
+	{
+		for (auto &grp : room->groupList)
+		{
+			if (grp == group)
+			{
+				room->groupList.erase(remove(room->groupList.begin(), room->groupList.end(), grp), room->groupList.end());
+			}
+		}
+	}
+	roomListMtx.unlock();
+
 	delete group;
 }
 
@@ -248,6 +306,20 @@ void Gateway::delSceneBle(SceneBle *sceneBle)
 	sceneBleList.erase(sceneBle->GetId());
 	sceneBleListMtx.unlock();
 	database->SceneBleDel(sceneBle);
+
+	roomListMtx.lock();
+	for (auto &[id, room] : roomList)
+	{
+		for (auto &sBle : room->sceneBleList)
+		{
+			if (sBle == sceneBle)
+			{
+				room->sceneBleList.erase(remove(room->sceneBleList.begin(), room->sceneBleList.end(), sBle), room->sceneBleList.end());
+			}
+		}
+	}
+	roomListMtx.unlock();
+
 	delete sceneBle;
 }
 
@@ -508,7 +580,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -774,7 +846,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["mac"] = scanDevice->GetMac();
 	devValue["data"] = scanDevice->GetData();
 	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
-			scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
+		scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
 	{
 		devValue["type"] = BLE_SWITCH_ONOFF;
 	}
@@ -787,12 +859,12 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		devValue["type"] = BLE_SMOKE_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
 	{
 		devValue["type"] = BLE_DOOR_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
 	{
 		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
 	}
@@ -1014,10 +1086,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -1028,7 +1100,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		uint16_t addr = 0;
 		Rule *rule = NULL;
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject() &&
-				inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+			inputValue.isMember("repeat") && inputValue["repeat"].isInt())
 		{
 			Json::Value timer = inputValue["timer"];
 			string endAt = "";
@@ -1056,7 +1128,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-							deviceJson.isMember("data") && deviceJson["data"].isObject())
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);
@@ -1450,4 +1522,39 @@ int Gateway::pushStartAddHc(Json::Value &dataValue)
 int Gateway::pushStopAddHc(Json::Value &dataValue)
 {
 	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
+}
+
+void Gateway::printGroup()
+{
+	for (auto &[id, grp] : groupList)
+	{
+		LOGW("group: %s", id.c_str());
+		for (auto &dev : grp->deviceList)
+		{
+			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
+}
+
+void Gateway::printScene()
+{
+	for (auto &[id, sce] : sceneBleList)
+	{
+		LOGW("scene: %s", id.c_str());
+		for (auto &dev : sce->deviceList)
+		{
+			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
+}
+void Gateway::printRoom()
+{
+	for (auto &[id, rm] : roomList)
+	{
+		LOGW("room: %s", id.c_str());
+		for (auto &dev : rm->deviceList)
+		{
+			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
 }

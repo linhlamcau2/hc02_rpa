@@ -19,6 +19,7 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SSHRemote", bind(&Gateway::OnSSHRemote, this, placeholders::_1, placeholders::_2));
 }
 
@@ -112,6 +113,15 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 	ResetFactory();
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnVersionHC(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Version HC");
+	respValue["data"]["code"] = CODE_OK;
+	respValue["data"]["version"] = STR(VERSION);
+	respValue["cmd"] = "versionHcRsp";
 	return CODE_OK;
 }
 

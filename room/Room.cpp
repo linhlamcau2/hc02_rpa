@@ -79,12 +79,13 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
 		if (isAddGateway)
 		{
 			mtxGroup.lock();
-			groupList.push_back(group);
+			if (GetPositionGroup(group) == CODE_ERROR)
+				groupList.push_back(group);
 			mtxGroup.unlock();
 		}
 		if (isAddDatabase)
 		{
-			database->GroupUpdateRoom(group, id);
+			database->GroupUpdateRoom(group, this->GetId());
 		}
 		return CODE_OK;
 	}
@@ -117,12 +118,13 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 		if (isAddGateway)
 		{
 			mtxScene.lock();
-			sceneBleList.push_back(sceneBle);
+			if (GetPositionSceneBle(sceneBle) == CODE_ERROR)
+				sceneBleList.push_back(sceneBle);
 			mtxScene.unlock();
 		}
 		if (isAddDatabase)
 		{
-			database->SceneBleUpdateRoom(sceneBle, id);
+			database->SceneBleUpdateRoom(sceneBle, this->GetId());
 		}
 		return CODE_OK;
 	}
