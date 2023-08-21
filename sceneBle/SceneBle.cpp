@@ -56,38 +56,40 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 	DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 	if (!deviceInSceneBle)
 		return CODE_ERROR;
-	bool isExist = false;
-	if (!sendBle)
+	if (GetPositionDevice(device) == CODE_ERROR)
 	{
-		mtx.lock();
-		if (GetPositionDevice(device) == CODE_ERROR)
-			deviceList.push_back(deviceInSceneBle);
-		mtx.unlock();
-
-		if (addDb)
-			database->DeviceInSceneBleAdd(this, device, data.toString());
-		return CODE_OK;
-	}
-	else
-	{
-		int modeRGB = 0;
-		if (data.isObject() &&
-			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
-		{
-			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
-		}
-		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
+		if (!sendBle)
 		{
 			mtx.lock();
-			if (GetPositionDevice(device) == CODE_ERROR)
-				deviceList.push_back(deviceInSceneBle);
+			deviceList.push_back(deviceInSceneBle);
 			mtx.unlock();
 
 			if (addDb)
 				database->DeviceInSceneBleAdd(this, device, data.toString());
 			return CODE_OK;
 		}
+		else
+		{
+			int modeRGB = 0;
+			if (data.isObject() &&
+				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+			{
+				modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
+			}
+			if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
+			{
+				mtx.lock();
+				deviceList.push_back(deviceInSceneBle);
+				mtx.unlock();
+
+				if (addDb)
+					database->DeviceInSceneBleAdd(this, device, data.toString());
+				return CODE_OK;
+			}
+		}
 	}
+	else
+		LOGW("Device %s is exist in sceneble", device->GetId().c_str());
 	return CODE_ERROR;
 }
 

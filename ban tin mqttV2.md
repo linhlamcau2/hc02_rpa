@@ -602,26 +602,24 @@ Request:
     "devId": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
     "data": [
       {
-        "bt0": 2,
-        "op": "=="
-      },
-      {
-        "pir": 1,
-        "op": "=="
+        "properties": [
+          {
+            "bt0": 2,
+            "op": "=="
+          },
+          {
+            "pir": 1,
+            "op": "=="
+          }
+        ],
+        "scene": {
+          "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
+          "icon": 1,
+          "name": "mùa hè"
+        }
       }
     ],
-    "scene": [
-      {
-        "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-        "icon": 1,
-        "name": "mùa hè"
-      }
-    ],
-    "delScene": [
-      "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-      "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2"
-    ],
-    "roomId": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2" // có thể có hoặc không
+    "roomId": "abcd1234"
   }
 }
 ```

@@ -23,13 +23,13 @@ Group::~Group()
 {
 }
 
-int Group::GetPositionDevice(Device *device)
+int Group::GetPositionDevice(Device *device, int epid)
 {
 	uint32_t deviceAddr = device->GetAddr();
 	mtx.lock();
 	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
-		if (deviceAddr == deviceList[i]->device->GetAddr())
+		if ((deviceAddr == deviceList[i]->device->GetAddr()) && (deviceList[i]->epId == epid))
 		{
 			mtx.unlock();
 			return i;
@@ -59,50 +59,54 @@ int Group::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 	if (!deviceInGroup)
 		return CODE_ERROR;
 
-	if (device->GetProtocol() == BLE_DEVICE)
+	if (GetPositionDevice(device, epId) == CODE_ERROR)
 	{
-		if (sendBle)
+		if (device->GetProtocol() == BLE_DEVICE)
 		{
-			if (bleProtocol)
+			if (sendBle)
 			{
-				if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
+				if (bleProtocol)
 				{
-					mtx.lock();
-					if (GetPositionDevice(device) == CODE_ERROR)
+					if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
+					{
+						mtx.lock();
 						deviceList.push_back(deviceInGroup);
-					mtx.unlock();
+						mtx.unlock();
 
-					if (addDb)
-						database->DeviceInGroupAdd(this, device, epId);
-					return CODE_OK;
+						if (addDb)
+							database->DeviceInGroupAdd(this, device, epId);
+						return CODE_OK;
+					}
+					else
+					{
+						LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), addr);
+					}
 				}
 				else
-				{
-					LOGW("Add Ble device %s to group %d error", device->GetId().c_str(), addr);
-				}
+					LOGW("BleProtocol null");
 			}
 			else
-				LOGW("BleProtocol null");
+			{
+				mtx.lock();
+				deviceList.push_back(deviceInGroup);
+				mtx.unlock();
+
+				if (addDb)
+					database->DeviceInGroupAdd(this, device, epId);
+				return CODE_OK;
+			}
 		}
 		else
 		{
 			mtx.lock();
-			if (GetPositionDevice(device) == CODE_ERROR)
-				deviceList.push_back(deviceInGroup);
+			deviceList.push_back(deviceInGroup);
 			mtx.unlock();
-
-			if (addDb)
-				database->DeviceInGroupAdd(this, device, epId);
 			return CODE_OK;
 		}
 	}
 	else
 	{
-		mtx.lock();
-		if (GetPositionDevice(device) == CODE_ERROR)
-			deviceList.push_back(deviceInGroup);
-		mtx.unlock();
-		return CODE_OK;
+		LOGW("Device %s is exist in group", device->GetId().c_str());
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -143,7 +147,7 @@ int Group::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
 			{
 				if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 				{
-					int deviceIndex = GetPositionDevice(device);
+					int deviceIndex = GetPositionDevice(device, epId);
 					if (deviceIndex > -1)
 					{
 						mtx.lock();
@@ -158,7 +162,7 @@ int Group::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
 		}
 		else
 		{
-			int deviceIndex = GetPositionDevice(device);
+			int deviceIndex = GetPositionDevice(device, epId);
 			if (deviceIndex > -1)
 			{
 				mtx.lock();

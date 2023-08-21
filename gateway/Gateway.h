@@ -139,6 +139,11 @@ private:
 	int OnEditScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
+
+	int ConfigSceneForRemote(Device * device, Json::Value &data, Json::Value &scene);
+	int ConfigSceneForPirSensor(Device * device, Json::Value &data, Json::Value &scene);
+	int ConfigSceneForScreenTouch(Device * device, Json::Value &data, Json::Value &scene);
+	int OnCreateSceneController(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetFavoriteScene(Json::Value &reqValue, Json::Value &respValue);

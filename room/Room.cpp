@@ -79,8 +79,7 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
 		if (isAddGateway)
 		{
 			mtxGroup.lock();
-			if (GetPositionGroup(group) == CODE_ERROR)
-				groupList.push_back(group);
+			groupList.push_back(group);
 			mtxGroup.unlock();
 		}
 		if (isAddDatabase)
@@ -118,8 +117,7 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 		if (isAddGateway)
 		{
 			mtxScene.lock();
-			if (GetPositionSceneBle(sceneBle) == CODE_ERROR)
-				sceneBleList.push_back(sceneBle);
+			sceneBleList.push_back(sceneBle);
 			mtxScene.unlock();
 		}
 		if (isAddDatabase)

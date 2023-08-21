@@ -100,7 +100,7 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
-						LOGD("local publish: %s: %s",(pubRespTopic + topics[3]).c_str(), respValue.toString().c_str());
+						LOGD("local publish: %s: %s", (pubRespTopic + topics[3]).c_str(), respValue.toString().c_str());
 						Publish(pubRespTopic + topics[3], respValue.toString());
 					}
 					else if (rs == CODE_DATA_ARRAY)
