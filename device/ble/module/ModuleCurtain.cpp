@@ -30,13 +30,21 @@ void ModuleCurtain::SaveAttribute()
 
 int ModuleCurtain::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) && dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
+	if (dataValue.isObject())
 	{
-		curtain = dataValue[KEY_ATTRIBUTE_CURTAIN].asInt();
-		CheckTrigger();
-		BuildTelemetryValue(jsonValue);
-		return CODE_OK;
+		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) && dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
+		{
+			curtain = dataValue[KEY_ATTRIBUTE_CURTAIN].asInt();
+			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
+			return CODE_OK;
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_MOTOR) && dataValue[KEY_ATTRIBUTE_MOTOR].isInt())
+		{
+			motor = dataValue[KEY_ATTRIBUTE_MOTOR].asInt();
+			BuildTelemetryValue(jsonValue);
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }
@@ -68,6 +76,12 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		SaveAttribute();
 #endif
 		CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
+	}
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->vendorId == RD_VENDOR_ID && data_message->header == RD_OPCODE_CONFIG_MOTOR)
+	{
+		motor = data_message->type;
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -143,6 +157,23 @@ int ModuleCurtain::Do(Json::Value &dataValue)
 				{
 					this->curtain = value;
 				}
+				return CODE_OK;
+			}
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_MOTOR) && dataValue[KEY_ATTRIBUTE_MOTOR].isInt())
+		{
+			int motor = dataValue[KEY_ATTRIBUTE_MOTOR].asInt();
+			if (bleProtocol->ConfigMotor(addr, motor) == CODE_OK)
+			{
+				this->motor = motor;
+				return CODE_OK;
+			}
+		}
+		if (dataValue.isMember(KEY_ATTRIBUTE_CALIB_CURTAIN) && dataValue[KEY_ATTRIBUTE_CALIB_CURTAIN].isInt())
+		{
+			int status = dataValue[KEY_ATTRIBUTE_CALIB_CURTAIN].asInt();
+			if (bleProtocol->CalibCurtain(addr, status) == CODE_OK)
+			{
 				return CODE_OK;
 			}
 		}

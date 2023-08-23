@@ -7,7 +7,7 @@ class ModuleCurtain : public Module
 {
 protected:
 	uint8_t curtain;
-
+	uint8_t motor;
 public:
 	ModuleCurtain(Device *device, uint16_t addr);
 	~ModuleCurtain();

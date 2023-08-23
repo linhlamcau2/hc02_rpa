@@ -37,6 +37,7 @@
 #define KEY_ATTRIBUTE_CURTAIN_CLOSE "curtainClose"
 #define KEY_ATTRIBUTE_CURTAIN_PAUSE "curtainPause"
 #define KEY_ATTRIBUTE_CURTAIN_OPENED "curtainOpened"
+#define KEY_ATTRIBUTE_CALIB_CURTAIN "calibCurtain"
 #define KEY_ATTRIBUTE_SMOKE "smoke"
 #define KEY_ATTRIBUTE_DOOR "door"
 #define KEY_ATTRIBUTE_SMOKE_PIN "smokePin"
