@@ -89,7 +89,10 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 		}
 	}
 	else
+	{
 		LOGW("Device %s is exist in sceneble", device->GetId().c_str());
+		return CODE_OK;
+	}
 	return CODE_ERROR;
 }
 

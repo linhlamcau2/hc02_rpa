@@ -107,6 +107,7 @@ int Group::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
 	else
 	{
 		LOGW("Device %s is exist in group", device->GetId().c_str());
+		return CODE_OK;
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

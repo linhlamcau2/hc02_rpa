@@ -10,6 +10,11 @@ void Gateway::InitMqttMessageDevice()
 	OnDeviceRpcCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
 
+	OnDeviceRpcCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delBtFromSwitchLink", bind(&Gateway::OnDelBtFromSwitchLink, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delSwitchLink", bind(&Gateway::OnDelSwitchLink, this, placeholders::_1, placeholders::_2));
+
 	OnLocalCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
@@ -22,6 +27,11 @@ void Gateway::InitMqttMessageDevice()
 	OnLocalCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getFavoriteDev", bind(&Gateway::OnGetFavoriteDev, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("delBtFromSwitchLink", bind(&Gateway::OnDelBtFromSwitchLink, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("delSwitchLink", bind(&Gateway::OnDelSwitchLink, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
@@ -359,5 +369,429 @@ int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "updateDeviceNameRsp";
+	return CODE_OK;
+}
+
+static int indexBt(string bt)
+{
+	string a[] = {"bt0", "bt1", "bt2", "bt3", "bt4", "bt5"};
+	for (int i = 0; i < 6; i++)
+	{
+		if (a[i] == bt)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+int Gateway::OnCreateSwitchLink(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnCreateSwitchLink")
+	respValue["cmd"] = "createSwitchLinkRsp";
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string groupId = reqValue["id"].asString();
+		Group *group = getGroupFromId(groupId);
+		if (!group)
+		{
+			group = new Group(groupId, getNextGroupAddr(), groupId);
+			if (group)
+				AddNewGroup(group, true);
+		}
+
+		if (group)
+		{
+			Json::Value listBtSuccess = Json::arrayValue;
+			Json::Value listBtFailure = Json::arrayValue;
+			Json::Value listSuccess = Json::arrayValue;
+			Json::Value listFailure = Json::arrayValue;
+			if (reqValue.isMember("lstBt") && reqValue["lstBt"].isArray())
+			{
+				Json::Value lstBt = reqValue["lstBt"];
+				for (auto &btn : lstBt)
+				{
+					if (btn.isObject() && btn.isMember("id") && btn["id"].isString() && btn.isMember("bt") && btn["bt"].isArray())
+					{
+						string devId = btn["id"].asString();
+						Device *device = getDeviceFromId(devId);
+						if (device)
+						{
+							if (device->GetType() == BLE_SWITCH_1 ||
+								device->GetType() == BLE_SWITCH_2 ||
+								device->GetType() == BLE_SWITCH_3 ||
+								device->GetType() == BLE_SWITCH_4 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+								device->GetType() == BLE_SWITCH_RGB_1 ||
+								device->GetType() == BLE_SWITCH_RGB_2 ||
+								device->GetType() == BLE_SWITCH_RGB_3 ||
+								device->GetType() == BLE_SWITCH_RGB_4 ||
+								device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+							{
+								for (auto &bt : btn["bt"])
+								{
+									if (bt.isString())
+									{
+										int idxBt = indexBt(bt.asString());
+										if ((idxBt >= 0) && (idxBt < 6))
+										{
+											if (group->AddDevice(device, device->GetAddr() + idxBt, true, true) == CODE_OK)
+											{
+												if (bleProtocol->SetIdCombine(device->GetAddr() + idxBt, group->GetAddr() + 49152) == CODE_OK)
+												{
+													listBtSuccess.append(bt.asString());
+												}
+												else
+												{
+													listBtFailure.append(bt.asString());
+												}
+											}
+											else
+											{
+												listBtFailure.append(bt.asString());
+											}
+										}
+									}
+								}
+								if (listBtSuccess.size() > 0)
+								{
+									Json::Value success;
+									success["id"] = devId;
+									success["bt"] = listBtSuccess;
+									listSuccess.append(success);
+								}
+								if (listBtFailure.size() > 0)
+								{
+									Json::Value failed;
+									failed["id"] = devId;
+									failed["bt"] = listBtFailure;
+									listFailure.append(failed);
+								}
+								respValue["data"]["code"] = CODE_OK;
+							}
+							else
+							{
+								respValue["data"]["code"] = CODE_ERROR;
+							}
+						}
+						else
+						{
+							respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+						}
+						respValue["data"]["success"] = listSuccess;
+						respValue["data"]["failed"] = listFailure;
+					}
+					else
+					{
+						respValue["data"]["code"] = CODE_FORMAT_ERROR;
+					}
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_MEMORY_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	return CODE_OK;
+}
+
+int Gateway::OnAddBtToSwitchLink(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnAddBtSwitchLink")
+	respValue["cmd"] = "addBtToSwitchLinkRsp";
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string groupId = reqValue["id"].asString();
+		Group *group = getGroupFromId(groupId);
+		if (!group)
+		{
+			group = new Group(groupId, getNextGroupAddr(), groupId);
+			if (group)
+				AddNewGroup(group, true);
+		}
+
+		if (group)
+		{
+			Json::Value listBtSuccess = Json::arrayValue;
+			Json::Value listBtFailure = Json::arrayValue;
+			Json::Value listSuccess = Json::arrayValue;
+			Json::Value listFailure = Json::arrayValue;
+			if (reqValue.isMember("lstBt") && reqValue["lstBt"].isArray())
+			{
+				Json::Value lstBt = reqValue["lstBt"];
+				for (auto &btn : lstBt)
+				{
+					if (btn.isObject() && btn.isMember("id") && btn["id"].isString() && btn.isMember("bt") && btn["bt"].isArray())
+					{
+						string devId = btn["id"].asString();
+						Device *device = getDeviceFromId(devId);
+						if (device)
+						{
+							if (device->GetType() == BLE_SWITCH_1 ||
+								device->GetType() == BLE_SWITCH_2 ||
+								device->GetType() == BLE_SWITCH_3 ||
+								device->GetType() == BLE_SWITCH_4 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+								device->GetType() == BLE_SWITCH_RGB_1 ||
+								device->GetType() == BLE_SWITCH_RGB_2 ||
+								device->GetType() == BLE_SWITCH_RGB_3 ||
+								device->GetType() == BLE_SWITCH_RGB_4 ||
+								device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+							{
+								for (auto &bt : btn["bt"])
+								{
+									if (bt.isString())
+									{
+										int idxBt = indexBt(bt.asString());
+										if ((idxBt >= 0) && (idxBt < 6))
+										{
+											if (group->AddDevice(device, device->GetAddr() + idxBt, true, true) == CODE_OK)
+											{
+												if (bleProtocol->SetIdCombine(device->GetAddr() + idxBt, group->GetAddr() + 49152) == CODE_OK)
+												{
+													listBtSuccess.append(bt.asString());
+												}
+												else
+												{
+													listBtFailure.append(bt.asString());
+												}
+											}
+											else
+											{
+												listBtFailure.append(bt.asString());
+											}
+										}
+									}
+								}
+								if (listBtSuccess.size() > 0)
+								{
+									Json::Value success;
+									success["id"] = devId;
+									success["bt"] = listBtSuccess;
+									listSuccess.append(success);
+								}
+								if (listBtFailure.size() > 0)
+								{
+									Json::Value failed;
+									failed["id"] = devId;
+									failed["bt"] = listBtFailure;
+									listFailure.append(failed);
+								}
+								respValue["data"]["code"] = CODE_OK;
+							}
+							else
+							{
+								respValue["data"]["code"] = CODE_ERROR;
+							}
+						}
+						else
+						{
+							respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+						}
+						respValue["data"]["success"] = listSuccess;
+						respValue["data"]["failed"] = listFailure;
+					}
+					else
+					{
+						respValue["data"]["code"] = CODE_FORMAT_ERROR;
+					}
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_MEMORY_ERROR;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	return CODE_OK;
+}
+
+int Gateway::OnDelBtFromSwitchLink(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("DelBtSwitchLink")
+	respValue["cmd"] = "delBtFromSwitchLinkRsp";
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string groupId = reqValue["id"].asString();
+		Group *group = getGroupFromId(groupId);
+		if (group)
+		{
+			Json::Value listBtSuccess = Json::arrayValue;
+			Json::Value listBtFailure = Json::arrayValue;
+			Json::Value listSuccess = Json::arrayValue;
+			Json::Value listFailure = Json::arrayValue;
+			if (reqValue.isMember("lstBt") && reqValue["lstBt"].isArray())
+			{
+				Json::Value lstBt = reqValue["lstBt"];
+				for (auto &btn : lstBt)
+				{
+					if (btn.isObject() && btn.isMember("id") && btn["id"].isString() && btn.isMember("bt") && btn["bt"].isArray())
+					{
+						string devId = btn["id"].asString();
+						Device *device = getDeviceFromId(devId);
+						if (device)
+						{
+							if (device->GetType() == BLE_SWITCH_1 ||
+								device->GetType() == BLE_SWITCH_2 ||
+								device->GetType() == BLE_SWITCH_3 ||
+								device->GetType() == BLE_SWITCH_4 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+								device->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+								device->GetType() == BLE_SWITCH_RGB_1 ||
+								device->GetType() == BLE_SWITCH_RGB_2 ||
+								device->GetType() == BLE_SWITCH_RGB_3 ||
+								device->GetType() == BLE_SWITCH_RGB_4 ||
+								device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+							{
+								for (auto &bt : btn["bt"])
+								{
+									if (bt.isString())
+									{
+										int idxBt = indexBt(bt.asString());
+										if ((idxBt >= 0) && (idxBt < 6))
+										{
+											if (group->DelDevice(device, device->GetAddr() + idxBt, true, true) == CODE_OK)
+											{
+												if (bleProtocol->SetIdCombine(device->GetAddr() + idxBt, 0) == CODE_OK)
+												{
+													listBtSuccess.append(bt.asString());
+												}
+												else
+												{
+													listBtFailure.append(bt.asString());
+												}
+											}
+											else
+											{
+												listBtFailure.append(bt.asString());
+											}
+										}
+									}
+								}
+								if (listBtSuccess.size() > 0)
+								{
+									Json::Value success;
+									success["id"] = devId;
+									success["bt"] = listBtSuccess;
+									listSuccess.append(success);
+								}
+								if (listBtFailure.size() > 0)
+								{
+									Json::Value failed;
+									failed["id"] = devId;
+									failed["bt"] = listBtFailure;
+									listFailure.append(failed);
+								}
+								respValue["data"]["code"] = CODE_OK;
+							}
+							else
+							{
+								respValue["data"]["code"] = CODE_ERROR;
+							}
+						}
+						else
+						{
+							respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+						}
+						respValue["data"]["success"] = listSuccess;
+						respValue["data"]["failed"] = listFailure;
+					}
+					else
+					{
+						respValue["data"]["code"] = CODE_FORMAT_ERROR;
+					}
+				}
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_FORMAT_ERROR;
+			}
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_NOT_FOUND_GROUP;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	return CODE_OK;
+}
+
+int Gateway::OnDelSwitchLink(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Del Switch Link");
+	respValue["cmd"] = "delSwitchLinkRsp";
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string groupId = reqValue["id"].asString();
+		Group *group = getGroupFromId(groupId);
+		if (group)
+		{
+			Json::Value listBtSuccess = Json::arrayValue;
+			Json::Value listBtFailure = Json::arrayValue;
+			Json::Value listSuccess = Json::arrayValue;
+			Json::Value listFailure = Json::arrayValue;
+			vector<DeviceInGroup *> listDev = group->deviceList;
+			for (auto &dev : listDev)
+			{
+				if (group->DelDevice(dev->device, dev->epId, true, true) == CODE_OK)
+				{
+					if (bleProtocol->SetIdCombine(dev->epId, 0) == CODE_OK)
+					{
+						respValue["data"]["coode"] = CODE_OK;
+					}
+					else
+					{
+						respValue["data"]["coode"] = CODE_ERROR;
+					}
+				}
+				else
+				{
+					respValue["data"]["coode"] = CODE_ERROR;
+				}
+			}
+			delGroup(group);
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_NOT_FOUND_GROUP;
+		}
+	}
 	return CODE_OK;
 }

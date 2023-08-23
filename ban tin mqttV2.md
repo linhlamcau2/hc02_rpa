@@ -1157,7 +1157,7 @@ Request:
   "rqi": "abc123456",
   "data": {
     "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-    "LstBt": [
+    "lstBt": [
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
@@ -1179,7 +1179,7 @@ Request:
 Response:
 ```json
 {
-  "cmd": "addBtToSwitchLink",
+  "cmd": "addBtToSwitchLinkRsp",
   "rqi": "abc123456",
   "data": {
     "code": 0,
@@ -1212,7 +1212,7 @@ Request:
   "rqi": "abc123456",
   "data": {
     "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
-    "LstBt": [
+    "lstBt": [
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
@@ -1234,7 +1234,7 @@ Request:
 Response:
 ```json
 {
-  "cmd": "delBtFromSwitchLink",
+  "cmd": "delBtFromSwitchLinkRsp",
   "rqi": "abc123456",
   "data": {
     "code": 0,
@@ -1273,7 +1273,7 @@ Request:
 Response:
 ```json
 {
-  "cmd": "delSwitchLink",
+  "cmd": "delSwitchLinkRsp",
   "rqi": "abc123456",
   "data": {
     "code": 0,

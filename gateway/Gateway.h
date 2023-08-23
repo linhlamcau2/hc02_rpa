@@ -94,6 +94,11 @@ private:
 	int OnGetFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
 	int OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue);
 
+	int OnCreateSwitchLink(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddBtToSwitchLink(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelBtFromSwitchLink(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelSwitchLink(Json::Value &reqValue, Json::Value &respValue);
+
 	// Group
 	void InitMqttMessageGroup();
 	int OnControlGroup(Json::Value &reqValue, Json::Value &respValue);
@@ -140,9 +145,9 @@ private:
 	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
 
-	int ConfigSceneForRemote(Device * device, Json::Value &data, Json::Value &scene, bool isAddScene);
-	int ConfigSceneForPirSensor(Device * device, Json::Value &data, Json::Value &scene, bool isAddScene);
-	int ConfigSceneForScreenTouch(Device * device, Json::Value &data, Json::Value &scene, bool isAddScene);
+	int ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
+	int ConfigSceneForPirSensor(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
+	int ConfigSceneForScreenTouch(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
 	int OnCreateSceneController(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelSceneController(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);
