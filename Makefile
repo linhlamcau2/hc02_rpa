@@ -9,7 +9,7 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
+INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Iprotocol/androidBle -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
 DEFINES 		+= -DCONFIG_USE_MESSAGE_FORMAT_V2=1
 # DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
 # DEFINES 	+= -D__OPENWRT__
@@ -52,6 +52,7 @@ DEVICESRC += $(wildcard mqtt/*.cpp)
 DEVICESRC += $(wildcard http/*.cpp)
 DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard protocol/mqtt/*.cpp)
+DEVICESRC += $(wildcard protocol/androidBle/*.cpp)
 DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard sceneBle/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
