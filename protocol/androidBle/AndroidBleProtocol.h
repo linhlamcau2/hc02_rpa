@@ -17,6 +17,7 @@ private:
 	void OnMessage(string &topic, string &payload);
 	int SendMessage(string data);
 
+	int OnBleInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnNewDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 

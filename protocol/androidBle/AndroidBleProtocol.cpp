@@ -2,6 +2,8 @@
 #include "Gateway.h"
 #include "DeviceMqtt.h"
 #include "Log.h"
+#include "Util.h"
+#include "BleProtocol.h"
 
 AndroidBleProtocol *androidBleProtocol = NULL;
 
@@ -18,7 +20,8 @@ void AndroidBleProtocol::init()
 	if (gateway)
 	{
 		gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnMessage, this, placeholders::_1, placeholders::_2), "device/androidBle");
-		OnAndroidBleProtocolCallbackRegister("NewDevice", bind(&AndroidBleProtocol::OnNewDevice, this, placeholders::_1, placeholders::_2));
+		OnAndroidBleProtocolCallbackRegister("bleInfo", bind(&AndroidBleProtocol::OnBleInfo, this, placeholders::_1, placeholders::_2));
+		OnAndroidBleProtocolCallbackRegister("newDev", bind(&AndroidBleProtocol::OnNewDevice, this, placeholders::_1, placeholders::_2));
 		OnAndroidBleProtocolCallbackRegister("DeviceStatus", bind(&AndroidBleProtocol::OnDeviceStatus, this, placeholders::_1, placeholders::_2));
 	}
 	else
@@ -30,11 +33,22 @@ void AndroidBleProtocol::init()
 
 int AndroidBleProtocol::StartScan()
 {
+	Json::Value dataJson;
+	dataJson["cmd"] = "startScanBle";
+	dataJson["rqi"] = Util::genRandRQI(16);
+	dataJson["data"] = Json::objectValue;
+	gateway->LocalPublish("HC/androidBle", dataJson.toString());
 	return CODE_OK;
 }
 
 int AndroidBleProtocol::StopScan()
 {
+	Json::Value dataJson;
+	dataJson["cmd"] = "stopScanBle";
+	dataJson["rqi"] = Util::genRandRQI(16);
+	dataJson["data"] = Json::objectValue;
+	gateway->LocalPublish("HC/androidBle", dataJson.toString());
+	return CODE_OK;
 	return CODE_OK;
 }
 
@@ -50,9 +64,9 @@ void AndroidBleProtocol::OnMessage(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-			payloadJson.isMember("data") && payloadJson["data"].isObject())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -105,23 +119,52 @@ int AndroidBleProtocol::SendMessage(string data)
 	return CODE_OK;
 }
 
+int AndroidBleProtocol::OnBleInfo(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("BleInfo Request");
+	respValue["cmd"] = "bleInfoRsp";
+	respValue["data"]["code"] = CODE_OK;
+	respValue["data"]["netKey"] = gateway->getBleNetKey();
+	respValue["data"]["appKey"] = gateway->getBleAppKey();
+	respValue["data"]["ivIndex"] = gateway->getBleIvIndex();
+	respValue["data"]["addrGw"] = gateway->getBleAddr();
+	return CODE_OK;
+}
+
 int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnNewDevice");
 	respValue["data"]["code"] = CODE_OK;
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("type") && reqValue["type"].isInt() &&
-			reqValue.isMember("mac") && reqValue["mac"].isString())
+		reqValue.isMember("type") && reqValue["type"].isInt() &&
+		reqValue.isMember("mac") && reqValue["mac"].isString() &&
+		reqValue.isMember("addr") && reqValue["addr"].isInt() &&
+		reqValue.isMember("ver") && reqValue["ver"].isString())
 	{
 		string deviceId = reqValue["id"].asString();
 		uint32_t type = reqValue["type"].asInt();
 		string mac = reqValue["mac"].asString();
+		uint32_t addr = reqValue["addr"].asInt();
+		string ver = reqValue["ver"].asString();
+		string devKey;
 		Json::Value dataJson;
 		if (reqValue.isMember("data") && reqValue["data"].isObject())
 		{
 			dataJson = reqValue["data"];
+			if (dataJson.isMember("devKey") && dataJson["devKey"].isString())
+			{
+				devKey = dataJson["devKey"].asString();
+			}
 		}
-		Device *device = gateway->AddNewDevice(deviceId, mac, mac, dataJson, 0, type, 0, true);
+
+		int intPart, fracPart;
+		char dot;
+		std::istringstream iss(ver);
+		iss >> intPart >> dot >> fracPart;
+
+		// Chuyển đổi thành uint16_t
+		uint16_t version = (static_cast<uint16_t>(intPart) << 8) | static_cast<uint16_t>(fracPart);
+		Device *device = gateway->AddNewDevice(deviceId, Device::ConvertDeviceTypeToName(type), mac, dataJson, addr, type, version, true);
 		if (device)
 		{
 			Json::Value jsonData;
@@ -129,7 +172,8 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 			jsonData["type"] = type;
 			jsonData["data"] = reqValue["data"];
 			gateway->AddDeviceToScanList(device);
-			gateway->pushNewDeviceLocal(jsonData);
+			bleProtocol->UpdateDeviceKeyDev(addr, devKey);
+			// gateway->pushNewDeviceLocal(jsonData);
 		}
 		else
 		{
@@ -156,7 +200,7 @@ int AndroidBleProtocol::OnDeviceStatus(Json::Value &reqValue, Json::Value &respV
 		for (auto deviceJson : deviceJsonList)
 		{
 			if (deviceJson.isMember("id") && deviceJson["id"].isString() &&
-					deviceJson.isMember("data") && deviceJson["data"].isObject())
+				deviceJson.isMember("data") && deviceJson["data"].isObject())
 			{
 				string deviceId = deviceJson["id"].asString();
 				Json::Value devData = deviceJson["data"];
