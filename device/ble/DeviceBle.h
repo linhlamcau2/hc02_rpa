@@ -5,6 +5,31 @@
 
 using namespace std;
 
+enum
+{
+	BLE_DOWNLIGHT_SMT_GROUP = 1,
+	BLE_DOWNLIGHT_COB_GOC_RONG_GROUP = 2,
+	BLE_DOWNLIGHT_COB_GOC_HEP_GROUP = 3,
+	BLE_DOWNLIGHT_COB_TRANG_TRI_GROUP = 4,
+	BLE_PANEL_TRON_GROUP = 5,
+	BLE_PANEL_VUONG_GROUP = 6,
+	BLE_LED_OP_TRAN_GROUP = 7,
+	BLE_LED_OP_TUONG_GROUP = 8,
+	BLE_LED_CHIEU_TRANH_GROUP = 9,
+	BLE_TRACKLIGHT_GROUP = 10,
+	BLE_LED_THA_TRAN_GROUP = 11,
+	BLE_LED_CHIEU_GUONG_GROUP = 12,
+	BLE_LED_DAY_LINEAR_GROUP = 13,
+	BLE_LED_TUBE_M16_GROUP = 14,
+	BLE_DEN_BAN_GROUP = 15,
+	BLE_LED_FLOOD_GROUP = 16,
+	BLE_LED_DAY_RGB_GROUP = 17,
+	BLE_LED_DAY_RGBCW_GROUP = 18,
+	BLE_LED_BULB_GROUP = 19,
+	BLE_DOWNLIGHT_RGBCW_GROUP = 20,
+	BLE_LED_OP_TRAN_LOA_GROUP = 21,
+};
+
 class DeviceBle : public Device
 {
 private:
@@ -17,7 +42,7 @@ protected:
 public:
 	DeviceBle(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 	~DeviceBle();
-	
+
 	string GetDeviceKey(Json::Value &dataJson);
 	string GetDeviceKey();
 

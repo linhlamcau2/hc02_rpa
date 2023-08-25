@@ -25,17 +25,17 @@ string Wifi::GetMacAddress()
 	unsigned char *mac = NULL;
 	char uc_Mac[100];
 	int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-#if defined(__ANDROID__) || defined(__OPENWRT__)
-	strcpy(s.ifr_name, "eth0");
-#else
+#ifdef ESP_PLATFORM
 	strcpy(s.ifr_name, "enp1s0");
+#else
+	strcpy(s.ifr_name, "eth0");
 #endif
 	if (0 == ioctl(fd, SIOCGIFHWADDR, &s))
 	{
 		mac = (unsigned char *)s.ifr_addr.sa_data;
 	}
 	sprintf((char *)uc_Mac, (const char *)"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return string(uc_Mac);
 }
 
@@ -68,14 +68,18 @@ string Wifi::GetIP()
 // trim from start
 static inline std::string &ltrim(std::string &s)
 {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) {return !std::isspace(c);}));
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c)
+																	{ return !std::isspace(c); }));
 	return s;
 }
 
 // trim from end
 static inline std::string &rtrim(std::string &s)
 {
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) {return !std::isspace(c);}).base(), s.end());
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](int c)
+											 { return !std::isspace(c); })
+							.base(),
+					s.end());
 	return s;
 }
 
@@ -137,31 +141,31 @@ void Wifi::ScanWifi(Json::Value &data)
 int Wifi::ConnectToWifi(string ssid, string password, string encryption)
 {
 	LOGD("Connect to Wifi");
-    string encry = "none";
+	string encry = "none";
 	if (encryption.find("OWE") != string::npos)
-    {
-        encry = "owe";
-    }
-    if (encryption.find("none") != string::npos)
-    {
-        encry = "none";
-    }
-    if (encryption.find("WPA")!= string::npos && encryption.find("PSK")!= string::npos)
-    {
-        encry = "psk";
-    }
-    if (encryption.find("WPA2")!= string::npos && encryption.find("PSK")!= string::npos)
-    {
-        encry = "psk2";
-    }
-    if (encryption.find("WPA3")!= string::npos && encryption.find("SAE")!= string::npos)
-    {
-        encry = "sae";
-    }
-    if (encryption.find("mixed")!= string::npos && encryption.find("WPA/WPA2")!= string::npos && encryption.find("PSK")!= string::npos)
-    {
-        encry = "psk-mixed";
-    }
+	{
+		encry = "owe";
+	}
+	if (encryption.find("none") != string::npos)
+	{
+		encry = "none";
+	}
+	if (encryption.find("WPA") != string::npos && encryption.find("PSK") != string::npos)
+	{
+		encry = "psk";
+	}
+	if (encryption.find("WPA2") != string::npos && encryption.find("PSK") != string::npos)
+	{
+		encry = "psk2";
+	}
+	if (encryption.find("WPA3") != string::npos && encryption.find("SAE") != string::npos)
+	{
+		encry = "sae";
+	}
+	if (encryption.find("mixed") != string::npos && encryption.find("WPA/WPA2") != string::npos && encryption.find("PSK") != string::npos)
+	{
+		encry = "psk-mixed";
+	}
 	LOGD("Encryption: %s", encry.c_str());
 	try
 	{

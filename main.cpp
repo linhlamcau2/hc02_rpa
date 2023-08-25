@@ -70,7 +70,6 @@ int main(int argc, char *argv[])
 	bleProtocol->init();
 
 #ifdef CONFIG_ENABLE_ZIGBEE
-	Device::InitDeviceModelList();
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
 	// zigbeeProtocol->CommissionFormation();
@@ -87,6 +86,8 @@ int main(int argc, char *argv[])
 
 	mqttProtocol = new MqttProtocol();
 	mqttProtocol->init();
+	
+	Device::InitDeviceModelList();
 
 	Util::LedService(true);
 

@@ -54,22 +54,35 @@ void Room::SetDataConfig(string dataConfig)
 	this->dataConfig = dataConfig;
 }
 
-int Room::AddDevice(Device *device, int epId, bool sendBle, bool addDb)
+int Room::AddDeviceOneMessage(Device *device, bool sendBle, bool addDb)
 {
 	if (!device)
 		return CODE_ERROR;
 	if (addDb)
 		database->DeviceInRoomAdd(this, device);
-	return Group::AddDevice(device, epId, sendBle, false);
+	if (bleProtocol)
+	{
+		return bleProtocol->AddDev2Room(device->GetAddr(), addr + ID_START);
+	}
+	return CODE_ERROR;
 }
 
-int Room::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
+int Room::AddDevice(Device *device, bool sendBle, bool addDb)
+{
+	if (!device)
+		return CODE_ERROR;
+	if (addDb)
+		database->DeviceInRoomAdd(this, device);
+	return Group::AddDevice(device, device->GetAddr(), sendBle, false);
+}
+
+int Room::DelDevice(Device *device, bool sendBle, bool delDb)
 {
 	if (!device)
 		return CODE_ERROR;
 	if (delDb)
 		database->DeviceInRoomDel(this, device);
-	return Group::DelDevice(device, epId, sendBle, false);
+	return Group::DelDevice(device, device->GetAddr(), sendBle, false);
 }
 
 int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)

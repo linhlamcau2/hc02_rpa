@@ -7,6 +7,8 @@
 #include "Object.h"
 #include "Device.h"
 
+#define ID_START (0xC000)
+
 using namespace std;
 
 class DeviceInGroup

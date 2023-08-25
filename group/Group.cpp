@@ -7,8 +7,6 @@
 #include "ZigbeeProtocol.h"
 #endif
 
-#define ID_START (49152)
-
 DeviceInGroup::DeviceInGroup(Device *device, int epId)
 {
 	this->device = device;

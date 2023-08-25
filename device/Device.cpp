@@ -189,9 +189,32 @@ int Device::PushAttributes(Json::Value &jsonValue)
 // TODO: remove
 static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
+static map<uint32_t, uint32_t> bleTypeToGroupIdList;
 
 void Device::InitDeviceModelList()
 {
+	bleTypeToGroupIdList[BLE_DOWNLIGHT_SMT] = BLE_DOWNLIGHT_SMT_GROUP;
+	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_GOC_RONG] = BLE_DOWNLIGHT_COB_GOC_RONG_GROUP;
+	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_GOC_HEP] = BLE_DOWNLIGHT_COB_GOC_HEP_GROUP;
+	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_TRANG_TRI] = BLE_DOWNLIGHT_COB_TRANG_TRI_GROUP;
+	bleTypeToGroupIdList[BLE_PANEL_TRON] = BLE_PANEL_TRON_GROUP;
+	bleTypeToGroupIdList[BLE_PANEL_VUONG] = BLE_PANEL_VUONG_GROUP;
+	bleTypeToGroupIdList[BLE_LED_OP_TRAN] = BLE_LED_OP_TRAN_GROUP;
+	bleTypeToGroupIdList[BLE_LED_OP_TUONG] = BLE_LED_OP_TUONG_GROUP;
+	bleTypeToGroupIdList[BLE_LED_CHIEU_TRANH] = BLE_LED_CHIEU_TRANH_GROUP;
+	bleTypeToGroupIdList[BLE_TRACKLIGHT] = BLE_TRACKLIGHT_GROUP;
+	bleTypeToGroupIdList[BLE_LED_THA_TRAN] = BLE_LED_THA_TRAN_GROUP;
+	bleTypeToGroupIdList[BLE_LED_CHIEU_GUONG] = BLE_LED_CHIEU_GUONG_GROUP;
+	bleTypeToGroupIdList[BLE_LED_DAY_LINEAR] = BLE_LED_DAY_LINEAR_GROUP;
+	bleTypeToGroupIdList[BLE_LED_TUBE_M16] = BLE_LED_TUBE_M16_GROUP;
+	bleTypeToGroupIdList[BLE_DEN_BAN] = BLE_DEN_BAN_GROUP;
+	bleTypeToGroupIdList[BLE_LED_FLOOD] = BLE_LED_FLOOD_GROUP;
+	bleTypeToGroupIdList[BLE_LED_DAY_RGB] = BLE_LED_DAY_RGB_GROUP;
+	bleTypeToGroupIdList[BLE_LED_DAY_RGBCW] = BLE_LED_DAY_RGBCW_GROUP;
+	bleTypeToGroupIdList[BLE_LED_BULB] = BLE_LED_BULB_GROUP;
+	bleTypeToGroupIdList[BLE_DOWNLIGHT_RGBCW] = BLE_DOWNLIGHT_RGBCW_GROUP;
+	bleTypeToGroupIdList[BLE_LED_OP_TRAN_LOA] = BLE_LED_OP_TRAN_LOA_GROUP;
+
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_TEMP_HUM, "lumi.sensor_ht", "Cam biet nhiet do do am");
@@ -207,6 +230,11 @@ void Device::RegisterDeviceModel(uint32_t type, string model, string name)
 	typeToNameList[type] = name;
 	if (model != "")
 		modelToTypeList[model] = type;
+}
+
+uint32_t Device::BleTypeToGroupId(uint32_t deviceType)
+{
+	return bleTypeToGroupIdList[deviceType];
 }
 
 uint32_t Device::ConvertModelToDeviceType(string model)

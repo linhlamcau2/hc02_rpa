@@ -1418,6 +1418,18 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	return CODE_ERROR;
 }
 
+int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
+{
+	LOGW("Add dev addr: 0x%04X to room: 0x%04X", devAddr, room);
+	return CODE_OK;
+}
+
+int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
+{
+	LOGW("Del dev addr: 0x%04X from room: 0x%04X", devAddr, room);
+	return CODE_OK;
+}
+
 int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 {
 	LOGD("Set scene addr: 0x%04X to scene: 0x%04X, modergb: %d", devAddr, scene, modeRgb);

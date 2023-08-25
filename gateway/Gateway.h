@@ -201,18 +201,19 @@ public:
 	Group *getGroupFromId(string id);
 	Group *getGroupFromAddr(uint16_t addr);
 	void delGroup(Group *group);
-	uint32_t getNextGroupAddr();
+	uint16_t getNextGroupAddr();
 
 	SceneBle *getSceneBleFromId(string id);
 	SceneBle *getSceneBleFromAddr(uint16_t addr);
 	void delSceneBle(SceneBle *sceneBle);
-	uint32_t getNextSceneBleAddr();
+	uint16_t getNextSceneBleAddr();
 
 	Rule *getRuleFromId(string id);
 	void delRule(Rule *rule);
 
 	Room *getRoomFromId(string id);
 	void delRoom(Room *room);
+	uint16_t getNextRoomAddr();
 
 	uint16_t getBleAddr();
 	uint32_t getBleIvIndex();

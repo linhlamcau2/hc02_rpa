@@ -258,9 +258,9 @@ void Gateway::delGroup(Group *group)
 	delete group;
 }
 
-uint32_t Gateway::getNextGroupAddr()
+uint16_t Gateway::getNextGroupAddr()
 {
-	uint32_t groupAddr = 0;
+	uint16_t groupAddr = 10000; //start add of normal group
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
@@ -323,9 +323,9 @@ void Gateway::delSceneBle(SceneBle *sceneBle)
 	delete sceneBle;
 }
 
-uint32_t Gateway::getNextSceneBleAddr()
+uint16_t Gateway::getNextSceneBleAddr()
 {
-	uint32_t sceneAddr = 1;
+	uint16_t sceneAddr = 10001;
 	sceneBleListMtx.lock();
 	for (const auto &[id, sceneBle] : sceneBleList)
 	{
@@ -383,6 +383,21 @@ void Gateway::delRoom(Room *room)
 	groupListMtx.unlock();
 
 	delete room;
+}
+
+uint16_t Gateway::getNextRoomAddr()
+{
+	uint16_t roomAddr = 0; //start add of room
+	groupListMtx.lock();
+	for (const auto &[id, group] : groupList)
+	{
+		if (group->GetAddr() >= roomAddr)
+		{
+			roomAddr = group->GetAddr()/200 + 200; //every room has 200 group
+		}
+	}
+	groupListMtx.unlock();
+	return roomAddr;
 }
 
 #ifdef ESP_PLATFORM

@@ -225,6 +225,7 @@ public:
 
 	static void InitDeviceModelList();
 	static void RegisterDeviceModel(uint32_t type, string model, string name);
+	static uint32_t BleTypeToGroupId(uint32_t deviceType);
 	static uint32_t ConvertModelToDeviceType(string model);
 	static string ConvertDeviceTypeToName(uint32_t type);
 
