@@ -239,7 +239,7 @@ Request:
 Response:
 ```json
 {
-    "cmd": "stopScanBleRsp",
+    "cmd": "startScanBleRsp",
     "rqi": "abc123456",
     "data": {
         "code": 0
@@ -284,7 +284,7 @@ Request:
                 "data":{
                     "devKey": "b717f8d8-6f18-43c0-ae46-69c32998f653",
                     "ipLan": "192.168.1.1"
-                },
+                }
             }
         ]
     }
@@ -1295,6 +1295,107 @@ Response:
         ]
       }
     ]
+  }
+}
+```
+## III. Bản tin giao tiếp với Android BLE
+
+### III.1. Khởi tạo thông tin mạng BLE: HC->AndroidBLE
+
+Request:
+```json
+{
+  "cmd":"bleInfo",
+  "rqi":"abc-xyz",
+  "data":{}
+}
+```
+
+Response:
+```json
+{
+  "cmd":"bleInfoRsp",
+  "rqi":"abc-xyz",
+  "data":
+  {
+    "code":0,
+    "netKey":"b717f8d8-6f18-43c0-ae46-69c32998f653",
+    "appKey":"b717f8d8-6f18-43c0-ae46-69c32998f653",
+    "ivIndex":"11223344",
+    "addrGw": 1,
+  }
+}
+```
+### III.2. Yêu cầu quét thiết bị qua Android BLE: HC->AndroidBLE
+#### Start Scan
+Request:
+```json
+{
+    "cmd": "startScanBle",
+    "rqi": "abc123456",
+    "data": {}
+}
+```
+Response:
+```json
+{
+    "cmd": "startScanBle",
+    "rqi": "abc123456",
+    "data": {
+      "code":0
+    }
+}
+```
+
+#### Stop Scan
+Request:
+```json
+{
+    "cmd": "stopScanBle",
+    "rqi": "abc123456",
+    "data": {}
+}
+```
+Response:
+```json
+{
+    "cmd": "stopScanBle",
+    "rqi": "abc123456",
+    "data": {
+      "code":0
+    }
+}
+```
+### New device: AndroidBLE->HC
+Request:
+```json
+{
+  "cmd": "newDev",
+  "rqi": "abc123456",
+  "data": {
+    "device": [
+      {
+        "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+        "addr": 2,
+        "type": 22014,
+        "mac": "AB:DE:EF",
+        "ver": "1.0.2",
+        "data": {
+          "devKey": "b717f8d8-6f18-43c0-ae46-69c32998f653"
+        }
+      }
+    ]
+  }
+}
+```
+
+Response:
+```json
+{
+  "cmd": "newDevRsp",
+  "rqi": "abc123456",
+  "data": {
+    "code": 0
   }
 }
 ```

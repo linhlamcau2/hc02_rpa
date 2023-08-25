@@ -19,6 +19,7 @@
 #include "ButtonSignal.h"
 #include "BleProtocol.h"
 #include "MqttProtocol.h"
+#include "AndroidBleProtocol.h"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
@@ -87,6 +88,9 @@ int main(int argc, char *argv[])
 
 	mqttProtocol = new MqttProtocol();
 	mqttProtocol->init();
+
+	androidBleProtocol = new AndroidBleProtocol();
+	androidBleProtocol->init();
 
 	Util::LedService(true);
 
