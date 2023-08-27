@@ -60,11 +60,24 @@ int Room::AddDeviceOneMessage(Device *device, bool sendBle, bool addDb)
 		return CODE_ERROR;
 	if (addDb)
 		database->DeviceInRoomAdd(this, device);
-	if (bleProtocol)
-	{
-		return bleProtocol->AddDev2Room(device->GetAddr(), addr + ID_START);
-	}
-	return CODE_ERROR;
+	if (bleProtocol && sendBle)
+		if (bleProtocol->AddDev2Room(device->GetAddr(), addr + ID_START) != CODE_OK)
+		{
+			return CODE_ERROR;
+		}
+	return Group::AddDevice(device, device->GetAddr(), false, false);
+}
+
+int Room::DelDeviceOneMessage(Device *device, bool sendBle, bool delDb)
+{
+	if (!device)
+		return CODE_ERROR;
+
+	if (delDb)
+		database->DeviceInRoomDel(this, device);
+	if (bleProtocol && sendBle)
+		bleProtocol->DelDev2Room(device->GetAddr(), addr + ID_START);
+	return Group::DelDevice(device, device->GetAddr(), false, false);
 }
 
 int Room::AddDevice(Device *device, bool sendBle, bool addDb)

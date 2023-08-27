@@ -29,6 +29,7 @@ public:
 	int GetPositionGroup(Group *group);
 	int GetPositionSceneBle(SceneBle *sceneBle);
 	int AddDeviceOneMessage(Device *device, bool sendBle, bool addDb);
+	int DelDeviceOneMessage(Device *device, bool sendBle, bool delDb);
 	int AddDevice(Device *device, bool sendBle, bool addDb);
 	int DelDevice(Device *device, bool sendBle, bool delDb);
 	int AddGroup(Group *group, bool isAddGateway, bool isAddDatabase);

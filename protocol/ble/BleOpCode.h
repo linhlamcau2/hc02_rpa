@@ -305,6 +305,12 @@ extern "C"
 #define GET_STATUS 0x0705
 #define GET_STATUS_SENSOR_PM 0xE405
 
+/**
+ * Opcode of room
+*/
+#define ROOM_DEV_ADD 0x0004
+#define ROOM_DEV_DEL 0x0005
+
 /*
  * Opcode for type dev
  */

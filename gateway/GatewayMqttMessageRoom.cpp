@@ -93,10 +93,10 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	respValue["cmd"] = "createRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("name") && reqValue["name"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray() &&
-			reqValue.isMember("groups") && reqValue["groups"].isArray() &&
-			reqValue.isMember("scenes") && reqValue["scenes"].isArray())
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray() &&
+		reqValue.isMember("groups") && reqValue["groups"].isArray() &&
+		reqValue.isMember("scenes") && reqValue["scenes"].isArray())
 	{
 		Json::Value successList = Json::arrayValue;
 		Json::Value failedList = Json::arrayValue;
@@ -108,6 +108,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_ERROR;
 
 		map<string, bool> devicesStatusConfig;
+		vector<Device *> devicesAddRoom;
 
 		Room *room = getRoomFromId(roomId);
 		if (!room)
@@ -128,8 +129,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						if (device)
 						{
 							LOGW("device->GetVersion(): 0x%04X", device->GetVersion());
+							devicesAddRoom.push_back(device);
 							// TODO: get fast provisioning
-							if (device->GetVersion() >= 0x0003)
+							if (device->GetVersion() >= 0x0300)
 							{
 								if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
 									devicesStatusConfig[deviceId] = false;
@@ -160,8 +162,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("name") && groupValue["name"].isString() &&
-								groupValue.isMember("type") && groupValue["type"].isInt())
+							groupValue.isMember("name") && groupValue["name"].isString() &&
+							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
 							string name = groupValue["name"].asString();
@@ -176,9 +178,15 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 										room->AddGroup(group, true, true);
 									for (auto &deviceInRoom : room->deviceList)
 									{
-										if (deviceInRoom->device->GetType() == type && deviceInRoom->device->GetVersion() < 0x0003)
+										if (deviceInRoom->device->GetType() == type && deviceInRoom->device->GetVersion() < 0x0300)
 										{
 											if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
+												if (devicesStatusConfig[deviceInRoom->device->GetId()])
+													devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+										}
+										else
+										{
+											if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), false, false) != CODE_OK)
 												if (devicesStatusConfig[deviceInRoom->device->GetId()])
 													devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 										}
@@ -202,39 +210,28 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("name") && sceneValue["name"].isString() &&
-								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+							sceneValue.isMember("name") && sceneValue["name"].isString())
 						{
 							string id = sceneValue["id"].asString();
 							string name = sceneValue["name"].asString();
-							Json::Value groupsValue = sceneValue["groups"];
-							SceneBle *sceneBle = new SceneBle(id, roomAddr + i, name);
+							SceneBle *sceneBle = new SceneBle(id, roomAddr + i + 1, name);
 							if (sceneBle)
 							{
 								AddNewSceneBle(sceneBle, true);
 								room->AddSceneBle(sceneBle, true, true);
-								for (auto &groupValue : groupsValue)
+								for (auto deviceAddScene : devicesAddRoom)
 								{
-									if (groupValue.isObject())
+									if (deviceAddScene->GetVersion() < 0x0300)
 									{
-										if (groupValue.isMember("id") && groupValue["id"].isString() &&
-												groupValue.isMember("data") && groupValue["data"].isObject())
-										{
-											string id = groupValue["id"].asString();
-											Json::Value groupData = groupValue["data"];
-											Group *group = getGroupFromId(id);
-											if (group)
-											{
-												group->Do(groupData);
-												for (auto &deviceInGroup : group->deviceList)
-												{
-													if (deviceInGroup->device->GetVersion() < 0x0003)
-														if (sceneBle->AddDevice(deviceInGroup->device, groupData, true, true) != CODE_OK)
-															if (devicesStatusConfig[deviceInGroup->device->GetId()])
-																devicesStatusConfig[deviceInGroup->device->GetId()] = false;
-												}
-											}
-										}
+										if (sceneBle->AddDevice(deviceAddScene, "", true, true) != CODE_OK)
+											if (devicesStatusConfig[deviceAddScene->GetId()])
+												devicesStatusConfig[deviceAddScene->GetId()] = false;
+									}
+									else
+									{
+										if (sceneBle->AddDevice(deviceAddScene, "", false, false) != CODE_OK)
+											if (devicesStatusConfig[deviceAddScene->GetId()])
+												devicesStatusConfig[deviceAddScene->GetId()] = false;
 									}
 								}
 							}
@@ -283,7 +280,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	respValue["cmd"] = "addDevToRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray())
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList = Json::arrayValue;
 		Json::Value failedList = Json::arrayValue;
@@ -334,7 +331,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (groupValue.isObject())
 					{
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
-								groupValue.isMember("type") && groupValue["type"].isInt())
+							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
 							string id = groupValue["id"].asString();
 							int type = groupValue["type"].asInt();
@@ -393,7 +390,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (sceneValue.isObject())
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString() &&
-								sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+							sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 						{
 							string id = sceneValue["id"].asString();
 							Json::Value groupsValue = sceneValue["groups"];
@@ -428,7 +425,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (groupValue.isObject())
 									{
 										if (groupValue.isMember("id") && groupValue["id"].isString() &&
-												groupValue.isMember("data") && groupValue["data"].isObject())
+											groupValue.isMember("data") && groupValue["data"].isObject())
 										{
 											string id = groupValue["id"].asString();
 											Json::Value groupData = groupValue["data"];
@@ -486,7 +483,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 {
 	respValue["cmd"] = "delDevFromRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("devices") && reqValue["devices"].isArray())
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
 		Json::Value successList = Json::arrayValue;
 		Json::Value failedList = Json::arrayValue;
@@ -594,9 +591,18 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			vector<DeviceInGroup *> devInRoom = room->deviceList;
 			for (auto &deviceInRoom : devInRoom)
 			{
-				if (room->DelDevice(deviceInRoom->device, true, true) != CODE_OK)
-					if (devicesStatusConfig[deviceInRoom->device->GetId()])
-						devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+				if (deviceInRoom->device->GetType() >= 0x0300)
+				{
+					if (room->DelDeviceOneMessage(deviceInRoom->device, true, true) != CODE_OK)
+						if (devicesStatusConfig[deviceInRoom->device->GetId()])
+							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+				}
+				else
+				{
+					if (room->DelDevice(deviceInRoom->device, true, true) != CODE_OK)
+						if (devicesStatusConfig[deviceInRoom->device->GetId()])
+							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+				}
 			}
 			devInRoom.clear();
 			printRoom();
@@ -607,9 +613,18 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				vector<DeviceInGroup *> devInGroup = groupInRoom->deviceList;
 				for (auto &deviceInGroup : devInGroup)
 				{
-					if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) != CODE_OK)
-						if (devicesStatusConfig[deviceInGroup->device->GetId()])
-							devicesStatusConfig[deviceInGroup->device->GetId()] = false;
+					if (deviceInGroup->device->GetType() < 0x0300)
+					{
+						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) != CODE_OK)
+							if (devicesStatusConfig[deviceInGroup->device->GetId()])
+								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
+					}
+					else
+					{
+						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), false, false) != CODE_OK)
+							if (devicesStatusConfig[deviceInGroup->device->GetId()])
+								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
+					}
 				}
 				delGroup(groupInRoom);
 				devInGroup.clear();
@@ -623,9 +638,18 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				vector<DeviceInSceneBle *> devInSceneBle = sceneInRoom->deviceList;
 				for (auto &deviceInScene : devInSceneBle)
 				{
-					if (sceneInRoom->DelDevice(deviceInScene->device, true, true) != CODE_OK)
-						if (devicesStatusConfig[deviceInScene->device->GetId()])
-							devicesStatusConfig[deviceInScene->device->GetId()] = false;
+					if (deviceInScene->device->GetType() < 0x0300)
+					{
+						if (sceneInRoom->DelDevice(deviceInScene->device, true, true) != CODE_OK)
+							if (devicesStatusConfig[deviceInScene->device->GetId()])
+								devicesStatusConfig[deviceInScene->device->GetId()] = false;
+					}
+					else
+					{
+						if (sceneInRoom->DelDevice(deviceInScene->device, false, false) != CODE_OK)
+							if (devicesStatusConfig[deviceInScene->device->GetId()])
+								devicesStatusConfig[deviceInScene->device->GetId()] = false;
+					}
 				}
 				delSceneBle(sceneInRoom);
 				devInSceneBle.clear();

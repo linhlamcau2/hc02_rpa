@@ -31,6 +31,7 @@ BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate
 {
 	nextAddr = 0;
 	haveNewMac = false;
+	haveGetMacRsp = true;
 	isProvisioning = false;
 }
 
@@ -52,6 +53,7 @@ static void AddDeviceThread(void *data)
 				timeout = 0;
 				memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
 				bleProtocol->AddDevice(&scan_device_message);
+				bleProtocol->haveGetMacRsp = true;
 				bleProtocol->haveNewMac = false;
 			}
 			else
@@ -96,16 +98,16 @@ void BleProtocol::init()
 		LOGE("Failed to create task");
 		SetLedService(false);
 	}
-	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
-	{
-		LOGE("Failed to create task");
-		SetLedService(false);
-	}
+	// if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
+	// {
+	// 	LOGE("Failed to create task");
+	// 	SetLedService(false);
+	// }
 #else
 	thread addDeviceThreadThread(AddDeviceThread, this);
 	addDeviceThreadThread.detach();
-	thread handleOpcodeBleThread(HandleOpcodeBle, this);
-	handleOpcodeBleThread.detach();
+	// thread handleOpcodeBleThread(HandleOpcodeBle, this);
+	// handleOpcodeBleThread.detach();
 #endif
 
 	usleep(100000); // wait for thread start
@@ -180,6 +182,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		{
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			haveNewMac = true;
+			haveGetMacRsp = false;
 		}
 		break;
 
@@ -248,10 +251,10 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 		SetLedService(!statusLedService);
 	}
 #endif
-	while (l >= 4)
+	while (l >= 5)
 	{
 		message_rsp = (message_rsp_st *)d;
-		if (message_rsp->len >= 3)
+		if (message_rsp->len >= 3 && message_rsp->len <= 36)
 		{
 			if (message_rsp->magic == 0x80 ||
 				message_rsp->magic == 0x90 ||
@@ -259,80 +262,99 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 				message_rsp->magic == 0x92 ||
 				message_rsp->magic == 0xfa)
 			{
-				uint16_t packageLen = message_rsp->len + 2;
-				is_dupplicate = false;
-				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
+				if (haveGetMacRsp || (!haveGetMacRsp && message_rsp->opcode != HCI_GATEWAY_CMD_UPDATE_MAC))
 				{
-					is_dupplicate = true;
-					for (int i = 0; i < message_rsp->len; i++)
+					uint16_t packageLen = message_rsp->len + 2;
+					is_dupplicate = false;
+					if (old_message_rsp && message_rsp->len == old_message_rsp->len)
 					{
-						if (message_rsp->data[i] != old_message_rsp->data[i])
+						is_dupplicate = true;
+						for (int i = 0; i < message_rsp->len; i++)
 						{
-							is_dupplicate = false;
-							break;
+							if (message_rsp->data[i] != old_message_rsp->data[i])
+							{
+								is_dupplicate = false;
+								break;
+							}
 						}
 					}
-				}
-				if (!is_dupplicate)
-				{
-					if (message_rsp->len >= 2 && message_rsp->len <= l - 2)
+					if (!is_dupplicate)
 					{
-						// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
-						for (auto &messageResp : messageRespList)
+						if (message_rsp->len >= 3 && message_rsp->len <= l - 2)
 						{
-							if (message_rsp->opcode == messageResp->opcode)
+							// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
+							for (auto &messageResp : messageRespList)
 							{
-								match = true;
-								if (messageResp->compare_data)
+								if (message_rsp->opcode == messageResp->opcode)
 								{
-									for (int i = 0; i < messageResp->compare_len; i++)
+									match = true;
+									if (messageResp->compare_data)
 									{
-										if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
-											match = false;
+										for (int i = 0; i < messageResp->compare_len; i++)
+										{
+											if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
+												match = false;
+										}
 									}
-								}
-								if (match)
-								{
-									messageResp->status = true;
-									if (messageResp->len)
+									if (match)
 									{
-										*(messageResp->len) = message_rsp->len - 2;
-										if (messageResp->data)
-											memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+										messageResp->status = true;
+										if (messageResp->len)
+										{
+											*(messageResp->len) = message_rsp->len - 2;
+											if (messageResp->data)
+												memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+										}
 									}
 								}
 							}
-						}
-						vectorCheckOpcodeMtx.lock();
-						if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
-						{
+							// vectorCheckOpcodeMtx.lock();
+							// if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+							// {
 #ifdef ESP_PLATFORM
 							message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
-							message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+							CheckOpcodeException(message_rsp);
+							// message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
 #endif
-							memcpy(messageCheckOpcode, message_rsp, packageLen);
-							messageCheckOpcodeList.push_back(messageCheckOpcode);
+							// memcpy(messageCheckOpcode, message_rsp, packageLen);
+							// messageCheckOpcodeList.push_back(messageCheckOpcode);
+							// }
+							// vectorCheckOpcodeMtx.unlock();
 						}
-						vectorCheckOpcodeMtx.unlock();
+						else if (message_rsp->len < 3 || message_rsp->len > 36)
+						{
+							LOGW("Wrong uart data");
+							l = 0;
+							break;
+						}
+						else
+						{
+							break;
+						}
 					}
-					else if (message_rsp->len < 2 && message_rsp->len > 36)
-					{
-						LOGW("Wrong uart data");
-						l = 0;
-						break;
-					}
-					else
-					{
-						break;
-					}
+					old_message_rsp = message_rsp;
+					l -= packageLen;
+					d += packageLen;
 				}
-				old_message_rsp = message_rsp;
-				l -= packageLen;
-				d += packageLen;
+				else
+				{
+					d ++;
+					l --;
+				}
+			}
+			else
+			{
+				d++;
+				l--;
 			}
 		}
-		usleep(10000);
+		else
+		{
+			d++;
+			l--;
+		}
+		usleep(300);
 	}
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
@@ -363,7 +385,6 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		// TODO: add mutex
 		messageRespList.push_back(&message_rsp_list);
 	}
-
 	message_req_st message_req = {
 		.opcode = opReq,
 	};
@@ -371,9 +392,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	{
 		message_req.data[i] = dataReq[i];
 	}
-
 	Write((uint8_t *)&message_req, lenReq + 2);
-
 	if (opRsp)
 	{
 		while (!message_rsp_list.status && timeout--)
@@ -440,7 +459,7 @@ int BleProtocol::GetNetKey()
 	uint8_t d = HCI_GATEWAY_CMD_GET_PRO_SELF_STS;
 	uint8_t dataRsp[100];
 	int lenRsp;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 5000);
 	if (rs == CODE_OK)
 	{
 		// pro_net_info = (pro_net_info_t *)&dataRsp[1];
@@ -685,7 +704,7 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 	provision_message.opcode = HCI_GATEWAY_CMD_SET_NODE_PARA;
 	memcpy(&provision_message.data_pro.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
 	provision_message.data_pro.unicast_address = deviceAddr;
-	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 20000);
+	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 30000);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -1421,13 +1440,64 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
 {
 	LOGW("Add dev addr: 0x%04X to room: 0x%04X", devAddr, room);
-	return CODE_OK;
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t addDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe1, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t groupId;
+		uint16_t sceneId;
+		uint8_t data[2];
+	} addDev2Room_t;
+	addDev2Room_t addDev2Room = {0};
+	memset(&addDev2Room, 0x00, sizeof(addDev2Room));
+	addDev2Room.ble_message_header.devAddr = devAddr;
+	addDev2Room.opcodeVendor = RD_OPCODE_PROVISION;
+	addDev2Room.vendorId = RD_VENDOR_ID;
+	addDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
+	addDev2Room.header = ROOM_DEV_ADD;
+	addDev2Room.groupId = room;
+	addDev2Room.sceneId = room + 1;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&addDev2Room, sizeof(addDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDev2RoomHeader, 0, 7);
+	if (rs != CODE_OK)
+		LOGW("AddDev2Room error");
+	return rs;
 }
 
 int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
 {
 	LOGW("Del dev addr: 0x%04X from room: 0x%04X", devAddr, room);
-	return CODE_OK;
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t delDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe1, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t data[6];
+	} delDev2Room_t;
+	delDev2Room_t delDev2Room = {0};
+	memset(&delDev2Room, 0x00, sizeof(delDev2Room));
+	delDev2Room.ble_message_header.devAddr = devAddr;
+	delDev2Room.opcodeVendor = RD_OPCODE_PROVISION;
+	delDev2Room.vendorId = RD_VENDOR_ID;
+	delDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
+	delDev2Room.header = ROOM_DEV_DEL;
+
+	int rs = SendMessage(APP_REQ, (uint8_t *)&delDev2Room, sizeof(delDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delDev2RoomHeader, 0, 7);
+	if (rs != CODE_OK)
+		LOGW("DelDev2Room error");
+	return rs;
 }
 
 int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)

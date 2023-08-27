@@ -206,6 +206,7 @@ private:
 
 public:
 	atomic<bool> haveNewMac;
+	atomic<bool> haveGetMacRsp;
 	atomic<bool> isProvisioning;
 	scan_device_message_t scanDeviceMessage;
 
