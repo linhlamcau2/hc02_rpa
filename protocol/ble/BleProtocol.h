@@ -189,7 +189,7 @@ private:
 	vector<message_rsp_list_st *> messageRespList;
 	mutex mtxWaitSendUart;
 
-#define BLE_CHECK_OPCODE_BUFFER_MAX_SIZE 20
+#define BLE_CHECK_OPCODE_BUFFER_MAX_SIZE 200
 	mutex vectorCheckOpcodeMtx;
 	vector<message_rsp_st *> messageCheckOpcodeList;
 

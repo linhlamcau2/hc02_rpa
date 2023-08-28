@@ -82,7 +82,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 		if (topics[4] == mac || topics[4] == "all")
 		{
 			Util::LedServiceLock();
-			LOGE("Payload: %s", payload.c_str());
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
 				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 				payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&

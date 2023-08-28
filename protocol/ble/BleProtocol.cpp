@@ -98,16 +98,16 @@ void BleProtocol::init()
 		LOGE("Failed to create task");
 		SetLedService(false);
 	}
-	// if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
-	// {
-	// 	LOGE("Failed to create task");
-	// 	SetLedService(false);
-	// }
+	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		SetLedService(false);
+	}
 #else
 	thread addDeviceThreadThread(AddDeviceThread, this);
 	addDeviceThreadThread.detach();
-	// thread handleOpcodeBleThread(HandleOpcodeBle, this);
-	// handleOpcodeBleThread.detach();
+	thread handleOpcodeBleThread(HandleOpcodeBle, this);
+	handleOpcodeBleThread.detach();
 #endif
 
 	usleep(100000); // wait for thread start
@@ -308,19 +308,19 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 									}
 								}
 							}
-							// vectorCheckOpcodeMtx.lock();
-							// if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
-							// {
+							vectorCheckOpcodeMtx.lock();
+							if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+							{
 #ifdef ESP_PLATFORM
 							message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
-							CheckOpcodeException(message_rsp);
-							// message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+							// CheckOpcodeException(message_rsp);
+							message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
 #endif
-							// memcpy(messageCheckOpcode, message_rsp, packageLen);
-							// messageCheckOpcodeList.push_back(messageCheckOpcode);
-							// }
-							// vectorCheckOpcodeMtx.unlock();
+							memcpy(messageCheckOpcode, message_rsp, packageLen);
+							messageCheckOpcodeList.push_back(messageCheckOpcode);
+							}
+							vectorCheckOpcodeMtx.unlock();
 						}
 						else if (message_rsp->len < 3 || message_rsp->len > 36)
 						{
