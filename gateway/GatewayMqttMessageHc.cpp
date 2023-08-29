@@ -113,7 +113,7 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 	ResetFactory();
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
-	return CODE_OK;
+	return CODE_EXIT;
 }
 
 int Gateway::OnVersionHC(Json::Value &reqValue, Json::Value &respValue)

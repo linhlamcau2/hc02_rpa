@@ -118,6 +118,15 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 					}
+					else if (rs == CODE_EXIT)
+					{
+						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+						respValue["rqi"] = rqi;
+						LOGD("local publish: %s: %s", (pubRespTopic + topics[3]).c_str(), respValue.toString().c_str());
+						Publish(pubRespTopic + topics[3], respValue.toString());
+						sleep(2);
+						exit(1);
+					}
 					else
 					{
 						LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
