@@ -218,7 +218,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						{
 							string id = sceneValue["id"].asString();
 							string name = sceneValue["name"].asString();
-							SceneBle *sceneBle = new SceneBle(id, roomAddr + i + 1, name);
+							SceneBle *sceneBle = new SceneBle(id, roomAddr + i, name);
 							if (sceneBle)
 							{
 								AddNewSceneBle(sceneBle, true);

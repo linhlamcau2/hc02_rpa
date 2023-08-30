@@ -325,7 +325,7 @@ void Gateway::delSceneBle(SceneBle *sceneBle)
 
 uint16_t Gateway::getNextSceneBleAddr()
 {
-	uint16_t sceneAddr = 10001;
+	uint16_t sceneAddr = 10000;
 	sceneBleListMtx.lock();
 	for (const auto &[id, sceneBle] : sceneBleList)
 	{

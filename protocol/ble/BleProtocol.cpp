@@ -1463,7 +1463,7 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
 	addDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
 	addDev2Room.header = ROOM_DEV_ADD;
 	addDev2Room.groupId = room;
-	addDev2Room.sceneId = room + 1;
+	addDev2Room.sceneId = room;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&addDev2Room, sizeof(addDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDev2RoomHeader, 0, 7);
 	if (rs != CODE_OK)
 		LOGW("AddDev2Room error");
