@@ -1458,10 +1458,10 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
 	addDev2Room_t addDev2Room = {0};
 	memset(&addDev2Room, 0x00, sizeof(addDev2Room));
 	addDev2Room.ble_message_header.devAddr = devAddr;
-	addDev2Room.opcodeVendor = RD_OPCODE_PROVISION;
+	addDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
 	addDev2Room.vendorId = RD_VENDOR_ID;
 	addDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
-	addDev2Room.header = ROOM_DEV_ADD;
+	addDev2Room.header = RD_OPCODE_CONFIG_ADD_ROOM;
 	addDev2Room.groupId = room;
 	addDev2Room.sceneId = room;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&addDev2Room, sizeof(addDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDev2RoomHeader, 0, 7);
@@ -1492,7 +1492,7 @@ int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
 	delDev2Room.opcodeVendor = RD_OPCODE_PROVISION;
 	delDev2Room.vendorId = RD_VENDOR_ID;
 	delDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
-	delDev2Room.header = ROOM_DEV_DEL;
+	delDev2Room.header = RD_OPCODE_CONFIG_DEL_ROOM;
 
 	int rs = SendMessage(APP_REQ, (uint8_t *)&delDev2Room, sizeof(delDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delDev2RoomHeader, 0, 7);
 	if (rs != CODE_OK)
