@@ -1442,7 +1442,7 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
 	LOGW("Add dev addr: 0x%04X to room: 0x%04X", devAddr, room);
 	uint8_t dataRsp[100];
 	int lenRsp;
-	uint8_t addDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe1, 0x11, 0x02};
+	uint8_t addDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
@@ -1475,7 +1475,7 @@ int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
 	LOGW("Del dev addr: 0x%04X from room: 0x%04X", devAddr, room);
 	uint8_t dataRsp[100];
 	int lenRsp;
-	uint8_t delDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe1, 0x11, 0x02};
+	uint8_t delDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
