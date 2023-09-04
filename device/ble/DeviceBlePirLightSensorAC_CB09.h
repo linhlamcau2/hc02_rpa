@@ -7,6 +7,7 @@
 #include "module/ModuleModeActionPir.h"
 #include "module/ModulePirLight.h"
 #include "module/ModuleOnOff.h"
+#include "module/ModuleSensiPir.h"
 
 using namespace std;
 
@@ -18,6 +19,7 @@ private:
 	ModuleLightSensor *moduleLightSensor;
 	ModuleTimeActionPir *moduleTimeActionPir;
     ModuleModeActionPir *moduleModeActionPir;
+	ModuleSensiPir *moduleSensiPir;
     ModuleOnOff *moduleOnOff;
 
 public:

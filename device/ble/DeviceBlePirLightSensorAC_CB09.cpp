@@ -12,12 +12,14 @@ DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string
 	moduleLightSensor = new ModuleLightSensor(this, addr);
 	moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
     moduleModeActionPir = new ModuleModeActionPir(this, addr);
+	moduleSensiPir = new ModuleSensiPir(this, addr);
     moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(modulePirLight);
 	modules.push_back(modulePirSensor);
 	modules.push_back(moduleLightSensor);
 	modules.push_back(moduleTimeActionPir);
     modules.push_back(moduleModeActionPir);
+	modules.push_back(moduleSensiPir);
     modules.push_back(moduleOnOff);
 	powerSource = POWER_AC;
 }

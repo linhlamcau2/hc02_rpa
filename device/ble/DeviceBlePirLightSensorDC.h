@@ -6,6 +6,7 @@
 #include "module/ModulePinLevel.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
+#include "module/ModuleSensiPir.h"
 #include <mutex>
 
 using namespace std;
@@ -18,6 +19,7 @@ private:
 	ModuleLightSensor *moduleLightSensor;
 	ModulePinLevel *modulePinLevel;
 	ModuleTimeActionPir *moduleTimeActionPir;
+	ModuleSensiPir *moduleSensiPir;
 
 public:
 	DeviceBlePirLightSensorDC(string id, string name, string mac, string data, uint32_t addr, uint16_t version);

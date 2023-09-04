@@ -1,5 +1,6 @@
 #include "BleProtocol.h"
 #include <stdlib.h>
+#include <chrono>
 #include <thread>
 #include <functional>
 #include <byteswap.h>
@@ -16,6 +17,8 @@
 #include "Led.h"
 #include "ButtonSignal.h"
 #endif
+
+#define TIME_WAIT 500000
 
 BleProtocol *bleProtocol = NULL;
 
@@ -267,10 +270,10 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 		if (message_rsp->len >= 3)
 		{
 			if (message_rsp->magic == 0x80 ||
-					message_rsp->magic == 0x90 ||
-					message_rsp->magic == 0x91 ||
-					message_rsp->magic == 0x92 ||
-					message_rsp->magic == 0xfa)
+				message_rsp->magic == 0x90 ||
+				message_rsp->magic == 0x91 ||
+				message_rsp->magic == 0x92 ||
+				message_rsp->magic == 0xfa)
 			{
 				is_dupplicate = false;
 				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
@@ -371,6 +374,8 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	return l;
 }
 
+auto start_time = std::chrono::high_resolution_clock::now();
+
 int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data, int compare_position, int compare_len)
 {
 	// mtxWaitSendUart.lock();
@@ -399,7 +404,10 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		{
 			message_req.data[i] = dataReq[i];
 		}
-
+		while ((std::chrono::high_resolution_clock::now() - start_time) < std::chrono::microseconds(TIME_WAIT))
+		{
+		}
+		start_time = std::chrono::high_resolution_clock::now();
 		Write((uint8_t *)&message_req, lenReq + 2);
 
 		if (opRsp)
@@ -630,10 +638,10 @@ void BleProtocol::SetProvisioning(bool isProvision)
 
 bool BleProtocol::isMacExists(string macDev)
 {
-	for (auto mac: listMac)
+	for (auto mac : listMac)
 	{
 		if (macDev == mac)
-		return true;
+			return true;
 	}
 	return false;
 }
@@ -1124,7 +1132,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 		onoff_message.onoff = onoff;
 		onoff_message.rev2 = 0;
 		onoff_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), 0, dataRsp, &lenRsp, 500);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1228,7 +1236,7 @@ int BleProtocol::SetDimmingLight(uint16_t devAddr, uint16_t dim, uint16_t transi
 		dim_message.dim = dim;
 		dim_message.offset = 0;
 		dim_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), 0, dataRsp, &lenRsp, 500);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1301,7 +1309,7 @@ int BleProtocol::SetCctLight(uint16_t devAddr, uint16_t cct, uint16_t transition
 			cct_message.offset[count] = 0;
 		}
 		cct_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&cct_message, sizeof(cct_message_t), 0, dataRsp, &lenRsp, 500);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&cct_message, sizeof(cct_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1367,7 +1375,7 @@ int BleProtocol::SetHSLLight(uint16_t devAddr, uint16_t H, uint16_t S, uint16_t 
 		hsl_message.s = S;
 		hsl_message.offset = 0;
 		hsl_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), 0, dataRsp, &lenRsp, 500);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&hsl_message, sizeof(hsl_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1429,7 +1437,7 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 		dimcct_message.cct = cct;
 		dimcct_message.offset = 0;
 		dimcct_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, sizeof(dimcct_message_t), 0, dataRsp, &lenRsp, 500);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&dimcct_message, sizeof(dimcct_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -1652,7 +1660,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 		callscene_message.scene = scene;
 		callscene_message.offset = 0;
 		callscene_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 0, dataRsp, &lenRsp, 0);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
@@ -2220,6 +2228,40 @@ int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
 		LOGW("mode action pir light resp state not match with input control");
 	}
 	LOGW("mode action pir light err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi)
+{
+	LOGD("Set sensiPirLightSensor: 0x%04X, sensi: %d", devAddr, sensi);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sensiHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t sensi;
+	} sensi_message_t;
+	sensi_message_t sensi_message = {0};
+	memset(&sensi_message, 0x00, sizeof(sensi_message));
+	sensi_message.ble_message_header.devAddr = devAddr;
+	sensi_message.opcodeVendor = RD_OPCODE_CONFIG;
+	sensi_message.vendorId = RD_VENDOR_ID;
+	sensi_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	sensi_message.header = RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR;
+	sensi_message.sensi = sensi;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&sensi_message, sizeof(sensi_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sensiHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	else
+		LOGW("Set sensi error");
 	return CODE_ERROR;
 }
 
