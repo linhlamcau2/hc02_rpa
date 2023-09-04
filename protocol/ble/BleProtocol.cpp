@@ -1489,9 +1489,9 @@ int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
 	delDev2Room_t delDev2Room = {0};
 	memset(&delDev2Room, 0x00, sizeof(delDev2Room));
 	delDev2Room.ble_message_header.devAddr = devAddr;
-	delDev2Room.opcodeVendor = RD_OPCODE_PROVISION;
+	delDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
 	delDev2Room.vendorId = RD_VENDOR_ID;
-	delDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
+	delDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	delDev2Room.header = RD_OPCODE_CONFIG_DEL_ROOM;
 
 	int rs = SendMessage(APP_REQ, (uint8_t *)&delDev2Room, sizeof(delDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delDev2RoomHeader, 0, 7);
