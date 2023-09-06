@@ -21,20 +21,19 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				uint32_t type = sqlite3_column_int(stmt, index++);
-				string firmware_version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string hardware_version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				uint32_t active_time = sqlite3_column_int(stmt, index++);
-				uint32_t update_time = sqlite3_column_int(stmt, index++);
+				uint16_t firmwareVersion = sqlite3_column_int(stmt, index++);
+				uint16_t hardwareVersion = sqlite3_column_int(stmt, index++);
+				uint32_t activeTime = sqlite3_column_int(stmt, index++);
+				uint32_t updateTime = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				bool isFavorite = sqlite3_column_int(stmt, index++);
 				string devData;
 				string decode = macaron::Base64::Decode(data, devData);
 				if (decode == "")
 				{
-					uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
 					Json::Value dataJson;
 					dataJson.parse(devData);
-					Device *device = gateway->AddNewDevice(id, name, mac, dataJson, addr, type, u16version, false);
+					Device *device = gateway->AddNewDevice(id, name, mac, dataJson, addr, type, firmwareVersion, false);
 					device->SetIsFavorite(isFavorite);
 				}
 			}
@@ -59,7 +58,7 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData().toString()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData().toString()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + "," + to_string(device->GetVersion()) + ")";
 	return Sqlite_Exec(sql);
 }
 
