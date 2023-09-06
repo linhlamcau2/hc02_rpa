@@ -1014,55 +1014,35 @@ int BleProtocol::ResetDelAll()
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
 	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	BleProtocol::GetOnoffLight(devAddr);
-	// switch (typeDev)
-	// {
-	// case BLE_LED_CHIEU_TRANH:
-	// case BLE_LED_CHIEU_GUONG:
-	// case BLE_DEN_BAN:
-	// case BLE_DOWNLIGHT_SMT:
-	// case BLE_DOWNLIGHT_COB_GOC_HEP:
-	// case BLE_DOWNLIGHT_COB_GOC_RONG:
-	// case BLE_DOWNLIGHT_COB_TRANG_TRI:
-	// case BLE_LED_FLOOD:
-	// case BLE_LED_DAY_LINEAR:
-	// case BLE_LED_OP_TRAN:
-	// case BLE_LED_OP_TUONG:
-	// case BLE_LED_OP_TRAN_LOA:
-	// case BLE_PANEL_TRON:
-	// case BLE_PANEL_VUONG:
-	// case BLE_TRACKLIGHT:
-	// case BLE_LED_THA_TRAN:
-	// case BLE_LED_TUBE_M16:
-	// case BLE_DOWNLIGHT_RGBCW:
-	// case BLE_LED_DAY_RGBCW:
-	// case BLE_LED_BULB:
-	// case BLE_LED_DAY_RGB:
-	// case BLE_SWITCH_ONOFF:
-	// 	if (version > 256)
-	// 		BleProtocol::UpdateLights(devAddr);
-	// 	else
-	// 		BleProtocol::GetOnoffLight(devAddr);
-	// 	break;
-	// case BLE_SWITCH_RGB_1:
-	// case BLE_SWITCH_RGB_1_SQUARE:
-	// case BLE_SWITCH_RGB_WATER_HEATER:
-	// case BLE_SWITCH_RGB_2:
-	// case BLE_SWITCH_RGB_2_SQUARE:
-	// case BLE_SWITCH_RGB_3:
-	// case BLE_SWITCH_RGB_3_SQUARE:
-	// case BLE_SWITCH_RGB_4:
-	// case BLE_SWITCH_RGB_4_SQUARE:
-	// case BLE_SWITCH_ELECTRICAL_1:
-	// case BLE_SWITCH_ELECTRICAL_2:
-	// case BLE_SWITCH_ELECTRICAL_3:
-	// case BLE_SWITCH_ELECTRICAL_4:
-	// case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-	// 	BleProtocol::GetOnoffLight(devAddr);
-	// 	break;
-	// }
-
-	return CODE_OK;
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint16_t opcode;
+	} ttl_message_t;
+	ttl_message_t ttl_message = {0};
+	memset(&ttl_message, 0x00, sizeof(ttl_message));
+	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
+	ttl_message.ble_message_header.devAddr = devAddr;
+	ttl_message.opcode = CFG_DEFAULT_TTL_GET;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&ttl_message, sizeof(ttl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t data[1];
+		} ttl_rsp_message_t;
+		ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
+		if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
+		{
+			return CODE_OK;
+		}
+	}
+	return CODE_ERROR;
 }
 
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)

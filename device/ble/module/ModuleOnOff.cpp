@@ -60,7 +60,6 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 	{
-		int onoff = 0;
 		if (len == 3)
 		{
 			onoff = data_message->state;
@@ -69,12 +68,8 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			onoff = data_message->onoff;
 		}
-		if(onoff != this->onoff)
-		{
-			this->onoff = onoff;
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-		}
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger();
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -85,8 +80,8 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 	// LOGD("CheckData data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		dataValue.isMember("op") && dataValue["op"].isString() &&
+		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
@@ -95,12 +90,12 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 	}
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -142,7 +137,7 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 	// LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
 		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
@@ -153,11 +148,11 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 	}
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			if (bleProtocol)
