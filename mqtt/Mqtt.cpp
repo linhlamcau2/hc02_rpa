@@ -6,12 +6,13 @@
 #include <thread>
 #include "Log.h"
 #include <Util.h>
+#include "Define.h"
 
 #define TAG "Mqtt"
 
 using namespace mosqpp;
 
-Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
+Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, bool tls, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
 {
 	this->host = host;
 	this->port = port;
@@ -19,6 +20,7 @@ Mqtt::Mqtt(string host, int port, string client_id, string username, string pass
 	this->username = username;
 	this->password = password;
 	this->keepalive = keepalive;
+	this->tls = tls;
 	this->willset_topic = willset_topic;
 	this->willset_payload = willset_payload;
 	connected = false;
@@ -54,6 +56,15 @@ void Mqtt::SetWillset(string willset_topic, string willset_payload)
 int Mqtt::Connect()
 {
 	LOGD("Connect host %s, port %d", host.c_str(), port);
+	if (tls)
+	{
+		LOGD("Get CAfile");
+		string cmd = "openssl s_client -connect " + host + ":" + to_string(port) + " 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > " TMP_FOLDER "server.pem";
+		system(cmd.c_str());
+		tls_set(TMP_FOLDER "server.pem");
+		tls_insecure_set(true);
+	}
+
 	if (!username.empty() || !password.empty())
 	{
 		if (username_pw_set(username.c_str(), password.c_str()) != MOSQ_ERR_SUCCESS)
@@ -247,7 +258,7 @@ void Mqtt::on_connect(int rc)
 
 void Mqtt::on_disconnect(int rc)
 {
-	// LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
+	LOGW("Disconnected with code %d, err: %s", rc, mosqpp::strerror(rc));
 	connected = false;
 	try
 	{

@@ -478,7 +478,7 @@ void Gateway::init()
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
-	// LOGI("OnCloudConnect: %d", isConnected);
+	LOGI("OnCloudConnect: %d", isConnected);
 	if (isConnected)
 	{
 		Util::LedInternet(true);

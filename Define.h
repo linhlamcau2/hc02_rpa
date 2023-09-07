@@ -20,6 +20,14 @@
 #endif
 #endif
 
+#if __ANDROID__
+#define CONFIG_FILE_NAME "/etc/sshremote/config.json"
+#define TMP_FOLDER "/data/rd/"
+#else
+#define CONFIG_FILE_NAME "config.json"
+#define TMP_FOLDER ""
+#endif
+
 #ifndef DB_NAME
 #ifdef __OPENWRT__
 #define DB_NAME "/root/smh.sqlite"
