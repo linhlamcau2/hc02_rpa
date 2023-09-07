@@ -489,6 +489,10 @@ int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
 			string eventId = dataValue["EVENT_TRIGGER_ID"].asString();
 			dataJsonRsp["EVENT_TRIGGER_ID"] = eventId;
 			Rule *rule = getRuleFromId(eventId);
+			if (!rule)
+			{
+				rule = AddRule(dataValue, true, true);
+			}
 			if (rule)
 			{
 				rule->DelAllRuleInput();
