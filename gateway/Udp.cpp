@@ -194,6 +194,9 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 					{
 						LOGW("Connect wifi err");
 					}
+#ifdef ESP_PLATFORM
+					SetLedInternet(false);
+#endif
 				}
 				else
 				{
