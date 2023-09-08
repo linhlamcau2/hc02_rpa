@@ -161,6 +161,12 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 	return string(buff);
 }
 
+int Util::ConvertStringToHex(string str, uint8_t *data, int len)
+{
+	LOGE("Bo sung code");
+	return 0;
+}
+
 int Util::CheckDayInWeek(int day, int repeater)
 {
 	int byte;

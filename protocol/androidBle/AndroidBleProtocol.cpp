@@ -64,9 +64,9 @@ void AndroidBleProtocol::OnMessage(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-		payloadJson.isMember("data") && payloadJson["data"].isObject())
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -135,17 +135,17 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 {
 	LOGD("OnNewDevice");
 	respValue["data"]["code"] = CODE_OK;
-	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("type") && reqValue["type"].isInt() &&
-		reqValue.isMember("mac") && reqValue["mac"].isString() &&
-		reqValue.isMember("addr") && reqValue["addr"].isInt() &&
-		reqValue.isMember("ver") && reqValue["ver"].isString())
+	if (reqValue.isMember("uuid") && reqValue["uuid"].isString() &&
+			reqValue.isMember("mac") && reqValue["mac"].isString() &&
+			reqValue.isMember("addr") && reqValue["addr"].isInt() &&
+			reqValue.isMember("vid") && reqValue["vid"].isInt() &&
+			reqValue.isMember("pid") && reqValue["pid"].isInt())
 	{
-		string deviceId = reqValue["id"].asString();
-		uint32_t type = reqValue["type"].asInt();
+		string uuid = reqValue["uuid"].asString();
 		string mac = reqValue["mac"].asString();
 		uint32_t addr = reqValue["addr"].asInt();
-		string ver = reqValue["ver"].asString();
+		uint16_t vid = reqValue["vid"].asInt();
+		uint16_t pid = reqValue["pid"].asInt();
 		string devKey;
 		Json::Value dataJson;
 		if (reqValue.isMember("data") && reqValue["data"].isObject())
@@ -157,28 +157,32 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 			}
 		}
 
-		int intPart, fracPart;
-		char dot;
-		std::istringstream iss(ver);
-		iss >> intPart >> dot >> fracPart;
-
-		// Chuyển đổi thành uint16_t
-		uint16_t version = (static_cast<uint16_t>(intPart) << 8) | static_cast<uint16_t>(fracPart);
-		Device *device = gateway->AddNewDevice(deviceId, Device::ConvertDeviceTypeToName(type), mac, dataJson, addr, type, version, true);
-		if (device)
+		uint16_t version = 0;
+		uint32_t deviceType = 0;
+		uint8_t u8mac[6];
+		if ((Util::ConvertStringToHex(mac, u8mac, 6) == 6) && bleProtocol->GetDeviceType(u8mac, addr, deviceType, version) == CODE_OK)
 		{
-			Json::Value jsonData;
-			jsonData["id"] = deviceId;
-			jsonData["type"] = type;
-			jsonData["data"] = reqValue["data"];
-			gateway->AddDeviceToScanList(device);
-			bleProtocol->UpdateDeviceKeyDev(addr, devKey);
-			// gateway->pushNewDeviceLocal(jsonData);
+			Device *device = gateway->AddNewDevice(uuid, Device::ConvertDeviceTypeToName(deviceType), mac, dataJson, addr, deviceType, version, true);
+			if (device)
+			{
+				Json::Value jsonData;
+				jsonData["id"] = uuid;
+				jsonData["type"] = deviceType;
+				jsonData["data"] = reqValue["data"];
+				gateway->AddDeviceToScanList(device);
+				bleProtocol->UpdateDeviceKeyDev(addr, devKey);
+				// gateway->pushNewDeviceLocal(jsonData);
+			}
+			else
+			{
+				respValue["data"]["code"] = CODE_MEMORY_ERROR;
+				LOGW("New device id %s err", uuid.c_str());
+			}
 		}
 		else
 		{
-			respValue["data"]["code"] = CODE_MEMORY_ERROR;
-			LOGW("New device id %s err", deviceId.c_str());
+			respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+			LOGW("Cannot get device type");
 		}
 	}
 	else
@@ -200,7 +204,7 @@ int AndroidBleProtocol::OnDeviceStatus(Json::Value &reqValue, Json::Value &respV
 		for (auto deviceJson : deviceJsonList)
 		{
 			if (deviceJson.isMember("id") && deviceJson["id"].isString() &&
-				deviceJson.isMember("data") && deviceJson["data"].isObject())
+					deviceJson.isMember("data") && deviceJson["data"].isObject())
 			{
 				string deviceId = deviceJson["id"].asString();
 				Json::Value devData = deviceJson["data"];
