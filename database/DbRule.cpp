@@ -33,7 +33,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 						if (rule)
 						{
 							rule->SetStatus(enable);
-							rule->Check();
+							// rule->Check();
 						}
 					}
 					else
