@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	string mac = Wifi::GetMacAddress();
 	// string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "minihub-" + mac, "minihub-" + mac, config->GetPassword(), config->GetKeepAlive(),
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(),
 												config->GetLocalHost(), config->GetLocalPort(), config->GetLocalUsername(), config->GetLocalPassword(), config->GetLocalKeepAlive());
 	gateway->init();
 

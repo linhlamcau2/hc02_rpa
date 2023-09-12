@@ -6,7 +6,12 @@
 void Gateway::InitMqttMessageRule()
 {
 	OnDeviceRpcCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRpcCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getRuleList", bind(&Gateway::OnGetRuleList, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("activeRule", bind(&Gateway::OnActiveRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));

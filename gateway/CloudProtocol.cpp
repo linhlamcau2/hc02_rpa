@@ -10,7 +10,7 @@
 #include "ButtonSignal.h"
 #endif
 
-CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive) : Mqtt(address, port, clientId, username, password, keepalive, true)
+CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive) : Mqtt(address, port, clientId, username, password, keepalive, false)
 {
 	this->mac = mac;
 

@@ -9,6 +9,13 @@ void Gateway::InitMqttMessageDevice()
 	OnDeviceRpcCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getCamList", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getFavoriteDev", bind(&Gateway::OnGetFavoriteDev, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
