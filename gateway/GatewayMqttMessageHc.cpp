@@ -39,6 +39,7 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 	Json::Value dataValue;
 	dataValue["mac"] = mac;
 	dataValue["ip"] = Wifi::GetIP();
+	dataValue["isConnectCloud"] = CloudProtocol::isConnected();
 	dataValue["name"] = "RD HC";
 	dataValue["type"] = MODEL;
 	dataValue["ver"] = STR(VERSION);
