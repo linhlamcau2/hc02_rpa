@@ -12,7 +12,7 @@ DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, s
 		modules.push_back(moduleRgb[i]);
 		moduleButton[i] = new ModuleButton(this, addr, i);
 		modules.push_back(moduleButton[i]);
-		idButton[i] = Util::GenIdDeviceByElement(id, i);
+		idButton[i] = Util::GenIdDeviceByElement(id, i, Util::checkGenIdDeviceChild(data, KEYJSON_GEN_DEVICEID));
 	}
 }
 

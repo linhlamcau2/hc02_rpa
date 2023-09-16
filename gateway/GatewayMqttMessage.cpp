@@ -403,7 +403,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 						string deviceChildId = "";
 						for (int i = 1; i <= numDeviceChild; i++)
 						{
-							deviceChildId = Util::GenIdDeviceByElement(deviceBle->GetId(), i);
+							deviceChildId = Util::GenIdDeviceByElement(deviceBle->GetId(), i, Util::checkGenIdDeviceChild(deviceBle->GetData(), KEYJSON_GEN_DEVICEID));
 							Device *deviceChild = getDeviceFromId(deviceChildId);
 							if (deviceChild)
 							{
@@ -422,7 +422,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 							database->DeviceInGroupDelDev(device);
 							database->DeviceInSceneBleDelDev(device);
 							database->DeviceInRoomDelDev(device);
-							bleProtocol->listMac.erase(remove(bleProtocol->listMac.begin(), bleProtocol->listMac.end(), device->GetMac()), bleProtocol->listMac.end());
+							// bleProtocol->listMac.erase(remove(bleProtocol->listMac.begin(), bleProtocol->listMac.end(), device->GetMac()), bleProtocol->listMac.end());
 							delDevice(device);
 						}
 						else

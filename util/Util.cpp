@@ -30,12 +30,35 @@ string Util::genRandRQI(int size)
 	return rqi;
 }
 
-string Util::GenIdDeviceByElement(string id, int element)
+string Util::GenIdDeviceByElement(string id, int element, bool isNewId)
 {
-	int c = id[0] - 48 + element;
-	string strTemp = to_string(c);
-	string tempId = id.substr(strTemp.length(), id.length() - strTemp.length());
-	return (strTemp + tempId);
+	if (!isNewId)
+	{
+		int c = id[0] - 48 + element;
+		string strTemp = to_string(c);
+		string tempId = id.substr(strTemp.length(), id.length() - strTemp.length());
+		return (strTemp + tempId);
+	}
+	else
+	{
+		int lastIndex = id.length();
+		int c = id[lastIndex - 1] - 48 + element;
+		string strTemp = to_string(c);
+		string tempId = id.substr(0, id.length() - strTemp.length());
+		return (tempId + strTemp);
+	}
+	return "";
+}
+
+bool Util::checkGenIdDeviceChild(string data, string key)
+{
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember(key) && dataJson[key].isBool())
+	{
+		return dataJson[key].asBool();
+	}
+	return false;
 }
 
 string getTimeStrFromTime(time_t t)

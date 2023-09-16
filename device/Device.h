@@ -56,6 +56,8 @@
 #define KEY_ATTRIBUTE_FACE_ID "faceId"
 #define KEY_ATTRIBUTE_FACE_VALUE "faceValue"
 
+#define KEYJSON_GEN_DEVICEID "genIdChildNew"
+
 using namespace std;
 
 typedef enum

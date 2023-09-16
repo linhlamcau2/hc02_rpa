@@ -597,6 +597,7 @@ int BleProtocol::StopScan()
 	{
 		LOGE("Send stop scan error, rs: %d", rs);
 	}
+	listMac.clear();
 	return rs;
 }
 
@@ -677,6 +678,7 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 							deviceType = convertDeviceType(deviceType);
 							Json::Value devKeyJson;
 							devKeyJson["devicekey"] = Util::arrayToString844412((uint8_t *)deviceKey);
+							devKeyJson["genIdChildNew"] = true;
 							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true, true);
 							if (device)
 							{

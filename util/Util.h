@@ -35,7 +35,8 @@ namespace Util
 	double millis();
 
 	string genRandRQI(int size);
-	string GenIdDeviceByElement(string id, int element);
+	string GenIdDeviceByElement(string id, int element, bool isNewId = false);
+	bool checkGenIdDeviceChild(string data, string key);
 
 	int GetCurrentWeekDay();
 	int ConvertStrTimeToInt(string time);
@@ -77,6 +78,6 @@ namespace Util
 	uint16_t GetTempOfScreenTouch();
 	uint16_t GetHumOfScreenTouch();
 
-	bool compareByID(const Json::Value& obj1, const Json::Value& obj2);
+	bool compareByID(const Json::Value &obj1, const Json::Value &obj2);
 	Json::Value arrangeJson(Json::Value &obj);
 }
