@@ -1577,7 +1577,7 @@ int BleProtocol::DelSceneBle(uint16_t devAddr, uint16_t scene)
 
 // TODO: BelProtocol ActiveScene
 // add delay time
-int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime)
+int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack)
 {
 	LOGD("Call scene: 0x%04X", scene);
 	uint8_t dataRsp[100];

@@ -61,6 +61,8 @@
 #define RD_OPCODE_CALIB 0x0411
 #define RD_OPCODE_REQUEST_STATUS_CURTAIN 0x0311
 
+#define TRANSITION_DEFAULT 5
+
 enum
 {
 	CLOSE,
@@ -264,7 +266,7 @@ public:
 	// Scene light
 	int SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
 	int DelSceneBle(uint16_t devAddr, uint16_t scene);
-	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
+	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
 
 	// update status lights

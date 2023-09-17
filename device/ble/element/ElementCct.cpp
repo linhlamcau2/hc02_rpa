@@ -143,7 +143,7 @@ int ElementCct::Do(Json::Value &dataValue)
 	{
 		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
 		uint16_t value = (cct * 192) + 800;
-		if (bleProtocol->SetCctLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol->SetCctLight(addr, value, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			this->cct = cct;
 			return CODE_OK;
@@ -160,7 +160,7 @@ int ElementCct::Do(Json::Value &dataValue)
 			int value = dataValue["VALUE"].asInt();
 			uint16_t cct = (value * 192) + 800;
 			if (bleProtocol)
-				bleProtocol->SetCctLight(addr, cct, 0, true);
+				bleProtocol->SetCctLight(addr, cct, TRANSITION_DEFAULT, true);
 			else
 				LOGW("Bleprotocol null");
 			return CODE_OK;

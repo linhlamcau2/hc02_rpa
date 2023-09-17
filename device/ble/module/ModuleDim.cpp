@@ -141,7 +141,7 @@ int ModuleDim::Do(Json::Value &dataValue)
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		uint16_t value = (dim * 65535) / 100;
-		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol->SetDimmingLight(addr, value, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			this->dim = dim;
 			return CODE_OK;
@@ -159,7 +159,7 @@ int ModuleDim::Do(Json::Value &dataValue)
 			uint16_t dim = (value * 65535) / 100;
 			if (bleProtocol)
 			{
-				bleProtocol->SetDimmingLight(addr, dim, 0, true);
+				bleProtocol->SetDimmingLight(addr, dim, TRANSITION_DEFAULT, true);
 			}
 			else
 				LOGW("BleProtocol null");

@@ -203,7 +203,7 @@ int ModuleHsl::DoJsonArray(Json::Value &dataValue)
 		{
 			if (bleProtocol)
 			{
-				bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, 0, true);
+				bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, TRANSITION_DEFAULT, true);
 			}
 			else
 				LOGW("BleProtocol null");
@@ -224,7 +224,7 @@ int ModuleHsl::Do(Json::Value &dataValue)
 		int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 		int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		if (bleProtocol->SetHSLLight(addr, h, s, l, 0, true) == CODE_OK)
+		if (bleProtocol->SetHSLLight(addr, h, s, l, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			this->h = h;
 			this->s = s;
@@ -264,7 +264,7 @@ int ModuleHsl::Do(Json::Value &dataValue)
 					isL = false;
 					if (bleProtocol)
 					{
-						bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, 0, true);
+						bleProtocol->SetHSLLight(addr, value_h, value_s, value_l, TRANSITION_DEFAULT, true);
 					}
 					else
 						LOGW("BleProtocol null");

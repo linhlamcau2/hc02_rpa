@@ -129,5 +129,5 @@ int SceneBle::DelDevice(Device *device)
 
 int SceneBle::Do()
 {
-	return bleProtocol->CallScene(0xffff, addr, 10, true, 1);
+	return bleProtocol->CallScene(0xffff, addr, TRANSITION_DEFAULT, true);
 }

@@ -128,19 +128,19 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 		if (reqValue.isMember(KEY_ATTRIBUTE_ONOFF) && reqValue[KEY_ATTRIBUTE_ONOFF].isInt())
 		{
 			int value = reqValue[KEY_ATTRIBUTE_ONOFF].asInt();
-			bleProtocol->SetOnOffLight(0xFFFF, value, 0, true);
+			bleProtocol->SetOnOffLight(0xFFFF, value, TRANSITION_DEFAULT, true);
 		}
 		if (reqValue.isMember(KEY_ATTRIBUTE_DIM) && reqValue[KEY_ATTRIBUTE_DIM].isInt())
 		{
 			int value = reqValue[KEY_ATTRIBUTE_DIM].asInt();
 			uint16_t dim = (value * 65535) / 100;
-			bleProtocol->SetDimmingLight(0xFFFF, dim, 0, true);
+			bleProtocol->SetDimmingLight(0xFFFF, dim, TRANSITION_DEFAULT, true);
 		}
 		if (reqValue.isMember(KEY_ATTRIBUTE_CCT) && reqValue[KEY_ATTRIBUTE_CCT].isInt())
 		{
 			int value = reqValue[KEY_ATTRIBUTE_CCT].asInt();
 			uint16_t cct = (value * 192) + 800;
-			bleProtocol->SetCctLight(0xFFFF, cct, 0, true);
+			bleProtocol->SetCctLight(0xFFFF, cct, TRANSITION_DEFAULT, true);
 		}
 		if (reqValue.isMember(KEY_ATTRIBUTE_HUE) && reqValue[KEY_ATTRIBUTE_HUE].isInt() &&
 				reqValue.isMember(KEY_ATTRIBUTE_SATURATION) && reqValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
@@ -149,7 +149,7 @@ int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
 			int h = reqValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = reqValue[KEY_ATTRIBUTE_SATURATION].asInt();
 			int l = reqValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-			bleProtocol->SetHSLLight(0xFFFF, h, s, l, 0, true);
+			bleProtocol->SetHSLLight(0xFFFF, h, s, l, TRANSITION_DEFAULT, true);
 		}
 		if (reqValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && reqValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{

@@ -189,15 +189,15 @@ void Group::DoBle(bool ack)
 
 				if (idProperty == 0)
 				{
-					bleProtocol->SetOnOffLight(addr + ID_START, value, 5, ack);
+					bleProtocol->SetOnOffLight(addr + ID_START, value, TRANSITION_DEFAULT, ack);
 				}
 				else if (idProperty == 1)
 				{
-					bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, 5, ack);
+					bleProtocol->SetDimmingLight(addr + ID_START, (value * 65535) / 100, TRANSITION_DEFAULT, ack);
 				}
 				else if (idProperty == 2)
 				{
-					bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, 5, ack);
+					bleProtocol->SetCctLight(addr + ID_START, (value * 192) + 800, TRANSITION_DEFAULT, ack);
 				}
 				else if (idProperty == 3)
 				{
@@ -230,7 +230,7 @@ void Group::DoBle(bool ack)
 		}
 		if (isIdHue && isIdLuminance && isIdSaturation)
 		{
-			bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, 5, ack);
+			bleProtocol->SetHSLLight(addr + ID_START, valueHue, valueSaturation, valueLuminance, TRANSITION_DEFAULT, ack);
 		}
 	}
 	else
@@ -244,19 +244,19 @@ void Group::DoBleV2()
 		if (dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-			bleProtocol->SetOnOffLight(addr + ID_START, value, 0, true);
+			bleProtocol->SetOnOffLight(addr + ID_START, value, TRANSITION_DEFAULT, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 			uint16_t dim = (value * 65535) / 100;
-			bleProtocol->SetDimmingLight(addr + ID_START, dim, 0, true);
+			bleProtocol->SetDimmingLight(addr + ID_START, dim, TRANSITION_DEFAULT, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 		{
 			int value = dataValue[KEY_ATTRIBUTE_CCT].asInt();
 			uint16_t cct = (value * 192) + 800;
-			bleProtocol->SetCctLight(addr + ID_START, cct, 0, true);
+			bleProtocol->SetCctLight(addr + ID_START, cct, TRANSITION_DEFAULT, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_HUE) && dataValue[KEY_ATTRIBUTE_HUE].isInt() &&
 			dataValue.isMember(KEY_ATTRIBUTE_SATURATION) && dataValue[KEY_ATTRIBUTE_SATURATION].isInt() &&
@@ -265,7 +265,7 @@ void Group::DoBleV2()
 			int h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 			int s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 			int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-			bleProtocol->SetHSLLight(addr + ID_START, h, s, l, 0, true);
+			bleProtocol->SetHSLLight(addr + ID_START, h, s, l, TRANSITION_DEFAULT, true);
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{

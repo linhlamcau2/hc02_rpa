@@ -1284,7 +1284,7 @@ int Gateway::OnRpcDeviceFlash(Json::Value &reqValue, Json::Value &respValue)
 					status = true;
 				}
 				if (bleProtocol)
-					bleProtocol->SetOnOffLight(device->GetAddr(), onoff, 5, true);
+					bleProtocol->SetOnOffLight(device->GetAddr(), onoff, TRANSITION_DEFAULT, true);
 			}
 			else
 			{

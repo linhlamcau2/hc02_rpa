@@ -140,7 +140,7 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 		dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
 	{
 		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+		if (bleProtocol->SetOnOffLight(addr, onoff, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			this->onoff = onoff;
 			return CODE_OK;
@@ -157,7 +157,7 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 			int value = dataValue["VALUE"].asInt();
 			if (bleProtocol)
 			{
-				bleProtocol->SetOnOffLight(addr, value, 0, true);
+				bleProtocol->SetOnOffLight(addr, value, TRANSITION_DEFAULT, true);
 			}
 			else
 				LOGW("BleProtocol null");
