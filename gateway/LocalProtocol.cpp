@@ -20,9 +20,8 @@ LocalProtocol::LocalProtocol(string mac, string address, int port, string token,
 #endif
 {
 	this->mac = mac;
-
-	pubReqTopic = "v2/json/req/" + mac + "/";
-	pubRespTopic = "v2/json/resp/" + mac + "/";
+	pubReqTopic = "/v2/mobile/+/hc/" + mac + "/json_req";
+	pubRespTopic = "/v2/mobile/+/hc/" + mac + "/json_resp";
 }
 
 LocalProtocol::~LocalProtocol()
@@ -37,9 +36,9 @@ void LocalProtocol::init()
 	Mqtt::init();
 #endif
 	isBusy = false;
-	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/" + mac);
+	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), pubReqTopic);
+	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), pubRespTopic);
 	// addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
-	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), "v2/json/resp/+/" + mac);
 }
 
 void LocalProtocol::localAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -77,9 +76,9 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	if (topics.size() == 5)
+	if (topics.size() == 7)
 	{
-		if (topics[4] == mac || topics[4] == "all")
+		if (topics[5] == mac || topics[5] == "all")
 		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&
@@ -99,8 +98,8 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 					{
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
-						LOGD("local publish: %s: %s", (pubRespTopic + topics[3]).c_str(), respValue.toString().c_str());
-						Publish(pubRespTopic + topics[3], respValue.toString());
+						LOGD("local publish: %s: %s", (pubRespTopic + topics[3] + topics[4]).c_str() , respValue.toString().c_str());
+						Publish(pubRespTopic + topics[3] + topics[4], respValue.toString());
 					}
 					else if (rs == CODE_DATA_ARRAY)
 					{
@@ -110,7 +109,7 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 							for (auto &respV : respValue)
 							{
 								respV["rqi"] = rqi;
-								Publish(pubRespTopic + topics[3], respV.toString());
+								Publish(pubRespTopic + topics[3] + topics[4], respV.toString());
 							}
 						}
 					}
@@ -123,7 +122,7 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 						respValue["rqi"] = rqi;
 						LOGD("local publish: %s: %s", (pubRespTopic + topics[3]).c_str(), respValue.toString().c_str());
-						Publish(pubRespTopic + topics[3], respValue.toString());
+						Publish(pubRespTopic + topics[3] + topics[4], respValue.toString());
 						sleep(2);
 						exit(1);
 					}
@@ -157,9 +156,9 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	if (topics.size() == 5)
+	if (topics.size() == 7)
 	{
-		if (topics[4] == mac || topics[4] == "all")
+		if (topics[5] == mac || topics[5] == "all")
 		{
 			Util::LedServiceLock();
 			if (payloadJson.parse(payload) && payloadJson.isObject() &&

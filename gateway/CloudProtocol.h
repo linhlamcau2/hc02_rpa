@@ -15,6 +15,7 @@ private:
 		bool status;
 		string respCmd;
 		Json::Value *respValue;
+		string pubTopic;
 	} request_t;
 	map<string, request_t *> requestList;
 
@@ -26,10 +27,14 @@ private:
 	} request_bin_t;
 	map<string, request_bin_t *> requestBinList;
 
-	string subReqTopic;
-	string subRespTopic;
-	string pubReqTopic;
-	string pubRespTopic;
+	string subServerReqTopic;
+	string subMobileReqTopic;
+	string subServerRespTopic;
+	string subMobileRespTopic;
+	string pubServerReqTopic;
+	string pubServerRespTopic;
+	string pubMobileReqTopic;
+	string pubMobileRespTopic;
 
 	string subBinRespTopic;
 	string pubBinReqTopic;
@@ -43,6 +48,8 @@ private:
 
 	void OnServerReq(string &topic, string &payload);
 	void OnServerResp(string &topic, string &payload);
+	void OnMobileReq(string &topic, string &payload);
+	void OnMobileResp(string &topic, string &payload);
 	void OnServerBinResp(string &topic, char *payload, int payloadLen);
 
 public:
