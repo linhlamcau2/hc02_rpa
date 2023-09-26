@@ -42,7 +42,7 @@
 #define KEY_ATTRIBUTE_DOOR "door"
 #define KEY_ATTRIBUTE_SMOKE_PIN "smokePin"
 #define KEY_ATTRIBUTE_DKTX_SCENE "remoteScene"
-#define KEY_ATTRIBUTE_ONLINE_OFFLINE "status"
+#define KEY_ATTRIBUTE_ONLINE_OFFLINE "stt"
 #define KEY_ATTRIBUTE_MOTOR "motor"
 #define KEY_ATTRIBUTE_R "r"
 #define KEY_ATTRIBUTE_G "g"

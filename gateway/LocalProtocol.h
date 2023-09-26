@@ -25,6 +25,8 @@ private:
 
 	string mac;
 
+	string subReqTopic;
+	string subRespTopic;
 	string pubReqTopic;
 	string pubRespTopic;
 

@@ -394,7 +394,7 @@ static int indexBt(string bt)
 
 int Gateway::OnCreateSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnCreateSwitchLink")
+	LOGD("OnCreateSwitchLink");
 	respValue["cmd"] = "createSwitchLinkRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
@@ -519,7 +519,7 @@ int Gateway::OnCreateSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnAddBtToSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnAddBtSwitchLink")
+	LOGD("OnAddBtSwitchLink");
 	respValue["cmd"] = "addBtToSwitchLinkRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
@@ -644,7 +644,7 @@ int Gateway::OnAddBtToSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnDelBtFromSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("DelBtSwitchLink")
+	LOGD("DelBtSwitchLink");
 	respValue["cmd"] = "delBtFromSwitchLinkRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{

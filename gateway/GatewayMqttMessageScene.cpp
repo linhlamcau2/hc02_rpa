@@ -170,6 +170,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 					}
 				}
 				respValue["data"]["code"] = CODE_OK;
+				respValue["data"]["id"] = sceneBle->GetId();
 				respValue["data"]["addr"] = sceneAddr;
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
@@ -334,6 +335,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 			printScene();
 
 			respValue["data"]["code"] = CODE_OK;
+			respValue["data"]["id"] = sceneBle->GetId();
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
 		}
@@ -499,7 +501,7 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 	}
 	else
 	{
-		LOGW("Data error format")
+		LOGW("Data error format");
 	}
 	return CODE_ERROR;
 }

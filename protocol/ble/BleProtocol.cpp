@@ -473,9 +473,10 @@ int BleProtocol::GetNetKey()
 			{
 				netKey[i] = pro_net_info.netKey[i];
 			}
+
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
-				nextAddr = 2;
+				nextAddr = 24575;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else

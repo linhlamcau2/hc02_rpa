@@ -8,13 +8,13 @@
 #define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "mqtt.rangdong.com.vn"
+#define HOST_DEFAULT "13.212.46.14"
 #define PORT_KEY "port"
 #define PORT_DEFAULT 1883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT "minihub-"
+#define CLIENT_ID_DEFAULT "hc-be:3e:25:2e:a1:ca"
 #define USERNAME_KEY "username"
-#define USERNAME_DEFAULT "minihub-"
+#define USERNAME_DEFAULT "hc-be:3e:25:2e:a1:ca"
 #define PASSWORD_KEY "password"
 #define PASSWORD_DEFAULT "ABC123456"
 #define KEEP_ALIVE_KEY "keep_alive"

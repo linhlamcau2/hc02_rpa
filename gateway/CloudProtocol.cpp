@@ -4,6 +4,7 @@
 #include "Log.h"
 #include "Util.h"
 #include "Wifi.h"
+#include "Gateway.h"
 
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -20,8 +21,8 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 	subMobileRespTopic = "/v2/mobile/+/hc/" + mac + "/json_resp";
 	pubServerReqTopic = "/v2/hc/" + mac + "/server/json_req";
 	pubServerRespTopic = "/v2/hc/" + mac + "/server/json_resp";
-	pubMobileReqTopic = "/v2/hc/" + mac + "/mobile/+/json_req";
-	pubMobileRespTopic = "/v2/hc/" + mac + "/mobile/+/json_resp";
+	pubMobileReqTopic = "/v2/hc/" + mac + "/mobile/all/json_req";
+	pubMobileRespTopic = "/v2/hc/" + mac + "/mobile/";
 
 	subBinRespTopic = "v2/bin/resp/server/" + mac + "/+/+";
 	pubBinReqTopic = "v2/bin/req/" + mac + "/server/";
@@ -37,9 +38,9 @@ void CloudProtocol::init()
 	isBusy = false;
 	isConfig = false;
 	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subServerReqTopic);
-	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subMobileReqTopic);
+	addActionCallback(bind(&CloudProtocol::OnMobileReq, this, placeholders::_1, placeholders::_2), subMobileReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subServerRespTopic);
-	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subMobileRespTopic);
+	addActionCallback(bind(&CloudProtocol::OnMobileResp, this, placeholders::_1, placeholders::_2), subMobileRespTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerBinResp, this, placeholders::_1, placeholders::_2, placeholders::_3), subBinRespTopic);
 }
 
@@ -212,6 +213,7 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 	Json::Value payloadJson;
 	Util::LedInternet(false);
 	Util::LedServiceLock();
+	vector<string> topics = Util::splitString(topic, '/');
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
 			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
@@ -229,7 +231,8 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				respValue["rqi"] = rqi;
-				Publish(pubMobileRespTopic, respValue.toString());
+				LOGD("cloud publish: %s: %s", (pubMobileRespTopic + topics[2] + "/json_resp").c_str() , respValue.toString().c_str());
+				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
 			}
 			else if (rs == CODE_DATA_ARRAY)
 			{
@@ -239,7 +242,7 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 					for (auto &respV : respValue)
 					{
 						respV["rqi"] = rqi;
-						Publish(pubMobileRespTopic, respV.toString());
+						Publish(pubMobileRespTopic + topics[2] + "/json_resp", respV.toString());
 					}
 				}
 			}
@@ -319,10 +322,11 @@ int CloudProtocol::OnlineHC(string deviceName)
 {
 	Json::Value jsonValue;
 	Json::Value datanValue;
-	datanValue["STATUS_ID"] = 1;
-	datanValue["IP_ADDRESS"] = Wifi::GetIP();
-	jsonValue["CMD"] = "HOME_CONTROLLER";
-	jsonValue["DATA"] = datanValue;
+	datanValue["status"] = 1;
+	datanValue["version"] = gateway->getVersion();
+	datanValue["ip"] = Wifi::GetIP();
+	jsonValue["cmd"] = "homeController";
+	jsonValue["data"] = datanValue;
 	return CloudPublish(jsonValue);
 }
 
@@ -363,6 +367,11 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 			.respValue = respValue,
 	};
 	requestList[rqi] = &request;
+	if (request.pubTopic == "")
+	{
+		request.pubTopic = pubServerReqTopic;
+	}
+	LOGD("PublishToCloudMessage: Topic: %s: msg: %s",request.pubTopic.c_str(), (sendValue.toString()).c_str());
 	Publish(request.pubTopic, sendValue.toString());
 	while (!request.status && timeout--)
 	{
