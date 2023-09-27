@@ -51,6 +51,8 @@ private:
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
 
+	bool isInternet;
+
 	map<string, Device *> deviceList;
 	map<string, Group *> groupList;
 	map<string, SceneBle *> sceneBleList;
@@ -189,6 +191,8 @@ public:
 
 	void SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp);
 	int CheckOnlineThread();
+
+	int CheckInternetThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
 

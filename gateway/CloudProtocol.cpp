@@ -11,7 +11,7 @@
 #include "ButtonSignal.h"
 #endif
 
-CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive) : Mqtt(address, port, clientId, username, password, keepalive, false)
+CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive) : Mqtt(address, port, clientId, username, password, keepalive, true)
 {
 	this->mac = mac;
 
@@ -26,6 +26,7 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 
 	subBinRespTopic = "v2/bin/resp/server/" + mac + "/+/+";
 	pubBinReqTopic = "v2/bin/req/" + mac + "/server/";
+	isConfig = false;
 }
 
 CloudProtocol::~CloudProtocol()
@@ -36,7 +37,7 @@ void CloudProtocol::init()
 {
 	Mqtt::init();
 	isBusy = false;
-	isConfig = false;
+	isConfig = true;
 	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subServerReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnMobileReq, this, placeholders::_1, placeholders::_2), subMobileReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subServerRespTopic);

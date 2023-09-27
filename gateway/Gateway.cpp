@@ -418,7 +418,6 @@ static void startUdpThread(void *data)
 
 void Gateway::init()
 {
-	CloudProtocol::init();
 	LocalProtocol::init();
 	Udp::init();
 
@@ -449,6 +448,8 @@ void Gateway::init()
 	udpBroadcastThread.detach();
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
+	thread checkInternet(bind(&Gateway::CheckInternetThread, this));
+	checkInternet.detach();
 #endif
 
 	database->GatewayRead();
@@ -471,8 +472,6 @@ void Gateway::init()
 		database->GatewayAdd(gateway);
 		database->GatewayRead();
 	}
-
-	CloudConnect();
 	LocalConnect();
 }
 
@@ -727,6 +726,29 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 	return CODE_OK;
+}
+
+int Gateway::CheckInternetThread()
+{
+	while (1)
+	{
+		int result = system("ping -c 1 www.google.com");
+		if (result == 0)
+		{
+			LOGE("co ket noi internet");
+			isInternet = true;
+			if(CloudProtocol::IsConfig() == false)
+			{
+				CloudProtocol::init();
+				CloudConnect();
+			} 
+		}
+		else
+		{
+			isInternet = false; 
+		}
+		sleep(5);
+	}
 }
 
 int Gateway::UdpBroadcastThread()
