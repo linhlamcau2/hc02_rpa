@@ -168,6 +168,7 @@ private:
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue);
+	int OnOtaHc(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);

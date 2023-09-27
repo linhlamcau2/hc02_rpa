@@ -4,6 +4,7 @@
 #include "Base64.h"
 #include <fstream>
 #include <string.h>
+#include "Util.h"
 
 void Gateway::InitMqttMessageHc()
 {
@@ -22,6 +23,7 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlHc(Json::Value &reqValue, Json::Value &respValue)
@@ -234,4 +236,30 @@ int Gateway::OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue)
 	system("killall ssh");
 	respValue["code"] = 0;
 	return CODE_OK;
+}
+
+int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Create Tunnel");
+	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checkSum") && reqValue["checkSum"].isString())
+	{
+		string url = reqValue["url"].asString();
+		string sha = reqValue["checkSum"].asString();
+		string cmd = "wget -P " TMP_FOLDER " "+ url;
+		system(cmd.c_str());
+		if(Util::CheckSHA256(TMP_FOLDER "rd.tat.gz", sha) != CODE_OK)
+		{
+			cmd = "rm " TMP_FOLDER "rd.tat.gz";
+			system(cmd.c_str());
+		}
+		else
+		{
+			cmd = "tar -xzf " TMP_FOLDER "rd.tat.gz -C " TMP_FOLDER;
+			system(cmd.c_str());
+			cmd = "./" TMP_FOLDER "rd_ota.sh";
+			system(cmd.c_str());
+		}
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }

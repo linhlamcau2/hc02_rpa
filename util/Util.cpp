@@ -16,6 +16,10 @@
 #include <locale>
 #include "Base64.h"
 #include "Log.h"
+#include <openssl/sha.h>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -232,6 +236,41 @@ bool Util::CompareNumber(string op, int a, int b, int c)
 	else if (op == "><")
 		return ((a <= b) || (a >= c));
 	return false;
+}
+
+int Util::CheckSHA256(string filePath, string inputSHA256)
+{
+    ifstream file(filePath, ios::binary);
+    if (!file)
+    {
+        return CODE_ERROR;
+    }
+
+    SHA256_CTX sha256Context;
+    SHA256_Init(&sha256Context);
+
+    char buffer[65536];
+
+    while (file)
+    {
+        file.read(buffer, sizeof(buffer));
+        size_t bytesRead = file.gcount();
+        SHA256_Update(&sha256Context, buffer, bytesRead);
+    }
+
+    unsigned char sha256[SHA256_DIGEST_LENGTH];
+    SHA256_Final(sha256, &sha256Context);
+
+    stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        ss << hex << setw(2) << setfill('0') << (int)sha256[i];
+    }
+	if(ss.str() == inputSHA256)
+	{
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 string Util::ExecuteCMD(char const *command)
