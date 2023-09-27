@@ -247,16 +247,16 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		string sha = reqValue["checkSum"].asString();
 		string cmd = "wget -P " TMP_FOLDER " "+ url;
 		system(cmd.c_str());
-		if(Util::CheckSHA256(TMP_FOLDER "rd.tat.gz", sha) != CODE_OK)
+		if(Util::CheckSHA256(TMP_FOLDER "rd.tar.gz", sha) != CODE_OK)
 		{
-			cmd = "rm " TMP_FOLDER "rd.tat.gz";
+			cmd = "rm " TMP_FOLDER "rd.tar.gz";
 			system(cmd.c_str());
 		}
 		else
 		{
-			cmd = "tar -xzf " TMP_FOLDER "rd.tat.gz -C " TMP_FOLDER;
+			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
 			system(cmd.c_str());
-			cmd = "./" TMP_FOLDER "rd_ota.sh";
+			cmd = "./" TMP_FOLDER "config.sh";
 			system(cmd.c_str());
 		}
 		return CODE_OK;
