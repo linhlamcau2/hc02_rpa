@@ -13,7 +13,7 @@ INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Id
 DEFINES 		+= -DCONFIG_USE_MESSAGE_FORMAT_V2=1
 # DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
 # DEFINES 	+= -D__OPENWRT__
-LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -luci -lcurl
+LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -luci -lcurl -lssl -lcrypto
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee

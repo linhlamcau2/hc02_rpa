@@ -10,7 +10,7 @@
 #define HOST_KEY "host"
 #define HOST_DEFAULT "13.212.46.14"
 #define PORT_KEY "port"
-#define PORT_DEFAULT 1883
+#define PORT_DEFAULT 8883
 #define CLIENT_ID_KEY "client_id"
 #define CLIENT_ID_DEFAULT "hc-be:3e:25:2e:a1:ca"
 #define USERNAME_KEY "username"

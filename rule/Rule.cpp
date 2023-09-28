@@ -92,6 +92,10 @@ void Rule::Check()
 					}
 				}
 			}
+			if (startTime <= currentTimer && currentTimer <= endTime && type == RULE_TYPE_TIME)
+			{
+				checkRuleInputResult = true;
+			}
 		}
 		if (checkRuleInputResult)
 		{
