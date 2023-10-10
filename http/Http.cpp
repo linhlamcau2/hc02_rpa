@@ -181,12 +181,12 @@ string HTTPRequest::DownloadFile(string dormitory)
 	return readBuffer;
 }
 
-string HTTPRequest::GetWeather(float longitude, float latitude)
+string HTTPRequest::GetWeather(float latitude, float longitude)
 {
 	return GetWeather(to_string(latitude), to_string(longitude));
 }
 
-string HTTPRequest::GetWeather(string longitude, string latitude)
+string HTTPRequest::GetWeather(string latitude, string longitude)
 {
 	CURL *curl;
 	CURLcode res;

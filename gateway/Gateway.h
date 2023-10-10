@@ -50,6 +50,7 @@ private:
 	uint32_t ble_iv_index;
 	string dormitoryId;
 	string refresh_token;
+	string data;
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
 
@@ -283,6 +284,7 @@ public:
 	string getVersion();
 	string getName();
 	string getRefreshToken();
+	string getData();
 	string getMac();
 
 	void setBleAddr(uint16_t addr);
@@ -296,6 +298,7 @@ public:
 	void setVersion(string version);
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
+	void setData(string data);
 
 	void DelAllDevice();
 	void DelAllGroup();

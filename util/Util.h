@@ -68,10 +68,8 @@ namespace Util
 	bool GetStatusLedZigbee();
 	bool GetStatusLedInternet();
 
-	float GetLongitude();
-	float GetLatitude();
-	void SetLongitude(float value);
-	void SetLatitude(float value);
+	float GetLongitude(string data);
+	float GetLatitude(string data);
 
 	void SetTempOfScreenTouch(uint16_t temp);
 	void SetHumOfScreenTouch(uint16_t hum);

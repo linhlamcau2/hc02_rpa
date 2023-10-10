@@ -172,8 +172,11 @@ int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 		respValue["CMD"] = "HC_CONNECT_TO_CLOUD";
 		if (data.isMember("LATITUDE") && data["LATITUDE"].isDouble() && data.isMember("LONGITUDE") && data["LONGITUDE"].isDouble())
 		{
-			Util::SetLongitude(data["LONGITUDE"].asDouble());
-			Util::SetLatitude(data["LATITUDE"].asDouble());
+			Json::Value dataJson;
+			dataJson["latitude"] = data["LATITUDE"].asDouble();
+			dataJson["longitude"] = data["LONGITUDE"].asDouble();
+			setData(dataJson.toString());
+			database->GatewayUpdateData(this, dataJson.toString());
 		}
 		if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
 		{

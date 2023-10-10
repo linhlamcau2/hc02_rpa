@@ -67,6 +67,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_appkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
+	this->data = "";
 	this->numScreenTouchs = 0;
 }
 
@@ -468,7 +469,7 @@ int Gateway::CheckOnlineThread()
 		{
 			oldTime = time(NULL);
 			HTTPRequest *httpRequest = new HTTPRequest();
-			string dataWeather = httpRequest->GetWeather(Util::GetLongitude(), Util::GetLatitude());
+			string dataWeather = httpRequest->GetWeather( Util::GetLatitude(gateway->getData()), Util::GetLongitude(gateway->getData()));
 			delete httpRequest;
 			LOGI("dataWeather:%s", dataWeather.c_str());
 
@@ -1804,6 +1805,11 @@ string Gateway::getRefreshToken()
 	return refresh_token;
 }
 
+string Gateway::getData()
+{
+	return this->data;
+}
+
 string Gateway::getMac()
 {
 	return mac;
@@ -1842,6 +1848,11 @@ void Gateway::setDormitory(string dormitory)
 void Gateway::setRefreshToken(string refresh_token)
 {
 	this->refresh_token = refresh_token;
+}
+
+void Gateway::setData(string data)
+{
+	this->data = data;
 }
 
 void Gateway::setId(string id)

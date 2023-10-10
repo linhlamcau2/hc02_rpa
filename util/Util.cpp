@@ -442,27 +442,28 @@ bool Util::GetStatusLedInternet()
 	return ledInternet;
 }
 
-static float longitude = 0;
-static float latitude = 0;
-
-float Util::GetLongitude()
+float Util::GetLongitude(string data)
 {
+	float longitude = 0.0;
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember("longitude") && dataJson["longitude"].isDouble())
+	{
+		longitude = dataJson["longitude"].asDouble();
+	}
 	return longitude;
 }
 
-float Util::GetLatitude()
+float Util::GetLatitude(string data)
 {
+	float latitude = 0.0;
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember("latitude") && dataJson["latitude"].isDouble())
+	{
+		latitude = dataJson["latitude"].asDouble();
+	}
 	return latitude;
-}
-
-void Util::SetLongitude(float value)
-{
-	longitude = value;
-}
-
-void Util::SetLatitude(float value)
-{
-	latitude = value;
 }
 
 static uint16_t tempForScreenTouch = 0;
