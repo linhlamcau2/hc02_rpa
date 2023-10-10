@@ -71,6 +71,11 @@ namespace Util
 	float GetLongitude(string data);
 	float GetLatitude(string data);
 
+	void SetStatusWeatherOutdoor(int status);
+	void SetTempWeatherOutdoor(uint16_t temp);
+	int GetStatusWeatherOutdoor();
+	uint16_t GetTempWeatherOutdoor();
+
 	void SetTempOfScreenTouch(uint16_t temp);
 	void SetHumOfScreenTouch(uint16_t hum);
 	uint16_t GetTempOfScreenTouch();

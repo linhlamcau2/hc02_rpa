@@ -35,6 +35,7 @@
 #include "DeviceBleCurtain.h"
 #include "DeviceBleRoolDoor.h"
 #include "DeviceBleSwitchTouch.h"
+#include "DeviceBleRepeater.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -465,11 +466,11 @@ int Gateway::CheckOnlineThread()
 	while (1)
 	{
 		// Check have device screen touch -> send datetime, weather data
-		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 1800)
+		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 18000)
 		{
 			oldTime = time(NULL);
 			HTTPRequest *httpRequest = new HTTPRequest();
-			string dataWeather = httpRequest->GetWeather( Util::GetLatitude(gateway->getData()), Util::GetLongitude(gateway->getData()));
+			string dataWeather = httpRequest->GetWeather(Util::GetLatitude(gateway->getData()), Util::GetLongitude(gateway->getData()));
 			delete httpRequest;
 			LOGI("dataWeather:%s", dataWeather.c_str());
 
@@ -496,19 +497,11 @@ int Gateway::CheckOnlineThread()
 							}
 						}
 						temp = main["temp"].asInt();
+						Util::SetStatusWeatherOutdoor(status);
+						Util::SetTempWeatherOutdoor(temp);
 					}
 				}
 			}
-
-			deviceListMtx.lock();
-			for (const auto &[id, device] : deviceList)
-			{
-				if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
-				{
-					SendDataForScreenTouch(device, dataWeather, status, temp);
-				}
-			}
-			deviceListMtx.unlock();
 		}
 
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
@@ -875,6 +868,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
+	case BLE_LED_RLT03_06W:
+	case BLE_LED_RLT02_10W:
+	case BLE_LED_RLT02_20W:
+	case BLE_LED_RLT01_10W:
+	case BLE_LED_TRL08_20W:
+	case BLE_LED_TRL08_10W:
+	case BLE_LED_RLT03_12W:
 		device = new DeviceBleLightOnoffCctDim(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
@@ -891,6 +891,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
+	case BLE_SWITCH_RGB_SOCKET_1:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_RGB_2:
@@ -1057,6 +1058,8 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SWITCH_4:
 		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 4);
 		break;
+	case BLE_REPEATER:
+		device = new DeviceBleRepeater(id, name, mac, data, addr, type, version);
 
 #ifndef ESP_PLATFORM
 	case MQTT_AI_HUB:

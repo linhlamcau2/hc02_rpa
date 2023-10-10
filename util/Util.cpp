@@ -466,6 +466,28 @@ float Util::GetLatitude(string data)
 	return latitude;
 }
 
+static int statusWeather;
+static uint16_t tempWeather;
+void Util::SetStatusWeatherOutdoor(int status)
+{
+	statusWeather = status;
+}
+
+void Util::SetTempWeatherOutdoor(uint16_t temp)
+{
+	tempWeather = temp;
+}
+
+int Util::GetStatusWeatherOutdoor()
+{
+	return statusWeather;
+}
+
+uint16_t Util::GetTempWeatherOutdoor()
+{
+	return tempWeather;
+}
+
 static uint16_t tempForScreenTouch = 0;
 static uint16_t humForScreenTouch = 0;
 

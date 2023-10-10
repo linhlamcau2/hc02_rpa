@@ -204,6 +204,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		data_message_t *data_message = (data_message_t *)message_rsp->data;
 		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
+		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
@@ -224,6 +225,20 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			else
 			{
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+			}
+
+			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+			{
+				if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME)
+				{
+					SendDate(deviceBle->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
+					SendTime(deviceBle->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
+				}
+				else if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP)
+				{
+					SendWeatherOutdoor(deviceBle->GetAddr(), Util::GetStatusWeatherOutdoor(), Util::GetTempWeatherOutdoor());
+					SendWeatherIndoor(deviceBle->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
+				}
 			}
 		}
 		else
