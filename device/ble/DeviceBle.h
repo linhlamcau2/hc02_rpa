@@ -55,6 +55,7 @@ public:
 	virtual void InputData(Json::Value &dataValue);
 	virtual void InputData(uint8_t *data, int len, uint16_t addr = 0);
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
+	int GetNumElement();
 
 	virtual int Do(Json::Value &dataValue);
 };

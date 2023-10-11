@@ -207,8 +207,24 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
 				deviceBle->InputData(dataArray);
 			}
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP)
+			{
+				uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
+				if (vendorId == RD_VENDOR_ID)
+				{
+					uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
+					if (header == 0x080b)
+					{
+						for (int i=0; i<deviceBle->GetNumElement(); i++)
+						{
+							deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr+i);
+						}
+					}
+				}
+			}
 			else
 			{
+				LOGE("Nut nhan");
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
 			break;

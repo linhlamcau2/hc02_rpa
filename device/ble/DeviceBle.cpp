@@ -82,6 +82,11 @@ bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
+int DeviceBle::GetNumElement()
+{
+	return countElement;
+}
+
 int DeviceBle::Do(Json::Value &dataValue)
 {
 	for (auto &module : modules)

@@ -44,26 +44,50 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	typedef struct __attribute__((packed))
+	if (data[0] == 0x82)
 	{
-		uint16_t opcode;
-		uint8_t state;
-		uint8_t onoff;
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
+		typedef struct __attribute__((packed))
+		{
+			uint16_t opcode;
+			uint8_t state;
+			uint8_t onoff;
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
+		{
+			if (len == 3)
+			{
+				onoff = data_message->state;
+			}
+			else
+			{
+				onoff = data_message->onoff;
+			}
+			CheckTrigger();
+			BuildTelemetryValue(jsonValue);
+			return CODE_OK;
+		}
+	}
+	if (data[0] == RD_OPCODE_CONFIG_RSP)
 	{
-		if (len == 3)
+		typedef struct __attribute__((packed))
 		{
-			onoff = data_message->state;
-		}
-		else
+			uint8_t opcodeVendor;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t data[100];
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->vendorId == RD_VENDOR_ID)
 		{
-			onoff = data_message->onoff;
+			if (data_message->header == 0x080b)
+			{
+				onoff = data_message->data[index+1];
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
 		}
-		CheckTrigger();
-		BuildTelemetryValue(jsonValue);
-		return CODE_OK;
 	}
 	return CODE_ERROR;
 }

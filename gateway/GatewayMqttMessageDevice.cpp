@@ -195,6 +195,7 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 	for (const auto &[id, room] : roomList)
 	{
 		Json::Value temp_devicesList;
+		temp_devicesList["camList"] = Json::arrayValue;
 		for (unsigned int i = 0; i < room->deviceList.size(); i++)
 		{
 			Json::Value dvList;
@@ -379,7 +380,7 @@ int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
 
 static int indexBt(string bt)
 {
-	string a[] = {"bt0", "bt1", "bt2", "bt3", "bt4", "bt5"};
+	string a[] = {"bt", "bt2", "bt3", "bt4", "bt5", "bt6"};
 	for (int i = 0; i < 6; i++)
 	{
 		if (a[i] == bt)
