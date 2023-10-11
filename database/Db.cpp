@@ -77,15 +77,15 @@ void Db::init(void)
 		LOGE("Failed to initialize the mutex");
 	}
 
-	if (!IsHaveDb())
-	{
-		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
-		createTableIfNotExists();
-	}
-	else
-	{
-		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
-	}
+	// if (!IsHaveDb())
+	// {
+	sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
+	createTableIfNotExists();
+	// }
+	// else
+	// {
+	// 	sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
+	// }
 }
 
 bool Db::IsHaveDb()
@@ -192,4 +192,125 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 	usleep(1000);
 #endif
 	return rc;
+}
+
+int Db::checkAndAddColumn(const std::string &tableName, const std::string &columnNameAdd)
+{
+	if (db)
+		sqlite3_close_v2(db);
+	sleep(1);
+
+	char *errMsg = 0;
+	int rc = sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
+	if (rc)
+	{
+		LOGW("Do not open database");
+		return CODE_ERROR;
+	}
+
+	const std::string sqlCheckColumn = "PRAGMA table_info(" + tableName + ");";
+
+	sqlite3_stmt *stmtCheckColumn;
+	rc = sqlite3_prepare_v2(db, sqlCheckColumn.c_str(), -1, &stmtCheckColumn, 0);
+
+	int columnExists = 0;
+	if (rc == SQLITE_OK)
+	{
+		while (sqlite3_step(stmtCheckColumn) == SQLITE_ROW)
+		{
+			const char *columnNameInTable = reinterpret_cast<const char *>(sqlite3_column_text(stmtCheckColumn, 1));
+			if (std::string(columnNameInTable) == columnNameAdd)
+			{
+				columnExists = 1; // Cột đã tồn tại trong bảng
+				break;
+			}
+		}
+		sqlite3_finalize(stmtCheckColumn);
+	}
+	else
+	{
+		LOGW("Sql error: %s", sqlite3_errmsg(db));
+		sqlite3_close_v2(db);
+		return CODE_ERROR;
+	}
+
+	if (!columnExists)
+	{
+		const std::string sqlAddColumn = "ALTER TABLE Device ADD COLUMN " + columnNameAdd + " TEXT;";
+		rc = sqlite3_exec(db, sqlAddColumn.c_str(), 0, 0, &errMsg);
+		if (rc != SQLITE_OK)
+		{
+			LOGW("Add column error: %s", errMsg);
+			sqlite3_free(errMsg);
+			sqlite3_close(db);
+			return CODE_ERROR;
+		}
+	}
+	else
+	{
+		LOGD("Column already exists");
+	}
+
+	sqlite3_close_v2(db);
+	return CODE_OK;
+}
+int Db::checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel)
+{
+	if (db)
+		sqlite3_close_v2(db);
+	sleep(1);
+
+	char *errMsg = 0;
+	int rc = sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
+	if (rc)
+	{
+		LOGW("Do not open database");
+		return CODE_ERROR;
+	}
+
+	const std::string sqlCheckColumn = "PRAGMA table_info(" + tableName + ");";
+	sqlite3_stmt *stmtCheckColumn;
+	rc = sqlite3_prepare_v2(db, sqlCheckColumn.c_str(), -1, &stmtCheckColumn, 0);
+	int columnExists = 0;
+
+	if (rc == SQLITE_OK)
+	{
+		// Lặp qua các dòng kết quả từ truy vấn
+		while (sqlite3_step(stmtCheckColumn) == SQLITE_ROW)
+		{
+			const char *columnNameInTable = reinterpret_cast<const char *>(sqlite3_column_text(stmtCheckColumn, 1));
+			if (std::string(columnNameInTable) == columnNameDel)
+			{
+				columnExists = 1; // Cột đã tồn tại trong bảng
+				break;
+			}
+		}
+		sqlite3_finalize(stmtCheckColumn);
+	}
+	else
+	{
+		LOGW("Sql error: %s", sqlite3_errmsg(db));
+		sqlite3_close_v2(db);
+		return CODE_ERROR;
+	}
+
+	if (columnExists)
+	{
+		const std::string sqlDeleteColumn = "ALTER TABLE Device DROP COLUMN " + columnNameDel + ";";
+		rc = sqlite3_exec(db, sqlDeleteColumn.c_str(), 0, 0, &errMsg);
+		if (rc != SQLITE_OK)
+		{
+			LOGW("Del column error: %s", errMsg);
+			sqlite3_free(errMsg);
+			sqlite3_close(db);
+			return CODE_ERROR;
+		}
+	}
+	else
+	{
+		LOGD("Column do not exist");
+	}
+
+	sqlite3_close_v2(db);
+	return CODE_OK;
 }

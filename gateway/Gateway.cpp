@@ -342,6 +342,18 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 
+	//Check old version to do something
+	string firmwareVersionCurrent = STR(VERSION);
+	if (getVersion() == "" && firmwareVersionCurrent == "1.0.10")
+	{
+		gateway->setVersion(firmwareVersionCurrent);
+		if (database->checkAndAddColumn("Gateway", "data") == CODE_OK)
+		{
+			database->GatewayUpdateVersion(this, firmwareVersionCurrent);
+			exit(1);
+		}
+	}
+
 	CloudConnect();
 	LocalConnect();
 }

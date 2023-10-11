@@ -86,6 +86,7 @@ public:
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
 	int GatewayUpdateData(Gateway *gateway, string data);
+	int GatewayUpdateVersion(Gateway *gateway, string version);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
@@ -126,6 +127,9 @@ public:
 	int SceneDelayUpdateData(SceneDelay *sceneDelay);
 	int SceneDelayDel(SceneDelay *sceneDelay);
 	int SceneDelayDelAll();
+
+	int checkAndAddColumn(const std::string &tableName, const std::string &columnNameAdd);
+	int checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel);
 };
 
 extern Db *database;
