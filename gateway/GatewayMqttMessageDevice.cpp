@@ -211,7 +211,9 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 		temp_devicesList["id"] = id;
+		roomData.append(temp_devicesList);
 	}
+	respValue["data"]["room"] = roomData;
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "getCamListRsp";
 	return CODE_OK;

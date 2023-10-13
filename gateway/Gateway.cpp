@@ -419,7 +419,6 @@ static void startUdpThread(void *data)
 void Gateway::init()
 {
 	LocalProtocol::init();
-	CloudProtocol::init();
 	Udp::init();
 
 	InitUdpMessage();
@@ -474,7 +473,6 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 	LocalConnect();
-	CloudConnect();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
