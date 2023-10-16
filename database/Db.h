@@ -128,8 +128,8 @@ public:
 	int SceneDelayDel(SceneDelay *sceneDelay);
 	int SceneDelayDelAll();
 
-	int checkAndAddColumn(const std::string &tableName, const std::string &columnNameAdd);
-	int checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel);
+	int checkAndAddColumn(const std::string &tableName, const std::string &columnNameAdd, string type);
+	int checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel, string type);
 };
 
 extern Db *database;

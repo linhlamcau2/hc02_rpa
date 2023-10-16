@@ -77,15 +77,15 @@ void Db::init(void)
 		LOGE("Failed to initialize the mutex");
 	}
 
-	// if (!IsHaveDb())
-	// {
-	sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
-	createTableIfNotExists();
-	// }
-	// else
-	// {
-	// 	sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
-	// }
+	if (!IsHaveDb())
+	{
+		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
+		createTableIfNotExists();
+	}
+	else
+	{
+		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
+	}
 }
 
 bool Db::IsHaveDb()
@@ -194,123 +194,112 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 	return rc;
 }
 
-int Db::checkAndAddColumn(const std::string &tableName, const std::string &columnNameAdd)
+int Db::checkAndAddColumn(const std::string &tableName, const std::string &columnNameAdd, string type)
 {
-	if (db)
-		sqlite3_close_v2(db);
-	sleep(1);
 
 	char *errMsg = 0;
-	int rc = sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
-	if (rc)
+	string dataSearch = columnNameAdd + " " + type;
+
+	string sql = "SELECT sql FROM sqlite_master WHERE type='table' AND name='" + tableName + "';";
+	sqlite3_stmt *stmt;
+	if (db)
 	{
-		LOGW("Do not open database");
-		return CODE_ERROR;
-	}
-
-	const std::string sqlCheckColumn = "PRAGMA table_info(" + tableName + ");";
-
-	sqlite3_stmt *stmtCheckColumn;
-	rc = sqlite3_prepare_v2(db, sqlCheckColumn.c_str(), -1, &stmtCheckColumn, 0);
-
-	int columnExists = 0;
-	if (rc == SQLITE_OK)
-	{
-		while (sqlite3_step(stmtCheckColumn) == SQLITE_ROW)
+		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL) == SQLITE_OK)
 		{
-			const char *columnNameInTable = reinterpret_cast<const char *>(sqlite3_column_text(stmtCheckColumn, 1));
-			if (std::string(columnNameInTable) == columnNameAdd)
+			if (sqlite3_step(stmt) == SQLITE_ROW)
 			{
-				columnExists = 1; // Cột đã tồn tại trong bảng
-				break;
+				const char *tableDefinition = (const char *)sqlite3_column_text(stmt, 0);
+				string tableInfo = string(tableDefinition);
+				LOGD("Table [%s] info: %s", tableName.c_str(), tableInfo.c_str());
+				if (tableInfo.find(dataSearch) != std::string::npos)
+				{
+					LOGW("column %s is exist", columnNameAdd.c_str());
+				}
+				else
+				{
+					LOGD("column %s is not exist", columnNameAdd.c_str());
+
+					const std::string sqlAddColumn = "ALTER TABLE " + tableName + " ADD COLUMN " + columnNameAdd + " " + type + ";";
+					int rc = sqlite3_exec(db, sqlAddColumn.c_str(), 0, 0, &errMsg);
+					if (rc != SQLITE_OK)
+					{
+						LOGW("Add column error: %s", errMsg);
+						sqlite3_free(errMsg);
+					}
+					else
+					{
+						return CODE_OK;
+					}
+				}
 			}
+			else
+			{
+				LOGE("Sql error: %s", sql.c_str());
+			}
+			sqlite3_finalize(stmt);
 		}
-		sqlite3_finalize(stmtCheckColumn);
-	}
-	else
-	{
-		LOGW("Sql error: %s", sqlite3_errmsg(db));
-		sqlite3_close_v2(db);
-		return CODE_ERROR;
-	}
-
-	if (!columnExists)
-	{
-		const std::string sqlAddColumn = "ALTER TABLE Device ADD COLUMN " + columnNameAdd + " TEXT;";
-		rc = sqlite3_exec(db, sqlAddColumn.c_str(), 0, 0, &errMsg);
-		if (rc != SQLITE_OK)
+		else
 		{
-			LOGW("Add column error: %s", errMsg);
-			sqlite3_free(errMsg);
-			sqlite3_close(db);
-			return CODE_ERROR;
+			LOGW("Sql error: %s", sql.c_str());
 		}
 	}
 	else
 	{
-		LOGD("Column already exists");
+		LOGE("Db null");
 	}
-
-	sqlite3_close_v2(db);
-	return CODE_OK;
+	return CODE_ERROR;
 }
-int Db::checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel)
+int Db::checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel, string type)
 {
-	if (db)
-		sqlite3_close_v2(db);
-	sleep(1);
-
 	char *errMsg = 0;
-	int rc = sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
-	if (rc)
-	{
-		LOGW("Do not open database");
-		return CODE_ERROR;
-	}
+	string dataSearch = columnNameDel + " " + type;
 
-	const std::string sqlCheckColumn = "PRAGMA table_info(" + tableName + ");";
-	sqlite3_stmt *stmtCheckColumn;
-	rc = sqlite3_prepare_v2(db, sqlCheckColumn.c_str(), -1, &stmtCheckColumn, 0);
-	int columnExists = 0;
-
-	if (rc == SQLITE_OK)
+	string sql = "SELECT sql FROM sqlite_master WHERE type='table' AND name='" + tableName + "';";
+	sqlite3_stmt *stmt;
+	if (db)
 	{
-		// Lặp qua các dòng kết quả từ truy vấn
-		while (sqlite3_step(stmtCheckColumn) == SQLITE_ROW)
+		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL) == SQLITE_OK)
 		{
-			const char *columnNameInTable = reinterpret_cast<const char *>(sqlite3_column_text(stmtCheckColumn, 1));
-			if (std::string(columnNameInTable) == columnNameDel)
+			if (sqlite3_step(stmt) == SQLITE_ROW)
 			{
-				columnExists = 1; // Cột đã tồn tại trong bảng
-				break;
+				const char *tableDefinition = (const char *)sqlite3_column_text(stmt, 0);
+				string tableInfo = string(tableDefinition);
+				LOGD("Table [%s] info: %s", tableName.c_str(), tableInfo.c_str());
+				if (tableInfo.find(dataSearch) != std::string::npos)
+				{
+					LOGD("column %s is exist", columnNameDel.c_str());
+
+					const std::string sqlAddColumn = "ALTER TABLE " + tableName + " DROP COLUMN " + columnNameDel + ";";
+					int rc = sqlite3_exec(db, sqlAddColumn.c_str(), 0, 0, &errMsg);
+					if (rc != SQLITE_OK)
+					{
+						LOGW("Del column error: %s", errMsg);
+						sqlite3_free(errMsg);
+					}
+					else
+					{
+						return CODE_OK;
+					}
+				}
+				else
+				{
+					LOGW("column %s is not exist", columnNameDel.c_str());
+				}
 			}
+			else
+			{
+				LOGE("Sql error: %s", sql.c_str());
+			}
+			sqlite3_finalize(stmt);
 		}
-		sqlite3_finalize(stmtCheckColumn);
-	}
-	else
-	{
-		LOGW("Sql error: %s", sqlite3_errmsg(db));
-		sqlite3_close_v2(db);
-		return CODE_ERROR;
-	}
-
-	if (columnExists)
-	{
-		const std::string sqlDeleteColumn = "ALTER TABLE Device DROP COLUMN " + columnNameDel + ";";
-		rc = sqlite3_exec(db, sqlDeleteColumn.c_str(), 0, 0, &errMsg);
-		if (rc != SQLITE_OK)
+		else
 		{
-			LOGW("Del column error: %s", errMsg);
-			sqlite3_free(errMsg);
-			sqlite3_close(db);
-			return CODE_ERROR;
+			LOGW("Sql error: %s", sql.c_str());
 		}
 	}
 	else
 	{
-		LOGD("Column do not exist");
+		LOGE("Db null");
 	}
-
-	sqlite3_close_v2(db);
-	return CODE_OK;
+	return CODE_ERROR;
 }
