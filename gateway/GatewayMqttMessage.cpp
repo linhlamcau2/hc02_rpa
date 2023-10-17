@@ -161,6 +161,8 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DEL_ALL_RULE", bind(&Gateway::OnRpcDelAllRuleInDB, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("ADD_DEVICE_BY_MAC", bind(&Gateway::OnRpcAddDeviceByMac, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
@@ -3805,6 +3807,71 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 		LOGW("Format error");
 	}
 	return CODE_ERROR;
+}
+
+int Gateway::OnRpcDelAllRuleInDB(Json::Value &reqValue, Json::Value &respValue)
+{
+	database->RuleDelAll();
+	sleep(5);
+	exit(1);
+}
+
+/**
+ *
+{
+  "CMD": "ADD_DEVICE_BY_MAC",
+  "DATA": {
+	"MAC": ["mac_Device"]
+  }
+}
+*/
+
+int Gateway::OnRpcAddDeviceByMac(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Add Device by mac: %s", reqValue.toString().c_str());
+	int rs = CODE_ERROR;
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataJson = reqValue["DATA"];
+		if (dataJson.isMember("MAC") && dataJson["MAC"].isArray())
+		{
+			for (Json::ArrayIndex i = 0; i < dataJson["MAC"].size(); i++)
+			{
+				if (dataJson["MAC"][i].isString())
+				{
+					string mac = dataJson["MAC"][i].asString();
+					scan_device_message_t dataScan = {0};
+					if (bleProtocol->ScanByMac(mac, 10000, dataScan) == CODE_OK)
+					{
+						LOGW("%02X- %02X- %02X- %02X- %02X- %02X", dataScan.mac[0], dataScan.mac[1], dataScan.mac[2], dataScan.mac[3], dataScan.mac[4], dataScan.mac[5]);
+						if (bleProtocol->AddDeviceByMac(&dataScan) == CODE_OK)
+						{
+							rs = CODE_OK;
+						}
+						else
+						{
+							LOGW("Add device mac %s error", mac.c_str());
+						}
+					}
+					else
+					{
+						LOGW("Not found device mac %s", mac.c_str());
+					}
+
+					bleProtocol->StopScan();
+				}
+			}
+		}
+		else
+		{
+			LOGW("Data Add device by mac error: %s", reqValue.toString().c_str());
+		}
+	}
+	else
+	{
+		LOGW("Data Add device by mac error: %s", reqValue.toString().c_str());
+	}
+	return rs;
 }
 
 #endif

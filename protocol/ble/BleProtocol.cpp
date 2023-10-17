@@ -602,6 +602,33 @@ int BleProtocol::StartScan()
 	return rs;
 }
 
+int BleProtocol::ScanByMac(string mac, uint32_t timeout, scan_device_message_t &dataScan)
+{
+	LOGD("Scan BLE by mac: %s", mac.c_str());
+
+	const char *mac_c = mac.c_str();
+	uint8_t macChar[6] = {0};
+	for (int i = 0; i < 6; i++)
+	{
+		sscanf(mac_c + 2 * i, "%2hhx", &macChar[i]);
+	}
+
+	uint8_t d = HCI_GATEWAY_CMD_START;
+	uint8_t scanByMacHeader[] = {macChar[0], macChar[1], macChar[2], macChar[3], macChar[4], macChar[5], macChar[6]};
+	uint8_t dataRsp[100];
+	int lenRsp;
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_UPDATE_MAC, dataRsp, &lenRsp, 10000, scanByMacHeader, 0, 6);
+	if (rs == CODE_OK)
+	{
+		memcpy(&dataScan, &dataRsp, sizeof(scan_device_message_t));
+		for (int i = 0; i < 6; i++)
+		{
+			LOGW("%02X- ", dataScan.mac[i]);
+		}
+	}
+	return rs;
+}
+
 int BleProtocol::StopScan()
 {
 	LOGD("StopScan");
@@ -724,6 +751,50 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	// 	Led::SetLedService(MODE_ON);
 	// #endif
 
+	return rs;
+}
+
+int BleProtocol::AddDeviceByMac(scan_device_message_t *scan_device_message)
+{
+	LOGD("AddDeviceByMac");
+
+	uint16_t version = 0;
+	uint32_t deviceType = 0;
+	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
+	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
+	int rs = CODE_ERROR;
+	if (!SelectMac(scan_device_message->mac))
+	{
+		if (!GetNetKey())
+		{
+			if (!Provision(nextAddr))
+			{
+				if (!BindingAll())
+				{
+					if (!SetGwAddr(nextAddr, gateway->getBleAddr()))
+					{
+						if (!GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
+						{
+							deviceType = convertDeviceType(deviceType);
+							Json::Value devKeyJson;
+							devKeyJson["devicekey"] = Util::arrayToString844412((uint8_t *)deviceKey);
+							devKeyJson["genIdChildNew"] = true;
+							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true, true);
+							if (device)
+							{
+								gateway->AddDeviceToScanList(device);
+								rs = CODE_OK;
+							}
+						}
+					}
+				}
+				if (rs != CODE_OK)
+				{
+					ResetDev(nextAddr);
+				}
+			}
+		}
+	}
 	return rs;
 }
 

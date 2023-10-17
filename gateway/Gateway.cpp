@@ -1072,6 +1072,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_REPEATER:
 		device = new DeviceBleRepeater(id, name, mac, data, addr, type, version);
+		break;
 
 #ifndef ESP_PLATFORM
 	case MQTT_AI_HUB:

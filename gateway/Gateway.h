@@ -164,6 +164,10 @@ private:
 
 	int OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcDelCountDown(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRpcDelAllRuleInDB(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRpcAddDeviceByMac(Json::Value &reqValue, Json::Value &respValue);
 #else
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
