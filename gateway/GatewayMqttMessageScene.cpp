@@ -174,6 +174,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["addr"] = sceneAddr;
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
+				pushMsgHcCoreToHcApp("createScene", sceneId, sceneBle->GetName(), successList);
 
 				printScene();
 			}
@@ -291,6 +292,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
+			pushMsgHcCoreToHcApp("editScene", sceneId, sceneBle->GetName(), successList);
 
 			printScene();
 		}
@@ -338,6 +340,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["id"] = sceneBle->GetId();
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
+			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList);
 		}
 		else
 		{

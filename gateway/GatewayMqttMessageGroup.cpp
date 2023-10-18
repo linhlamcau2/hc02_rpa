@@ -201,6 +201,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
 				printGroup();
+				pushMsgHcCoreToHcApp("createGroup", groupId, groupName, successList);
 			}
 			else
 			{
@@ -261,8 +262,8 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-
 			printGroup();
+			pushMsgHcCoreToHcApp("addDevToGroup", groupId, group->GetName(), successList);
 		}
 		else
 		{
@@ -351,8 +352,8 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-
 			printGroup();
+			pushMsgHcCoreToHcApp("delDevFromGroup", groupId, group->GetName(), successList);
 		}
 		else
 		{
@@ -391,8 +392,8 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			delGroup(group);
-
 			printGroup();
+			pushMsgHcCoreToHcApp("delGroup", groupId, group->GetName(), successList);
 
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;

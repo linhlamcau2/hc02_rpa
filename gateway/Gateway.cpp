@@ -1561,6 +1561,17 @@ int Gateway::pushStopAddHc(Json::Value &dataValue)
 	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
 }
 
+int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice)
+{
+	Json::Value msg;
+	msg["cmd"] = cmd;
+	string rqi = Util::genRandRQI(16);
+	msg["data"]["id"] = id;
+	msg["data"]["name"] = name;
+	msg["data"]["devices"] = listDevice;
+	PublishToLocalMessage(msg);
+}
+
 void Gateway::printGroup()
 {
 	for (auto &[id, grp] : groupList)

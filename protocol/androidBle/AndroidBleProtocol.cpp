@@ -135,39 +135,38 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 {
 	LOGD("OnNewDevice");
 	respValue["data"]["code"] = CODE_OK;
-	if (reqValue.isMember("uuid") && reqValue["uuid"].isString() &&
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 			reqValue.isMember("mac") && reqValue["mac"].isString() &&
-			reqValue.isMember("addr") && reqValue["addr"].isInt() &&
-			reqValue.isMember("vid") && reqValue["vid"].isInt() &&
-			reqValue.isMember("pid") && reqValue["pid"].isInt())
+			reqValue.isMember("addr") && reqValue["addr"].isInt())
 	{
-		string uuid = reqValue["uuid"].asString();
+		string uuid = reqValue["id"].asString();
 		string mac = reqValue["mac"].asString();
 		uint32_t addr = reqValue["addr"].asInt();
-		uint16_t vid = reqValue["vid"].asInt();
-		uint16_t pid = reqValue["pid"].asInt();
+		uint16_t vid;
+		uint16_t pid;
 		string devKey;
 		Json::Value dataJson;
 		if (reqValue.isMember("data") && reqValue["data"].isObject())
 		{
 			dataJson = reqValue["data"];
-			if (dataJson.isMember("devKey") && dataJson["devKey"].isString())
+			if (dataJson.isMember("devKey") && dataJson["devKey"].isString() &&
+				dataJson.isMember("vid") && dataJson["vid"].isString() &&
+				dataJson.isMember("pid") && dataJson["pid"].isString())
 			{
 				devKey = dataJson["devKey"].asString();
+				pid = dataJson["pid"].asInt();
+				vid = dataJson["vid"].asInt();
 			}
 		}
-
-		uint16_t version = 0;
-		uint32_t deviceType = 0;
 		uint8_t u8mac[6];
-		if ((Util::ConvertStringToHex(mac, u8mac, 6) == 6) && bleProtocol->GetDeviceType(u8mac, addr, deviceType, version) == CODE_OK)
+		if ((Util::ConvertStringToHex(mac, u8mac, 6) == 6))
 		{
-			Device *device = gateway->AddNewDevice(uuid, Device::ConvertDeviceTypeToName(deviceType), mac, dataJson, addr, deviceType, version, true);
+			Device *device = gateway->AddNewDevice(uuid, Device::ConvertDeviceTypeToName(pid), mac, dataJson, addr, pid, vid, true);
 			if (device)
 			{
 				Json::Value jsonData;
 				jsonData["id"] = uuid;
-				jsonData["type"] = deviceType;
+				jsonData["type"] = pid;
 				jsonData["data"] = reqValue["data"];
 				gateway->AddDeviceToScanList(device);
 				bleProtocol->UpdateDeviceKeyDev(addr, devKey);
