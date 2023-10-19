@@ -1569,7 +1569,7 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
-	PublishToLocalMessage(msg);
+	return PublishToLocalMessage(msg);
 }
 
 void Gateway::printGroup()
