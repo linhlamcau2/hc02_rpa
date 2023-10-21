@@ -225,11 +225,8 @@ int Mqtt::Publish(string topic, const char *payload, int payloadLen)
 	{
 		return CODE_OK;
 	}
-	else
-	{
-		// LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
-		return CODE_ERROR;
-	}
+	LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
+	return CODE_ERROR;
 }
 
 bool Mqtt::isConnected()

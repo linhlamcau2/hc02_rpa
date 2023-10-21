@@ -61,7 +61,7 @@ int Room::AddDeviceOneMessage(Device *device, bool sendBle, bool addDb)
 	if (addDb)
 		database->DeviceInRoomAdd(this, device);
 	if (bleProtocol && sendBle)
-		if (bleProtocol->AddDev2Room(device->GetAddr(), addr + ID_START) != CODE_OK)
+		if (bleProtocol->AddDev2Room(device->GetAddr(), addr + ID_START, addr) != CODE_OK)
 		{
 			return CODE_ERROR;
 		}

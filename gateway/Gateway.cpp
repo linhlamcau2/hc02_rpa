@@ -387,7 +387,7 @@ void Gateway::delRoom(Room *room)
 
 uint16_t Gateway::getNextRoomAddr()
 {
-	uint16_t roomAddr = 0; //start add of room
+	uint16_t roomAddr = 1; //start add of room
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
@@ -735,7 +735,6 @@ int Gateway::CheckInternetThread()
 		int result = system("ping -c 1 www.google.com");
 		if (result == 0)
 		{
-			LOGE("co ket noi internet");
 			isInternet = true;
 			if(CloudProtocol::IsConfig() == false)
 			{
@@ -939,6 +938,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
+	case BLE_LED_RLT03_06W:
+	case BLE_LED_RLT02_10W:
+	case BLE_LED_RLT02_20W:
+	case BLE_LED_RLT01_10W:
+	case BLE_LED_TRL08_20W:
+	case BLE_LED_TRL08_10W:
+	case BLE_LED_RLT03_12W:
 		device = new DeviceBleLightOnoffCctDim(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:

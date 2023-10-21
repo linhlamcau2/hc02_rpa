@@ -263,7 +263,7 @@ public:
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 
-	int AddDev2Room(uint16_t devAddr, uint16_t room);
+	int AddDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene);
 	int DelDev2Room(uint16_t devAddr, uint16_t room);
 
 	// Scene light

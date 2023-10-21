@@ -77,7 +77,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 #endif
 
 	respValue["data"]["code"] = rsCode;
-	respValue["cmd"] = "startScanBleRsp";
+	respValue["cmd"] = "startScanBle";
 	return CODE_OK;
 }
 
@@ -107,7 +107,7 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 #endif
 
 	respValue["data"]["code"] = rsCode;
-	respValue["cmd"] = "stopScanBleRsp";
+	respValue["cmd"] = "stopScanBle";
 	return CODE_OK;
 }
 

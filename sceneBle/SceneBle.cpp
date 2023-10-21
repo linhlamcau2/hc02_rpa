@@ -76,7 +76,7 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 			{
 				modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
 			}
-			if (bleProtocol->SetSceneBle(device->GetAddr(), addr + ID_START, modeRGB) == CODE_OK)
+			if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
 			{
 				mtx.lock();
 				deviceList.push_back(deviceInSceneBle);
@@ -105,7 +105,7 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 		database->DeviceInSceneBleDel(this, device);
 	if (sendBle)
 	{
-		if (bleProtocol->DelSceneBle(device->GetAddr(), addr + ID_START) == CODE_OK)
+		if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == CODE_OK)
 		{
 			int deviceIndex = GetPositionDevice(device);
 			if (deviceIndex > -1)
@@ -133,5 +133,5 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 
 int SceneBle::Do()
 {
-	return bleProtocol->CallScene(0xffff, addr + ID_START, 10, true, 1);
+	return bleProtocol->CallScene(0xffff, addr, 10, true, 1);
 }

@@ -65,7 +65,7 @@ static void AddDeviceThread(void *data)
 					timeout = 0;
 					bleProtocol->SetProvisioning(false);
 					bleProtocol->StopScan();
-					string cmdStop = "{\"CMD\":\"STOP\"}";
+					string cmdStop = "{\"cmd\":\"stopScanBle\",\"data\":{\"code\":0}}";
 					gateway->LocalPublish(cmdStop);
 				}
 			}
@@ -224,7 +224,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			}
 			else
 			{
-				LOGE("Nut nhan");
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
 			break;
@@ -1454,9 +1453,9 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	return CODE_ERROR;
 }
 
-int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
+int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t group, uint16_t scene)
 {
-	LOGW("Add dev addr: 0x%04X to room: 0x%04X", devAddr, room);
+	LOGW("Add dev addr: 0x%04X to room: 0x%04X", devAddr, group);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t addDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -1479,8 +1478,8 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t room)
 	addDev2Room.vendorId = RD_VENDOR_ID;
 	addDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
 	addDev2Room.header = RD_OPCODE_CONFIG_ADD_ROOM;
-	addDev2Room.groupId = room;
-	addDev2Room.sceneId = room;
+	addDev2Room.groupId = group;
+	addDev2Room.sceneId = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&addDev2Room, sizeof(addDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDev2RoomHeader, 0, 7);
 	if (rs != CODE_OK)
 		LOGW("AddDev2Room error");

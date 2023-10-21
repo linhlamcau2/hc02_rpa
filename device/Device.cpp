@@ -214,6 +214,13 @@ void Device::InitDeviceModelList()
 	bleTypeToGroupIdList[BLE_LED_BULB] = BLE_LED_BULB_GROUP;
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_RGBCW] = BLE_DOWNLIGHT_RGBCW_GROUP;
 	bleTypeToGroupIdList[BLE_LED_OP_TRAN_LOA] = BLE_LED_OP_TRAN_LOA_GROUP;
+	bleTypeToGroupIdList[BLE_LED_RLT03_06W] = BLE_LED_RLT03_06W_GROUP;
+	bleTypeToGroupIdList[BLE_LED_RLT02_10W] = BLE_LED_RLT02_10W_GROUP;
+	bleTypeToGroupIdList[BLE_LED_RLT02_20W] = BLE_LED_RLT02_20W_GROUP;
+	bleTypeToGroupIdList[BLE_LED_RLT01_10W] = BLE_LED_RLT01_10W_GROUP;
+	bleTypeToGroupIdList[BLE_LED_TRL08_20W] = BLE_LED_TRL08_20W_GROUP;
+	bleTypeToGroupIdList[BLE_LED_TRL08_10W] = BLE_LED_TRL08_10W_GROUP;
+	bleTypeToGroupIdList[BLE_LED_RLT03_12W] = BLE_LED_RLT03_12W_GROUP;
 
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
