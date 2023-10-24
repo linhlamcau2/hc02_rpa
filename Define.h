@@ -21,7 +21,7 @@
 #endif
 
 #if __ANDROID__
-#define CONFIG_FILE_NAME "/etc/sshremote/config.json"
+#define CONFIG_FILE_NAME "/etc/smh/config.json"
 #define TMP_FOLDER "/data/rd/"
 #elif defined(__OPENWRT__)
 #define CONFIG_FILE_NAME "config.json"
