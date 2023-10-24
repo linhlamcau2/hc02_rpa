@@ -2,6 +2,7 @@
 #include "Log.h"
 #include "Wifi.h"
 #include "Base64.h"
+#include "Config.h"
 #include <fstream>
 #include <string.h>
 #include "Util.h"
@@ -24,6 +25,7 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlHc(Json::Value &reqValue, Json::Value &respValue)
@@ -261,5 +263,55 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		}
 		return CODE_OK;
 	}
+	return CODE_ERROR;
+}
+
+/*
+{
+  "cmd": "setPasswordMqtt",
+  "rqi": "abc-xyz-mnl",
+  "data": {
+	"password": "ABC123456"
+  }
+}
+*/
+
+int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Set password mqtt");
+	if (reqValue.isMember("password") && reqValue["password"].isString())
+	{
+		string password = reqValue["password"].asString();
+		string client_id = "hc-" + mac;
+		string username = "hc-" + mac;
+		if (config->SetHost("mqtt.rangdong.com.vn"))
+		{
+			if (config->SetPort(8883))
+			{
+				if (config->SetClientId(client_id))
+				{
+					if (config->SetUsername(username))
+					{
+						if (config->SetPassword(password))
+						{
+							return CODE_EXIT;
+						}
+						else
+							LOGW("set password error");
+					}
+					else
+						LOGW("set username error");
+				}
+				else
+					LOGW("set client error");
+			}
+			else
+				LOGW("set port error");
+		}
+		else
+			LOGW("set host error");
+	}
+	else
+		LOGW("format error: %s", reqValue.toString().c_str());
 	return CODE_ERROR;
 }

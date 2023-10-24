@@ -16,6 +16,7 @@ Config *config = NULL;
 /****************************************
  *                  API                 *
  ***************************************/
+#ifdef __OPENWRT__
 static bool get_str_config_entry(const char *name, char *value)
 {
 #ifndef __ANDROID__
@@ -147,36 +148,91 @@ static bool set_int_config_entry(const char *section, const char *name, int valu
 	return false;
 #endif
 }
+#elif defined(__ANDROID__)
+static bool get_str_config_entry(Json::Value &jsonData, string key, string &value)
+{
+	if (jsonData.isMember(key) && jsonData[key].isString())
+	{
+		string temp = jsonData[key].asString();
+		value = temp;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
-// static bool delete_section(char *section)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	ctx = uci_alloc_context();
-// 	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s != NULL)
-// 	{
-// 		if (uci_delete(ctx, &ptr) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to delete section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
+static bool get_int_config_entry(Json::Value &jsonData, string key, int &value)
+{
+	if (jsonData.isMember(key) && jsonData[key].isInt())
+	{
+		int temp = jsonData[key].asInt();
+		value = temp;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static bool set_str_config_entry(Json::Value &jsonData, string key, string &value)
+{
+	if (jsonData.isMember(key) && jsonData[key].isString())
+	{
+		jsonData[key] = value;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static bool set_int_config_entry(Json::Value jsonData, string key, int &value)
+{
+	if (jsonData.isMember(key) && jsonData[key].isInt())
+	{
+		jsonData[key] = value;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static bool OpenFile(string file, Json::Value &jsonData)
+{
+	std::ifstream input(file.c_str());
+	if (!input.is_open())
+	{
+		std::cerr << "Không thể mở tệp JSON." << std::endl;
+		return false;
+	}
+
+	// Đọc nội dung từ tệp vào một đối tượng JSON
+	input >> jsonData;
+	input.close();
+	return true;
+}
+
+static bool Write2File(string file, Json::Value &jsonData)
+{
+	std::ofstream output(file.c_str());
+	if (!output.is_open())
+	{
+		std::cerr << "Không thể mở tệp JSON." << std::endl;
+		return false;
+	}
+
+	output << jsonData; // Ghi lại JSON với định dạng đẹp
+	output.close();
+	return true;
+}
+
+#endif
 
 Config::Config()
 {
@@ -187,7 +243,8 @@ void Config::ReadConfig()
 	char str_temp[STRING_VALUE_MAX_SIZE];
 	int int_temp = 0;
 
-	// server
+// server
+#ifdef __OPENWRT__
 	if (get_str_config_entry((char *)CONFIG_ENV HOST_KEY, str_temp))
 		host = string(str_temp);
 	else
@@ -249,6 +306,41 @@ void Config::ReadConfig()
 		localKeepAlive = int_temp;
 	else
 		localKeepAlive = 10;
+#elif defined(__ANDROID__)
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+
+	if (get_str_config_entry(jsonData, HOST_KEY, value_temp))
+		host = value_temp;
+	else
+		host = HOST_DEFAULT;
+
+	if (get_int_config_entry(jsonData, PORT_KEY, int_temp))
+		port = int_temp;
+	else
+		port = PORT_DEFAULT;
+
+	if (get_str_config_entry(jsonData, CLIENT_ID_KEY, value_temp))
+		clientId = value_temp;
+	else
+		clientId = CLIENT_ID_DEFAULT;
+
+	if (get_str_config_entry(jsonData, USERNAME_KEY, value_temp))
+		username = value_temp;
+	else
+		username = USERNAME_DEFAULT;
+
+	if (get_str_config_entry(jsonData, PASSWORD_KEY, value_temp))
+		password = value_temp;
+	else
+		password = PASSWORD_DEFAULT;
+
+	if (get_int_config_entry(jsonData, KEEP_ALIVE_KEY, int_temp))
+		keepAlive = int_temp;
+	else
+		keepAlive = KEEP_ALIVE_DEFAULT;
+
+#endif
 
 	Print();
 }
@@ -338,46 +430,96 @@ int Config::GetLocalKeepAlive()
 
 bool Config::SetHost(string host)
 {
+#ifdef __OPENWRT__
 	if (set_str_config_entry((char *)CONFIG_ENV HOST_KEY, HOST_KEY, host.c_str()))
 	{
 		return true;
 	}
+#elif defined(__ANDROID__)
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+	if (set_str_config_entry(jsonData, HOST_KEY, host))
+	{
+		Write2File(CONFIG_FILE_NAME, jsonData);
+		return true;
+	}
+#endif
 	return false;
 }
 
 bool Config::SetPort(int port)
 {
+#ifdef __OPENWRT__
 	if (set_int_config_entry((char *)CONFIG_ENV PORT_KEY, PORT_KEY, port))
 	{
 		return true;
 	}
+#elif defined(__ANDROID__)
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+	if (set_int_config_entry(jsonData, PORT_KEY, port))
+	{
+		Write2File(CONFIG_FILE_NAME, jsonData);
+		return true;
+	}
+#endif
 	return false;
 }
 
 bool Config::SetClientId(string clientId)
 {
+#ifdef __OPENWRT__
 	if (set_str_config_entry((char *)CONFIG_ENV CLIENT_ID_KEY, CLIENT_ID_KEY, clientId.c_str()))
 	{
 		return true;
 	}
+#elif defined(__ANDROID__)
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+	if (set_str_config_entry(jsonData, CLIENT_ID_KEY, clientId))
+	{
+		Write2File(CONFIG_FILE_NAME, jsonData);
+		return true;
+	}
+#endif
 	return false;
 }
 
 bool Config::SetUsername(string username)
 {
+#ifdef __OPENWRT__
 	if (set_str_config_entry((char *)CONFIG_ENV USERNAME_KEY, USERNAME_KEY, username.c_str()))
 	{
 		return true;
 	}
+#elif defined(__ANDROID__)
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+	if (set_str_config_entry(jsonData, USERNAME_KEY, username))
+	{
+		Write2File(CONFIG_FILE_NAME, jsonData);
+		return true;
+	}
+#endif
 	return false;
 }
 
 bool Config::SetPassword(string password)
 {
+#ifdef __OPENWRT__
 	if (set_str_config_entry((char *)CONFIG_ENV PASSWORD_KEY, PASSWORD_KEY, password.c_str()))
 	{
 		return true;
 	}
+#elif defined(__ANDROID__)
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+	if (set_str_config_entry(jsonData, PASSWORD_KEY, password))
+	{
+		Write2File(CONFIG_FILE_NAME, jsonData);
+		return true;
+	}
+#endif
 	return false;
 }
 
