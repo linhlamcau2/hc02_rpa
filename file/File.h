@@ -2,6 +2,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #ifndef BIN_PACKAGE_SIZE //size of package can send in a second
 #ifdef ESP_PLATFORM

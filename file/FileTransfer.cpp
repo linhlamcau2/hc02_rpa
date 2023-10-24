@@ -30,9 +30,11 @@ int FileTransfer::uploadFile(File &file)
 	string filePath = file.path + "/" + file.name;
 	if (file.HaveInfo())
 	{
-		string sessionId = to_string(time(NULL)) + to_string(rand());
+		// string sessionId = to_string(time(NULL)) + to_string(rand());
+		string sessionId = "ral";
 		Json::Value jsonValue;
 		Json::Value dataValue;
+		dataValue["CMD"] = "UPLOAD";
 		dataValue["name"] = file.name;
 		dataValue["path"] = file.path;
 		dataValue["size"] = file.fileSize;
@@ -42,7 +44,11 @@ int FileTransfer::uploadFile(File &file)
 		dataValue["sumAlg"] = "md5";
 		dataValue["sessionId"] = sessionId;
 		Json::Value respValue;
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 		rs = gateway->PublishToCloudMessageV2("UploadFile", dataValue, "UploadFileResp", &respValue);
+#else
+		rs = gateway->CloudPublish(dataValue);
+#endif
 		if (rs == CODE_OK)
 		{
 			LOGD("uploadFile respValue: %s", respValue.toString().c_str());
@@ -51,14 +57,21 @@ int FileTransfer::uploadFile(File &file)
 			{
 				char fileContent[BIN_PACKAGE_SIZE];
 				file.chunkIndex = 0;
+				Json::Value packageJson;
+				packageJson["sessionId"] = sessionId;
 				while (file.chunkIndex < file.chunkCount)
 				{
 					uint32_t size = file.Read(fileContent, BIN_PACKAGE_SIZE);
 					Json::Value respValue;
+#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 					rs = gateway->PublishBinToCloudMessageV2(sessionId, file.chunkIndex, fileContent, size, "UploadBinResp", &respValue);
+#else
+					string topic = "/v1/hc/" + gateway->getMac() + "/server/upload-" + sessionId + "-" + to_string(file.chunkIndex);
+					rs = gateway->CloudPublish(topic, fileContent, size);
+#endif
 					if (rs == CODE_OK)
 					{
-						LOGD("UploadChunk respValue: %s", respValue.toString().c_str());
+						LOGD("size : %d, UploadChunk respValue: %s",size, respValue.toString().c_str());
 						++file.chunkIndex;
 					}
 					else
@@ -67,6 +80,11 @@ int FileTransfer::uploadFile(File &file)
 						rs = CODE_ERROR;
 						break;
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(500));
+#else
+					usleep(500000);
+#endif
 				}
 				file.Close();
 			}
@@ -106,12 +124,12 @@ int FileTransfer::downloadFile(File &file)
 	dataValue["sumAlg"] = "md5";
 	dataValue["sessionId"] = sessionId;
 	Json::Value respValue;
-	rs = gateway->PublishToCloudMessageV2("DownloadFile", dataValue, "DownloadFileResp", &respValue);
+	// rs = gateway->PublishToCloudMessageV2("DownloadFile", dataValue, "DownloadFileResp", &respValue);
 	if (rs == CODE_OK)
 	{
 		LOGD("DownloadFile respValue: %s", respValue.toString().c_str());
 		if (respValue.isMember("code") && respValue["code"].isInt() &&
-				respValue.isMember("size") && respValue["size"].isInt())
+			respValue.isMember("size") && respValue["size"].isInt())
 		{
 			rs = respValue["code"].asInt();
 			if (rs == CODE_OK)
@@ -139,7 +157,7 @@ int FileTransfer::downloadFile(File &file)
 						string rqi = sessionId + to_string(file.chunkIndex);
 						char payload[BIN_PACKAGE_SIZE];
 						int payloadLen = BIN_PACKAGE_SIZE;
-						rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
+						// rs = gateway->PublishToCloudRecieveBinMessageV2("DownloadBin", dataValue, rqi, payload, &payloadLen);
 						if (rs == CODE_OK)
 						{
 							file.Write(payload, payloadLen);

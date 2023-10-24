@@ -51,7 +51,7 @@ int Group::GetPositionDevice(Device *device, int epid)
  */
 int Group::AddDevice(Device *device, int epId, bool sendBle)
 {
-	// TODO: Check exsit
+	// TODO: Check exist
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
 	// 	return CODE_ERROR;
 	if (!device)

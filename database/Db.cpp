@@ -202,6 +202,7 @@ int Db::checkAndAddColumn(const std::string &tableName, const std::string &colum
 
 	string sql = "SELECT sql FROM sqlite_master WHERE type='table' AND name='" + tableName + "';";
 	sqlite3_stmt *stmt;
+	int rs = CODE_ERROR;
 	if (db)
 	{
 		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL) == SQLITE_OK)
@@ -214,6 +215,7 @@ int Db::checkAndAddColumn(const std::string &tableName, const std::string &colum
 				if (tableInfo.find(dataSearch) != std::string::npos)
 				{
 					LOGW("column %s is exist", columnNameAdd.c_str());
+					rs = CODE_EXIST;
 				}
 				else
 				{
@@ -228,7 +230,7 @@ int Db::checkAndAddColumn(const std::string &tableName, const std::string &colum
 					}
 					else
 					{
-						return CODE_OK;
+						rs = CODE_OK;
 					}
 				}
 			}
@@ -247,7 +249,7 @@ int Db::checkAndAddColumn(const std::string &tableName, const std::string &colum
 	{
 		LOGE("Db null");
 	}
-	return CODE_ERROR;
+	return rs;
 }
 int Db::checkAndDelColumn(const std::string &tableName, const std::string &columnNameDel, string type)
 {
@@ -256,6 +258,7 @@ int Db::checkAndDelColumn(const std::string &tableName, const std::string &colum
 
 	string sql = "SELECT sql FROM sqlite_master WHERE type='table' AND name='" + tableName + "';";
 	sqlite3_stmt *stmt;
+	int rs = CODE_ERROR;
 	if (db)
 	{
 		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL) == SQLITE_OK)
@@ -278,12 +281,13 @@ int Db::checkAndDelColumn(const std::string &tableName, const std::string &colum
 					}
 					else
 					{
-						return CODE_OK;
+						rs = CODE_OK;
 					}
 				}
 				else
 				{
 					LOGW("column %s is not exist", columnNameDel.c_str());
+					rs = CODE_NOT_EXIST;
 				}
 			}
 			else
@@ -301,5 +305,5 @@ int Db::checkAndDelColumn(const std::string &tableName, const std::string &colum
 	{
 		LOGE("Db null");
 	}
-	return CODE_ERROR;
+	return rs;
 }

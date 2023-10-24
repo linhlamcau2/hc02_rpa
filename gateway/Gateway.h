@@ -168,6 +168,8 @@ private:
 	int OnRpcDelAllRuleInDB(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcAddDeviceByMac(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRpcUpload(Json::Value &reqValue, Json::Value &respValue);
 #else
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
@@ -229,6 +231,7 @@ private:
 	// Cấu hình HC
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);
+
 #endif // CONFIG_USE_MESSAGE_FORMAT_V2
 
 public:

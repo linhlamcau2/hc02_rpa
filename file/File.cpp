@@ -16,6 +16,7 @@ bool File::HaveInfo()
 	if (!haveInfo)
 	{
 		fstream uploadFile;
+		LOGW("filePath: %s", filePath.c_str());
 		uploadFile.open(filePath.c_str(), ios::in | ios::binary);
 		if (uploadFile.is_open())
 		{
@@ -25,7 +26,9 @@ bool File::HaveInfo()
 			uploadFile.seekg(0, ios::beg);
 			uploadFile.close();
 
+			std::cout << "File size: " << fileSize << std::endl;
 			chunkCount = fileSize / BIN_PACKAGE_SIZE;
+			LOGW("Chunk count: %d", chunkCount);
 			if (fileSize % BIN_PACKAGE_SIZE)
 				++chunkCount;
 

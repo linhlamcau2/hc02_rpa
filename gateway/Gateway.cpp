@@ -346,7 +346,8 @@ void Gateway::init()
 	string firmwareVersionCurrent = STR(VERSION);
 	if (getVersion() == "" && firmwareVersionCurrent == "1.0.10")
 	{
-		if (database->checkAndAddColumn("Gateway", "data", "TEXT") == CODE_OK)
+		int addColumnSuccess = database->checkAndAddColumn("Gateway", "data", "TEXT");
+		if (addColumnSuccess == CODE_OK || addColumnSuccess == CODE_EXIST)
 		{
 			database->GatewayUpdateVersion(this, firmwareVersionCurrent);
 			sleep(5);
@@ -1516,7 +1517,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 								LOGW("Device Attribute error");
 						}
 						else
-							LOGW("Device %s does not exsit", devId.c_str());
+							LOGW("Device %s does not exist", devId.c_str());
 					}
 				}
 			}
@@ -1545,7 +1546,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 						}
 						else
 						{
-							LOGW("Device %s does not exsit", devIdOp.c_str());
+							LOGW("Device %s does not exist", devIdOp.c_str());
 						}
 					}
 				}
@@ -1575,7 +1576,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 						}
 						else
 						{
-							LOGW("Group %s does not exsit", groupId.c_str());
+							LOGW("Group %s does not exist", groupId.c_str());
 						}
 					}
 				}
@@ -1606,7 +1607,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 							}
 							else
 							{
-								LOGW("Scene %s does not exsit", sceneId.c_str());
+								LOGW("Scene %s does not exist", sceneId.c_str());
 							}
 						}
 					}

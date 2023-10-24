@@ -62,6 +62,9 @@ public:
 
 	void init();
 
+	string getSubTopic();
+	string getPubTopic();
+
 	bool IsBusy() { return isBusy; }
 	bool IsConfig() { return isConfig; }
 	void SetConfig(bool value);

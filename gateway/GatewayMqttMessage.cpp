@@ -12,6 +12,7 @@
 #include "Config.h"
 #include "Base64.h"
 #include "DeviceBleSwitchScene6ACRgb.h"
+#include "FileTransfer.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
 #include "Wifi.h"
@@ -88,6 +89,9 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("REMOVE_POWER_SWITCH_TIMEOUT", bind(&Gateway::OnRpcRemovePowerSwitchTimeout, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
+	
+	OnDeviceRpcCallbackRegister("DEL_ALL_RULE", bind(&Gateway::OnRpcDelAllRuleInDB, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("UPLOAD", bind(&Gateway::OnRpcUpload, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
@@ -515,7 +519,7 @@ int Gateway::OnRpcEditRule(Json::Value &reqValue, Json::Value &respValue)
 			}
 			else
 			{
-				LOGW("rule %s does not exsit", eventId.c_str());
+				LOGW("rule %s does not exist", eventId.c_str());
 			}
 		}
 		respValue["DATA"] = dataJsonRsp;
@@ -550,7 +554,7 @@ int Gateway::OnRpcSwitchStatusEvent(Json::Value &reqValue, Json::Value &respValu
 			}
 			else
 			{
-				LOGW("Switch rule %s does not exsit", ruleId.c_str());
+				LOGW("Switch rule %s does not exist", ruleId.c_str());
 			}
 		}
 		else
@@ -880,7 +884,7 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 							}
 							else
 							{
-								LOGW("Device %s does not exsit", deviceId.c_str())
+								LOGW("Device %s does not exist", deviceId.c_str())
 							}
 						}
 					}
@@ -888,7 +892,7 @@ int Gateway::OnRpcEditSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 			else
 			{
-				LOGW("Scene %s does not exsit", sceneId.c_str());
+				LOGW("Scene %s does not exist", sceneId.c_str());
 			}
 			respValue["DATA"] = dataJsonRsp;
 		}
@@ -942,7 +946,7 @@ int Gateway::OnRpcDeleteSceneBle(Json::Value &reqValue, Json::Value &respValue)
 			}
 			else
 			{
-				LOGW("Scene %s does not exsit", sceneId.c_str());
+				LOGW("Scene %s does not exist", sceneId.c_str());
 			}
 		}
 		respValue["DATA"] = dataJsonRsp;
@@ -1257,7 +1261,7 @@ int Gateway::OnRpcSensorUpdate(Json::Value &reqValue, Json::Value &respValue)
 			}
 			else
 			{
-				LOGW("Device %s does not exsit", deviceId.c_str());
+				LOGW("Device %s does not exist", deviceId.c_str());
 			}
 		}
 	}
@@ -1450,7 +1454,7 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 							else
 							{
-								LOGW("Group %s does not exsit", idGroup.c_str());
+								LOGW("Group %s does not exist", idGroup.c_str());
 							}
 							if (sceneInRoom)
 							{
@@ -1577,7 +1581,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 							else
 							{
-								LOGW("Device %s does not exsit", deviceIdGroup.c_str());
+								LOGW("Device %s does not exist", deviceIdGroup.c_str());
 							}
 						}
 
@@ -1682,7 +1686,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 								}
 								else
 								{
-									LOGW("Group %s does not exsit", groupIdInScene.c_str());
+									LOGW("Group %s does not exist", groupIdInScene.c_str());
 								}
 								for (int g = 0; g < listGroupDevAddRoom[groupIdInScene].size(); g++)
 								{
@@ -1707,7 +1711,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					else
 					{
-						LOGW("Scene %s does not exsit", sceneId.c_str());
+						LOGW("Scene %s does not exist", sceneId.c_str());
 					}
 					dataJsonRsp["SCENES"].append(sceneJsonRsp);
 					if (sceneJsonRsp.isMember("SUCCESS"))
@@ -1806,14 +1810,14 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 								}
 								else
 								{
-									LOGW("Device %s does not exsit", deviceId.c_str());
+									LOGW("Device %s does not exist", deviceId.c_str());
 								}
 							}
 						}
 					}
 					else
 					{
-						LOGW("Group %s does not exsit", groupId.c_str());
+						LOGW("Group %s does not exist", groupId.c_str());
 					}
 				}
 				dataJsonRsp["GROUPS"].append(groupJsonRsp);
@@ -1855,14 +1859,14 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 								}
 								else
 								{
-									LOGW("Device %s does not exsit", deviceIdDelScene.c_str());
+									LOGW("Device %s does not exist", deviceIdDelScene.c_str());
 								}
 							}
 						}
 					}
 					else
 					{
-						LOGW("Scene %s does not exsit", sceneId.c_str());
+						LOGW("Scene %s does not exist", sceneId.c_str());
 					}
 				}
 				dataJsonRsp["SCENES"].append(sceneJsonRsp);
@@ -1964,7 +1968,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 				else
 				{
-					LOGW("Group %s does not exsit", groupId.c_str());
+					LOGW("Group %s does not exist", groupId.c_str());
 				}
 				dataJsonRsp["GROUPS"].append(groupJsonRsp);
 				if (groupJsonRsp.isMember("SUCCESS"))
@@ -2008,7 +2012,7 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				}
 				else
 				{
-					LOGW("Scene %s does not exsit", sceneId.c_str());
+					LOGW("Scene %s does not exist", sceneId.c_str());
 				}
 				dataJsonRsp["SCENES"].append(sceneJsonRsp);
 				if (sceneJsonRsp.isMember("SUCCESS"))
@@ -2402,12 +2406,12 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 				}
 				else
 				{
-					LOGW("Scene %s does not exsit", sceneId.c_str())
+					LOGW("Scene %s does not exist", sceneId.c_str())
 				}
 			}
 			else
 			{
-				LOGW("Device %s does not exsit", deviceId.c_str());
+				LOGW("Device %s does not exist", deviceId.c_str());
 			}
 		}
 		else
@@ -2463,7 +2467,7 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 					LOGW("BleProtocol null");
 			}
 			else
-				LOGW("Device %s does not exsit", deviceId.c_str());
+				LOGW("Device %s does not exist", deviceId.c_str());
 		}
 		else
 			LOGW("Data error %s", dataValue.toString().c_str());
@@ -2524,7 +2528,7 @@ int Gateway::OnRpcResetRemote(Json::Value &reqValue, Json::Value &respValue)
 			}
 			else
 			{
-				LOGW("Device %s does not exsit", deviceId.c_str());
+				LOGW("Device %s does not exist", deviceId.c_str());
 			}
 		}
 	}
@@ -2585,7 +2589,7 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 					}
 					else
 					{
-						LOGW("Scene %s does not exsit", sceneId.c_str());
+						LOGW("Scene %s does not exist", sceneId.c_str());
 					}
 				}
 				if (data.isMember("AFTER_PIR_SCENE_ID") && data["AFTER_PIR_SCENE_ID"].isString())
@@ -2604,13 +2608,13 @@ int Gateway::OnRpcScenePirLigtSensor(Json::Value &reqValue, Json::Value &respVal
 					}
 					else
 					{
-						LOGW("Scene %s does not exsit", sceneAfterId.c_str());
+						LOGW("Scene %s does not exist", sceneAfterId.c_str());
 					}
 				}
 			}
 			else
 			{
-				LOGW("Device %s does not exsit", deviceId.c_str());
+				LOGW("Device %s does not exist", deviceId.c_str());
 			}
 		}
 		dataJsonRsp["DATA"] = data;
@@ -2671,7 +2675,7 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 					}
 					else
 					{
-						LOGW("Scene %s does not exsit", sceneId.c_str());
+						LOGW("Scene %s does not exist", sceneId.c_str());
 					}
 				}
 				if (data.isMember("AFTER_PIR_SCENE_ID") && data["AFTER_PIR_SCENE_ID"].isString())
@@ -2690,13 +2694,13 @@ int Gateway::OnRpcEditScenePirLightSensor(Json::Value &reqValue, Json::Value &re
 					}
 					else
 					{
-						LOGW("Scene %s does not exsit", sceneAfterId.c_str());
+						LOGW("Scene %s does not exist", sceneAfterId.c_str());
 					}
 				}
 			}
 			else
 			{
-				LOGW("Device %s does not exsit", deviceId.c_str());
+				LOGW("Device %s does not exist", deviceId.c_str());
 			}
 		}
 		dataJsonRsp["DATA"] = data;
@@ -3469,7 +3473,7 @@ int Gateway::OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue)
 				return CODE_NOT_RESPONSE;
 			}
 
-			LOGW("Scene %s dose not exsit", sceneId.c_str());
+			LOGW("Scene %s dose not exist", sceneId.c_str());
 		}
 	}
 	return CODE_NOT_RESPONSE;
@@ -3870,6 +3874,36 @@ int Gateway::OnRpcAddDeviceByMac(Json::Value &reqValue, Json::Value &respValue)
 	else
 	{
 		LOGW("Data Add device by mac error: %s", reqValue.toString().c_str());
+	}
+	return rs;
+}
+
+int Gateway::OnRpcUpload(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Upload file");
+	respValue["CMD"] = "UPLOADRSP";
+	int rs = CODE_ERROR;
+	{
+		if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+		{
+			Json::Value data = reqValue["DATA"];
+			if (data.isMember("TYPE") && data["TYPE"].isString())
+			{
+				string type = data["TYPE"].asString();
+				if (type == "DATABASE")
+				{
+					rs = fileTransfer->uploadFile("/spiffs","smh.sqlite");
+				}
+			}
+		}
+	}
+	if (rs == CODE_OK)
+	{
+		respValue["DATA"]["STATUS"] = "SUCCESS";
+	}
+	else
+	{
+		respValue["DATA"]["STATUS"] = "FAILED";
 	}
 	return rs;
 }

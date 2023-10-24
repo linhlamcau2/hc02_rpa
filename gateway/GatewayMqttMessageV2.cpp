@@ -214,7 +214,7 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 		}
 		else
 		{
-			LOGW("Scene %s dose not exsit", sceneId.c_str());
+			LOGW("Scene %s dose not exist", sceneId.c_str());
 			respValue["data"]["code"] = CODE_NOT_FOUND_SCENE;
 		}
 	}

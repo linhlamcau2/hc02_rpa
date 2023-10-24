@@ -350,6 +350,16 @@ int CloudProtocol::CloudPublish(Json::Value payloadJson)
 	return CloudPublish(payloadJson.toString());
 }
 
+string CloudProtocol::getSubTopic()
+{
+	return this->subTopic;
+}
+
+string CloudProtocol::getPubTopic()
+{
+	return this->pubTopic;
+}
+
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 int CloudProtocol::PublishToCloudMessageV2(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
