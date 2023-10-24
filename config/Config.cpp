@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <endian.h>
+#include <fstream>
 
 #ifndef __ANDROID__
 #include <uci.h>
@@ -8,6 +9,8 @@
 
 #include "Config.h"
 #include "Log.h"
+#include "json.h"
+#include "Define.h"
 
 #define TAG "Config"
 
@@ -19,7 +22,6 @@ Config *config = NULL;
 #ifdef __OPENWRT__
 static bool get_str_config_entry(const char *name, char *value)
 {
-#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char path[STRING_VALUE_MAX_SIZE];
@@ -34,14 +36,10 @@ static bool get_str_config_entry(const char *name, char *value)
 	snprintf(value, STRING_VALUE_MAX_SIZE, "%s", ptr.o->v.string);
 	uci_free_context(ctx);
 	return true;
-#else
-	return false;
-#endif
 }
 
 static bool get_int_config_entry(const char *name, int *value)
 {
-#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char path[STRING_VALUE_MAX_SIZE];
@@ -56,14 +54,10 @@ static bool get_int_config_entry(const char *name, int *value)
 	*value = atoi(ptr.o->v.string);
 	uci_free_context(ctx);
 	return true;
-#else
-	return false;
-#endif
 }
 
 static bool set_str_config_entry(const char *name, const char *section_name, const char *value)
 {
-#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char path[STRING_VALUE_MAX_SIZE];
@@ -100,14 +94,10 @@ static bool set_str_config_entry(const char *name, const char *section_name, con
 	}
 	uci_free_context(ctx);
 	return true;
-#else
-	return false;
-#endif
 }
 
 static bool set_int_config_entry(const char *section, const char *name, int value)
 {
-#ifndef __ANDROID__
 	struct uci_context *ctx;
 	struct uci_ptr ptr;
 	char strValue[20];
@@ -144,9 +134,6 @@ static bool set_int_config_entry(const char *section, const char *name, int valu
 	}
 	uci_free_context(ctx);
 	return true;
-#else
-	return false;
-#endif
 }
 #elif defined(__ANDROID__)
 static bool get_str_config_entry(Json::Value &jsonData, string key, string &value)
@@ -242,6 +229,7 @@ void Config::ReadConfig()
 {
 	char str_temp[STRING_VALUE_MAX_SIZE];
 	int int_temp = 0;
+	string value_temp;
 
 // server
 #ifdef __OPENWRT__
