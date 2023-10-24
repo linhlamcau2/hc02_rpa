@@ -138,7 +138,7 @@ static bool set_int_config_entry(const char *section, const char *name, int valu
 #elif defined(__ANDROID__)
 static bool get_str_config_entry(Json::Value &jsonData, string key, string &value)
 {
-	if (jsonData.isMember(key) && jsonData[key].isString())
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isString())
 	{
 		string temp = jsonData[key].asString();
 		value = temp;
@@ -146,13 +146,14 @@ static bool get_str_config_entry(Json::Value &jsonData, string key, string &valu
 	}
 	else
 	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
 }
 
 static bool get_int_config_entry(Json::Value &jsonData, string key, int &value)
 {
-	if (jsonData.isMember(key) && jsonData[key].isInt())
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isInt())
 	{
 		int temp = jsonData[key].asInt();
 		value = temp;
@@ -160,32 +161,35 @@ static bool get_int_config_entry(Json::Value &jsonData, string key, int &value)
 	}
 	else
 	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
 }
 
 static bool set_str_config_entry(Json::Value &jsonData, string key, string &value)
 {
-	if (jsonData.isMember(key) && jsonData[key].isString())
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isString())
 	{
 		jsonData[key] = value;
 		return true;
 	}
 	else
 	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
 }
 
 static bool set_int_config_entry(Json::Value jsonData, string key, int &value)
 {
-	if (jsonData.isMember(key) && jsonData[key].isInt())
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isInt())
 	{
 		jsonData[key] = value;
 		return true;
 	}
 	else
 	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
 }
@@ -425,12 +429,16 @@ bool Config::SetHost(string host)
 	}
 #elif defined(__ANDROID__)
 	Json::Value jsonData;
-	OpenFile(CONFIG_FILE_NAME, jsonData);
-	if (set_str_config_entry(jsonData, HOST_KEY, host))
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		Write2File(CONFIG_FILE_NAME, jsonData);
-		return true;
+		if (set_str_config_entry(jsonData, HOST_KEY, host))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 #endif
 	return false;
 }
@@ -444,12 +452,16 @@ bool Config::SetPort(int port)
 	}
 #elif defined(__ANDROID__)
 	Json::Value jsonData;
-	OpenFile(CONFIG_FILE_NAME, jsonData);
-	if (set_int_config_entry(jsonData, PORT_KEY, port))
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		Write2File(CONFIG_FILE_NAME, jsonData);
-		return true;
+		if (set_int_config_entry(jsonData, PORT_KEY, port))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 #endif
 	return false;
 }
@@ -463,12 +475,16 @@ bool Config::SetClientId(string clientId)
 	}
 #elif defined(__ANDROID__)
 	Json::Value jsonData;
-	OpenFile(CONFIG_FILE_NAME, jsonData);
-	if (set_str_config_entry(jsonData, CLIENT_ID_KEY, clientId))
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		Write2File(CONFIG_FILE_NAME, jsonData);
-		return true;
+		if (set_str_config_entry(jsonData, CLIENT_ID_KEY, clientId))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 #endif
 	return false;
 }
@@ -482,12 +498,16 @@ bool Config::SetUsername(string username)
 	}
 #elif defined(__ANDROID__)
 	Json::Value jsonData;
-	OpenFile(CONFIG_FILE_NAME, jsonData);
-	if (set_str_config_entry(jsonData, USERNAME_KEY, username))
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		Write2File(CONFIG_FILE_NAME, jsonData);
-		return true;
+		if (set_str_config_entry(jsonData, USERNAME_KEY, username))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 #endif
 	return false;
 }
@@ -501,12 +521,16 @@ bool Config::SetPassword(string password)
 	}
 #elif defined(__ANDROID__)
 	Json::Value jsonData;
-	OpenFile(CONFIG_FILE_NAME, jsonData);
-	if (set_str_config_entry(jsonData, PASSWORD_KEY, password))
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		Write2File(CONFIG_FILE_NAME, jsonData);
-		return true;
+		if (set_str_config_entry(jsonData, PASSWORD_KEY, password))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 #endif
 	return false;
 }
