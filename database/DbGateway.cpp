@@ -31,7 +31,6 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				gateway->setMac(mac);
 				gateway->setId(id);
 				gateway->setName(name);
-				gateway->setVersion(version);
 				gateway->setBleNetkey(ble_netkey);
 				gateway->setBleAppkey(ble_appkey);
 				gateway->setBleDevicekey(ble_devicekey);
@@ -39,6 +38,13 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				gateway->setBleIvIndex(ble_iv_index);
 				gateway->setDormitory(dormitory);
 				gateway->setRefreshToken(refresh);
+
+				string versionCode = STR(VERSION);
+				if (version == "" && versionCode == "2.0.0")
+				{
+					version = versionCode;
+				}
+				gateway->setVersion(version);
 
 				LOGI("Gateway mac: %s, id: %s, name: %s, version: %s , ble_netkey: %s,ble_appkey: %s, ble_devicekey: %s, ble_addr: %d, ble_iv_index: %d, dormitory: %s, refresh_token: %s",
 					 gateway->getMac().c_str(), gateway->getId().c_str(), gateway->getName().c_str(), gateway->getVersion().c_str(), gateway->getBleNetKey().c_str(), gateway->getBleAppKey().c_str(),

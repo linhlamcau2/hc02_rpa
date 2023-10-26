@@ -324,7 +324,7 @@ int CloudProtocol::OnlineHC(string deviceName)
 	Json::Value jsonValue;
 	Json::Value datanValue;
 	datanValue["status"] = 1;
-	datanValue["version"] = gateway->getVersion();
+	datanValue["version"] = STR(VERSION);
 	datanValue["ip"] = Wifi::GetIP();
 	jsonValue["cmd"] = "homeController";
 	jsonValue["data"] = datanValue;

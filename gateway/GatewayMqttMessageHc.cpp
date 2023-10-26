@@ -6,6 +6,10 @@
 #include <fstream>
 #include <string.h>
 #include "Util.h"
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dirent.h>
 
 void Gateway::InitMqttMessageHc()
 {
@@ -17,6 +21,7 @@ void Gateway::InitMqttMessageHc()
 	OnDeviceRpcCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("CreateTunnel", bind(&Gateway::OnCreateTunnel, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
@@ -247,21 +252,65 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 	{
 		string url = reqValue["url"].asString();
 		string sha = reqValue["checkSum"].asString();
+		LOGD("url: %s", url.c_str());
+		LOGD("sha: %s", sha.c_str());
 		string cmd = "wget -P " TMP_FOLDER " " + url;
 		system(cmd.c_str());
-		if (Util::CheckSHA256(TMP_FOLDER "rd.tar.gz", sha) != CODE_OK)
-		{
-			cmd = "rm " TMP_FOLDER "rd.tar.gz";
-			system(cmd.c_str());
-		}
-		else
-		{
+		// if (Util::CheckSHA256(TMP_FOLDER "rd.tar.gz", sha) != CODE_OK)
+		// {
+		// 	cmd = "rm " TMP_FOLDER "rd.tar.gz";
+		// 	system(cmd.c_str());
+		// }
+		// else
+		// {
+#ifdef __OPENWRT__
 			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
 			system(cmd.c_str());
 			cmd = "./" TMP_FOLDER "config.sh";
 			system(cmd.c_str());
-		}
-		return CODE_OK;
+#elif defined(__ANDROID__)
+			cmd = "mount -o rw,remount /system";
+			system(cmd.c_str());
+			cmd = "rm -r" TMP_FOLDER "rd";
+			system(cmd.c_str());
+			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
+			system(cmd.c_str());
+
+			string folderBin = TMP_FOLDER "rd";
+
+			const char *folderPath = folderBin.c_str(); // Thay thế "path_to_your_folder" bằng đường dẫn thư mục bạn muốn kiểm tra.
+
+			DIR *dir;
+			struct dirent *entry;
+
+			dir = opendir(folderPath);
+			if (dir == NULL)
+			{
+				LOGW("Can not open folder: %s", folderPath);
+				return 1;
+			}
+
+			while ((entry = readdir(dir)) != NULL)
+			{
+				if (entry->d_type == DT_REG)
+				{ // Kiểm tra xem có phải là tệp tin (file) không
+					string fileBin = string(entry->d_name);
+					LOGD("file exist: %s", fileBin.c_str());
+					string pathFileBin = "/system/bin/" + fileBin;
+					LOGD("pathFileBin: %s", pathFileBin.c_str());
+
+					string copyFile = "cp -f" + folderBin + "/" + fileBin + " /system/bin/";
+					LOGD("copy file: %s", copyFile.c_str());
+					system(copyFile.c_str());
+				}
+			}
+
+			closedir(dir);
+			return 0;
+
+#endif
+		// }
+		return CODE_EXIT;
 	}
 	return CODE_ERROR;
 }
