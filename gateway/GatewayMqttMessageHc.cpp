@@ -139,11 +139,11 @@ int Gateway::OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value params = reqValue["params"];
 		if (params.isMember("type") && params["type"].isString() &&
-				params.isMember("key") && params["key"].isString() &&
-				params.isMember("user") && params["user"].isString() &&
-				params.isMember("host") && params["host"].isString() &&
-				params.isMember("serverPort") && params["serverPort"].isInt() &&
-				params.isMember("forwardPort") && params["forwardPort"].isInt())
+			params.isMember("key") && params["key"].isString() &&
+			params.isMember("user") && params["user"].isString() &&
+			params.isMember("host") && params["host"].isString() &&
+			params.isMember("serverPort") && params["serverPort"].isInt() &&
+			params.isMember("forwardPort") && params["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = params["type"].asString();
@@ -247,9 +247,9 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 	{
 		string url = reqValue["url"].asString();
 		string sha = reqValue["checkSum"].asString();
-		string cmd = "wget -P " TMP_FOLDER " "+ url;
+		string cmd = "wget -P " TMP_FOLDER " " + url;
 		system(cmd.c_str());
-		if(Util::CheckSHA256(TMP_FOLDER "rd.tar.gz", sha) != CODE_OK)
+		if (Util::CheckSHA256(TMP_FOLDER "rd.tar.gz", sha) != CODE_OK)
 		{
 			cmd = "rm " TMP_FOLDER "rd.tar.gz";
 			system(cmd.c_str());
@@ -284,6 +284,12 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 		string password = reqValue["password"].asString();
 		string client_id = "hc-" + mac;
 		string username = "hc-" + mac;
+
+#ifdef __ANDROID__
+		string cmd = "mount -o rw,remount /system";
+		system(cmd.c_str());
+#endif
+
 		if (config->SetHost("mqtt.rangdong.com.vn"))
 		{
 			if (config->SetPort(8883))

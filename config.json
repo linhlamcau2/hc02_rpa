@@ -3,5 +3,6 @@
     "port": 8883,
     "client_id": "",
     "username": "",
-    "password": ""
+    "password": "",
+    "keep_alive": 10
   }
