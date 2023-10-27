@@ -289,7 +289,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 
 			string folderBin = TMP_FOLDER "rd";
 
-			const char *folderPath = folderBin.c_str(); // Thay thế "path_to_your_folder" bằng đường dẫn thư mục bạn muốn kiểm tra.
+			const char *folderPath = folderBin.c_str();
 
 			DIR *dir;
 			struct dirent *entry;
@@ -330,11 +330,13 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			}
 
 			closedir(dir);
-			return 0;
-
+			cmd = "rm " TMP_FOLDER "rd.tar.gz";
+			system(cmd.c_str());
+			cmd = "rm -r " + folderBin;
+			system(cmd.c_str());
+			return CODE_EXIT;
 #endif
 		}
-		return CODE_EXIT;
 	}
 	return CODE_ERROR;
 }
