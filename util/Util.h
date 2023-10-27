@@ -47,7 +47,7 @@ namespace Util
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(string op, int a, int b, int c = 0);
 
-	int CheckSHA256(string filePath, string inputSHA256);
+	string calculateSHA256Checksum(string& filePath);
 
 	string ExecuteCMD(char const *command);
 	string GetCurrentTimeStr();

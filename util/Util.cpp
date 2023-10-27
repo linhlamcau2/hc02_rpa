@@ -238,39 +238,30 @@ bool Util::CompareNumber(string op, int a, int b, int c)
 	return false;
 }
 
-int Util::CheckSHA256(string filePath, string inputSHA256)
-{
-    ifstream file(filePath, ios::binary);
-    if (!file)
-    {
-        return CODE_ERROR;
+string Util::calculateSHA256Checksum(string& filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open file.");
     }
 
     SHA256_CTX sha256Context;
     SHA256_Init(&sha256Context);
 
-    char buffer[65536];
-
-    while (file)
-    {
+    char buffer[1024];
+    while (!file.eof()) {
         file.read(buffer, sizeof(buffer));
-        size_t bytesRead = file.gcount();
-        SHA256_Update(&sha256Context, buffer, bytesRead);
+        SHA256_Update(&sha256Context, buffer, file.gcount());
     }
 
-    unsigned char sha256[SHA256_DIGEST_LENGTH];
-    SHA256_Final(sha256, &sha256Context);
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_Final(hash, &sha256Context);
 
-    stringstream ss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        ss << hex << setw(2) << setfill('0') << (int)sha256[i];
+    std::stringstream checksum;
+    checksum << std::hex << std::setfill('0');
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        checksum << std::setw(2) << static_cast<int>(hash[i]);
     }
-	if(ss.str() == inputSHA256)
-	{
-		return CODE_OK;
-	}
-	return CODE_ERROR;
+    return checksum.str();
 }
 
 string Util::ExecuteCMD(char const *command)

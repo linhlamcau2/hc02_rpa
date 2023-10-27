@@ -254,19 +254,30 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		string sha = reqValue["checkSum"].asString();
 		LOGD("url: %s", url.c_str());
 		LOGD("sha: %s", sha.c_str());
-		string cmd = "wget -P " TMP_FOLDER " " + url;
+
+		string cmd = "rm " TMP_FOLDER "rd.tar.gz";
 		system(cmd.c_str());
-		// if (Util::CheckSHA256(TMP_FOLDER "rd.tar.gz", sha) != CODE_OK)
-		// {
-		// 	cmd = "rm " TMP_FOLDER "rd.tar.gz";
-		// 	system(cmd.c_str());
-		// }
-		// else
-		// {
+
+		cmd = "wget -P " TMP_FOLDER " " + url;
+		system(cmd.c_str());
+
+		string folderDownload = TMP_FOLDER "rd.tar.gz";
+		if (Util::calculateSHA256Checksum(folderDownload) != sha)
+		{
+			LOGW("checksum not match");
+			cmd = "rm " TMP_FOLDER "rd.tar.gz";
+			system(cmd.c_str());
+		}
+		else
+		{
 #ifdef __OPENWRT__
 			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
 			system(cmd.c_str());
-			cmd = "./" TMP_FOLDER "config.sh";
+			cmd = "cd " TMP_FOLDER "rd";
+			system(cmd.c_str());
+			cmd = "opkg install *.ipk";
+			system(cmd.c_str());
+			cmd = "reboot -f";
 			system(cmd.c_str());
 #elif defined(__ANDROID__)
 			cmd = "mount -o rw,remount /system";
@@ -299,7 +310,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 					string pathFileBin = "/system/bin/" + fileBin;
 					LOGD("pathFileBin: %s", pathFileBin.c_str());
 
-					string copyFile = "cp -f" + folderBin + "/" + fileBin + " /system/bin/";
+					string copyFile = "cp -f " + folderBin + "/" + fileBin + " /system/bin/";
 					LOGD("copy file: %s", copyFile.c_str());
 					system(copyFile.c_str());
 				}
@@ -309,7 +320,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			return 0;
 
 #endif
-		// }
+		}
 		return CODE_EXIT;
 	}
 	return CODE_ERROR;
