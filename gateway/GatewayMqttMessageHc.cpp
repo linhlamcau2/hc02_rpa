@@ -301,18 +301,31 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 				return 1;
 			}
 
+			string tailFile = ".apk";
 			while ((entry = readdir(dir)) != NULL)
 			{
 				if (entry->d_type == DT_REG)
 				{ // Kiểm tra xem có phải là tệp tin (file) không
 					string fileBin = string(entry->d_name);
 					LOGD("file exist: %s", fileBin.c_str());
-					string pathFileBin = "/system/bin/" + fileBin;
-					LOGD("pathFileBin: %s", pathFileBin.c_str());
+					if (fileBin.find(tailFile) != std::string::npos)
+					{
+						cmd = "pm uninstall vn.com.rangdong.hcapp";
+						system(cmd.c_str());
+						sleep(20);
+						cmd = "pm install " + fileBin;
+						system(cmd.c_str());
+						sleep(10);
+					}
+					else
+					{
+						string pathFileBin = "/system/bin/" + fileBin;
+						LOGD("pathFileBin: %s", pathFileBin.c_str());
 
-					string copyFile = "cp -f " + folderBin + "/" + fileBin + " /system/bin/";
-					LOGD("copy file: %s", copyFile.c_str());
-					system(copyFile.c_str());
+						string copyFile = "cp -f " + folderBin + "/" + fileBin + " /system/bin/";
+						LOGD("copy file: %s", copyFile.c_str());
+						system(copyFile.c_str());
+					}
 				}
 			}
 
