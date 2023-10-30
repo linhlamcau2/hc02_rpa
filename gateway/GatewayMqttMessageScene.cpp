@@ -332,6 +332,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 					failedList.append(deviceInScene->device->GetId());
 				}
 			}
+			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList);
 			delSceneBle(sceneBle);
 
 			printScene();
@@ -340,7 +341,6 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["id"] = sceneBle->GetId();
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList);
 		}
 		else
 		{

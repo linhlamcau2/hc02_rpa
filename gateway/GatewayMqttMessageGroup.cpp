@@ -391,9 +391,10 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 					failedList.append(deviceInGroup->device->GetId());
 				}
 			}
+
+			pushMsgHcCoreToHcApp("delGroup", groupId, group->GetName(), successList);
 			delGroup(group);
 			printGroup();
-			pushMsgHcCoreToHcApp("delGroup", groupId, group->GetName(), successList);
 
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
