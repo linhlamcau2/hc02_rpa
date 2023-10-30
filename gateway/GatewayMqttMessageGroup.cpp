@@ -155,6 +155,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 		string groupName = reqValue["name"].asString();
 		Json::Value devicesValue = reqValue["devices"];
 		// TODO: add start address of normal group
+		string roomId;
 		Group *group = new Group(groupId, getNextGroupAddr(), groupName);
 		if (group)
 		{
@@ -162,7 +163,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 				{
-					string roomId = reqValue["roomId"].asString();
+					roomId = reqValue["roomId"].asString();
 					Room *room = getRoomFromId(roomId);
 					if (room)
 					{
@@ -201,7 +202,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
 				printGroup();
-				pushMsgHcCoreToHcApp("createGroup", groupId, groupName, successList);
+				pushMsgHcCoreToHcApp("createGroup", groupId, groupName, successList, roomId);
 			}
 			else
 			{
@@ -263,7 +264,7 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
 			printGroup();
-			pushMsgHcCoreToHcApp("addDevToGroup", groupId, group->GetName(), successList);
+			pushMsgHcCoreToHcApp("addDevToGroup", groupId, group->GetName(), successList, "");
 		}
 		else
 		{
@@ -353,7 +354,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
 			printGroup();
-			pushMsgHcCoreToHcApp("delDevFromGroup", groupId, group->GetName(), successList);
+			pushMsgHcCoreToHcApp("delDevFromGroup", groupId, group->GetName(), successList, "");
 		}
 		else
 		{
@@ -392,7 +393,7 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 
-			pushMsgHcCoreToHcApp("delGroup", groupId, group->GetName(), successList);
+			pushMsgHcCoreToHcApp("delGroup", groupId, group->GetName(), successList, "");
 			delGroup(group);
 			printGroup();
 

@@ -290,7 +290,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["id"] = roomId;
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
-				pushMsgHcCoreToHcApp("createRoom", roomId, roomName, objSuccessList);
+				pushMsgHcCoreToHcApp("createRoom", roomId, roomName, objSuccessList, "");
 			}
 			else
 			{
@@ -527,7 +527,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("addDevToRoom", roomId, room->GetName(), successList);
+			pushMsgHcCoreToHcApp("addDevToRoom", roomId, room->GetName(), successList, "");
 
 			if (room)
 			{
@@ -647,7 +647,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("delDevFromRoom", roomId, room->GetName(), successList);
+			pushMsgHcCoreToHcApp("delDevFromRoom", roomId, room->GetName(), successList, "");
 
 			if (room)
 			{
@@ -753,7 +753,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 
 			printScene();
 
-			pushMsgHcCoreToHcApp("delDevFromRoom", roomId, room->GetName(), successList);
+			pushMsgHcCoreToHcApp("delDevFromRoom", roomId, room->GetName(), successList, "");
 			delRoom(room);
 
 			for (auto &[id, status] : devicesStatusConfig)
