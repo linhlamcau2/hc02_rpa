@@ -52,6 +52,7 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRpcAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DelAllDevice", bind(&Gateway::OnRpcDelAllDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DEVICE", bind(&Gateway::OnRpcControlDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("DEVICE_CALIB", bind(&Gateway::OnRpcCablibDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("GROUP", bind(&Gateway::OnRpcControlGroup, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("SCENE", bind(&Gateway::OnRpcControlSceneBle, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRpcUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
@@ -89,7 +90,7 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("REMOVE_POWER_SWITCH_TIMEOUT", bind(&Gateway::OnRpcRemovePowerSwitchTimeout, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("ADD_DEVICE_SMARTHOME_TO_ROOM", bind(&Gateway::OnRpcAddDeviceSmartHomeToRoom, this, placeholders::_1, placeholders::_2));
-	
+
 	OnDeviceRpcCallbackRegister("DEL_ALL_RULE", bind(&Gateway::OnRpcDelAllRuleInDB, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("UPLOAD", bind(&Gateway::OnRpcUpload, this, placeholders::_1, placeholders::_2));
 
@@ -126,6 +127,7 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("NEW_DEVICE", bind(&Gateway::OnRpcAddTuyaDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DelAllDevice", bind(&Gateway::OnRpcDelAllDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DEVICE", bind(&Gateway::OnRpcControlDevice, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("DEVICE_CALIB", bind(&Gateway::OnRpcCablibDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("GROUP", bind(&Gateway::OnRpcControlGroup, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("SCENE", bind(&Gateway::OnRpcControlSceneBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRpcUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
@@ -3397,6 +3399,46 @@ int Gateway::OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_NOT_RESPONSE;
 }
 
+int Gateway::OnRpcCablibDevice(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcCablibDevice");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value dataValue = reqValue["DATA"];
+		if (dataValue.isMember("DEVICE_ID") && dataValue["DEVICE_ID"].isString() &&
+			dataValue.isMember("PROPERTIES") && dataValue["PROPERTIES"].isArray())
+		{
+			string deviceId = dataValue["DEVICE_ID"].asString();
+			Json::Value properties = dataValue["PROPERTIES"];
+			Device *device = getDeviceFromId(deviceId);
+			if (device)
+			{
+				if (device->GetType() == BLE_SWITCH_RGB_CURTAIN || device->GetType() == BLE_SWITCH_RGB_CURTAIN_SQUARE || device->GetType() == BLE_SWITCH_CURTAIN)
+				{
+					device->DoJsonArray(properties);
+				}
+				else
+				{
+					LOGW("Device is not curtain");
+				}
+			}
+			else
+			{
+				LOGW("Device not found");
+			}
+		}
+		else
+		{
+			LOGW("Format error");
+		}
+	}
+	else
+	{
+		LOGW("Format error");
+	}
+	return CODE_NOT_RESPONSE;
+}
+
 int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
@@ -3892,7 +3934,7 @@ int Gateway::OnRpcUpload(Json::Value &reqValue, Json::Value &respValue)
 				string type = data["TYPE"].asString();
 				if (type == "DATABASE")
 				{
-					rs = fileTransfer->uploadFile("/spiffs","smh.sqlite");
+					rs = fileTransfer->uploadFile("/spiffs", "smh.sqlite");
 				}
 			}
 		}

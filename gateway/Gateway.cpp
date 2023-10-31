@@ -1032,7 +1032,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_PIR_LIGHT_SENSOR_DC:
 	case BLE_PIR_LIGHT_SENSOR_DC_CB09:
 	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
-		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version);
+		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
 		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, type, version);

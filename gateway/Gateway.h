@@ -153,6 +153,7 @@ private:
 	int OnRpcDeleteSceneDelay(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcControlDevice(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcCablibDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcUpdateAllTelemetry(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue);

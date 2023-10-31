@@ -12,6 +12,8 @@ DeviceBleCurtain::DeviceBleCurtain(string id, string name, string mac, string da
     modules.push_back(moduleControlPause);
     moduleControlPercent = new ModuleControlPercent(this, addr);
     modules.push_back(moduleControlPercent);
+    moduleConfigTypeMotor = new ModuleConfigTypeMotor(this, addr);
+    modules.push_back(moduleConfigTypeMotor);
     moduleRgb = new ModuleRgb(this, addr, 0);
     modules.push_back(moduleRgb);
 

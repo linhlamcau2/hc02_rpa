@@ -5,6 +5,7 @@
 #include "module/ModuleControlOpen.h"
 #include "module/ModuleControlPause.h"
 #include "module/ModuleControlPercent.h"
+#include "module/ModuleConfigTypeMotor.h"
 #include "module/ModuleRgb.h"
 
 using namespace std;
@@ -16,6 +17,7 @@ private:
     ModuleControlOpen *moduleControlOpen;
     ModuleControlPause *moduleControlPause;
     ModuleControlPercent *moduleControlPercent;
+    ModuleConfigTypeMotor *moduleConfigTypeMotor;
     ModuleRgb *moduleRgb;
 
 public:

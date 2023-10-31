@@ -86,6 +86,20 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			CheckTrigger();
 			return false;
 		}
+
+		if (data[1] == 0x04 && data[2] == 0x01)
+		{
+			typedef struct __attribute__((packed))
+			{
+				uint16_t lux;
+				uint16_t scene;
+			} data_message_t;
+			data_message_t *data_message = (data_message_t *)&data[3];
+			lux = (data_message->lux);
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			return false;
+		} 
 	}
 	return true;
 }
