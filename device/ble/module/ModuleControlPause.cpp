@@ -58,7 +58,9 @@ int ModuleControlPause::InputData(uint8_t *data, int len, Json::Value &jsonValue
 		uint8_t type;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == PAUSE)) || (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PAUSE))
+	if ((data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING && ((data_message->header & 0x00FF) == PAUSE)) ||
+		// (data_message->opcode == 0x52 && data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN && ((data_message->header & 0x00FF) == PAUSE)) ||
+		(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PAUSE))
 	{
 		value = 1;
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -77,12 +79,12 @@ bool ModuleControlPause::CheckData(Json::Value &dataValue, bool &rs)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t value1 = 0, value2 = 0;
 			string op = dataValue["OP"].asString();
@@ -124,7 +126,7 @@ int ModuleControlPause::Do(Json::Value &dataValue)
 	LOGD("ModuleControlPause Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_PAUSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_PAUSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].isInt())
 	{
 		int value = dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].asInt();
 		if (value)
@@ -138,11 +140,11 @@ int ModuleControlPause::Do(Json::Value &dataValue)
 	}
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int percent = dataValue["VALUE"].asInt();
 			if (bleProtocol)

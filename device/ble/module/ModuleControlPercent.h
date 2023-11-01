@@ -6,7 +6,8 @@ using namespace std;
 class ModuleControlPercent : public Module
 {
 protected:
-	int id;
+	int idStatus;
+	int idPercent;
 	uint8_t percent;
 
 public:
