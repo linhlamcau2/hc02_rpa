@@ -295,7 +295,7 @@ public:
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
 	int ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t relay, uint8_t value);
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
-	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
+	int CountDownSwitch(uint16_t devAddr, uint16_t timer, uint8_t status);
 	int UpdateStatusRelaySwitch(uint16_t devAddr);
 
 	// screen touch

@@ -3,6 +3,7 @@
 #include "DeviceBle.h"
 #include "module/ModuleButton.h"
 #include "module/ModuleOnOff.h"
+#include "module/ModuleCountDownSwitch.h"
 #include "module/ModuleRgb.h"
 
 using namespace std;
@@ -13,6 +14,7 @@ private:
 	ModuleButton *moduleButton;
 	ModuleOnOff *moduleOnOff;
 	ModuleRgb *moduleRgb;
+	ModuleCountDownSwitch *moduleCountDownSwitch;
 	uint8_t element;
 
 public:

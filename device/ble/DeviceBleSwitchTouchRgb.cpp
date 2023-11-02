@@ -14,5 +14,7 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 	modules.push_back(moduleOnOff);
 	moduleRgb = new ModuleRgb(this, addr, 0);
 	modules.push_back(moduleRgb);
+	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
+	modules.push_back(moduleCountDownSwitch);
 	powerSource = POWER_AC;
 }

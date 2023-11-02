@@ -3194,7 +3194,7 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	return CODE_ERROR;
 }
 
-int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
+int BleProtocol::CountDownSwitch(uint16_t devAddr, uint16_t timer, uint8_t status)
 {
 	LOGD("SetTimer 0x%04x, timer %d, status %d", devAddr, timer, status);
 	uint8_t dataRsp[100];
@@ -3209,7 +3209,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 		uint8_t tidPos;
 		uint16_t header;
 		uint8_t status;
-		uint32_t timer;
+		uint16_t timer;
 	} timer_message_t;
 	timer_message_t timer_message = {0};
 	memset(&timer_message, 0x00, sizeof(timer_message));
@@ -3219,7 +3219,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	timer_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	timer_message.header = RD_OPCODE_CONFIG_SET_TIMER;
 	timer_message.status = status;
-	timer_message.timer = bswap_32(timer);
+	timer_message.timer = timer;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, sizeof(timer_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
@@ -3231,7 +3231,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 			uint16_t vendorId;
 			uint16_t header;
 			uint8_t status;
-			uint8_t timer[4];
+			uint16_t timer;
 		} timer_rsp_message_t;
 		timer_rsp_message_t *timer_rsp_message = (timer_rsp_message_t *)dataRsp;
 		if (timer_rsp_message->header == 0x070b && timer_rsp_message->status == status)
