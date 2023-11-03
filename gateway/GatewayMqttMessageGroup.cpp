@@ -427,6 +427,10 @@ int Gateway::OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue)
 			database->GroupUpdate(group);
 		}
 	}
+	Json::Value dataPushToHcApp;
+	dataPushToHcApp["cmd"] = "updateGroupName";
+	dataPushToHcApp["data"] = reqValue;
+	PublishToLocalMessage(dataPushToHcApp);
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "updateGroupNameRsp";
 	return CODE_OK;

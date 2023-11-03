@@ -779,6 +779,10 @@ int Gateway::OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue)
 			database->SceneBleUpdate(scene);
 		}
 	}
+	Json::Value dataPushToHcApp;
+	dataPushToHcApp["cmd"] = "updateSceneName";
+	dataPushToHcApp["data"] = reqValue;
+	PublishToLocalMessage(dataPushToHcApp);
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "updateSceneNameRsp";
 	return CODE_OK;
