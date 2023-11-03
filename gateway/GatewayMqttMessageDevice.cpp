@@ -375,6 +375,10 @@ int Gateway::OnUpdateDeviceName(Json::Value &reqValue, Json::Value &respValue)
 			database->DeviceUpdate(device);
 		}
 	}
+	Json::Value dataPushToHcApp;
+	dataPushToHcApp["cmd"] = "updateDeviceName";
+	dataPushToHcApp["data"] = reqValue;
+	PublishToLocalMessage(dataPushToHcApp);
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "updateDeviceNameRsp";
 	return CODE_OK;

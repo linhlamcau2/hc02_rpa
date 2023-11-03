@@ -1567,7 +1567,7 @@ int Gateway::pushStopAddHc(Json::Value &dataValue)
 	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
 }
 
-int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice)
+int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
 {
 	Json::Value msg;
 	msg["cmd"] = cmd;
@@ -1575,6 +1575,8 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
+	if(roomId != "")
+		msg["data"]["roomId"] = roomId;
 	return PublishToLocalMessage(msg);
 }
 

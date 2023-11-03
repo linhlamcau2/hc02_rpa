@@ -136,6 +136,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 		{
 			if (AddNewSceneBle(sceneBle, true))
 			{
+				string roomId;
 				Json::Value deviceList = reqValue["devices"];
 				for (auto &deviceValue : deviceList)
 				{
@@ -162,7 +163,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 				if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 				{
-					string roomId = reqValue["roomId"].asString();
+					roomId = reqValue["roomId"].asString();
 					Room *room = getRoomFromId(roomId);
 					if (room)
 					{
@@ -174,7 +175,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["addr"] = sceneAddr;
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
-				pushMsgHcCoreToHcApp("createScene", sceneId, sceneBle->GetName(), successList);
+				pushMsgHcCoreToHcApp("createScene", sceneId, sceneBle->GetName(), successList, roomId);
 
 				printScene();
 			}
@@ -292,7 +293,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("editScene", sceneId, sceneBle->GetName(), successList);
+			pushMsgHcCoreToHcApp("editScene", sceneId, sceneBle->GetName(), successList, "");
 
 			printScene();
 		}
@@ -332,6 +333,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 					failedList.append(deviceInScene->device->GetId());
 				}
 			}
+			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList, "");
 			delSceneBle(sceneBle);
 
 			printScene();
@@ -340,7 +342,6 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["id"] = sceneBle->GetId();
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList);
 		}
 		else
 		{
@@ -778,6 +779,10 @@ int Gateway::OnUpdateSceneName(Json::Value &reqValue, Json::Value &respValue)
 			database->SceneBleUpdate(scene);
 		}
 	}
+	Json::Value dataPushToHcApp;
+	dataPushToHcApp["cmd"] = "updateSceneName";
+	dataPushToHcApp["data"] = reqValue;
+	PublishToLocalMessage(dataPushToHcApp);
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "updateSceneNameRsp";
 	return CODE_OK;
