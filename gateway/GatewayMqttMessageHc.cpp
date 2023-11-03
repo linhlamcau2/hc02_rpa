@@ -247,7 +247,7 @@ int Gateway::OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("Create Tunnel");
+	LOGD("OTA HC");
 	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checkSum") && reqValue["checkSum"].isString())
 	{
 		string url = reqValue["url"].asString();
@@ -270,72 +270,27 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		}
 		else
 		{
-#ifdef __OPENWRT__
 			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
 			system(cmd.c_str());
 			cmd = "cd " TMP_FOLDER "rd";
 			system(cmd.c_str());
-			cmd = "opkg install *.ipk";
-			system(cmd.c_str());
-			cmd = "reboot -f";
-			system(cmd.c_str());
-#elif defined(__ANDROID__)
-			cmd = "mount -o rw,remount /system";
-			system(cmd.c_str());
-			cmd = "rm -r" TMP_FOLDER "rd";
-			system(cmd.c_str());
-			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
-			system(cmd.c_str());
 
-			string folderBin = TMP_FOLDER "rd";
-
-			const char *folderPath = folderBin.c_str();
-
-			DIR *dir;
-			struct dirent *entry;
-
-			dir = opendir(folderPath);
-			if (dir == NULL)
+			string fileConfigOta = TMP_FOLDER "rd/ota.sh";
+			struct stat st;
+			if (stat(fileConfigOta.c_str(), &st) == 0)
 			{
-				LOGW("Can not open folder: %s", folderPath);
-				return 1;
+				cmd  = "chmod +x " TMP_FOLDER "rd/ota.sh";
+				system(cmd.c_str());
+				string versionCurrent = STR(VERSION);
+				cmd = "./" TMP_FOLDER "rd/ota.sh " + versionCurrent;
+				system(cmd.c_str());
+				sleep(10);
+				return CODE_EXIT;
 			}
-
-			string tailFile = ".apk";
-			while ((entry = readdir(dir)) != NULL)
+			else
 			{
-				if (entry->d_type == DT_REG)
-				{ // Kiểm tra xem có phải là tệp tin (file) không
-					string fileBin = string(entry->d_name);
-					LOGD("file exist: %s", fileBin.c_str());
-					if (fileBin.find(tailFile) != std::string::npos)
-					{
-						cmd = "pm uninstall vn.com.rangdong.hcapp";
-						system(cmd.c_str());
-						sleep(20);
-						cmd = "pm install " + fileBin;
-						system(cmd.c_str());
-						sleep(10);
-					}
-					else
-					{
-						string pathFileBin = "/system/bin/" + fileBin;
-						LOGD("pathFileBin: %s", pathFileBin.c_str());
-
-						string copyFile = "cp -f " + folderBin + "/" + fileBin + " /system/bin/";
-						LOGD("copy file: %s", copyFile.c_str());
-						system(copyFile.c_str());
-					}
-				}
+				LOGW("Not found ota file");
 			}
-
-			closedir(dir);
-			cmd = "rm " TMP_FOLDER "rd.tar.gz";
-			system(cmd.c_str());
-			cmd = "rm -r " + folderBin;
-			system(cmd.c_str());
-			return CODE_EXIT;
-#endif
 		}
 	}
 	return CODE_ERROR;
