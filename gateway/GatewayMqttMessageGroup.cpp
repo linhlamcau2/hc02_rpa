@@ -426,6 +426,16 @@ int Gateway::OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue)
 			group->SetName(name);
 			database->GroupUpdate(group);
 		}
+		Room *room = getRoomFromId(id);
+		if (room)
+		{
+			room->SetName(name);
+			database->RoomUpdate(room, room->GetAddr());
+			Json::Value temp;
+			temp["cmd"] = "updateRoomName";
+			temp["data"] = reqValue;
+			PublishToLocalMessage(temp);
+		}
 	}
 	Json::Value dataPushToHcApp;
 	dataPushToHcApp["cmd"] = "updateGroupName";

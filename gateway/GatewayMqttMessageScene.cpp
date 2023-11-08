@@ -56,6 +56,10 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 		LOGW("OnControlScene %s format error", reqValue.toString().c_str());
 	}
+	Json::Value dataPushToHcApp;
+	dataPushToHcApp["cmd"] = "controlScene";
+	dataPushToHcApp["data"] = reqValue;
+	PublishToLocalMessage(dataPushToHcApp);
 	respValue["cmd"] = "controlSceneRsp";
 	return CODE_OK;
 }

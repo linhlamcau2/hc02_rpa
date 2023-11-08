@@ -42,7 +42,8 @@ int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
 	{
 		module->BuildTelemetryValue(pushDataValue);
 	}
-	pushDataValue["stt"] = isOnline();
+	int temp = isOnline();
+	pushDataValue["stt"] = temp;
 	return CODE_OK;
 }
 
