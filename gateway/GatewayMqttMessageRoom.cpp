@@ -873,7 +873,7 @@ int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
 		if (room)
 		{
 			room->SetName(name);
-			database->RoomUpdate(room, room->GetAddr());
+			database->RoomUpdate(room);
 		}
 		Group *group = getGroupFromId(id);
 		if (group)

@@ -17,6 +17,8 @@ void Gateway::InitMqttMessageScene()
 	OnDeviceRpcCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("addDevToScene", bind(&Gateway::OnAddDevToScene, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delDevToScene", bind(&Gateway::OnDelDevToScene, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
@@ -31,6 +33,8 @@ void Gateway::InitMqttMessageScene()
 	OnLocalCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("addDevToScene", bind(&Gateway::OnAddDevToScene, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("delDevToScene", bind(&Gateway::OnDelDevToScene, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
@@ -384,6 +388,139 @@ int Gateway::OnCallScene(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue)
+{
+		if (reqValue.isMember("id") && reqValue["id"].isString() &&
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
+	{
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
+		string sceneId = reqValue["id"].asString();
+		string sceneName = reqValue["name"].asString();
+		SceneBle *sceneBle = getSceneBleFromId(sceneId);
+		if (sceneBle)
+		{
+			Json::Value deviceList = reqValue["devices"];
+			for (auto &deviceValue : deviceList)
+			{
+				if (deviceValue.isObject() &&
+					deviceValue.isMember("id") && deviceValue["id"].isString() &&
+					deviceValue.isMember("data") && deviceValue["data"].isObject())
+				{
+					Json::Value deviceProperties = deviceValue["data"];
+					string deviceId = deviceValue["id"].asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
+					{
+						if (sceneBle->AddDevice(device, deviceProperties, true, true) == CODE_OK)
+						{
+							successList.append(deviceId);
+						}
+						else
+						{
+							failedList.append(deviceId);
+						}
+					}
+				}
+			}
+
+			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
+			{
+				string roomId = reqValue["roomId"].asString();
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					room->AddSceneBle(sceneBle, true, true);
+				}
+			}
+			respValue["data"]["code"] = CODE_OK;
+			respValue["data"]["id"] = sceneId;
+			respValue["data"]["success"] = successList;
+			respValue["data"]["failed"] = failedList;
+			pushMsgHcCoreToHcApp("addDevToScene", sceneId, sceneBle->GetName(), successList, "");
+
+			printScene();
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_NOT_FOUND_SCENE;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "addDevToSceneRsp";
+	return CODE_OK;
+}
+int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
+{
+		if (reqValue.isMember("id") && reqValue["id"].isString() &&
+		reqValue.isMember("name") && reqValue["name"].isString() &&
+		reqValue.isMember("devices") && reqValue["devices"].isArray())
+	{
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
+		string sceneId = reqValue["id"].asString();
+		string sceneName = reqValue["name"].asString();
+		SceneBle *sceneBle = getSceneBleFromId(sceneId);
+		if (sceneBle)
+		{
+			Json::Value deviceList = reqValue["devices"];
+			for (auto &deviceValue : deviceList)
+			{
+				if (deviceValue.isObject() &&
+					deviceValue.isMember("id") && deviceValue["id"].isString() &&
+					deviceValue.isMember("data") && deviceValue["data"].isObject())
+				{
+					Json::Value deviceProperties = deviceValue["data"];
+					string deviceId = deviceValue["id"].asString();
+					Device *device = getDeviceFromId(deviceId);
+					if (device)
+					{
+						if (sceneBle->DelDevice(device, true, true) == CODE_OK)
+						{
+							successList.append(deviceId);
+						}
+						else
+						{
+							failedList.append(deviceId);
+						}
+					}
+				}
+			}
+
+			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
+			{
+				string roomId = reqValue["roomId"].asString();
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					room->AddSceneBle(sceneBle, true, true);
+				}
+			}
+			respValue["data"]["code"] = CODE_OK;
+			respValue["data"]["id"] = sceneId;
+			respValue["data"]["success"] = successList;
+			respValue["data"]["failed"] = failedList;
+			pushMsgHcCoreToHcApp("delDevToScene", sceneId, sceneBle->GetName(), successList, "");
+
+			printScene();
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_NOT_FOUND_SCENE;
+		}
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delDevToSceneRsp";
+	return CODE_OK;
+}
+
 int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene)
 {
 	if (!device)
@@ -696,6 +833,7 @@ int Gateway::OnDelSceneController(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGD("OnAddFavoriteScene");
 	if (reqValue.isMember("scenelist") && reqValue["scenelist"].isArray())
 	{
 		Json::Value scenes = reqValue["scenelist"];
@@ -707,14 +845,14 @@ int Gateway::OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 				SceneBle *scene = getSceneBleFromId(temp_scene);
 				if (scene)
 				{
-					for (const auto &[id, sceneBle] : sceneBleList)
-					{
-						if (id == temp_scene)
-						{
-							sceneBle->SetIsFavorite(false);
-							database->SceneBleUpdateFavorite(sceneBle);
-						}
-					}
+					// for (const auto &[id, sceneBle] : sceneBleList)
+					// {
+					// 	if (id == temp_scene)
+					// 	{
+							scene->SetIsFavorite(true);
+							database->SceneBleUpdateFavorite(scene);
+					// 	}
+					// }
 				}
 			}
 		}

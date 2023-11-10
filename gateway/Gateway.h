@@ -146,6 +146,8 @@ private:
 	int OnEditScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteScene(Json::Value &reqValue, Json::Value &respValue);
 	int OnCallScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue);
 
 	int ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
 	int ConfigSceneForPirSensor(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);

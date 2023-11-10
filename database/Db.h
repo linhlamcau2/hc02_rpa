@@ -98,7 +98,7 @@ public:
 
 	int RoomRead();
 	int RoomAdd(Room *room);
-	int RoomUpdate(Room *room, int id);
+	int RoomUpdate(Room *room);
 	int RoomDel(Room *room);
 	int RoomDelAll();
 

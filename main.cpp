@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 #ifndef __ANDROID__
 	log_set_level(LOG_DEBUG);
 #endif
-	LOGI("Start");
+	LOGI("Start V2.0.0");
 
 	buttonSignal = new ButtonSignal();
 	signal(SIGUSR1, signal_handler);

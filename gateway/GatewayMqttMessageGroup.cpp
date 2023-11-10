@@ -430,7 +430,7 @@ int Gateway::OnUpdateGroupName(Json::Value &reqValue, Json::Value &respValue)
 		if (room)
 		{
 			room->SetName(name);
-			database->RoomUpdate(room, room->GetAddr());
+			database->RoomUpdate(room);
 			Json::Value temp;
 			temp["cmd"] = "updateRoomName";
 			temp["data"] = reqValue;
