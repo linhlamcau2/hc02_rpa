@@ -454,8 +454,6 @@ void Gateway::init()
 
 	database->GatewayRead();
 	database->DeviceRead();
-	Json::Value jsonData;
-	gateway->AddNewDevice("", "all", "ble", jsonData, 65535, 0, 0, false);
 	database->DeviceBleChildRead();
 	database->DeviceAttributeRead();
 	database->RoomRead();
