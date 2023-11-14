@@ -1044,6 +1044,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, version);
 		break;
 	case BLE_DOOR_SENSOR:
+	case BLE_DOOR_CB16_SENSOR:
 		device = new DeviceBleDoorSensor(id, name, mac, data, addr, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
@@ -1995,6 +1996,41 @@ void Gateway::DelAllRoom()
 		delete room;
 	roomList.clear();
 	roomListMtx.unlock();
+}
+
+void Gateway::printGroup()
+{
+	for (auto &[id, grp] : groupList)
+	{
+		LOGW("group: %s", id.c_str());
+		for (auto &dev : grp->deviceList)
+		{
+			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
+}
+
+void Gateway::printScene()
+{
+	for (auto &[id, sce] : sceneBleList)
+	{
+		LOGW("scene: %s", id.c_str());
+		for (auto &dev : sce->deviceList)
+		{
+			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
+}
+void Gateway::printRoom()
+{
+	for (auto &[id, rm] : roomList)
+	{
+		LOGW("room: %s", id.c_str());
+		for (auto &dev : rm->deviceList)
+		{
+			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
 }
 
 int Gateway::Do(Json::Value &dataValue)

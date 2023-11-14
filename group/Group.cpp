@@ -57,6 +57,11 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 	if (!device)
 		return CODE_ERROR;
 
+	if (GetPositionDevice(device, epId) >= 0)
+	{
+		DelDevice(device, epId);
+	}
+
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);

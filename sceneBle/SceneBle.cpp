@@ -75,6 +75,11 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 		}
 	}
 #else
+
+	if (GetPositionDevice(device) >=0)
+	{
+		DelDevice(device);
+	}
 	if (addOnlyDB)
 	{
 		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);

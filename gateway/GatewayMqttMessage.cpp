@@ -1502,6 +1502,10 @@ int Gateway::OnRpcCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		{
 			LOGW("OnRpcCreateRoom error: %s", respValue.toString().c_str());
 		}
+
+		printRoom();
+		printGroup();
+		printScene();
 	}
 	return CODE_OK;
 }
@@ -1540,24 +1544,59 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value groupAddDev = groupsAddDev[i];
 				if (groupAddDev.isMember("GROUP_ID") && groupAddDev["GROUP_ID"].isString() && groupAddDev.isMember("DEVICES") && groupAddDev["DEVICES"].isArray())
 				{
+					string groupName = "";
+					if (groupAddDev.isMember("NAME") && groupAddDev["NAME"].isString())
+						groupName = groupAddDev["NAME"].asString();
 					string groupId = groupAddDev["GROUP_ID"].asString();
 					groupJsonRsp["GROUP_ID"] = groupId;
 					Json::Value devicesInGroupAddRoom = groupAddDev["DEVICES"];
+
+					room = getRoomFromId(groupId);
 					Group *groupOfGw = gateway->getGroupFromId(groupId);
-					if (groupOfGw)
+					if (!groupOfGw) // group chua co thong tin -> tao moi
 					{
-						if (!isRoom)
+						string nameGroup;
+						if (groupAddDev.isMember("NAME") && groupAddDev["NAME"].isString())
+							nameGroup = groupAddDev["NAME"].asString();
+
+						// lay dia chi unicast tiep theo
+						int groupAddr = 1;
+						groupListMtx.lock();
+						for (const auto &[id, group] : groupList)
+						{
+							if (group->GetAddr() >= groupAddr)
+							{
+								groupAddr = group->GetAddr() + 1;
+							}
+						}
+						groupListMtx.unlock();
+						
+						// tao room dau tien
+						if (!isRoom )
 						{
 							isRoom = true;
 							roomId = groupId;
-							roomUnicast = groupOfGw->GetAddr();
-							room = getRoomFromId(roomId);
+							roomUnicast = groupAddr;
 							if (!room)
 							{
-								room = new Room(roomId, roomUnicast, roomName);
+								room = new Room(roomId, roomUnicast, "");
 								room = gateway->AddNewRoom(room, true, true);
 							}
 						}
+
+						groupOfGw = new Group(groupId, groupAddr, nameGroup);
+						if (groupOfGw)
+						{
+							AddNewGroup(groupOfGw, true, true);
+						}
+					}
+					if (groupOfGw)
+					{
+						if (!isRoom )
+							isRoom = true;
+
+						if (room)
+							room->AddGroup(groupOfGw, true, true);
 						for (Json::ArrayIndex j = 0; j < devicesInGroupAddRoom.size(); j++)
 						{
 							string deviceIdGroup = devicesInGroupAddRoom[j].asString();
@@ -1598,66 +1637,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					else
 					{
-						string nameGroup;
-						if (groupAddDev.isMember("NAME") && groupAddDev["NAME"].isString())
-						{
-							nameGroup = groupAddDev["NAME"].asString();
-						}
-						int groupAddr = 1;
-						groupListMtx.lock();
-						for (const auto &[id, group] : groupList)
-						{
-							if (group->GetAddr() >= groupAddr)
-							{
-								groupAddr = group->GetAddr() + 1;
-							}
-						}
-						groupListMtx.unlock();
-						Group *newGroup = new Group(groupId, groupAddr, nameGroup);
-						if (newGroup)
-						{
-							groupJsonRsp["GROUP_UNICAST_ID"] = groupAddr + 49152;
-							if (AddNewGroup(newGroup, true, true))
-							{
-								Json::Value devices = groupAddDev["DEVICES"];
-								for (Json::ArrayIndex j = 0; j < devices.size(); j++)
-								{
-									string deviceIdScene = devices[j].asString();
-									Device *device = getDeviceFromId(deviceIdScene);
-									if (device)
-									{
-										if (room)
-										{
-											room->AddDevice(device, false);
-											database->DeviceInRoomAdd(room, device);
-										}
-										int tempDeviceAddr = device->GetAddr();
-										listDevAddGroup.push_back(deviceIdScene);
-										if (newGroup->AddDevice(device, tempDeviceAddr, true) == CODE_OK)
-										{
-											database->DeviceInGroupAdd(newGroup, device, tempDeviceAddr);
-											groupJsonRsp["SUCCESS"].append(deviceIdScene);
-										}
-										else
-										{
-											groupJsonRsp["FAILED"].append(deviceIdScene);
-										}
-									}
-								}
-								listGroupDevAddRoom[groupId] = listDevAddGroup;
-								listDevAddGroup.clear();
-							}
-							else
-							{
-								delete newGroup;
-							}
-							dataJsonRsp["GROUPS"].append(groupJsonRsp);
-							if (groupJsonRsp.isMember("SUCCESS"))
-								groupJsonRsp["SUCCESS"].clear();
-							if (groupJsonRsp.isMember("FAILED"))
-								groupJsonRsp["FAILED"].clear();
-							groupJsonRsp["FAILED"] = Json::arrayValue;
-						}
+						LOGW("group is not exist");
 					}
 				}
 			}
@@ -1668,12 +1648,37 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value sceneAddDev = scenesAddDev[n];
 				if (sceneAddDev.isMember("SCENE_ID") && sceneAddDev["SCENE_ID"].isString() && sceneAddDev.isMember("GROUPS") && sceneAddDev["GROUPS"].isArray())
 				{
+					string sceneName = "";
+					if (sceneAddDev.isMember("SCENE_NAME") && sceneAddDev["SCENE_NAME"].isString())
+						sceneName = sceneAddDev["SCENE_NAME"].asString();
 					string sceneId = sceneAddDev["SCENE_ID"].asString();
 					Json::Value infoDevsAdd = sceneAddDev["GROUPS"];
 					sceneJsonRsp["SCENE_ID"] = sceneId;
 					SceneBle *sceneOfGw = gateway->getSceneBleFromId(sceneId);
+					if (!sceneOfGw)
+					{
+						int sceneAddr = 1;
+						sceneBleListMtx.lock();
+						for (const auto &[id, sceneBle] : sceneBleList)
+						{
+							if (sceneBle->GetAddr() >= sceneAddr)
+							{
+								sceneAddr = sceneBle->GetAddr() + 1;
+							}
+						}
+						sceneBleListMtx.unlock();
+						sceneOfGw = new SceneBle(sceneId, sceneAddr, sceneName);
+						if (sceneOfGw)
+						{
+							sceneOfGw = AddNewSceneBle(sceneOfGw, true, true);
+							if (room)
+								room->AddSceneBle(sceneOfGw, true, true);
+						}
+					}
 					if (sceneOfGw)
 					{
+						if (room)
+							room->AddSceneBle(sceneOfGw, true, true);
 						for (Json::ArrayIndex l = 0; l < infoDevsAdd.size(); l++)
 						{
 							Json::Value infoDevAdd = infoDevsAdd[l];
@@ -1736,6 +1741,10 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 		{
 			LOGW("OnRpcAddDevToRoom error: %s", respValue.toString().c_str());
 		}
+
+		printRoom();
+		printGroup();
+		printScene();
 	}
 	return CODE_OK;
 }
@@ -1891,6 +1900,10 @@ int Gateway::OnRpcRemoveDevFromRoom(Json::Value &reqValue, Json::Value &respValu
 		{
 			LOGW("OnRpcRemoveDevFromRoom msg error");
 		}
+
+		printRoom();
+		printGroup();
+		printScene();
 	}
 	return CODE_OK;
 }
@@ -2029,6 +2042,10 @@ int Gateway::OnRpcDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				delRoom(room);
 			}
 		}
+
+		printRoom();
+		printGroup();
+		printScene();
 	}
 	else
 	{
@@ -2718,7 +2735,7 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 		respValue["CMD"] = "REMOVE_SCENE_FOR_SENSOR_LIGHT_PIR";
 		Json::Value data = reqValue["DATA"];
 		string deviceId = reqValue["DEVICE_ID"].asString();
-		// int pirValue = 0;
+		int pirValue = 0;
 		string sceneId = "";
 		SceneBle *sceneBle = NULL;
 		Device *device = getDeviceFromId(deviceId);
@@ -2731,15 +2748,16 @@ int Gateway::OnRpcRemoveScenePirLightSensor(Json::Value &reqValue, Json::Value &
 				// {
 				// 	pirValue = dataValue["PIR_VALUE"].asInt();
 				// }
-				if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString())
+				if (dataValue.isMember("EVENT_TRIGGER_ID") && dataValue["EVENT_TRIGGER_ID"].isString() && dataValue.isMember("PIR_VALUE") && dataValue["PIR_VALUE"].isInt())
 				{
 					sceneId = dataValue["EVENT_TRIGGER_ID"].asString();
+					pirValue = dataValue["PIR_VALUE"].asInt();
 					sceneBle = getSceneBleFromId(sceneId);
 					if (sceneBle)
 					{
 						if (bleProtocol)
 						{
-							if (bleProtocol->DelScenePirLightSensor(device->GetAddr(), sceneBle->GetAddr()) != CODE_OK)
+							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pirValue, 0, 0, 0, 0) != CODE_OK)
 								status = CODE_ERROR;
 						}
 					}

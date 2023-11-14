@@ -327,6 +327,11 @@ public:
 
 	int Do(Json::Value &dataValue);
 
+		// debug
+	void printGroup();
+	void printScene();
+	void printRoom();
+
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	int pushDeviceUpdateCloudV2(Json::Value &dataValue);
 	int pushNewDeviceLocalV2(Json::Value &dataValue);
