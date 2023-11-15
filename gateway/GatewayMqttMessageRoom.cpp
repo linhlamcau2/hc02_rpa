@@ -536,7 +536,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("addDevToRoom", roomId, room->GetName(), successList, "");
+			pushMsgHcCoreToHcApp("addDevToRoom", roomId, room->GetName(), objSuccessList, "");
 
 			if (room)
 			{
