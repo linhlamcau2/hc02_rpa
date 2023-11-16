@@ -23,11 +23,11 @@ Group::~Group()
 
 int Group::GetPositionDevice(Device *device, int epid)
 {
-	uint32_t deviceAddr = device->GetAddr();
+	string deviceId = device->GetId();
 	mtx.lock();
 	for (uint32_t i = 0; i < deviceList.size(); i++)
 	{
-		if ((deviceAddr == deviceList[i]->device->GetAddr()) && (deviceList[i]->epId == epid))
+		if ((deviceId == deviceList[i]->device->GetId()) && (deviceList[i]->epId == epid))
 		{
 			mtx.unlock();
 			return i;
