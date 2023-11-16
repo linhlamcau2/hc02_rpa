@@ -177,6 +177,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							Group *group = getGroupFromId(id);
 							if (!group)
 							{
+								Json::Value tempSuccessList = Json::arrayValue;
 								group = new Group(id, roomAddr + Device::BleTypeToGroupId(type), name);
 								if (group)
 								{
@@ -189,17 +190,30 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											if (deviceInRoom->device->GetVersion() < 0x0300)
 											{
 												if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
+												{
 													if (devicesStatusConfig[deviceInRoom->device->GetId()])
 														devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+												}
+												else
+												{
+													tempSuccessList.append(deviceInRoom->device->GetId());
+												}
 											}
 											else
 											{
 												if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), false, true) != CODE_OK)
+												{
 													if (devicesStatusConfig[deviceInRoom->device->GetId()])
 														devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+												}
+												else
+												{
+													tempSuccessList.append(deviceInRoom->device->GetId());
+												}
 											}
 										}
 									}
+									pushMsgHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), successList, roomId);
 								}
 							}
 							else
@@ -226,6 +240,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							SceneBle *sceneBle = new SceneBle(id, roomAddr + i, name);
 							if (sceneBle)
 							{
+								Json::Value tempSuccessList = Json::arrayValue;
 								AddNewSceneBle(sceneBle, true);
 								room->AddSceneBle(sceneBle, true, true);
 								for (auto &deviceAddScene : devicesAddRoom)
@@ -249,8 +264,13 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 														{
 															group->Do(groupData, true);
 															if (sceneBle->AddDevice(deviceAddScene, groupData, true, true) != CODE_OK)
-																if (devicesStatusConfig[deviceAddScene->GetId()])
-																	devicesStatusConfig[deviceAddScene->GetId()] = false;
+															{																																if (devicesStatusConfig[deviceAddScene->GetId()])
+																devicesStatusConfig[deviceAddScene->GetId()] = false;
+															}
+															else
+															{
+																tempSuccessList.append(deviceAddScene->GetId());																
+															}
 														}
 													}
 												}
@@ -261,9 +281,16 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									{
 										Json::Value dataScene = DataSceneBle::GetDataDeviceInScene(deviceAddScene->GetType(), i + 1);
 										if (sceneBle->AddDevice(deviceAddScene, dataScene, false, true) != CODE_OK)
+										{
 											if (devicesStatusConfig[deviceAddScene->GetId()])
 												devicesStatusConfig[deviceAddScene->GetId()] = false;
+										}
+										else
+										{
+											tempSuccessList.append(deviceAddScene->GetId());
+										}
 									}
+									pushMsgHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId);
 								}
 							}
 						}
@@ -382,6 +409,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 						if (groupValue.isMember("id") && groupValue["id"].isString() &&
 							groupValue.isMember("type") && groupValue["type"].isInt())
 						{
+							Json::Value tempSuccessList = Json::arrayValue;
+							string cmd = "addDevToGroup";
 							string id = groupValue["id"].asString();
 							int type = groupValue["type"].asInt();
 							Group *group = getGroupFromId(id);
@@ -394,7 +423,10 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (group)
 									{
 										if (AddNewGroup(group, true))
+										{
 											room->AddGroup(group, true, true);
+											cmd = "createGroup";
+										}											
 									}
 									else
 									{
@@ -417,17 +449,30 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 										if (dev->GetVersion() < 0x0300)
 										{
 											if (group->AddDevice(dev, dev->GetAddr(), true, true) != CODE_OK)
+											{
 												if (devicesStatusConfig[dev->GetId()])
 													devicesStatusConfig[dev->GetId()] = false;
+											}
+											else
+											{
+												tempSuccessList.append(dev->GetId());
+											}
 										}
 										else
 										{
 											if (group->AddDevice(dev, dev->GetAddr(), false, true) != CODE_OK)
+											{
 												if (devicesStatusConfig[dev->GetId()])
 													devicesStatusConfig[dev->GetId()] = false;
+											}
+											else
+											{
+												tempSuccessList.append(dev->GetId());
+											}
 										}
 									}
 								}
+								pushMsgHcCoreToHcApp(cmd, group->GetId(), group->GetName(), tempSuccessList, "");
 							}
 							else
 							{
@@ -449,6 +494,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						if (sceneValue.isMember("id") && sceneValue["id"].isString())
 						{
+							Json::Value tempSuccessList = Json::arrayValue;
+							string cmd = "addDevToScene";
 							string id = sceneValue["id"].asString();
 							SceneBle *sceneBle = getSceneBleFromId(id);
 							if (!sceneBle)
@@ -461,6 +508,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									{
 										room->AddSceneBle(sceneBle, true, true);
 										AddNewSceneBle(sceneBle, true);
+										cmd = "createScene";
 									}
 									else
 									{
@@ -497,8 +545,14 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 														{
 															group->Do(groupData, true);
 															if (sceneBle->AddDevice(devInScene, groupData, true, true) != CODE_OK)
+															{
 																if (devicesStatusConfig[devInScene->GetId()])
 																	devicesStatusConfig[devInScene->GetId()] = false;
+															}
+															else
+															{
+																tempSuccessList.append(devInScene->GetId());
+															}																
 														}
 													}
 												}
@@ -507,10 +561,17 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									}
 									else
 									{
-										if (sceneBle->AddDevice(devInScene, DataSceneBle::GetDataDeviceInScene(devInScene->GetType(), i + 1), false, true) != CODE_OK)
+										if (sceneBle->AddDevice(devInScene, DataSceneBle::GetDataDeviceInScene(devInScene->GetType(), i + 1), false, true) != CODE_OK)\
+										{
 											if (devicesStatusConfig[devInScene->GetId()])
 												devicesStatusConfig[devInScene->GetId()] = false;
+										}
+										else
+										{
+											tempSuccessList.append(devInScene->GetId());
+										}											
 									}
+									pushMsgHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId);
 								}
 							}
 						}
@@ -595,6 +656,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 
 						for (auto &group : room->groupList)
 						{
+							Json::Value tempSuccessList = Json::arrayValue;
 							for (auto &devInGr : group->deviceList)
 							{
 								if (devInGr->device->GetId() == device->GetId())
@@ -602,22 +664,36 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 									if (device->GetVersion() < 0x0300)
 									{
 										if (group->DelDevice(device, device->GetAddr(), true, true) != CODE_OK)
+										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
+										}
+										else
+										{
+											tempSuccessList.append(device->GetId());
+										}										
 									}
 									else
 									{
 										if (group->DelDevice(device, device->GetAddr(), false, true) != CODE_OK)
+										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
+										}
+										else
+										{
+											tempSuccessList.append(device->GetId());
+										}									
 									}
 								}
 							}
+							pushMsgHcCoreToHcApp("delDevFromGroup", group->GetId(), group->GetName(), tempSuccessList, "");
 						}
 
 						printGroup();
 						for (auto &sceneBle : room->sceneBleList)
 						{
+							Json::Value tempSuccessList = Json::arrayValue;
 							for (auto &devInScene : sceneBle->deviceList)
 							{
 								if (devInScene->device->GetId() == device->GetId())
@@ -625,15 +701,28 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 									if (device->GetVersion() < 0x0300)
 									{
 										if (sceneBle->DelDevice(device, true, true) != CODE_OK)
+										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
+										}
+										else
+										{
+											tempSuccessList.append(deviceId);
+										}									
 									}
 									else
 									{
 										if (sceneBle->DelDevice(device, false, true) != CODE_OK)
+										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
+										}
+										else
+										{
+											tempSuccessList.append(deviceId);
+										}				
 									}
+									pushMsgHcCoreToHcApp("delDevToScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, "");
 								}
 							}
 						}
