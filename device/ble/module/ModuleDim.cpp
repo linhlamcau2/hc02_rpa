@@ -54,11 +54,11 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (len <= 5)
 		{
-			dim = data_message->dim_first * 100 / 65535;
+			dim = ceil(data_message->dim_first * 100 / 65535.0);
 		}
 		else
 		{
-			dim = data_message->dim * 100 / 65535;
+			dim = ceil(data_message->dim * 100 / 65535.0);
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
@@ -99,6 +99,7 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
+	jsonValue[KEY_ATTRIBUTE_ONOFF] = 1;
 }
 
 int ModuleDim::Do(Json::Value &dataValue)

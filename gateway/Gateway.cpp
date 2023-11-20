@@ -1578,6 +1578,19 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 	return PublishToLocalMessage(msg);
 }
 
+string Gateway::CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
+{
+	Json::Value msg;
+	msg["cmd"] = cmd;
+	string rqi = Util::genRandRQI(16);
+	msg["data"]["id"] = id;
+	msg["data"]["name"] = name;
+	msg["data"]["devices"] = listDevice;
+	if(roomId != "")
+	msg["data"]["roomId"] = roomId;
+	return msg.toString();
+}
+
 void Gateway::printGroup()
 {
 	for (auto &[id, grp] : groupList)

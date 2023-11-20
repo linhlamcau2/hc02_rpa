@@ -94,6 +94,8 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+
+
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	respValue["cmd"] = "createRoomRsp";
@@ -115,6 +117,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 
 		map<string, bool> devicesStatusConfig;
 		vector<Device *> devicesAddRoom;
+		vector<string> groupSceneSendtoHcApp;
 
 		Room *room = getRoomFromId(roomId);
 		if (!room)
@@ -213,7 +216,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											}
 										}
 									}
-									pushMsgHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), successList, roomId);
+									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), tempSuccessList, roomId));
 								}
 							}
 							else
@@ -290,7 +293,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											tempSuccessList.append(deviceAddScene->GetId());
 										}
 									}
-									pushMsgHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId);
+									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 								}
 							}
 						}
@@ -318,6 +321,10 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
 				pushMsgHcCoreToHcApp("createRoom", roomId, roomName, objSuccessList, "");
+				for (int i=0; i<=groupSceneSendtoHcApp.size();i++)
+				{
+					PublishToLocalMessage(groupSceneSendtoHcApp[i]);
+				}
 			}
 			else
 			{
@@ -357,6 +364,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 
 		map<string, bool> devicesStatusConfig;
 		vector<Device *> devicesAddRoom;
+		vector<string> groupSceneSendtoHcApp;
 
 		Room *room = getRoomFromId(roomId);
 		if (room)
@@ -472,7 +480,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 										}
 									}
 								}
-								pushMsgHcCoreToHcApp(cmd, group->GetId(), group->GetName(), tempSuccessList, "");
+								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, group->GetId(), group->GetName(), tempSuccessList, roomId));
 							}
 							else
 							{
@@ -571,7 +579,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											tempSuccessList.append(devInScene->GetId());
 										}											
 									}
-									pushMsgHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId);
+									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 								}
 							}
 						}
@@ -598,7 +606,10 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
 			pushMsgHcCoreToHcApp("addDevToRoom", roomId, room->GetName(), objSuccessList, "");
-
+			for (int i=0; i<=groupSceneSendtoHcApp.size();i++)
+			{
+				PublishToLocalMessage(groupSceneSendtoHcApp[i]);
+			}
 			if (room)
 			{
 				room->SetDataConfig(respValue.toString());
