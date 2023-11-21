@@ -256,15 +256,15 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 			}
 
 			// Find list deivce add scene
-			for (auto &item : devsEditScene)
-			{
-				if (find(devsInScene.begin(), devsInScene.end(), item) == devsInScene.end())
-				{
-					listDevicesAdd.push_back(item);
-				}
-			}
+			// for (auto &item : devsEditScene)
+			// {
+			// 	if (find(devsInScene.begin(), devsInScene.end(), item) == devsInScene.end())
+			// 	{
+			// 		listDevicesAdd.push_back(item);
+			// 	}
+			// }
 
-			for (auto &item : listDevicesAdd)
+			for (auto &item : devsEditScene)
 			{
 				if (sceneBle->AddDevice(item, listData[item], true, true) == CODE_OK)
 				{

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include "AndroidBleProtocol.h"
 
 void Gateway::InitMqttMessageHc()
 {
@@ -60,15 +61,26 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rsCode = CODE_OK;
-	if (bleProtocol)
+	if (androidBleProtocol)
 	{
-		bleProtocol->SetProvisioning(true);
-		bleProtocol->StartScan();
+		if (androidBleProtocol->StartScan() != CODE_OK)
+		{
+			if (bleProtocol)
+			{
+				bleProtocol->SetProvisioning(true);
+				bleProtocol->StartScan();
+			}
+			else
+			{
+				rsCode = CODE_ERROR;
+				LOGW("BleProtocol null");
+			}
+		}
 	}
 	else
 	{
 		rsCode = CODE_ERROR;
-		LOGW("BleProtocol null");
+		LOGW("androidProtocol null");
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE
@@ -85,12 +97,23 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 
 	respValue["data"]["code"] = rsCode;
 	respValue["cmd"] = "startScanBle";
+
 	return CODE_OK;
 }
 
 int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rsCode = CODE_OK;
+	if (androidBleProtocol)
+	{
+		androidBleProtocol->StopScan();
+	}
+	else
+	{
+		rsCode = CODE_ERROR;
+		LOGW("AndroidBleProtocol null");
+	}
+	
 	if (bleProtocol)
 	{
 		bleProtocol->StopScan();
@@ -248,17 +271,23 @@ int Gateway::OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OTA HC");
-	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checkSum") && reqValue["checkSum"].isString())
+	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
 	{
-		string url = reqValue["url"].asString();
-		string sha = reqValue["checkSum"].asString();
+		string url = "https://rallismartv2-staging.rangdong.com.vn" + reqValue["url"].asString();
+		string sha = reqValue["checksum"].asString();
 		LOGD("url: %s", url.c_str());
 		LOGD("sha: %s", sha.c_str());
 
 		string cmd = "rm " TMP_FOLDER "rd.tar.gz";
+		LOGW("Tp1: %s", cmd.c_str());
+		system(cmd.c_str());
+
+		cmd = "rm -r " TMP_FOLDER "rd";
+		LOGW("Tp2: %s", cmd.c_str());
 		system(cmd.c_str());
 
 		cmd = "wget -P " TMP_FOLDER " " + url;
+		LOGW("Tp3: %s", cmd.c_str());
 		system(cmd.c_str());
 
 		string folderDownload = TMP_FOLDER "rd.tar.gz";
@@ -271,20 +300,29 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		else
 		{
 			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
-			system(cmd.c_str());
-			cmd = "cd " TMP_FOLDER "rd";
+			LOGW("Tp4: %s", cmd.c_str());
 			system(cmd.c_str());
 
 			string fileConfigOta = TMP_FOLDER "rd/ota.sh";
 			struct stat st;
 			if (stat(fileConfigOta.c_str(), &st) == 0)
 			{
-				cmd  = "chmod +x " TMP_FOLDER "rd/ota.sh";
+				cmd = "chmod +x " TMP_FOLDER "rd/ota.sh";
+				LOGW("Tp5: %s", cmd.c_str());
 				system(cmd.c_str());
+#ifdef __ANDROID__
+				cmd = "su";
+				LOGW("Tp6: %s", cmd.c_str());
+				system(cmd.c_str());
+				cmd = "mount -o rw,remount /system";
+				LOGW("Tp7: %s", cmd.c_str());
+				system(cmd.c_str());
+#endif
 				string versionCurrent = STR(VERSION);
-				cmd = "./" TMP_FOLDER "rd/ota.sh " + versionCurrent;
+				cmd = "." TMP_FOLDER "rd/ota.sh " + versionCurrent;
+				LOGW("Tp8: %s", cmd.c_str());
 				system(cmd.c_str());
-				sleep(10);
+				LOGW("Tp9");
 				return CODE_EXIT;
 			}
 			else
