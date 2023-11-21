@@ -16,3 +16,9 @@ DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, str
 	modules.push_back(moduleDimonDimoff);
 	powerSource = POWER_AC;
 }
+
+int DeviceBleSwitchElectrical::BuildTelemetryValue(Json::Value &pushDataValue)
+{
+	moduleOnOff->BuildTelemetryValue(pushDataValue);
+	return CODE_OK;
+}

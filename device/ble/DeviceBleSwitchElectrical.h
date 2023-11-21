@@ -17,4 +17,5 @@ private:
 
 public:
 	DeviceBleSwitchElectrical(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
+	int BuildTelemetryValue(Json::Value &pushDataValue);
 };

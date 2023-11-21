@@ -92,12 +92,12 @@ bool ElementCct::CheckData(Json::Value &dataValue, bool &rs)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t cct1 = 0, cct2 = 0;
 			string op = dataValue["OP"].asString();
@@ -127,10 +127,15 @@ void ElementCct::BuildTelemetryValue(Json::Value &jsonValue)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_CCT] = ((cct - 800) / 192);
 #else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = ((cct - 800) / 192);
-	jsonValue.append(dataValue);
+	int valueCctPush = ((cct - 800) / 192);
+	if (valueCctPush >= 0 && valueCctPush <= 100)
+	{
+		Json::Value dataValue;
+		dataValue["ID"] = id;
+		dataValue["VALUE"] = valueCctPush;
+		jsonValue.append(dataValue);
+	}
+
 #endif
 }
 
@@ -139,7 +144,7 @@ int ElementCct::Do(Json::Value &dataValue)
 	// LOGD("Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
 		uint16_t value = (cct * 192) + 800;
@@ -151,11 +156,11 @@ int ElementCct::Do(Json::Value &dataValue)
 	}
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t cct = (value * 192) + 800;

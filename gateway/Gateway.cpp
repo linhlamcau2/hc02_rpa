@@ -476,6 +476,8 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 
+	Json::Value pushDataValue;
+	Json::Value dataValueOld;
 	while (1)
 	{
 		// Check have device screen touch -> send datetime, weather data
@@ -610,6 +612,17 @@ int Gateway::CheckOnlineThread()
 							CloudPublish(onlineValue);
 #endif
 						}
+
+						if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
+						{
+							Json::Value deviceData;
+							Json::Value deviceAttribute;
+							deviceData["DEVICE_ID"] = id;
+							device->BuildTelemetryValue(deviceAttribute);
+							deviceData["PROPERTIES"] = deviceAttribute;
+							pushDataValue["CMD"] = "DEVICE";
+							pushDataValue["DATA"].append(deviceData);
+						}
 					}
 				}
 				else
@@ -624,9 +637,18 @@ int Gateway::CheckOnlineThread()
 				gateway->pushDeviceUpdateLocalV2(dataValue);
 				gateway->pushDeviceUpdateCloudV2(dataValue);
 			}
+#else
+			if (dataValueOld != pushDataValue)
+			{
+				dataValueOld.clear();
+				dataValueOld = pushDataValue;
+				gateway->LocalPublish(pushDataValue);
+				gateway->CloudPublish(pushDataValue);
+			}
+			pushDataValue.clear();
 #endif
 		}
-		sleep(1);
+		sleep(3);
 	}
 	return CODE_OK;
 }

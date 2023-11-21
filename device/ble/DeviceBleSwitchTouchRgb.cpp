@@ -18,3 +18,9 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 	modules.push_back(moduleCountDownSwitch);
 	powerSource = POWER_AC;
 }
+
+int DeviceBleSwitchTouchRgb::BuildTelemetryValue(Json::Value &pushDataValue)
+{
+	moduleOnOff->BuildTelemetryValue(pushDataValue);
+	return CODE_OK;
+}

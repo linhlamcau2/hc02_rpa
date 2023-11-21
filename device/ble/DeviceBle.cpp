@@ -41,7 +41,8 @@ string DeviceBle::GetDeviceKey()
 
 int DeviceBle::GetCountElement()
 {
-	return this->countElement;;
+	return this->countElement;
+	;
 }
 
 int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
@@ -57,7 +58,7 @@ int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
 	return CODE_OK;
 }
 
-void DeviceBle::InputData(Json::Value &dataValue)
+void DeviceBle::InputData(Json::Value &dataValue, bool isPushTelemety)
 {
 	values = Json::Value::null;
 	for (auto &module : modules)
@@ -68,7 +69,7 @@ void DeviceBle::InputData(Json::Value &dataValue)
 	{
 		element->InputData(dataValue, values);
 	}
-	if (!values.isNull())
+	if (!values.isNull() && isPushTelemety)
 		PushTelemetry(values);
 }
 

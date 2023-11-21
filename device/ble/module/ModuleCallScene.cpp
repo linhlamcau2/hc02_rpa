@@ -144,13 +144,13 @@ bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-void ModuleCallScene::BuildTelemetryValue(Json::Value &jsonValue)
-{
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = value;
-	jsonValue.append(dataValue);
-#endif
-}
+// void ModuleCallScene::BuildTelemetryValue(Json::Value &jsonValue)
+// {
+// #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+// #else
+// 	Json::Value dataValue;
+// 	dataValue["ID"] = id;
+// 	dataValue["VALUE"] = value;
+// 	jsonValue.append(dataValue);
+// #endif
+// }
