@@ -1,5 +1,3 @@
-VERSION = 2.0.0
-
 ZIGBEE ?= OFF
 
 CC ?= gcc
@@ -13,7 +11,6 @@ LDFLAGS ?= -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 LDFLAGS += -static-libstdc++
 
 INCLUDES 		+= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Iprotocol/androidBle -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
-DEFINES 		= -DVERSION=$(VERSION) -DCONFIG_USE_MESSAGE_FORMAT_V2=1
 # DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -llog -lssl -lcrypto
 

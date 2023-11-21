@@ -6,6 +6,15 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
+enum
+{
+	CURTAIN_UNKNOWN = 0,
+	CURTAIN_CLOSE,
+	CURTAIN_OPEN,
+	CURTAIN_PAUSE,
+	CURTAIN_PERCENT,
+};
+
 ModuleCurtain::ModuleCurtain(Device *device, uint16_t addr) : Module(device, addr)
 {
 	curtain = 0;
@@ -62,7 +71,7 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 
 	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)) ||
-			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == PERCENT))
+			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CURTAIN_PERCENT))
 	{
 		if (data_message->opcode == 0x52)
 		{
@@ -127,33 +136,33 @@ int ModuleCurtain::Do(Json::Value &dataValue)
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject())
 	{
-		uint8_t mode = -1;
+		uint8_t mode = CURTAIN_UNKNOWN;
 		int value = -1;
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
 		{
-			mode = OPEN;
+			mode = CURTAIN_OPEN;
 			value = dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].asInt();
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_CLOSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].isInt())
 		{
-			mode = CLOSE;
+			mode = CURTAIN_CLOSE;
 			value = dataValue[KEY_ATTRIBUTE_CURTAIN_CLOSE].asInt();
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_PAUSE) && dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].isInt())
 		{
-			mode = PAUSE;
+			mode = CURTAIN_PAUSE;
 			value = dataValue[KEY_ATTRIBUTE_CURTAIN_PAUSE].asInt();
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPENED) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].isInt())
 		{
-			mode = PERCENT;
+			mode = CURTAIN_PERCENT;
 			value = dataValue[KEY_ATTRIBUTE_CURTAIN_OPENED].asInt();
 		}
 		if (mode != -1 && value != -1)
 		{
 			if (bleProtocol->ControlOpenClosePausePercent(addr, mode, (uint8_t)value) == CODE_OK)
 			{
-				if (mode == PERCENT)
+				if (mode == CURTAIN_PERCENT)
 				{
 					this->curtain = value;
 				}

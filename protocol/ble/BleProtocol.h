@@ -65,14 +65,6 @@
 
 enum
 {
-	CLOSE,
-	OPEN,
-	PAUSE,
-	PERCENT,
-};
-
-enum
-{
 	// send cmd part
 	HCI_GATEWAY_CMD_START = 0x00,
 	HCI_GATEWAY_CMD_STOP = 0x01,
