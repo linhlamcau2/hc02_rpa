@@ -17,12 +17,16 @@ AndroidBleProtocol::~AndroidBleProtocol()
 
 void AndroidBleProtocol::init()
 {
+	subTopic = "device/androidBle";
+	pubTopic = "HC/androidBle";
 	if (gateway)
 	{
-		gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnMessage, this, placeholders::_1, placeholders::_2), "device/androidBle");
+		gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnMessage, this, placeholders::_1, placeholders::_2), subTopic);
+		gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnAndroidBleResp, this, placeholders::_1, placeholders::_2), subTopic);
 		OnAndroidBleProtocolCallbackRegister("bleInfo", bind(&AndroidBleProtocol::OnBleInfo, this, placeholders::_1, placeholders::_2));
 		OnAndroidBleProtocolCallbackRegister("newDev", bind(&AndroidBleProtocol::OnNewDevice, this, placeholders::_1, placeholders::_2));
 		OnAndroidBleProtocolCallbackRegister("DeviceStatus", bind(&AndroidBleProtocol::OnDeviceStatus, this, placeholders::_1, placeholders::_2));
+		OnAndroidBleProtocolCallbackRegister("provisionNormal", bind(&AndroidBleProtocol::OnProvisionNormal, this, placeholders::_1, placeholders::_2));
 	}
 	else
 	{
@@ -33,23 +37,18 @@ void AndroidBleProtocol::init()
 
 int AndroidBleProtocol::StartScan()
 {
-	Json::Value dataJson;
-	dataJson["cmd"] = "startScanBle";
-	dataJson["rqi"] = Util::genRandRQI(16);
-	dataJson["data"] = Json::objectValue;
-	gateway->LocalPublish("HC/androidBle", dataJson.toString());
-	return CODE_OK;
+	string cmd = "startScanBle";
+	Json::Value dataRequest = Json::objectValue;
+	Json::Value dataResponse;
+	return PublishToAndroidBleMessage(cmd, dataRequest, cmd, &dataResponse, 2000);
 }
 
 int AndroidBleProtocol::StopScan()
 {
-	Json::Value dataJson;
-	dataJson["cmd"] = "stopScanBle";
-	dataJson["rqi"] = Util::genRandRQI(16);
-	dataJson["data"] = Json::objectValue;
-	gateway->LocalPublish("HC/androidBle", dataJson.toString());
-	return CODE_OK;
-	return CODE_OK;
+	string cmd = "stopScanBle";
+	Json::Value dataRequest = Json::objectValue;
+	Json::Value dataResponse;
+	return PublishToAndroidBleMessage(cmd, dataRequest, cmd, &dataResponse, 2000);
 }
 
 int AndroidBleProtocol::OnAndroidBleProtocolCallbackRegister(string cmd, OnAndroidBleProtocolCallbackFunc onAndroidBleProtocolCallbackFunc)
@@ -78,7 +77,7 @@ void AndroidBleProtocol::OnMessage(string &topic, string &payload)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
 				respValue["rqi"] = rqi;
-				gateway->LocalPublish("HC/androidBle", respValue.toString());
+				gateway->LocalPublish(pubTopic, respValue.toString());
 			}
 			else if (rs == CODE_DATA_ARRAY)
 			{
@@ -88,7 +87,7 @@ void AndroidBleProtocol::OnMessage(string &topic, string &payload)
 					for (auto &respV : respValue)
 					{
 						respV["rqi"] = rqi;
-						gateway->LocalPublish("HC/androidBle", respV.toString());
+						gateway->LocalPublish(pubTopic, respV.toString());
 					}
 				}
 			}
@@ -131,6 +130,25 @@ int AndroidBleProtocol::OnBleInfo(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int AndroidBleProtocol::OnProvisionNormal(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("Start provision normal");
+	int rs = CODE_ERROR;
+	respValue["cmd"] = "provisionNormal";
+	if (bleProtocol)
+	{
+		bleProtocol->SetProvisioning(true);
+		bleProtocol->StartScan();
+		rs = CODE_OK;
+	}
+	else
+	{
+		LOGW("BleProtocol null");
+	}
+	respValue["data"]["code"] = rs;
+	return CODE_OK;
+}
+
 int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnNewDevice");
@@ -154,30 +172,27 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 				if (deviceJson.isMember("data") && deviceJson["data"].isObject())
 				{
 					dataJson = deviceJson["data"];
-					if (dataJson.isMember("devKey") && dataJson["devKey"].isString() &&
-						dataJson.isMember("vid") && dataJson["vid"].isString() &&
-						dataJson.isMember("pid") && dataJson["pid"].isString())
+					if (dataJson.isMember("deviceKey") && dataJson["deviceKey"].isString() &&
+						dataJson.isMember("vid") && dataJson["vid"].isInt() &&
+						dataJson.isMember("pid") && dataJson["pid"].isInt())
 					{
-						devKey = dataJson["devKey"].asString();
+						devKey = dataJson["deviceKey"].asString();
 						pid = dataJson["pid"].asInt();
 						vid = dataJson["vid"].asInt();
+
+						uint32_t deviceType = Device::ConverPidToDeviveType(pid);
+						Device *device = gateway->AddNewDevice(uuid, Device::ConvertDeviceTypeToName(deviceType), mac, dataJson, addr, deviceType, vid, true);
+						if (device)
+						{
+							gateway->AddDeviceToScanList(device);
+							bleProtocol->UpdateDeviceKeyDev(addr, devKey);
+						}
+						else
+						{
+							respValue["data"]["code"] = CODE_MEMORY_ERROR;
+							LOGW("New device id %s err", uuid.c_str());
+						}
 					}
-				}
-				Device *device = gateway->AddNewDevice(uuid, Device::ConvertDeviceTypeToName(pid), mac, dataJson, addr, pid, vid, true);
-				if (device)
-				{
-					Json::Value jsonData;
-					jsonData["id"] = uuid;
-					jsonData["type"] = pid;
-					jsonData["data"] = reqValue["data"];
-					gateway->AddDeviceToScanList(device);
-					bleProtocol->UpdateDeviceKeyDev(addr, devKey);
-					// gateway->pushNewDeviceLocal(jsonData);
-				}
-				else
-				{
-					respValue["data"]["code"] = CODE_MEMORY_ERROR;
-					LOGW("New device id %s err", uuid.c_str());
 				}
 			}
 			else
@@ -235,4 +250,72 @@ int AndroidBleProtocol::OnDeviceStatus(Json::Value &reqValue, Json::Value &respV
 	}
 	respValue["cmd"] = "DeviceStatusRsp";
 	return CODE_OK;
+}
+
+int AndroidBleProtocol::PublishToAndroidBleMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
+{
+	LOGD("PublishToAndroidBleMessage: %s", reqValue.toString().c_str());
+	int rs = CODE_OK;
+	Json::Value sendValue;
+	string rqi = Util::genRandRQI(16);
+	sendValue["data"] = reqValue;
+	sendValue["rqi"] = rqi;
+	sendValue["cmd"] = reqCmd;
+	request_t request = {
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
+	};
+	requestList[rqi] = &request;
+	if (request.pubTopic == "")
+	{
+		request.pubTopic = pubTopic;
+	}
+	LOGD("PublishToAndroidBleMessage: Topic: %s: msg: %s", request.pubTopic.c_str(), (sendValue.toString()).c_str());
+	gateway->LocalPublish(request.pubTopic, sendValue.toString());
+	while (!request.status && timeout--)
+	{
+		usleep(1000);
+	}
+	if (!request.status)
+	{
+		rs = CODE_ERROR;
+	}
+	requestList.erase(rqi);
+	LOGD("PublishToAndroidBleMessage rs: %d", rs);
+	return rs;
+}
+
+void AndroidBleProtocol::OnAndroidBleResp(string &topic, string &payload)
+{
+	Json::Value respValue;
+	Json::Value payloadJson;
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (requestList.find(rqi) != requestList.end())
+		{
+			request_t *request = requestList[rqi];
+			if (cmd == request->respCmd)
+			{
+				request->status = true;
+				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
+				{
+					*request->respValue = payloadJson["data"];
+				}
+			}
+		}
+		else
+		{
+			LOGW("rqi %s not found", rqi.c_str());
+			LOGW("OnAndroidBleResp payload: %s", payload.c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnAndroidBleResp error topic: %s, payload: %s", topic.c_str(), payload.c_str());
+	}
 }

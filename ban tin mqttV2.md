@@ -1300,7 +1300,7 @@ Response:
 ```
 ## III. Bản tin giao tiếp với Android BLE
 
-### III.1. Khởi tạo thông tin mạng BLE: HC->AndroidBLE
+### III.1. Khởi tạo thông tin mạng BLE: AndroidBLE->HC
 
 Request:
 ```json
@@ -1347,6 +1347,28 @@ Response:
 }
 ```
 
+#### Android Ble báo fast provision done -> quét thường
+Request:
+```json
+{
+  "cmd": "provisionNormal",
+  "rqi":"abc123456",
+  "data" : {
+  }
+}
+```
+
+Response:
+```json
+{
+  "cmd": "provisionNormal",
+  "rqi":"abc123456",
+  "data" : {
+    "code": 0
+  }
+}
+
+
 #### Stop Scan
 Request:
 ```json
@@ -1377,11 +1399,11 @@ Request:
       {
         "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
         "addr": 2,
-        "type": 22014,
         "mac": "AB:DE:EF",
-        "ver": "1.0.2",
         "data": {
-          "devKey": "b717f8d8-6f18-43c0-ae46-69c32998f653"
+          "deviceKey": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+          "vid": 768,
+          "pid": 4631
         }
       }
     ]

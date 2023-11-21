@@ -134,13 +134,26 @@ enum
 	BLE_SWITCH_ELECTRICAL_4 = 24004,
 	BLE_SWITCH_ELECTRICAL_WATER_HEATER = 24005,
 
+	//TODO: update this device
+	BLE_SOCKET_SWITCH = 26003,
+
 	BLE_PM_SENSOR = 37001,
 	BLE_TEMP_HUM_SENSOR = 38001, // 0x030801,
 	BLE_PIR_LIGHT_SENSOR_DC = 32001,
 	BLE_PIR_LIGHT_SENSOR_AC = 32002,
 	BLE_PIR_LIGHT_SENSOR_AC_AMTRAN = 32004,
+
+    //TODO: update this devices
+	BLE_PIR_LIGHT_SENSOR_CB10 = 32006,
+	BLE_PIR_LIGHT_SENSOR_CB09 = 32007,
+	BLE_PIR_LIGHT_SENSOR_CB015_RADA = 32008,
+	
 	BLE_DOOR_SENSOR = 36001,
+	BLE_DOOR_SENSOR_CB16 = 36002,
 	BLE_SMOKE_SENSOR = 33001,
+
+	//TODO: update this device
+	BLE_REPEATER = 91001,
 
 	ZIGBEE_LUMI_PLUG = 0x02000001,
 	ZIGBEE_LUMI_SENSOR_SWITCH = 0x02000002,
@@ -235,6 +248,7 @@ public:
 	static uint32_t BleTypeToGroupId(uint32_t deviceType);
 	static uint32_t ConvertModelToDeviceType(string model);
 	static string ConvertDeviceTypeToName(uint32_t type);
+	static uint32_t ConverPidToDeviveType(uint16_t pid);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
 	// virtual void Getstatus(Json::Value &jsonValue) {}

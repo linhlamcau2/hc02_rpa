@@ -481,7 +481,7 @@ int BleProtocol::GetNetKey()
 		memcpy(&pro_net_info.netKey[0], &dataRsp[1], sizeof(pro_net_info_t));
 
 		uint32_t ivIndex = bswap_32(pro_net_info.iv_index);
-		if ((ivIndex == 0x11223344) || (ivIndex == 0))
+		if ((ivIndex == 0x11223344))
 		{
 			// database->GatewayUpdateIvIndex(gateway, ivIndex);
 			for (int i = 0; i < 16; i++)
@@ -514,6 +514,7 @@ int BleProtocol::GetNetKey()
 
 			gateway->setBleDevicekey(devicekeyGwStr);
 			gateway->setBleNetkey(netkeyStr);
+			UpdateAppKey(gateway->getBleAppKey());
 		}
 	}
 	else
@@ -3152,6 +3153,7 @@ int BleProtocol::GetInfoMesh()
 int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 {
 	LOGD("UpdateDeviceKeyDev");
+	devKeyDev.erase(std::remove(devKeyDev.begin(), devKeyDev.end(), '-'), devKeyDev.end());
 	if (devKeyDev.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3181,6 +3183,7 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 {
 	LOGD("UpdateDeviceKeyGateway");
+	devKeyDev.erase(std::remove(devKeyDev.begin(), devKeyDev.end(), '-'), devKeyDev.end());
 	if (devKeyDev.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3210,6 +3213,7 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 {
 	LOGD("UpdateNetKey");
+	netKey.erase(std::remove(netKey.begin(), netKey.end(), '-'), netKey.end());
 	if (netKey.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3244,6 +3248,7 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 {
 	LOGD("UpdateDevKey");
+	devKey.erase(std::remove(devKey.begin(), devKey.end(), '-'), devKey.end());
 	if (devKey.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3271,6 +3276,7 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 int BleProtocol::UpdateAppKey(string appKey)
 {
 	LOGD("UpdateAppKey");
+	appKey.erase(std::remove(appKey.begin(), appKey.end(), '-'), appKey.end());
 	if (appKey.size() == 32)
 	{
 		uint8_t dataRsp[100];
