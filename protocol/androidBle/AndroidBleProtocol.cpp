@@ -17,7 +17,7 @@ AndroidBleProtocol::~AndroidBleProtocol()
 
 void AndroidBleProtocol::init()
 {
-	subTopic = "device/androidBle";
+	subTopic = "androidBle/HC";
 	pubTopic = "HC/androidBle";
 	if (gateway)
 	{
