@@ -155,7 +155,7 @@ DeviceZigbee *Gateway::getDeviceZigbeeFromAddr(uint16_t addr)
 }
 #endif
 
-//Del dev in all group, scenBle, room
+// Del dev in all group, scenBle, room
 void Gateway::delDevice(Device *device)
 {
 	deviceListMtx.lock();
@@ -260,7 +260,7 @@ void Gateway::delGroup(Group *group)
 
 uint16_t Gateway::getNextGroupAddr()
 {
-	uint16_t groupAddr = 10000; //start add of normal group
+	uint16_t groupAddr = 10000; // start add of normal group
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
@@ -387,13 +387,13 @@ void Gateway::delRoom(Room *room)
 
 uint16_t Gateway::getNextRoomAddr()
 {
-	uint16_t roomAddr = 1; //start add of room
+	uint16_t roomAddr = 1; // start add of room
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
 		if (group->GetAddr() >= roomAddr)
 		{
-			roomAddr = group->GetAddr()/200 + 200; //every room has 200 group
+			roomAddr = group->GetAddr() / 200 + 200; // every room has 200 group
 		}
 	}
 	groupListMtx.unlock();
@@ -734,15 +734,15 @@ int Gateway::CheckInternetThread()
 		if (result == 0)
 		{
 			isInternet = true;
-			if(CloudProtocol::IsConfig() == false)
+			if (CloudProtocol::IsConfig() == false)
 			{
 				CloudProtocol::init();
 				CloudConnect();
-			} 
+			}
 		}
 		else
 		{
-			isInternet = false; 
+			isInternet = false;
 		}
 		sleep(5);
 	}
@@ -1573,7 +1573,7 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
-	if(roomId != "")
+	if (roomId != "")
 		msg["data"]["roomId"] = roomId;
 	return PublishToLocalMessage(msg);
 }
@@ -1586,8 +1586,8 @@ string Gateway::CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, str
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
-	if(roomId != "")
-	msg["data"]["roomId"] = roomId;
+	if (roomId != "")
+		msg["data"]["roomId"] = roomId;
 	return msg.toString();
 }
 

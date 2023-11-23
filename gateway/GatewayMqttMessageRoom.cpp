@@ -94,8 +94,6 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
-
-
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	respValue["cmd"] = "createRoomRsp";
@@ -267,12 +265,13 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 														{
 															group->Do(groupData, true);
 															if (sceneBle->AddDevice(deviceAddScene, groupData, true, true) != CODE_OK)
-															{																																if (devicesStatusConfig[deviceAddScene->GetId()])
-																devicesStatusConfig[deviceAddScene->GetId()] = false;
+															{
+																if (devicesStatusConfig[deviceAddScene->GetId()])
+																	devicesStatusConfig[deviceAddScene->GetId()] = false;
 															}
 															else
 															{
-																tempSuccessList.append(deviceAddScene->GetId());																
+																tempSuccessList.append(deviceAddScene->GetId());
 															}
 														}
 													}
@@ -434,7 +433,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 										{
 											room->AddGroup(group, true, true);
 											cmd = "createGroup";
-										}											
+										}
 									}
 									else
 									{
@@ -560,7 +559,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 															else
 															{
 																tempSuccessList.append(devInScene->GetId());
-															}																
+															}
 														}
 													}
 												}
@@ -569,7 +568,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									}
 									else
 									{
-										if (sceneBle->AddDevice(devInScene, DataSceneBle::GetDataDeviceInScene(devInScene->GetType(), i + 1), false, true) != CODE_OK)\
+										if (sceneBle->AddDevice(devInScene, DataSceneBle::GetDataDeviceInScene(devInScene->GetType(), i + 1), false, true) != CODE_OK)
 										{
 											if (devicesStatusConfig[devInScene->GetId()])
 												devicesStatusConfig[devInScene->GetId()] = false;
@@ -577,7 +576,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 										else
 										{
 											tempSuccessList.append(devInScene->GetId());
-										}											
+										}
 									}
 									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 								}
@@ -606,7 +605,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
 			pushMsgHcCoreToHcApp("addDevToRoom", roomId, room->GetName(), objSuccessList, "");
-			for (int i=0; i<=groupSceneSendtoHcApp.size();i++)
+			for (int i = 0; i < groupSceneSendtoHcApp.size(); i++)
 			{
 				PublishToLocalMessage(groupSceneSendtoHcApp[i]);
 			}
@@ -682,7 +681,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 										else
 										{
 											tempSuccessList.append(device->GetId());
-										}										
+										}
 									}
 									else
 									{
@@ -694,7 +693,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 										else
 										{
 											tempSuccessList.append(device->GetId());
-										}									
+										}
 									}
 								}
 							}
@@ -719,7 +718,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 										else
 										{
 											tempSuccessList.append(deviceId);
-										}									
+										}
 									}
 									else
 									{
@@ -731,7 +730,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 										else
 										{
 											tempSuccessList.append(deviceId);
-										}				
+										}
 									}
 									pushMsgHcCoreToHcApp("delDevToScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, "");
 								}
