@@ -9,7 +9,8 @@ void Gateway::InitMqttMessageDevice()
 	OnDeviceRpcCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getCamList", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getCamListInRoom", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getAllCam", bind(&Gateway::OnGetAllCam, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
@@ -27,7 +28,8 @@ void Gateway::InitMqttMessageDevice()
 	OnLocalCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getCamList", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getCamListInRoom", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getAllCam", bind(&Gateway::OnGetAllCam, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
@@ -206,6 +208,7 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value deviceValue;
 				deviceValue["id"] = deviceInRoom->device->GetId();
 				deviceValue["mac"] = deviceInRoom->device->GetMac();
+				deviceValue["name"] = deviceInRoom->device->GetName();
 				deviceValue["data"] = deviceInRoom->device->GetData();
 				temp_devicesList["camList"].append(deviceValue);
 			}
@@ -215,7 +218,30 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["room"] = roomData;
 	respValue["data"]["code"] = CODE_OK;
-	respValue["cmd"] = "getCamListRsp";
+	respValue["cmd"] = "getCamListInRoomRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetAllCam(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGE("OnGetAllCam");
+	Json::Value camData;
+	for (const auto &[id, device] : deviceList)
+	{
+		int type = device->GetType();
+		if (type / 10000 == 6)
+		{
+			Json::Value deviceValue;
+			deviceValue["id"] = device->GetId();
+			deviceValue["mac"] = device->GetMac();
+			deviceValue["name"] = device->GetName();
+			deviceValue["data"] = device->GetData();
+			camData.append(deviceValue);
+		}
+	}
+	respValue["data"]["devices"] = camData;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getAllCamRsp";
 	return CODE_OK;
 }
 

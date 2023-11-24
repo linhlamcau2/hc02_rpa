@@ -89,6 +89,7 @@ private:
 	int OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetCamList(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetAllCam(Json::Value &reqValue, Json::Value &respValue);
 	int OnNewDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue);
