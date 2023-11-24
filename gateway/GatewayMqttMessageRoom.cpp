@@ -320,7 +320,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
 				pushMsgHcCoreToHcApp("createRoom", roomId, roomName, objSuccessList, "");
-				for (int i=0; i<=groupSceneSendtoHcApp.size();i++)
+				for (int i = 0; i < groupSceneSendtoHcApp.size(); i++)
 				{
 					PublishToLocalMessage(groupSceneSendtoHcApp[i]);
 				}
