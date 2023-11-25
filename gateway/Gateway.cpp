@@ -638,12 +638,15 @@ int Gateway::CheckOnlineThread()
 				gateway->pushDeviceUpdateCloudV2(dataValue);
 			}
 #else
-			if (dataValueOld != pushDataValue)
+			if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 			{
-				dataValueOld.clear();
-				dataValueOld = pushDataValue;
-				gateway->LocalPublish(pushDataValue);
-				gateway->CloudPublish(pushDataValue);
+				if (dataValueOld != pushDataValue)
+				{
+					dataValueOld.clear();
+					dataValueOld = pushDataValue;
+					gateway->LocalPublish(pushDataValue);
+					gateway->CloudPublish(pushDataValue);
+				}
 			}
 			pushDataValue.clear();
 #endif
@@ -896,6 +899,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_LED_FLOOD:
 	case BLE_LED_DAY_LINEAR:
 	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TRAN_40W:
 	case BLE_LED_OP_TUONG:
 	case BLE_LED_OP_TRAN_LOA:
 	case BLE_PANEL_TRON:

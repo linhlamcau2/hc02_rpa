@@ -1570,9 +1570,9 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 						}
 						groupListMtx.unlock();
-						
+
 						// tao room dau tien
-						if (!isRoom )
+						if (!isRoom)
 						{
 							isRoom = true;
 							roomId = groupId;
@@ -1592,7 +1592,7 @@ int Gateway::OnRpcAddDevToRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					if (groupOfGw)
 					{
-						if (!isRoom )
+						if (!isRoom)
 							isRoom = true;
 
 						if (room)
@@ -3433,7 +3433,35 @@ int Gateway::OnRpcCablibDevice(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (device->GetType() == BLE_SWITCH_RGB_CURTAIN || device->GetType() == BLE_SWITCH_RGB_CURTAIN_SQUARE || device->GetType() == BLE_SWITCH_CURTAIN)
 				{
-					device->DoJsonArray(properties);
+					for (int i = 0; i < properties.size(); i++)
+					{
+						if (properties[i].isObject())
+						{
+							if (properties[i].isMember("ID") && properties[i]["ID"].isInt() &&
+								properties[i].isMember("VALUE") && properties[i]["VALUE"].isInt())
+							{
+								int id = properties[i]["ID"].asInt();
+								int value = properties[i]["VALUE"].asInt();
+								if (id == BLE_ATTRIBUTE_CURTAIN_OPENED)
+								{
+									int status = 0;
+									if (value == 0)
+										status = 0;
+									else if (value == 100)
+										status = 1;
+									if (bleProtocol)
+										bleProtocol->CalibCurtain(device->GetAddr(), status);
+								}
+								else if (id == BLE_ATTRIBUTE_CURTAIN_PAUSE)
+								{
+									if (bleProtocol)
+										bleProtocol->CalibCurtain(device->GetAddr(), 2);
+								}
+							}
+							else
+								LOGW("Data error");
+						}
+					}
 				}
 				else
 				{
