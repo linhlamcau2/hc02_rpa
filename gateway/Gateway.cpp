@@ -393,7 +393,7 @@ uint16_t Gateway::getNextRoomAddr()
 	{
 		if (group->GetAddr() >= roomAddr)
 		{
-			roomAddr = group->GetAddr() / 200 + 200; // every room has 200 group
+			roomAddr = (group->GetAddr() / 200 + 1) * 200; // every room has 200 group
 		}
 	}
 	groupListMtx.unlock();
