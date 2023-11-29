@@ -1,10 +1,10 @@
 
-#include "DeviceBlePirLightSensorAC_CB09.h"
+#include "DeviceBleRadaSensorAc.h"
 #include "BleProtocol.h"
 #include "Log.h"
 #include "Util.h"
 
-DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
+DeviceBleRadaSensorAc::DeviceBleRadaSensorAc(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, data, addr, type, version)
 {
 	modulePirLight = new ModulePirLight(this, addr);
@@ -14,6 +14,7 @@ DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string
     moduleModeActionPir = new ModuleModeActionPir(this, addr);
 	moduleSensiPir = new ModuleSensiPir(this, addr);
     moduleOnOff = new ModuleOnOff(this, addr);
+	moduleDistance = new ModuleDistance(this, addr);
 	modulePirLightSensorStartup = new ModulePirLightSensorStartup(this, addr);
 	modules.push_back(modulePirLight);
 	modules.push_back(modulePirSensor);
@@ -22,6 +23,7 @@ DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string
     modules.push_back(moduleModeActionPir);
 	modules.push_back(moduleSensiPir);
     modules.push_back(moduleOnOff);
+	modules.push_back(moduleDistance);
 	modules.push_back(modulePirLightSensorStartup);
 	powerSource = POWER_AC;
 }

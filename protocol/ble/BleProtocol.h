@@ -36,6 +36,8 @@
 #define RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR 0x0345
 #define RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR 0x0445
 #define RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR 0x0545
+#define RD_OPCODE_RSP_PIR_LIGHT_SENSOR_STARTUP 0x0645
+#define RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR 0x0745
 #define RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH 0x010A
 #define RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH 0x020A
 #define RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR 0x030A
@@ -281,6 +283,7 @@ public:
 	// update status lights
 	int UpdateLights(uint16_t devAddr);
 	int UpdateStatusSensorsPm(uint16_t devAddr);
+	int GetTTL(uint16_t devAddr);
 
 	// remote scene
 	int SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type);
@@ -294,6 +297,7 @@ public:
 	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
 	int SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode);
 	int SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi);
+	int SetDistanceSensor(uint16_t devAddr, uint8_t distance);
 
 	// switch
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);

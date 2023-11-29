@@ -8,11 +8,12 @@
 #include "module/ModulePirLight.h"
 #include "module/ModuleOnOff.h"
 #include "module/ModuleSensiPir.h"
+#include "module/ModuleDistance.h"
 #include "module/ModulePirLightSensorStartup.h"
 
 using namespace std;
 
-class DeviceBlePirLightSensorAC_CB09 : public DeviceBle
+class DeviceBleRadaSensorAc : public DeviceBle
 {
 private:
 	ModulePirLight *modulePirLight;
@@ -22,8 +23,9 @@ private:
     ModuleModeActionPir *moduleModeActionPir;
 	ModuleSensiPir *moduleSensiPir;
     ModuleOnOff *moduleOnOff;
+	ModuleDistance *moduleDistance;
 	ModulePirLightSensorStartup * modulePirLightSensorStartup;
 
 public:
-	DeviceBlePirLightSensorAC_CB09(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleRadaSensorAc(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
 };

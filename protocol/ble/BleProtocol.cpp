@@ -238,11 +238,12 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				uint8_t numRelay = data_message->data[5];
 				for (int n = 1; n < numRelay; n++)
 				{
-					DeviceBle * deviceChild = gateway->getDeviceBleFromAddr(data_message->dev_addr + n);
+					DeviceBle *deviceChild = gateway->getDeviceBleFromAddr(data_message->dev_addr + n);
 					if (deviceChild)
-					{	dataJson.clear();
-						GetDataUpdateSwitch(data_message->data[6+n], dataJson);
-						deviceChild->InputData(dataJson,false);
+					{
+						dataJson.clear();
+						GetDataUpdateSwitch(data_message->data[6 + n], dataJson);
+						deviceChild->InputData(dataJson, false);
 					}
 				}
 			}
@@ -1180,10 +1181,13 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_2:
 	case BLE_SWITCH_3:
 	case BLE_SWITCH_4:
-	case BLE_REPEATER:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		break;
+	case BLE_REPEATER:
+		BleProtocol::GetTTL(devAddr);
+		break;
 	}
+
 	return CODE_OK;
 }
 
@@ -1905,6 +1909,39 @@ int BleProtocol::UpdateStatusSensorsPm(uint16_t devAddr)
 	return CODE_ERROR;
 }
 
+int BleProtocol::GetTTL(uint16_t devAddr)
+{
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint16_t opcode;
+	} ttl_message_t;
+	ttl_message_t ttl_message = {0};
+	memset(&ttl_message, 0x00, sizeof(ttl_message));
+	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
+	ttl_message.ble_message_header.devAddr = devAddr;
+	ttl_message.opcode = CFG_DEFAULT_TTL_GET;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&ttl_message, sizeof(ttl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t data[1];
+		} ttl_rsp_message_t;
+		ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
+		if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
+		{
+			return CODE_OK;
+		}
+	}
+	return CODE_ERROR;
+}
+
 int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t mode, uint16_t sceneId, uint8_t type)
 {
 	LOGD("SetSceneSwitchSceneDC 0x%04x, button %d, mode %d, sceneId %d, type %d", devAddr, button, mode, sceneId, type);
@@ -2384,6 +2421,40 @@ int BleProtocol::SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi)
 	}
 	else
 		LOGW("Set sensi error");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetDistanceSensor(uint16_t devAddr, uint8_t distance)
+{
+	LOGD("Set distance sensor: 0x%04X, distance: %d", devAddr, distance);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t distanceHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t distance;
+	} distance_message_t;
+	distance_message_t distance_message = {0};
+	memset(&distance_message, 0x00, sizeof(distance_message));
+	distance_message.ble_message_header.devAddr = devAddr;
+	distance_message.opcodeVendor = RD_OPCODE_CONFIG;
+	distance_message.vendorId = RD_VENDOR_ID;
+	distance_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	distance_message.header = RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR;
+	distance_message.distance = distance;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&distance_message, sizeof(distance_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, distanceHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	else
+		LOGW("Set distance error");
 	return CODE_ERROR;
 }
 

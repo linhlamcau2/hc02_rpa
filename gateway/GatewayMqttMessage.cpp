@@ -3194,7 +3194,8 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
-					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER ||
+					deviceParent->GetType() == BLE_SWITCH_RGB_SOCKET_1)
 				{
 					Json::Value properties;
 					properties["ID"] = 0;

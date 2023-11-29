@@ -36,6 +36,7 @@
 #include "DeviceBleRoolDoor.h"
 #include "DeviceBleSwitchTouch.h"
 #include "DeviceBleRepeater.h"
+#include "DeviceBleRadaSensorAc.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -615,13 +616,16 @@ int Gateway::CheckOnlineThread()
 
 						if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
 						{
-							Json::Value deviceData;
-							Json::Value deviceAttribute;
-							deviceData["DEVICE_ID"] = id;
-							device->BuildTelemetryValue(deviceAttribute);
-							deviceData["PROPERTIES"] = deviceAttribute;
-							pushDataValue["CMD"] = "DEVICE";
-							pushDataValue["DATA"].append(deviceData);
+							if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+							{
+								Json::Value deviceData;
+								Json::Value deviceAttribute;
+								deviceData["DEVICE_ID"] = id;
+								device->BuildTelemetryValue(deviceAttribute);
+								deviceData["PROPERTIES"] = deviceAttribute;
+								pushDataValue["CMD"] = "DEVICE";
+								pushDataValue["DATA"].append(deviceData);
+							}
 						}
 					}
 				}
@@ -1059,6 +1063,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_PIR_LIGHT_SENSOR_DC_CB09:
 	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
 		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_RADA_LIGHT_SENSOR_AC_CB15:
+		device = new DeviceBleRadaSensorAc(id, name, mac, data, addr, type, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
 		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, type, version);
