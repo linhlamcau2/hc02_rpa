@@ -12,6 +12,7 @@ Device::Device(string id, string name, string mac, Json::Value &dataJson, uint16
 	this->dataJson = dataJson;
 	this->version = version;
 	powerSource = POWER_UNKNOWN;
+	this->isFavorite = false;
 
 	lastOnlineState = false;
 	lastTimeActive = 0;

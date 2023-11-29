@@ -12,6 +12,7 @@ DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 
 SceneBle::SceneBle(string id, uint16_t addr, string name) : Object(id, addr, name)
 {
+	this->isFavorite = false;
 }
 
 bool SceneBle::GetIsFavorite()
