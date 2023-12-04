@@ -3,28 +3,31 @@
 #include "TimerSchedule.h"
 #include "Util.h"
 #include "Log.h"
+#include "Db.h"
 #ifdef ESP_PLATFORM
 #include "Sntp.h"
 #endif
 
-Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, bool isFirstRun, string name, uint16_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
+	this->isFirstRun = isFirstRun;
 	isEnable = true;
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, bool isFirstRun, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
 	this->ruleData = ruleData;
+	this->isFirstRun = isFirstRun;
 	isEnable = true;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
 }
@@ -49,9 +52,22 @@ Json::Value Rule::GetRuleData()
 	return ruleData;
 }
 
+void Rule::SetRuleData(Json::Value ruleData)
+{
+	this->ruleData = ruleData;
+}
+
 RuleType Rule::GetType()
 {
 	return type;
+}
+
+void Rule::UpdateFirstRun()
+{
+	isFirstRun = false;
+	Json::Value ruleData = GetRuleData();
+	ruleData["isFirstRun"] = false;
+	database->RuleUpdateData(this, this->ruleData.toString());
 }
 
 void Rule::Check()
@@ -61,7 +77,7 @@ void Rule::Check()
 		bool checkRuleInputResult = false;
 		int currentTimer = Util::GetCurrentTimer();
 		int currentWeekDay = Util::GetCurrentWeekDay();
-		if (Util::CheckDayInWeek(currentWeekDay, repeater))
+		if (Util::CheckDayInWeek(currentWeekDay, repeater) || isFirstRun)
 		{
 			LOGD("Check repeater day OK");
 			if ((startTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (startTime == currentTimer))
@@ -92,7 +108,7 @@ void Rule::Check()
 					}
 				}
 			}
-			if (startTime <= currentTimer && currentTimer <= endTime && type == RULE_TYPE_TIME)
+			if (((startTime <= currentTimer && currentTimer <= endTime) || (startTime <= currentTimer && endTime < 0)) && type == RULE_TYPE_TIME)
 			{
 				checkRuleInputResult = true;
 			}
@@ -101,6 +117,7 @@ void Rule::Check()
 		{
 			LOGI("Do output rule id: %s", id.c_str());
 			RunOutput();
+			UpdateFirstRun();
 		}
 	}
 }

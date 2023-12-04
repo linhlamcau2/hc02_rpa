@@ -4,11 +4,43 @@
 #include "Log.h"
 #include "Util.h"
 #include "Wifi.h"
+#include "AES.h"
 
 #ifdef ESP_PLATFORM
 #include "Led.h"
 #include "ButtonSignal.h"
 #endif
+
+static string GenPassMqttBroker(string mac)
+{
+	mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
+	uint8_t key[16] = {0};
+	string keyS = "RANGDONGRALSMART";
+	memcpy(key, keyS.c_str(), 16);
+
+	string plainText = "2804" + mac;
+	uint8_t plt[16] = {0};
+	memcpy(plt, plainText.c_str(), 16);
+
+	AES aes(AESKeyLength::AES_128);
+
+	unsigned char *outAes = aes.EncryptECB(plt, 32, key);
+	unsigned char out[32] = {0};
+	for (int i = 0; i < 32; i++)
+	{
+		out[i] = outAes[i];
+	}
+	char hexString[sizeof(out) * 2 + 1];
+	sprintf(hexString, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+			out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7],
+			out[8], out[9], out[10], out[11], out[12], out[13], out[14], out[15],
+			out[16], out[17], out[18], out[19], out[20], out[21], out[22], out[23],
+			out[24], out[25], out[26], out[27], out[28], out[29], out[30], out[31]);
+
+	std::string b(hexString);
+	delete[] outAes; // Remember to free the allocated memory
+	return b;
+}
 
 #ifdef ESP_PLATFORM
 LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : MqttBroker()
@@ -21,6 +53,13 @@ LocalProtocol::LocalProtocol(string mac, string address, int port, string token,
 	subRespTopic = "/v2/mobile/+/hc/" + mac + "/json_resp";
 	pubReqTopic = "/v2/hc/" + mac + "/mobile/all/json_req";
 	pubRespTopic = "/v2/hc/" + mac + "/mobile/";
+#ifdef __OPENWRT__
+	password = GenPassMqttBroker(this->mac);
+	for (char &c : password) {
+        c = std::toupper(c);
+    }
+	LOGI("Passsword: %s", password.c_str());
+#endif
 }
 
 LocalProtocol::~LocalProtocol()
@@ -79,71 +118,71 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	// {
 	// 	if (topics[5] == mac || topics[5] == "all")
 	// 	{
-			Util::LedServiceLock();
-			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-				payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-				payloadJson.isMember("data") && payloadJson["data"].isObject())
+	Util::LedServiceLock();
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
+		{
+			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
+			isBusy = true;
+			int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
+			isBusy = false;
+			if (rs == CODE_OK)
 			{
-				string cmd = payloadJson["cmd"].asString();
-				string rqi = payloadJson["rqi"].asString();
-				if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+			}
+			else if (rs == CODE_DATA_ARRAY)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				if (respValue.isArray())
 				{
-					OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
-					isBusy = true;
-					int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
-					isBusy = false;
-					if (rs == CODE_OK)
+					for (auto &respV : respValue)
 					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-						respValue["rqi"] = rqi;
-						LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str() , respValue.toString().c_str());
-						Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+						respV["rqi"] = rqi;
+						Publish(pubRespTopic + topics[2] + "/json_resp", respV.toString());
 					}
-					else if (rs == CODE_DATA_ARRAY)
-					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-						if (respValue.isArray())
-						{
-							for (auto &respV : respValue)
-							{
-								respV["rqi"] = rqi;
-								Publish(pubRespTopic + topics[2] + "/json_resp", respV.toString());
-							}
-						}
-					}
-					else if (rs == CODE_NOT_RESPONSE)
-					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-					}
-					else if (rs == CODE_EXIT)
-					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-						respValue["rqi"] = rqi;
-						LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
-						Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
-						sleep(2);
-						exit(1);
-					}
-					else
-					{
-						LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-					}
-#ifdef ESP_PATFORM
-					vTaskDelay(1);
-#endif
 				}
-				else
-				{
-					LOGW("Method %s not registed", cmd.c_str());
-					LOGW("OnLocalMessage payload: %s", payload.c_str());
-				}
+			}
+			else if (rs == CODE_NOT_RESPONSE)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+			}
+			else if (rs == CODE_EXIT)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+				sleep(2);
+				exit(1);
 			}
 			else
 			{
-				LOGW("OnLocalMessage topic: %s", topic.c_str());
-				LOGW("OnLocalMessage payload: %s", payload.c_str());
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
+#ifdef ESP_PATFORM
+			vTaskDelay(1);
+#endif
+		}
+		else
+		{
+			LOGW("Method %s not registed", cmd.c_str());
+			LOGW("OnLocalMessage payload: %s", payload.c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnLocalMessage topic: %s", topic.c_str());
+		LOGW("OnLocalMessage payload: %s", payload.c_str());
+	}
 	// 	}
 	// }
 
@@ -159,36 +198,36 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 	// {
 	// 	if (topics[5] == mac || topics[5] == "all")
 	// 	{
-			Util::LedServiceLock();
-			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-				payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	Util::LedServiceLock();
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (requestList.find(rqi) != requestList.end())
+		{
+			request_t *request = requestList[rqi];
+			if (cmd == request->respCmd)
 			{
-				string cmd = payloadJson["cmd"].asString();
-				string rqi = payloadJson["rqi"].asString();
-				if (requestList.find(rqi) != requestList.end())
+				request->status = true;
+				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
 				{
-					request_t *request = requestList[rqi];
-					if (cmd == request->respCmd)
-					{
-						request->status = true;
-						if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
-						{
-							*request->respValue = payloadJson["data"];
-						}
-					}
-				}
-				else
-				{
-					LOGW("rqi %s not found", rqi.c_str());
-					LOGW("OnLocalResp payload: %s", payload.c_str());
+					*request->respValue = payloadJson["data"];
 				}
 			}
-			else
-			{
-				LOGW("OnLocalResp topic: %s", topic.c_str());
-				LOGW("OnLocalResp payload: %s", payload.c_str());
-			}
+		}
+		else
+		{
+			LOGW("rqi %s not found", rqi.c_str());
+			LOGW("OnLocalResp payload: %s", payload.c_str());
+		}
+	}
+	else
+	{
+		LOGW("OnLocalResp topic: %s", topic.c_str());
+		LOGW("OnLocalResp payload: %s", payload.c_str());
+	}
 	// 	}
 	// }
 	Util::LedServiceUnlock();

@@ -450,6 +450,7 @@ void Gateway::init()
 	checkOnlineThread.detach();
 	thread checkInternet(bind(&Gateway::CheckInternetThread, this));
 	checkInternet.detach();
+
 #endif
 
 	database->GatewayRead();
@@ -1140,8 +1141,12 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		int repeat = 255;
 		uint16_t addr = 0;
 		Rule *rule = NULL;
-		if (inputValue.isMember("timer") && inputValue["timer"].isObject() &&
-			inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+
+		bool isFirstRun = true;
+		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			isFirstRun = ruleValue["isFirstRun"].asBool();
+
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
 			Json::Value timer = inputValue["timer"];
 			string endAt = "";
@@ -1150,12 +1155,15 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				startAt = timer["start"].asString();
 			if (timer.isMember("end") && timer["end"].isString())
 				endAt = timer["end"].asString();
-			repeat = inputValue["repeat"].asInt();
-			rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+
+			repeat = 0;
+			if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+				repeat = inputValue["repeat"].asInt();
+			rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
 		}
 		else
 		{
-			rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+			rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, ruleValue);
 		}
 
 		if (rule)
@@ -1242,6 +1250,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 			ruleListMtx.unlock();
 			if (addDatabase)
 			{
+				ruleValue["isFirstRun"] = true;
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);

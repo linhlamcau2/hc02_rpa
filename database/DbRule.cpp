@@ -33,7 +33,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 						if (rule)
 						{
 							rule->SetStatus(enable);
-							rule->Check();
+							// rule->Check();
 						}
 					}
 					else
@@ -73,7 +73,7 @@ int Db::RuleAdd(Rule *rule, string data, int type)
 
 int Db::RuleUpdateData(Rule *rule, string data)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data='" + data + "' WHERE rule_id='" + rule->GetId() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(data) + "' WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
