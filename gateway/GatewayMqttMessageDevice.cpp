@@ -300,7 +300,7 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 		}
-		pushMsgHcCoreToHcApp("delDevRsp", "", "", successList, "");
+		pushMsgHcCoreToHcApp("delDev", "", "", successList, "");
 		respValue["data"]["code"] = 0;
 		respValue["data"]["success"] = successList;
 		respValue["data"]["failed"] = failedList;
