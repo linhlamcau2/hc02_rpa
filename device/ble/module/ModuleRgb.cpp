@@ -13,11 +13,11 @@ ModuleRgb::ModuleRgb(Device *device, uint16_t addr, uint32_t index) : Module(dev
 	g = 0;
 	dimOn = 0;
 	dimOff = 0;
-	keyR = KEY_ATTRIBUTE_R + (index ? to_string(index+1) : "");
-	keyG = KEY_ATTRIBUTE_G + (index ? to_string(index+1) : "");
-	keyB = KEY_ATTRIBUTE_B + (index ? to_string(index+1) : "");
-	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index+1) : "");
-	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index+1) : "");
+	keyR = KEY_ATTRIBUTE_R + (index ? to_string(index + 1) : "");
+	keyG = KEY_ATTRIBUTE_G + (index ? to_string(index + 1) : "");
+	keyB = KEY_ATTRIBUTE_B + (index ? to_string(index + 1) : "");
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index + 1) : "");
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index + 1) : "");
 }
 
 ModuleRgb::~ModuleRgb()
@@ -62,11 +62,11 @@ void ModuleRgb::SaveAttribute()
 int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
-			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
-			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+		dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+		dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		r = dataValue[keyR].asInt();
 		g = dataValue[keyG].asInt();
@@ -116,7 +116,7 @@ bool ModuleRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(keyR))
@@ -236,18 +236,18 @@ int ModuleRgb::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
-			dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
-			dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyR) && dataValue[keyR].isInt() &&
+		dataValue.isMember(keyG) && dataValue[keyG].isInt() &&
+		dataValue.isMember(keyB) && dataValue[keyB].isInt() &&
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int r = dataValue[keyR].asInt();
 		int g = dataValue[keyG].asInt();
 		int b = dataValue[keyB].asInt();
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol->ControlRgbSwitch(addr, index, b, g, r, dimOn, dimOff) == CODE_OK)
+		if (bleProtocol->ControlRgbSwitch(addr, index + 1, b, g, r, dimOn, dimOff) == CODE_OK)
 		{
 			this->r = r;
 			this->g = g;

@@ -215,7 +215,7 @@ public:
 
 	void SetRSSI(int rssi);
 	virtual bool CheckAddr(uint16_t addr) { return this->addr == addr; }
-	virtual bool CheckId(string id) { return this->id == id; }
+	// virtual bool CheckId(string id) { return this->id == id; }
 	virtual string GetDeviceKey();
 
 	protocol_e GetProtocol();

@@ -100,7 +100,7 @@ Device *Gateway::getDeviceFromId(string id)
 	deviceListMtx.lock();
 	for (const auto &[idDev, device] : deviceList)
 	{
-		if (device->CheckId(id))
+		if (id == idDev)
 		{
 			deviceListMtx.unlock();
 			return device;

@@ -966,7 +966,7 @@ int BleProtocol::ResetDelAll()
 
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
-	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct __attribute__((packed))
