@@ -71,8 +71,8 @@ bool ModuleCct::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CCT) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_CCT) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_CCT].isInt())
@@ -105,10 +105,10 @@ int ModuleCct::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		if (bleProtocol->SetCctLight(addr, (cct * 192) + 800, 0, true) == CODE_OK)
+		if (bleProtocol->SetCctLight(addr, (cct * 192) + 800, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			this->cct = cct;
 			return CODE_OK;

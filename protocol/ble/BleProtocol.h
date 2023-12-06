@@ -63,6 +63,11 @@
 #define RD_OPCODE_CALIB 0x0411
 #define RD_OPCODE_REQUEST_STATUS_CURTAIN 0x0311
 
+#define RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME 0xF00A
+#define RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP 0xF10A
+
+#define TRANSITION_DEFAULT 5
+
 enum
 {
 	CLOSE,
@@ -269,7 +274,7 @@ public:
 	// Scene light
 	int SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
 	int DelSceneBle(uint16_t devAddr, uint16_t scene);
-	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
+	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
 
 	// update status lights
@@ -291,7 +296,7 @@ public:
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
 	int ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t relay, uint8_t value);
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
-	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
+	int CountDownSwitch(uint16_t devAddr, uint32_t timer, uint8_t status);
 	int UpdateStatusRelaySwitch(uint16_t devAddr);
 
 	// screen touch

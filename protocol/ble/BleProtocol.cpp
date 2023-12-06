@@ -1591,7 +1591,7 @@ int BleProtocol::DelSceneBle(uint16_t devAddr, uint16_t scene)
 
 // TODO: BelProtocol ActiveScene
 // add delay time
-int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime)
+int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack)
 {
 	LOGD("Call scene: 0x%04X", scene);
 	uint8_t dataRsp[100];
@@ -3051,9 +3051,9 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	return CODE_ERROR;
 }
 
-int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
+int BleProtocol::CountDownSwitch(uint16_t devAddr, uint32_t timer, uint8_t status)
 {
-	LOGD("SetTimer 0x%04x, timer %d, status %d", devAddr, timer, status);
+	LOGD("CountDownSwitch 0x%04x, timer %d, status %d", devAddr, timer, status);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -3095,9 +3095,9 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 		{
 			return CODE_OK;
 		}
-		LOGW("timer resp state not match with input control");
+		LOGW("CountDownSwitch resp state not match with input control");
 	}
-	LOGW("timer switch err");
+	LOGW("CountDownSwitch err");
 	return CODE_ERROR;
 }
 

@@ -32,7 +32,7 @@ void ModuleDim::SaveAttribute()
 int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		CheckTrigger();
@@ -72,8 +72,8 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_DIM].isInt())
@@ -107,10 +107,10 @@ int ModuleDim::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		if (bleProtocol->SetDimmingLight(addr, dim * 65535 / 100, 0, true) == CODE_OK)
+		if (bleProtocol->SetDimmingLight(addr, dim * 65535 / 100, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			this->dim = dim;
 			return CODE_OK;
