@@ -33,7 +33,7 @@ int ModuleRelaySwitch::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		bt = dataValue[key].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

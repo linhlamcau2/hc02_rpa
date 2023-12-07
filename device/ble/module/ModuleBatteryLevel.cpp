@@ -34,7 +34,7 @@ int ModuleBatteryLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue
 			dataValue.isMember(KEY_ATTRIBUTE_BATTERY) && dataValue[KEY_ATTRIBUTE_BATTERY].isInt())
 	{
 		bat = dataValue[KEY_ATTRIBUTE_BATTERY].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

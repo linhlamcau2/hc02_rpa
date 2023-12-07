@@ -179,7 +179,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 					}
 				}
 				respValue["data"]["code"] = CODE_OK;
-				respValue["data"]["id"] = sceneBle->GetId();
+				respValue["data"]["id"] = sceneId;
 				respValue["data"]["addr"] = sceneAddr;
 				respValue["data"]["success"] = successList;
 				respValue["data"]["failed"] = failedList;
@@ -342,14 +342,13 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList, "");
-			delSceneBle(sceneBle);
-
-			printScene();
-
+			
 			respValue["data"]["code"] = CODE_OK;
-			respValue["data"]["id"] = sceneBle->GetId();
+			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
+			delSceneBle(sceneBle);
+			printScene();
 		}
 		else
 		{

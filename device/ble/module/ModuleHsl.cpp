@@ -52,7 +52,7 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 		s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 		l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

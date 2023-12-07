@@ -109,7 +109,7 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			rs = CODE_FORMAT_ERROR;
 		}
-		// respValue["data"]["id"] = rule->GetId();
+		respValue["data"]["id"] = ruleId;
 	}
 	else
 	{
@@ -135,7 +135,7 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			respValue["data"]["code"] = CODE_NOT_FOUND_RULE;
 		}
-		// respValue["data"]["id"] = ruleId;
+		respValue["data"]["id"] = ruleId;
 	}
 	else
 	{

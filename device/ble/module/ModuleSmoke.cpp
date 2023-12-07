@@ -40,7 +40,7 @@ int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		smoke = dataValue[KEY_ATTRIBUTE_SMOKE].asInt();
 		power = dataValue[KEY_ATTRIBUTE_SMOKE_PIN].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

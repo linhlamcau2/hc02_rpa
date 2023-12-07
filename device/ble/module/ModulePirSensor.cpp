@@ -36,7 +36,7 @@ int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_PIR) && dataValue[KEY_ATTRIBUTE_PIR].isInt())
 	{
 		pir = dataValue[KEY_ATTRIBUTE_PIR].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

@@ -59,5 +59,5 @@ public:
 	 *
 	 * @param jsonValue
 	 */
-	void BuildTelemetryValue(Json::Value &jsonValue);
+	//void BuildTelemetryValue(Json::Value &jsonValue);
 };

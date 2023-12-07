@@ -35,7 +35,7 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		onoff = dataValue[key].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -80,11 +80,11 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)data;
 		if (data_message->vendorId == RD_VENDOR_ID)
 		{
-			if (data_message->header == 0x080b)
+			if (data_message->header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 			{
 				onoff = data_message->data[index+1];
 				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
+				// CheckTrigger();
 				return CODE_OK;
 			}
 		}

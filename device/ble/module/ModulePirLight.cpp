@@ -42,7 +42,7 @@ int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		pir = dataValue[KEY_ATTRIBUTE_PIR].asInt();
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

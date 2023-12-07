@@ -203,7 +203,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
-				Json::Value dataArray;
+				Json::Value dataArray = Json::objectValue;
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
 				deviceBle->InputData(dataArray);
 			}
@@ -213,7 +213,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				if (vendorId == RD_VENDOR_ID)
 				{
 					uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
-					if (header == 0x080b)
+					if (header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 					{
 						for (int i=0; i<deviceBle->GetNumElement(); i++)
 						{
@@ -967,35 +967,65 @@ int BleProtocol::ResetDelAll()
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
 	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	uint8_t dataRsp[100];
-	int lenRsp;
-	typedef struct __attribute__((packed))
+	switch (typeDev)
 	{
-		ble_message_header_t ble_message_header;
-		uint16_t opcode;
-	} ttl_message_t;
-	ttl_message_t ttl_message = {0};
-	memset(&ttl_message, 0x00, sizeof(ttl_message));
-	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
-	ttl_message.ble_message_header.devAddr = devAddr;
-	ttl_message.opcode = CFG_DEFAULT_TTL_GET;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&ttl_message, sizeof(ttl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);
-	if (rs == CODE_OK)
-	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t devAddr;
-			uint16_t gwAddr;
-			uint16_t opcode;
-			uint8_t data[1];
-		} ttl_rsp_message_t;
-		ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
-		if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
-		{
-			return CODE_OK;
-		}
+	case BLE_LED_CHIEU_TRANH:
+	case BLE_LED_CHIEU_GUONG:
+	case BLE_DEN_BAN:
+	case BLE_DOWNLIGHT_SMT:
+	case BLE_DOWNLIGHT_COB_GOC_HEP:
+	case BLE_DOWNLIGHT_COB_GOC_RONG:
+	case BLE_DOWNLIGHT_COB_TRANG_TRI:
+	case BLE_LED_FLOOD:
+	case BLE_LED_DAY_LINEAR:
+	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TUONG:
+	case BLE_LED_OP_TRAN_LOA:
+	case BLE_PANEL_TRON:
+	case BLE_PANEL_VUONG:
+	case BLE_TRACKLIGHT:
+	case BLE_LED_THA_TRAN:
+	case BLE_LED_TUBE_M16:
+	case BLE_LED_RLT03_06W:
+	case BLE_LED_RLT02_10W:
+	case BLE_LED_RLT02_20W:
+	case BLE_LED_RLT01_10W:
+	case BLE_LED_TRL08_20W:
+	case BLE_LED_TRL08_10W:
+	case BLE_LED_RLT03_12W:
+	case BLE_DOWNLIGHT_RGBCW:
+	case BLE_LED_DAY_RGBCW:
+	case BLE_LED_BULB:
+	case BLE_LED_DAY_RGB:
+	case BLE_SWITCH_ONOFF:
+		if (version > 256)
+			BleProtocol::UpdateLights(devAddr);
+		else
+			BleProtocol::GetOnoffLight(devAddr);
+		break;
+	case BLE_SWITCH_RGB_1:
+	case BLE_SWITCH_RGB_1_SQUARE:
+	case BLE_SWITCH_RGB_WATER_HEATER:
+	case BLE_SWITCH_RGB_2:
+	case BLE_SWITCH_RGB_2_SQUARE:
+	case BLE_SWITCH_RGB_3:
+	case BLE_SWITCH_RGB_3_SQUARE:
+	case BLE_SWITCH_RGB_4:
+	case BLE_SWITCH_RGB_4_SQUARE:
+	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
+	case BLE_SWITCH_ELECTRICAL_3:
+	case BLE_SWITCH_ELECTRICAL_4:
+	case BLE_SWITCH_1:
+	case BLE_SWITCH_WATER_HEATER:
+	case BLE_SWITCH_2:
+	case BLE_SWITCH_3:
+	case BLE_SWITCH_4:
+	case BLE_REPEATER:
+		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
+		break;
 	}
-	return CODE_ERROR;
+	return CODE_OK;
 }
 
 int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack)
@@ -3101,9 +3131,27 @@ int BleProtocol::CountDownSwitch(uint16_t devAddr, uint32_t timer, uint8_t statu
 	return CODE_ERROR;
 }
 
-int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr)
+int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type)
 {
 	LOGD("Update status Relay Switch 0x%04x", devAddr);
+	uint16_t header;
+	switch (type)
+	{
+	case BLE_SWITCH_1:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_1;
+		break;
+	case BLE_SWITCH_2:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_2;
+		break;
+	case BLE_SWITCH_3:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_3;
+		break;
+	case BLE_SWITCH_4:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_4;
+		break;
+	default:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH;
+	}
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -3122,7 +3170,7 @@ int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr)
 	request_status_message.opcodeVendor = RD_OPCODE_CONFIG;
 	request_status_message.vendorId = RD_VENDOR_ID;
 	request_status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	request_status_message.header = RD_OPCODE_REQUEST_STATUS_SWITCH;
+	request_status_message.header = header;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&request_status_message, sizeof(request_status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
 	if (rs == CODE_OK)
 	{

@@ -55,6 +55,10 @@
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
 #define RD_OPCODE_CONFIG_SET_TIMER 0x070B
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_1 0x030e
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_2 0x030d
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_3 0x030c
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_4 0x030b
 #define RD_OPCODE_REQUEST_STATUS_SWITCH 0x090B
 #define RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE 0x0011
 #define RD_OPCODE_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED 0x0311
@@ -297,7 +301,7 @@ public:
 	int ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t relay, uint8_t value);
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int CountDownSwitch(uint16_t devAddr, uint32_t timer, uint8_t status);
-	int UpdateStatusRelaySwitch(uint16_t devAddr);
+	int UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type = 0);
 
 	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);

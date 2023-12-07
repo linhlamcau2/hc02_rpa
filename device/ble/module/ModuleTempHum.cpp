@@ -40,7 +40,7 @@ int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
 		hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

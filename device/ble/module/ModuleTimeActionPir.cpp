@@ -34,7 +34,7 @@ int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValu
 			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
 		time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

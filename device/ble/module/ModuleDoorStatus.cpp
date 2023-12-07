@@ -33,7 +33,7 @@ int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_DOOR) && dataValue[KEY_ATTRIBUTE_DOOR].isInt())
 	{
 		status = dataValue[KEY_ATTRIBUTE_DOOR].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

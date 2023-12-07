@@ -46,7 +46,7 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		pm1_0 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
 		pm10 = dataValue[KEY_ATTRIBUTE_PM10].asInt();
 		pm1_0 = dataValue[KEY_ATTRIBUTE_PM1_0].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

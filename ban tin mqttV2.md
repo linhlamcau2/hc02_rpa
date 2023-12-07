@@ -13,7 +13,7 @@ Request:
                 "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
                 "data": {
                     "stt": 1,
-                    "bt0": 1,
+                    "bt": 1,
                     "onoff0": 0,
                     "h": 0,
                     "s": 2,
@@ -48,8 +48,8 @@ Response:
 * Note:
 ```
 - Liệt kê tất cả các tham số có thể có của các loại thiết bị theo tên rút gọn, bao gồm thiết bị nhiều element và các chức năng phụ khác (màu led rgb). Ví dụ:
-    + bt0: giá trị nút ấn đầu tiên của công tắc 4 nút.
-    + rBt0: giá trị màu R của nút bấm đầu tiên của bảng cảnh.
+    + bt: giá trị nút ấn đầu tiên của công tắc 4 nút.
+    + rBt: giá trị màu R của nút bấm đầu tiên của bảng cảnh.
     + temp: nhiệt độ.
     + pin: mức pin.
 - deviceId có thể chứa các thông tin text bất kỳ hay ko: Ví dụ tạo bằng cách: <mac>_<thời gian tạo>
@@ -63,7 +63,7 @@ Request:
     "data": {
         "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
         "data": {
-            "bt0": 1,
+            "bt": 1,
             "h": 0,
             "s": 2,
             "l": 4,
@@ -96,7 +96,7 @@ Request:
     "cmd": "controlAllDev",
     "rqi": "abc123456",
     "data": {
-        "bt0": 1,
+        "bt": 1,
         "h": 0,
         "s": 2,
         "l": 4,
@@ -126,7 +126,7 @@ Request:
     "data": {
         "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
         "data": {
-            "bt0": 1,
+            "bt": 1,
             "h": 0,
             "s": 2,
             "l": 4,
@@ -373,7 +373,8 @@ Request:
         "devices": [
             "b717f8d8-6f18-43c0-ae46-69c32998f653",
             "b717f8d8-6f18-43c0-ae46-69c32998f654"
-        ]
+        ],
+        "roomId": "670bf986-0605-4709-850c-225475d8950b"
     }
 }
 ```
@@ -505,11 +506,12 @@ Request:
     "data": {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "name": "abc",
+        "roomId": "670bf986-0605-4709-850c-225475d8950b",
         "devices": [
             {
             "id": "b717f8d8-6f18-43c0-ae46-69c32998f653",
             "data": {
-                "bt0": 1,
+                "bt": 1,
                 "h": 0,
                 "s": 2,
                 "l": 4,
@@ -519,7 +521,7 @@ Request:
             {
             "id": "b717f8d8-6f18-43c0-ae46-69c32998f654",
             "data": {
-                "bt0": 1,
+                "bt": 1,
                 "h": 0,
                 "s": 2,
                 "l": 4,
@@ -530,7 +532,7 @@ Request:
         "groups": [{//có dùng với group được không?
                 "id": "b717f8d8-6f18-43c0-ae46-69c32998f655",
                 "data": {
-                    "bt0": 1,
+                    "bt": 1,
                     "h": 0,
                     "s": 2,
                     "l": 4,
@@ -604,7 +606,7 @@ Request:
       {
         "properties": [
           {
-            "bt0": 2,
+            "bt": 2,
             "op": "=="
           },
           {
@@ -646,7 +648,7 @@ Request:
       {
         "properties": [
           {
-            "bt0": 2,
+            "bt": 2,
             "op": "=="
           },
           {
@@ -688,16 +690,13 @@ Request:
     "roomId": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
     "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
     "name": "abc",
-    "type": "and",
+    "type": -2,
     "enable": 1,
-    "time": {
-      "start": "00:11",
-      "end": "11:23"
-    },
     "input": {
       "repeat": 255,
       "timer": {
-        "time": "00:11"
+        "start": "00:11",
+        "end":"00:12"
       },
       "device": [
         {
@@ -1014,7 +1013,20 @@ Request:
   "cmd": "delRoom",
   "rqi": "abc123456",
   "data": {
-    "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2"
+    "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
+    "groups": [
+      "7ce30444-d762-487f-8088-7f0c16ca2207",
+      "2b43f61c-9d83-494f-9ba4-7e91b2f76616"
+    ],
+    "scenes": [
+      "2b1ca0d2-7c5b-4296-b129-767084167405",
+      "cc9cbc2c-5f35-4e16-a153-44e6b6b1ba47",
+      "9a2ed14a-e15f-4a9a-8f0f-bc91a8167265",
+      "80ece670-5490-4319-9e0e-43a432c3968f",
+      "1a654a52-fe7e-49e8-a535-6cb962ea9856",
+      "9014e104-50b9-4947-bc14-9055d1a0528a"
+    ],
+    "rules": []
   }
 }
 ```
@@ -1106,14 +1118,14 @@ Request:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       },
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1132,7 +1144,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1141,7 +1153,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1161,14 +1173,14 @@ Request:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       },
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1187,7 +1199,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1196,7 +1208,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1216,14 +1228,14 @@ Request:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       },
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1242,7 +1254,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1251,7 +1263,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1281,7 +1293,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }
@@ -1290,7 +1302,7 @@ Response:
       {
         "id": "aa3549d4-5471-4d75-b0b2-b70fa5c10fb2",
         "bt": [
-          "bt1",
+          "bt",
           "bt2"
         ]
       }

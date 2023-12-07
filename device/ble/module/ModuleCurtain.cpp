@@ -44,7 +44,7 @@ int ModuleCurtain::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) && dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
 		{
 			curtain = dataValue[KEY_ATTRIBUTE_CURTAIN].asInt();
-			CheckTrigger();
+			// CheckTrigger();
 			BuildTelemetryValue(jsonValue);
 			return CODE_OK;
 		}

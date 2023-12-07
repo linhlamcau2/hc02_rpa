@@ -34,7 +34,7 @@ int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
 	{
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

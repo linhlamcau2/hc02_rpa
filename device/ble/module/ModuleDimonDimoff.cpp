@@ -46,7 +46,7 @@ int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		dimOn = dataValue[keyDimOn].asInt();
 		dimOff = dataValue[keyDimOff].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

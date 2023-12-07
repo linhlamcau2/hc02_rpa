@@ -35,7 +35,7 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

@@ -34,7 +34,7 @@ int ModuleModeRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
 		mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

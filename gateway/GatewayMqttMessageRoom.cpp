@@ -135,28 +135,29 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							LOGW("device->GetVersion(): 0x%04X", device->GetVersion());
+							uint32_t type = device->GetType() / 10000;
 							devicesAddRoom.push_back(device);
-							// TODO: get fast provisioning
-							if (device->GetVersion() >= 0x0300)
+							if (type == 1)
 							{
-								if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
-									devicesStatusConfig[deviceId] = false;
-							}
-							else
-							{
-								// Check lightBle send ble
-								uint32_t type = device->GetType() / 10000;
-								if (type == 1)
+								if (device->GetVersion() >= 0x0300) // fast add device to room
 								{
+									if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
+										devicesStatusConfig[deviceId] = false;
+								}
+								else // normal add device to room
+								{
+									// Check lightBle send ble
 									if (room->AddDevice(device, true, true) != CODE_OK)
 										devicesStatusConfig[deviceId] = false;
 								}
-								else
-								{
-									if (room->AddDevice(device, false, true) != CODE_OK)
-										devicesStatusConfig[deviceId] = false;
-								}
+							}
+							else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4) // set group for remote
+							{
+								devicesStatusConfig[deviceId] = false;
+								if (bleProtocol)
+									if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
+										if (room->AddDevice(device, false, true) == CODE_OK)
+											devicesStatusConfig[deviceId] = true;
 							}
 						}
 						else
@@ -378,24 +379,27 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (device)
 					{
 						devicesAddRoom.push_back(device);
-						if (device->GetVersion() >= 0x0300)
+						uint32_t type = device->GetType() / 10000;
+						if (type == 1)
 						{
-							if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
-								devicesStatusConfig[deviceId] = false;
-						}
-						else
-						{
-							uint32_t type = device->GetType() / 10000;
-							if (type == 1)
+							if (device->GetVersion() >= 0x0300)
 							{
-								if (room->AddDevice(device, true, true) != CODE_OK)
+								if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
 									devicesStatusConfig[deviceId] = false;
 							}
 							else
 							{
-								if (room->AddDevice(device, false, true) != CODE_OK)
+								if (room->AddDevice(device, true, true) != CODE_OK)
 									devicesStatusConfig[deviceId] = false;
 							}
+						}
+						else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4) // set group for remote
+						{
+							devicesStatusConfig[deviceId] = false;
+							if (bleProtocol)
+								if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
+									if (room->AddDevice(device, false, true) == CODE_OK)
+										devicesStatusConfig[deviceId] = true;
 						}
 					}
 					else
