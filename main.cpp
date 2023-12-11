@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 #endif
 
 	string mac = Wifi::GetMacAddress();
-	// string mac = "be:3e:25:2e:a1:ca";
+	// string mac = "cc:cc:cc:cc:cc:cc";
 	LOGI("mac: %s", mac.c_str());
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(),
 						  "localhost", 1883, "RD", "", 10);

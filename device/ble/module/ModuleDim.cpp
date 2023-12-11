@@ -100,7 +100,8 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
-	jsonValue[KEY_ATTRIBUTE_ONOFF] = 1;
+	if (dim > 0)
+		jsonValue[KEY_ATTRIBUTE_ONOFF] = 1;
 }
 
 int ModuleDim::Do(Json::Value &dataValue)

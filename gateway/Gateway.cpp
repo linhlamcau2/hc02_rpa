@@ -73,7 +73,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_appkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
-	this->numScreenTouchs = 0;
+	this->data = "";
 }
 
 Gateway::~Gateway()
@@ -540,20 +540,6 @@ void Gateway::ResetFactory()
 	DelDatabase();
 }
 
-void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp)
-{
-	if (bleProtocol)
-	{
-		bleProtocol->SendDate(device->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
-		bleProtocol->SendTime(device->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
-		bleProtocol->SendWeatherIndoor(device->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
-		if (statusWeather != 254 && temp != 65534)
-			bleProtocol->SendWeatherOutdoor(device->GetAddr(), statusWeather, temp);
-	}
-	else
-		LOGW("BleProtocol null");
-}
-
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
 
 int Gateway::CheckOnlineThread()
@@ -575,14 +561,16 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 
+	Json::Value dataValueOld;
+
 	while (1)
 	{
 		// Check have device screen touch -> send datetime, weather data
-		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 1800)
+		if ((time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);
 			HTTPRequest *httpRequest = new HTTPRequest();
-			string dataWeather = httpRequest->GetWeather(Util::GetLongitude(), Util::GetLatitude());
+			string dataWeather = httpRequest->GetWeather(Util::GetLatitude(gateway->getData()), Util::GetLongitude(gateway->getData()));
 			delete httpRequest;
 			LOGI("dataWeather:%s", dataWeather.c_str());
 
@@ -609,19 +597,11 @@ int Gateway::CheckOnlineThread()
 							}
 						}
 						temp = main["temp"].asInt();
+						Util::SetStatusWeatherOutdoor(status);
+						Util::SetTempWeatherOutdoor(temp);
 					}
 				}
 			}
-
-			deviceListMtx.lock();
-			for (const auto &[id, device] : deviceList)
-			{
-				if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
-				{
-					SendDataForScreenTouch(device, dataWeather, status, temp);
-				}
-			}
-			deviceListMtx.unlock();
 		}
 
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
@@ -708,18 +688,35 @@ int Gateway::CheckOnlineThread()
 								deviceData["data"] = offlineValue;
 							devicesData.append(deviceData);
 						}
+
+						if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
+						{
+							if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+							{
+
+								Json::Value deviceValue;
+								deviceValue["id"] = device->GetId();
+								Json::Value deviceAttbute;
+								device->BuildTelemetryValue(deviceAttbute);
+								deviceValue["data"] = deviceAttbute;
+								devicesData.append(deviceValue);
+							}
+						}
 					}
 				}
 				else
 					break;
 			}
+
 			// deviceListMtx.unlock();
-			if (!devicesData.isNull())
+			if (!devicesData.isNull() && (devicesData != dataValueOld))
 			{
 				Json::Value dataValue;
 				dataValue["device"] = devicesData;
+				LOGW("data push: %s", dataValue.toString().c_str());
 				gateway->pushDeviceUpdateLocal(dataValue);
 				gateway->pushDeviceUpdateCloud(dataValue);
+				dataValueOld = devicesData;
 			}
 		}
 		sleep(1);
@@ -1021,7 +1018,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
 		device = new DeviceBleScreenTouch(id, name, mac, dataJson, addr, version);
-		numScreenTouchs++;
 		break;
 	case BLE_SWITCH_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN:
@@ -1349,6 +1345,11 @@ string Gateway::getRefreshToken()
 	return refresh_token;
 }
 
+string Gateway::getData()
+{
+	return data;
+}
+
 string Gateway::getMac()
 {
 	return mac;
@@ -1387,6 +1388,10 @@ void Gateway::setDormitory(string dormitory)
 void Gateway::setRefreshToken(string refresh_token)
 {
 	this->refresh_token = refresh_token;
+}
+void Gateway::setData(string data)
+{
+	this->data = data;
 }
 
 void Gateway::setId(string id)

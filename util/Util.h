@@ -47,7 +47,7 @@ namespace Util
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(string op, int a, int b, int c = 0);
 
-	string calculateSHA256Checksum(string& filePath);
+	string calculateSHA256Checksum(string &filePath);
 
 	string ExecuteCMD(char const *command);
 	string GetCurrentTimeStr();
@@ -69,10 +69,13 @@ namespace Util
 	bool GetStatusLedZigbee();
 	bool GetStatusLedInternet();
 
-	float GetLongitude();
-	float GetLatitude();
-	void SetLongitude(float value);
-	void SetLatitude(float value);
+	float GetLongitude(string data);
+	float GetLatitude(string data);
+
+	void SetStatusWeatherOutdoor(int status);
+	void SetTempWeatherOutdoor(uint16_t temp);
+	int GetStatusWeatherOutdoor();
+	uint16_t GetTempWeatherOutdoor();
 
 	void SetTempOfScreenTouch(uint16_t temp);
 	void SetHumOfScreenTouch(uint16_t hum);

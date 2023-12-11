@@ -33,7 +33,7 @@ int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_CCT) && dataValue[KEY_ATTRIBUTE_CCT].isInt())
 	{
 		cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
-		CheckTrigger();
+		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}

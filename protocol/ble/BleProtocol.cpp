@@ -127,9 +127,8 @@ void BleProtocol::InitKey()
 	}
 }
 
-static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
+static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataValues)
 {
-	Json::Value dataValue = Json::objectValue;
 	typedef struct __attribute__((packed))
 	{
 		uint16_t opcode;
@@ -143,17 +142,17 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 
 	if (data_message->opcode == LIGHTNESS_LINEAR_STATUS && data_message->header == 2)
 	{
-		dataValue[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
+		dataValues[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
 		if ((data_message->status_mode & 0x0F) == 1)
 		{
-			dataValue[KEY_ATTRIBUTE_DIM] = (data_message->value1 * 100) / 65535;
-			dataValue[KEY_ATTRIBUTE_CCT] = (data_message->value2 - 800) / 192;
+			dataValues[KEY_ATTRIBUTE_DIM] = (data_message->value1 * 100) / 65535;
+			dataValues[KEY_ATTRIBUTE_CCT] = (data_message->value2 - 800) / 192;
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
-			dataValue[KEY_ATTRIBUTE_HUE] = data_message->value2;
-			dataValue[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
-			dataValue[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
+			dataValues[KEY_ATTRIBUTE_HUE] = data_message->value2;
+			dataValues[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
+			dataValues[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
 		}
 	}
 }
@@ -197,27 +196,27 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		data_message_t *data_message = (data_message_t *)message_rsp->data;
 		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
+		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
 			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
-				Json::Value dataArray = Json::objectValue;
-				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
-				deviceBle->InputData(dataArray);
+				Json::Value dataValues = Json::objectValue;
+				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
+				deviceBle->InputData(dataValues, false);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP)
 			{
 				uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
 				if (vendorId == RD_VENDOR_ID)
 				{
-					uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
 					if (header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 					{
-						for (int i=0; i<deviceBle->GetNumElement(); i++)
+						for (int i = 0; i < deviceBle->GetNumElement(); i++)
 						{
-							deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr+i);
+							deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr + i);
 						}
 					}
 				}
@@ -225,6 +224,20 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			else
 			{
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
+			}
+
+			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+			{
+				if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME)
+				{
+					SendDate(deviceBle->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
+					SendTime(deviceBle->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
+				}
+				else if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP)
+				{
+					SendWeatherOutdoor(deviceBle->GetAddr(), Util::GetStatusWeatherOutdoor(), Util::GetTempWeatherOutdoor());
+					SendWeatherIndoor(deviceBle->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
+				}
 			}
 			break;
 		}
@@ -327,13 +340,13 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 							if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
 							{
 #ifdef ESP_PLATFORM
-							message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
+								message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
-							// CheckOpcodeException(message_rsp);
-							message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+								// CheckOpcodeException(message_rsp);
+								message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
 #endif
-							memcpy(messageCheckOpcode, message_rsp, packageLen);
-							messageCheckOpcodeList.push_back(messageCheckOpcode);
+								memcpy(messageCheckOpcode, message_rsp, packageLen);
+								messageCheckOpcodeList.push_back(messageCheckOpcode);
 							}
 							vectorCheckOpcodeMtx.unlock();
 						}
@@ -354,8 +367,8 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 				}
 				else
 				{
-					d ++;
-					l --;
+					d++;
+					l--;
 				}
 			}
 			else
