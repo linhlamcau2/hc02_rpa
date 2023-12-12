@@ -61,7 +61,7 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 	{
 		int modeRGB = 0;
 		if (data.isObject() &&
-				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		}
@@ -76,7 +76,7 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 	}
 #else
 
-	if (GetPositionDevice(device) >=0)
+	if (GetPositionDevice(device) >= 0)
 	{
 		DelDevice(device);
 	}

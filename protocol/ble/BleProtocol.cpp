@@ -265,6 +265,12 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 					SendWeatherIndoor(deviceBle->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
 				}
 			}
+
+			// update device status after screen touch, remote control group
+			if (data_message->data[0] == 0x52 && (data_message->data[1] == 0x0a || data_message->data[1] == 0x02)) 
+			{
+				UpdateLights(0xFFFF);
+			}
 		}
 		else
 		{

@@ -70,7 +70,6 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	this->data = "";
-	this->numScreenTouchs = 0;
 }
 
 Gateway::~Gateway()
@@ -447,6 +446,7 @@ int Gateway::CheckOnlineThread()
 	LOGI("Start CheckOnlineThread");
 	time_t currentTime = 0;
 	time_t oldTime = 0;
+	time_t oldTimeCheckStatus = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
 
@@ -481,8 +481,38 @@ int Gateway::CheckOnlineThread()
 	Json::Value dataValueOld;
 	while (1)
 	{
+		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		{
+			if ((time(NULL) - oldTimeCheckStatus) > 180)
+			{
+				oldTimeCheckStatus = time(NULL);
+				for (const auto &[id, device] : deviceList)
+				{
+					if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
+					{
+						Json::Value deviceData;
+						Json::Value deviceAttribute;
+						deviceData["DEVICE_ID"] = id;
+						device->BuildTelemetryValue(deviceAttribute);
+						deviceData["PROPERTIES"] = deviceAttribute;
+						pushDataValue["CMD"] = "DEVICE";
+						pushDataValue["DATA"].append(deviceData);
+					}
+				}
+
+				if (dataValueOld != pushDataValue)
+				{
+					dataValueOld.clear();
+					dataValueOld = pushDataValue;
+					gateway->LocalPublish(pushDataValue);
+					gateway->CloudPublish(pushDataValue);
+				}
+
+				pushDataValue.clear();
+			}
+		}
 		// Check have device screen touch -> send datetime, weather data
-		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 18000)
+		if ((time(NULL) - oldTime) > 18000)
 		{
 			oldTime = time(NULL);
 			HTTPRequest *httpRequest = new HTTPRequest();
@@ -613,20 +643,6 @@ int Gateway::CheckOnlineThread()
 							CloudPublish(onlineValue);
 #endif
 						}
-
-						if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
-						{
-							if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
-							{
-								Json::Value deviceData;
-								Json::Value deviceAttribute;
-								deviceData["DEVICE_ID"] = id;
-								device->BuildTelemetryValue(deviceAttribute);
-								deviceData["PROPERTIES"] = deviceAttribute;
-								pushDataValue["CMD"] = "DEVICE";
-								pushDataValue["DATA"].append(deviceData);
-							}
-						}
 					}
 				}
 				else
@@ -641,21 +657,9 @@ int Gateway::CheckOnlineThread()
 				gateway->pushDeviceUpdateLocalV2(dataValue);
 				gateway->pushDeviceUpdateCloudV2(dataValue);
 			}
-#else
-			if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
-			{
-				if (dataValueOld != pushDataValue)
-				{
-					dataValueOld.clear();
-					dataValueOld = pushDataValue;
-					gateway->LocalPublish(pushDataValue);
-					gateway->CloudPublish(pushDataValue);
-				}
-			}
-			pushDataValue.clear();
 #endif
 		}
-		sleep(3);
+		sleep(1);
 	}
 	return CODE_OK;
 }
@@ -1082,7 +1086,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
 		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
-		numScreenTouchs++;
 		break;
 	case BLE_SWITCH_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN:

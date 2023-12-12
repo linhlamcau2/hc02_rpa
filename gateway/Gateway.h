@@ -68,8 +68,6 @@ private:
 	mutex sceneDelayListMtx;
 	mutex sceneBleListMtx;
 
-	uint8_t numScreenTouchs;
-
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
 

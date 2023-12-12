@@ -389,10 +389,6 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
-				{
-					numScreenTouchs--;
-				}
 				if (device->GetProtocol() == BLE_DEVICE)
 				{
 					DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
