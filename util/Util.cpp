@@ -443,27 +443,50 @@ bool Util::GetStatusLedInternet()
 	return ledInternet;
 }
 
-static float longitude = 0;
-static float latitude = 0;
-
-float Util::GetLongitude()
+float Util::GetLongitude(string data)
 {
+	float longitude = 0.0;
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember("longitude") && dataJson["longitude"].isDouble())
+	{
+		longitude = dataJson["longitude"].asDouble();
+	}
 	return longitude;
 }
 
-float Util::GetLatitude()
+float Util::GetLatitude(string data)
 {
+	float latitude = 0.0;
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember("latitude") && dataJson["latitude"].isDouble())
+	{
+		latitude = dataJson["latitude"].asDouble();
+	}
 	return latitude;
 }
 
-void Util::SetLongitude(float value)
+static int statusWeather;
+static uint16_t tempWeather;
+void Util::SetStatusWeatherOutdoor(int status)
 {
-	longitude = value;
+	statusWeather = status;
 }
 
-void Util::SetLatitude(float value)
+void Util::SetTempWeatherOutdoor(uint16_t temp)
 {
-	latitude = value;
+	tempWeather = temp;
+}
+
+int Util::GetStatusWeatherOutdoor()
+{
+	return statusWeather;
+}
+
+uint16_t Util::GetTempWeatherOutdoor()
+{
+	return tempWeather;
 }
 
 static uint16_t tempForScreenTouch = 0;

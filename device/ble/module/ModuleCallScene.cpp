@@ -18,34 +18,6 @@ ModuleCallScene::~ModuleCallScene()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleCallScene::InitAttribute(int id, double value)
-{
-	if (this->id == id)
-		this->value = value;
-}
-
-void ModModuleCallSceneuleDim::SaveAttribute()
-{
-	database->DeviceAttributeAddOrReplace(device, id, value);
-}
-#endif
-
-// int ModuleCallScene::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-// {
-//     if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-//     {
-//         id = dataValue["ID"].asInt();
-//         if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-//         {
-//             value = dataValue["VALUE"].asInt();
-//             BuildTelemetryValue(jsonValue);
-//             return CODE_OK;
-//         }
-//     }
-//     return CODE_ERROR;
-// }
-
 int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
@@ -107,50 +79,3 @@ int ModuleCallScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	}
 	return CODE_ERROR;
 }
-
-bool ModuleCallScene::CheckData(Json::Value &dataValue, bool &rs)
-{
-	LOGV("CheckData data: %s", dataValue.toString().c_str());
-// #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-// #else
-// 	if (dataValue.isObject() &&
-// 			dataValue.isMember("ID") && dataValue["ID"].isInt())
-// 	{
-// 		int id = dataValue["ID"].asInt();
-// 		if (this->id == id &&
-// 				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-// 				dataValue.isMember("OP") && dataValue["OP"].isString())
-// 		{
-// 			uint16_t idScene1 = 0, idScene2 = 0;
-// 			string op = dataValue["OP"].asString();
-// 			Json::Value listValue = dataValue["VALUE"];
-// 			if (listValue.size() > 0)
-// 			{
-// 				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-// 				{
-// 					idScene1 = listValue[0].asInt();
-// 					idScene2 = listValue[1].asInt();
-// 				}
-// 				else if (listValue.size() == 1 && listValue[0].isInt())
-// 				{
-// 					idScene1 = listValue[0].asInt();
-// 				}
-// 				rs = Util::CompareNumber(op, this->value, idScene1, idScene2);
-// 				return true;
-// 			}
-// 		}
-// 	}
-// #endif
-	return false;
-}
-
-// void ModuleCallScene::BuildTelemetryValue(Json::Value &jsonValue)
-// {
-// #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-// #else
-// 	Json::Value dataValue;
-// 	dataValue["ID"] = id;
-// 	dataValue["VALUE"] = value;
-// 	jsonValue.append(dataValue);
-// #endif
-// }

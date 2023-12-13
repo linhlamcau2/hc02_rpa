@@ -48,6 +48,7 @@ private:
 	uint32_t ble_iv_index;
 	string dormitoryId;
 	string refresh_token;
+	string data;
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
 
@@ -64,8 +65,6 @@ private:
 	mutex ruleListMtx;
 	mutex roomListMtx;
 	mutex sceneBleListMtx;
-
-	uint8_t numScreenTouchs;
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
@@ -194,7 +193,6 @@ public:
 	void StopUdpBroadcast();
 	int UdpBroadcastThread();
 
-	void SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp);
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
@@ -234,6 +232,7 @@ public:
 	string getVersion();
 	string getName();
 	string getRefreshToken();
+	string getData();
 	string getMac();
 
 	void setBleAddr(uint16_t addr);
@@ -247,6 +246,7 @@ public:
 	void setVersion(string version);
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
+	void setData(string data);
 
 	void DelAllDevice();
 	void DelAllGroup();

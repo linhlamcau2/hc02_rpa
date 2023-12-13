@@ -84,6 +84,7 @@ public:
 	int GatewayUpdateIvIndex(Gateway *gateway, uint32_t iv_index);
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
+	int GatewayUpdateData(Gateway *gateway, string data);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
