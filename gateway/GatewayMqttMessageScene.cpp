@@ -46,7 +46,7 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
-			int rs = sceneBle->Do();
+			int rs = sceneBle->Do(true);
 			respValue["data"]["code"] = rs;
 		}
 		else
@@ -342,7 +342,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList, "");
-			
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
@@ -389,7 +389,7 @@ int Gateway::OnCallScene(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue)
 {
-		if (reqValue.isMember("id") && reqValue["id"].isString() &&
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 		reqValue.isMember("name") && reqValue["name"].isString() &&
 		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
@@ -455,7 +455,7 @@ int Gateway::OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue)
 }
 int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
 {
-		if (reqValue.isMember("id") && reqValue["id"].isString() &&
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 		reqValue.isMember("name") && reqValue["name"].isString() &&
 		reqValue.isMember("devices") && reqValue["devices"].isArray())
 	{
@@ -848,8 +848,8 @@ int Gateway::OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 					// {
 					// 	if (id == temp_scene)
 					// 	{
-							scene->SetIsFavorite(true);
-							database->SceneBleUpdateFavorite(scene);
+					scene->SetIsFavorite(true);
+					database->SceneBleUpdateFavorite(scene);
 					// 	}
 					// }
 				}

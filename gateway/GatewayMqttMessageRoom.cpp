@@ -137,7 +137,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						{
 							uint32_t type = device->GetType() / 10000;
 							devicesAddRoom.push_back(device);
-							if (type == 1)
+							if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF)
 							{
 								if (device->GetVersion() >= 0x0300) // fast add device to room
 								{
@@ -264,7 +264,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 													{
 														if (group->GetPositionDevice(deviceAddScene, deviceAddScene->GetAddr()) >= 0)
 														{
-															group->Do(groupData, true);
+															group->Do(groupData, false);
 															if (sceneBle->AddDevice(deviceAddScene, groupData, true, true) != CODE_OK)
 															{
 																if (devicesStatusConfig[deviceAddScene->GetId()])
@@ -380,7 +380,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						devicesAddRoom.push_back(device);
 						uint32_t type = device->GetType() / 10000;
-						if (type == 1)
+						if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF)
 						{
 							if (device->GetVersion() >= 0x0300)
 							{
@@ -554,7 +554,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 													{
 														if (group->GetPositionDevice(devInScene, devInScene->GetAddr()) >= 0)
 														{
-															group->Do(groupData, true);
+															group->Do(groupData, false);
 															if (sceneBle->AddDevice(devInScene, groupData, true, true) != CODE_OK)
 															{
 																if (devicesStatusConfig[devInScene->GetId()])

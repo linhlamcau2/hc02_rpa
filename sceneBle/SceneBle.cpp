@@ -133,7 +133,7 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 	return CODE_ERROR;
 }
 
-int SceneBle::Do()
+int SceneBle::Do(bool ack)
 {
-	return bleProtocol->CallScene(0xffff, addr, TRANSITION_DEFAULT, true);
+	return bleProtocol->CallScene(0xffff, addr, TRANSITION_DEFAULT, ack);
 }

@@ -60,10 +60,10 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert,
-								 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
-			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -100,6 +100,7 @@ static void startUdpThread(void *data)
 void Gateway::init()
 {
 	LocalProtocol::init();
+	CloudProtocol::init();
 	Udp::init();
 
 	InitUdpMessage();
@@ -225,6 +226,7 @@ int Gateway::CheckOnlineThread()
 	LOGI("Start CheckOnlineThread");
 	time_t currentTime = 0;
 	time_t oldTime = 0;
+	time_t oldTimeCheckStatus = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
 
@@ -239,11 +241,39 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 
-	Json::Value dataValueOld;
+	Json::Value devicesStatusOld = Json::Value::null;
 
 	while (1)
 	{
-		// Check have device screen touch -> send datetime, weather data
+		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		{
+			if ((time(NULL) - oldTimeCheckStatus) >= 3)
+			{
+				oldTimeCheckStatus = time(NULL);
+				Json::Value devicesStatus = Json::Value::null;
+				for (const auto &[id, device] : deviceList)
+				{
+					if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
+					{
+						Json::Value deviceValue;
+						deviceValue["id"] = device->GetId();
+						Json::Value deviceAttbute;
+						device->BuildTelemetryValue(deviceAttbute);
+						deviceValue["data"] = deviceAttbute;
+						devicesStatus.append(deviceValue);
+					}
+				}
+				if (!devicesStatus.isNull() && devicesStatus != devicesStatusOld)
+				{
+					devicesStatusOld = devicesStatus;
+					Json::Value dataPush;
+					dataPush["device"] = devicesStatus;
+					gateway->pushDeviceUpdateLocal(dataPush);
+					gateway->pushDeviceUpdateCloud(dataPush);
+				}
+			}
+		}
+
 		if ((time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);
@@ -259,7 +289,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -366,20 +396,6 @@ int Gateway::CheckOnlineThread()
 								deviceData["data"] = offlineValue;
 							devicesData.append(deviceData);
 						}
-
-						if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
-						{
-							if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
-							{
-
-								Json::Value deviceValue;
-								deviceValue["id"] = device->GetId();
-								Json::Value deviceAttbute;
-								device->BuildTelemetryValue(deviceAttbute);
-								deviceValue["data"] = deviceAttbute;
-								devicesData.append(deviceValue);
-							}
-						}
 					}
 				}
 				else
@@ -387,14 +403,12 @@ int Gateway::CheckOnlineThread()
 			}
 
 			// deviceListMtx.unlock();
-			if (!devicesData.isNull() && (devicesData != dataValueOld))
+			if (!devicesData.isNull())
 			{
 				Json::Value dataValue;
 				dataValue["device"] = devicesData;
-				LOGW("data push: %s", dataValue.toString().c_str());
 				gateway->pushDeviceUpdateLocal(dataValue);
 				gateway->pushDeviceUpdateCloud(dataValue);
-				dataValueOld = devicesData;
 			}
 		}
 		sleep(1);
@@ -534,7 +548,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["mac"] = scanDevice->GetMac();
 	devValue["data"] = scanDevice->GetData();
 	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
-			scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
+		scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
 	{
 		devValue["type"] = BLE_SWITCH_ONOFF;
 	}
@@ -547,12 +561,12 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		devValue["type"] = BLE_SMOKE_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
 	{
 		devValue["type"] = BLE_DOOR_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
 	{
 		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
 	}
@@ -780,10 +794,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -829,7 +843,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-							deviceJson.isMember("data") && deviceJson["data"].isObject())
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include "AndroidBleProtocol.h"
+#include "Db.h"
 
 void Gateway::InitMqttMessageHc()
 {
@@ -24,6 +25,7 @@ void Gateway::InitMqttMessageHc()
 	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 
+	OnLocalCallbackRegister("hcConnectToCloud", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
@@ -32,6 +34,34 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+}
+
+int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcHcConnectCloud");
+	if (reqValue.isMember("latitude") && reqValue["latitude"].isDouble() &&
+		reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
+	{
+		Json::Value dataJson;
+		dataJson["latitude"] = reqValue["latitude"].asDouble();
+		dataJson["longitude"] = reqValue["longitude"].asDouble();
+		this->setData(dataJson.toString());
+		database->GatewayUpdateData(this, dataJson.toString());
+	}
+
+	if (reqValue.isMember("dormitoryId") && reqValue["dormitoryId"].isString())
+	{
+		string dormitoryId = reqValue["dormitoryId"].asString();
+		this->setDormitory(dormitoryId);
+		database->GatewayUpdateDormitory(this, dormitoryId);
+		respValue["data"]["code"] = CODE_OK;
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_ERROR;
+	}
+	respValue["cmd"] = "hcConnectToCloudRsp";
+	return CODE_OK;
 }
 
 int Gateway::OnControlHc(Json::Value &reqValue, Json::Value &respValue)
@@ -113,7 +143,7 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 		rsCode = CODE_ERROR;
 		LOGW("AndroidBleProtocol null");
 	}
-	
+
 	if (bleProtocol)
 	{
 		bleProtocol->StopScan();

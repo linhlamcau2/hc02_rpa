@@ -1105,6 +1105,30 @@ Response:
     }
 }
 ```
+### II.1.3. Hc connected cloud: app -> HC
+Request:
+```json
+{
+  "cmd": "hcConnectToCloud",
+  "rpi": "abc123456",
+  "data": {
+    "dormitoryId": "af7d22f1-1b90-451e-8332-7c99ee08eaf2",
+    "latitude": 20.9909759,
+    "longitude": 105.808105
+  }
+}
+```
+
+Response:
+```json
+{
+    "cmd": "hcConnectToCloudRsp",
+    "rqi": "abc123456",
+    "data": {
+        "code": 0
+    }
+}
+```
 ### II.8. Công tắc liên thông
 #### II.8.1 Thêm công tắc liên thông
 Request:

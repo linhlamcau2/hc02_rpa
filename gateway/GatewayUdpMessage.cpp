@@ -260,45 +260,6 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_ERROR;
 }
 
-int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
-{
-	LOGD("OnRpcHcConnectCloud");
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
-	{
-		Json::Value data = reqValue["DATA"];
-		respValue["CMD"] = "HC_CONNECT_TO_CLOUD";
-		if (data.isMember("LATITUDE") && data["LATITUDE"].isDouble() && data.isMember("LONGITUDE") && data["LONGITUDE"].isDouble())
-		{
-			Json::Value dataJson;
-			dataJson["latitude"] = data["LATITUDE"].asDouble();
-			dataJson["longitude"] = data["LONGITUDE"].asDouble();
-			setData(dataJson.toString());
-			database->GatewayUpdateData(this, dataJson.toString());
-		}
-		if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString() && data.isMember("REFRESH_TOKEN") && data["REFRESH_TOKEN"].isString())
-		{
-			string dormitoryId = data["DORMITORY_ID"].asString();
-			string refreshToken = data["REFRESH_TOKEN"].asString();
-			gateway->setDormitory(dormitoryId);
-			gateway->setRefreshToken(refreshToken);
-			database->GatewayUpdateDormitory(gateway, dormitoryId);
-			database->GatewayUpdateRefreshToken(gateway, refreshToken);
-			respValue["DATA"]["SUCCESS"] = true;
-		}
-		else
-		{
-			LOGW("Data error");
-			respValue["DATA"]["SUCCESS"] = false;
-		}
-		return CODE_OK;
-	}
-	else
-	{
-		LOGW("OnRpcHcConnectCloud %s error", reqValue.toString().c_str());
-	}
-	return CODE_ERROR;
-}
-
 int Gateway::OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcRspHcInfo");

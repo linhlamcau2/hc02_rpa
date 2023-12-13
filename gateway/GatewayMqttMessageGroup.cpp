@@ -34,7 +34,7 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
-			int rs = group->Do(devData);
+			int rs = group->Do(devData, true);
 			respValue["data"]["code"] = rs;
 		}
 		else

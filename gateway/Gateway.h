@@ -76,7 +76,6 @@ private:
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
-	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
 
@@ -161,6 +160,7 @@ private:
 
 	// Hc
 	void InitMqttMessageHc();
+	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);

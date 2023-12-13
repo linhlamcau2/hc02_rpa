@@ -29,7 +29,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
-				gateway->setMac(mac);
+				// gateway->setMac(mac);
 				gateway->setId(id);
 				gateway->setName(name);
 				gateway->setBleNetkey(ble_netkey);
