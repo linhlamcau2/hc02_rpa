@@ -483,12 +483,12 @@ int Gateway::CheckOnlineThread()
 	{
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
-			if ((time(NULL) - oldTimeCheckStatus) > 180)
+			if ((time(NULL) - oldTimeCheckStatus) >= 3)
 			{
 				oldTimeCheckStatus = time(NULL);
 				for (const auto &[id, device] : deviceList)
 				{
-					if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
+					if (((device->GetType() / 10000) == 1) /*|| ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26)*/)
 					{
 						Json::Value deviceData;
 						Json::Value deviceAttribute;
