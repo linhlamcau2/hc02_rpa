@@ -53,7 +53,7 @@ private:
 	void OnServerBinResp(string &topic, char *payload, int payloadLen);
 
 public:
-	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive);
+	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert);
 	virtual ~CloudProtocol();
 
 	void init();

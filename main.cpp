@@ -7,6 +7,8 @@
 #include <vector>
 #include <algorithm>
 #include <signal.h>
+#include <iostream>
+#include <fstream>
 #include "json.h"
 #include "Log.h"
 #include "Config.h"
@@ -76,11 +78,20 @@ int main(int argc, char *argv[])
 	// zigbeeProtocol->CommissionFormation();
 #endif
 
+	string cmd_get_cert = "openssl s_client -connect " + config->GetHost() + ":" + to_string(config->GetPort()) + " 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'";
+	string cert = Util::ExecuteCMD(cmd_get_cert.c_str());
+	LOGI("cert: %s", cert.c_str());
+	if (!cert.empty())
+	{
+		ofstream certFile(TMP_FOLDER "server.pem");
+		certFile << cert;
+		certFile.close();
+	}
+
 	string mac = Wifi::GetMacAddress();
-	// string mac = "be:3e:25:2e:a1:ca";
 	LOGI("mac: %s", mac.c_str());
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(),
-						  "localhost", 1883, "RD", "", 10);
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER "server.pem",
+												"localhost", 1883, "RD", "", 10);
 	gateway->init();
 
 	bleProtocol->InitKey();

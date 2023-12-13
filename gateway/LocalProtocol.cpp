@@ -32,10 +32,10 @@ static string GenPassMqttBroker(string mac)
 	}
 	char hexString[sizeof(out) * 2 + 1];
 	sprintf(hexString, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-			out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7],
-			out[8], out[9], out[10], out[11], out[12], out[13], out[14], out[15],
-			out[16], out[17], out[18], out[19], out[20], out[21], out[22], out[23],
-			out[24], out[25], out[26], out[27], out[28], out[29], out[30], out[31]);
+					out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7],
+					out[8], out[9], out[10], out[11], out[12], out[13], out[14], out[15],
+					out[16], out[17], out[18], out[19], out[20], out[21], out[22], out[23],
+					out[24], out[25], out[26], out[27], out[28], out[29], out[30], out[31]);
 
 	std::string b(hexString);
 	delete[] outAes; // Remember to free the allocated memory
@@ -45,7 +45,8 @@ static string GenPassMqttBroker(string mac)
 #ifdef ESP_PLATFORM
 LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : MqttBroker()
 #else
-LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : Mqtt(address, port, token, username, password, keepalive)
+LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive)
+		: Mqtt(address, port, token, username, password, keepalive)
 #endif
 {
 	this->mac = mac;
@@ -55,9 +56,10 @@ LocalProtocol::LocalProtocol(string mac, string address, int port, string token,
 	pubRespTopic = "/v2/hc/" + mac + "/mobile/";
 #ifdef __OPENWRT__
 	password = GenPassMqttBroker(this->mac);
-	for (char &c : password) {
-        c = std::toupper(c);
-    }
+	for (char &c : password)
+	{
+		c = std::toupper(c);
+	}
 	LOGI("Passsword: %s", password.c_str());
 #endif
 }
@@ -120,9 +122,9 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	// 	{
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-		payloadJson.isMember("data") && payloadJson["data"].isObject())
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -200,8 +202,8 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 	// 	{
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -272,9 +274,9 @@ int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, s
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	request_t request = {
-		.status = false,
-		.respCmd = respCmd,
-		.respValue = respValue,
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	Publish(pubReqTopic, sendValue.toString());

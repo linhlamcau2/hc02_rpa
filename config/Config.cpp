@@ -135,7 +135,7 @@ static bool set_int_config_entry(const char *section, const char *name, int valu
 	uci_free_context(ctx);
 	return true;
 }
-#elif defined(__ANDROID__)
+#else
 static bool get_str_config_entry(Json::Value &jsonData, string key, string &value)
 {
 	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isString())
@@ -298,7 +298,7 @@ void Config::ReadConfig()
 		localKeepAlive = int_temp;
 	else
 		localKeepAlive = 10;
-#elif defined(__ANDROID__)
+#else
 	Json::Value jsonData;
 	OpenFile(CONFIG_FILE_NAME, jsonData);
 
@@ -427,7 +427,7 @@ bool Config::SetHost(string host)
 	{
 		return true;
 	}
-#elif defined(__ANDROID__)
+#else
 	Json::Value jsonData;
 	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
@@ -450,7 +450,7 @@ bool Config::SetPort(int port)
 	{
 		return true;
 	}
-#elif defined(__ANDROID__)
+#else
 	Json::Value jsonData;
 	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
@@ -473,7 +473,7 @@ bool Config::SetClientId(string clientId)
 	{
 		return true;
 	}
-#elif defined(__ANDROID__)
+#else
 	Json::Value jsonData;
 	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
@@ -496,7 +496,7 @@ bool Config::SetUsername(string username)
 	{
 		return true;
 	}
-#elif defined(__ANDROID__)
+#else
 	Json::Value jsonData;
 	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
@@ -519,7 +519,7 @@ bool Config::SetPassword(string password)
 	{
 		return true;
 	}
-#elif defined(__ANDROID__)
+#else
 	Json::Value jsonData;
 	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{

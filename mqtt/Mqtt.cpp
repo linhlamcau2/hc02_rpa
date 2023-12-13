@@ -12,15 +12,16 @@
 
 using namespace mosqpp;
 
-Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, bool tls, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
+Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, char *cert, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
 {
+	LOGI("MQTT: host: %s, port: %d", host.c_str(), port);
 	this->host = host;
 	this->port = port;
 	this->client_id = client_id;
 	this->username = username;
 	this->password = password;
 	this->keepalive = keepalive;
-	this->tls = tls;
+	this->cert = cert;
 	this->willset_topic = willset_topic;
 	this->willset_payload = willset_payload;
 	connected = false;
@@ -55,13 +56,11 @@ void Mqtt::SetWillset(string willset_topic, string willset_payload)
 
 int Mqtt::Connect()
 {
-	LOGD("Connect host %s, port %d", host.c_str(), port);
-	if (tls)
+	LOGI("Connect host %s, port %d", host.c_str(), port);
+	if (cert)
 	{
-		LOGD("Get CAfile");
-		string cmd = "openssl s_client -connect " + host + ":" + to_string(port) + " 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > " TMP_FOLDER "server.pem";
-		system(cmd.c_str());
-		tls_set(TMP_FOLDER "server.pem");
+		LOGI("Cert: %s", cert);
+		tls_set(cert);
 		tls_insecure_set(true);
 	}
 
@@ -83,7 +82,11 @@ int Mqtt::Connect()
 	if (result == MOSQ_ERR_SUCCESS)
 	{
 		result = connect_async(host.c_str(), port, keepalive);
-		if (result != MOSQ_ERR_SUCCESS)
+		if (result == MOSQ_ERR_SUCCESS)
+		{
+			LOGI("connect_async SUCCESS");
+		}
+		else
 		{
 			LOGW("connect_async failed code %d, err %s", result, mosqpp::strerror(result));
 		}
@@ -93,12 +96,6 @@ int Mqtt::Connect()
 		LOGE("loop_start failed code %d, err %s", result, mosqpp::strerror(result));
 	}
 	return result;
-	if (result == MOSQ_ERR_SUCCESS)
-	{
-		return CODE_OK;
-	}
-	LOGW("Connect err: %d", result);
-	return CODE_ERROR;
 }
 
 int Mqtt::Reconnect()

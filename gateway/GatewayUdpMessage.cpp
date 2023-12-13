@@ -48,7 +48,7 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 #endif
 #else
 		hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
-#ifdef defined(__OPENWRT__)
+#ifdef __OPENWRT__
 		respValue["TYPE"] = 1;
 #elif defined(__ANDROID__)
 		respValue["TYPE"] = 3;
