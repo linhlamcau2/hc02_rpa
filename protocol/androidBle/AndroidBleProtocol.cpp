@@ -39,6 +39,12 @@ int AndroidBleProtocol::StartScan()
 {
 	string cmd = "startScanBle";
 	Json::Value dataRequest = Json::objectValue;
+	Json::Value infoProvision = Json::objectValue;
+	infoProvision["netKey"] = gateway->getBleNetKey();
+	infoProvision["appKey"] = gateway->getBleAppKey();
+	infoProvision["ivIndex"] = gateway->getBleIvIndex();
+	infoProvision["addrGw"] = gateway->getBleAddr();
+	infoProvision["addProvision"] = gateway->GetNextAndroidProvisionAddr();
 	Json::Value dataResponse;
 	return PublishToAndroidBleMessage(cmd, dataRequest, cmd, &dataResponse, 2000);
 }

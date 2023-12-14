@@ -222,6 +222,8 @@ public:
 	void delRoom(Room *room);
 	uint16_t getNextRoomAddr();
 
+	uint32_t GetNextAndroidProvisionAddr();
+
 	uint16_t getBleAddr();
 	uint32_t getBleIvIndex();
 	string getBleNetKey();

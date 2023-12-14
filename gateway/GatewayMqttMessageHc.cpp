@@ -95,22 +95,25 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 	{
 		if (androidBleProtocol->StartScan() != CODE_OK)
 		{
-			if (bleProtocol)
-			{
-				bleProtocol->SetProvisioning(true);
-				bleProtocol->StartScan();
-			}
-			else
-			{
-				rsCode = CODE_ERROR;
-				LOGW("BleProtocol null");
-			}
+			rsCode = CODE_ERROR;
+			LOGW("Android Scan error");
 		}
 	}
 	else
 	{
 		rsCode = CODE_ERROR;
 		LOGW("androidProtocol null");
+	}
+
+	if (bleProtocol)
+	{
+		bleProtocol->SetProvisioning(true);
+		bleProtocol->StartScan();
+	}
+	else
+	{
+		rsCode = CODE_ERROR;
+		LOGW("bleProtocol null");
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

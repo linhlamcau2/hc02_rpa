@@ -1367,9 +1367,15 @@ Response:
 Request:
 ```json
 {
-    "cmd": "startScanBle",
-    "rqi": "abc123456",
-    "data": {}
+  "cmd": "startScanBle",
+  "rqi": "abc123456",
+  "data": {
+    "netKey": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+    "appKey": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+    "ivIndex": "11223344",
+    "addrGw": 1,
+    "addrProvision": 2
+  }
 }
 ```
 Response:

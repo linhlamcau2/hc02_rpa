@@ -1,6 +1,8 @@
 #include "Gateway.h"
 #include "Db.h"
 
+#define ELEMENT_MAX 4
+
 Device *Gateway::getDeviceFromMac(string mac)
 {
 	deviceListMtx.lock();
@@ -319,4 +321,19 @@ uint16_t Gateway::getNextRoomAddr()
 	}
 	groupListMtx.unlock();
 	return roomAddr;
+}
+
+uint32_t Gateway::GetNextAndroidProvisionAddr()
+{
+	uint32_t nextAddr = 20000;
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->GetAddr() > nextAddr)
+		{
+			nextAddr = device->GetAddr() + ELEMENT_MAX;
+		}
+	}
+	deviceListMtx.unlock();
+	return nextAddr;
 }

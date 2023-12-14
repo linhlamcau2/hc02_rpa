@@ -268,6 +268,7 @@ int Gateway::CheckOnlineThread()
 					devicesStatusOld = devicesStatus;
 					Json::Value dataPush;
 					dataPush["device"] = devicesStatus;
+					LOGE("%s", dataPush.toString().c_str());
 					gateway->pushDeviceUpdateLocal(dataPush);
 					gateway->pushDeviceUpdateCloud(dataPush);
 				}

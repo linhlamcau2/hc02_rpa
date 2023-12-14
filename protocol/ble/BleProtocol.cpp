@@ -508,7 +508,7 @@ int BleProtocol::GetNetKey()
 
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
-				nextAddr = 24575;
+				nextAddr = 2;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else
@@ -1760,7 +1760,7 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 
 int BleProtocol::UpdateLights(uint16_t devAddr)
 {
-	LOGV("Update lights addr: 0x%04X ", devAddr);
+	LOGI("Update lights addr: 0x%04X ", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t updateHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x52};
