@@ -53,6 +53,7 @@ private:
 	string data;
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
+	atomic<bool> isCheckStatusLights;
 
 	map<string, Device *> deviceList;
 	map<string, Group *> groupList;
@@ -253,7 +254,10 @@ public:
 	void StopUdpBroadcast();
 	int UdpBroadcastThread();
 
-	void SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp);
+	void setCheckStatusLights(bool status);
+	bool getCheckStatusLights();
+
+	// void SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp);
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);

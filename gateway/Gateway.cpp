@@ -424,7 +424,7 @@ void Gateway::ResetFactory()
 
 	DelDatabase();
 }
-
+/*
 void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp)
 {
 	if (bleProtocol)
@@ -438,6 +438,22 @@ void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_
 	else
 		LOGW("BleProtocol null");
 }
+*/
+
+/*
+void Gateway::PushTelemetryAllLights()
+{
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		if (((device->GetType() / 10000) == 1))
+		{
+			bleProtocol->GetOnoffLight(device->GetAddr());
+		}
+	}
+	deviceListMtx.unlock();
+}
+*/
 
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
 
@@ -446,7 +462,6 @@ int Gateway::CheckOnlineThread()
 	LOGI("Start CheckOnlineThread");
 	time_t currentTime = 0;
 	time_t oldTime = 0;
-	time_t oldTimeCheckStatus = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
 
@@ -477,38 +492,20 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 
-	Json::Value pushDataValue;
-	Json::Value dataValueOld;
 	while (1)
 	{
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
-			if ((time(NULL) - oldTimeCheckStatus) >= 3)
+			if (getCheckStatusLights())
 			{
-				oldTimeCheckStatus = time(NULL);
+				setCheckStatusLights(false);
 				for (const auto &[id, device] : deviceList)
 				{
 					if (((device->GetType() / 10000) == 1) /*|| ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26)*/)
 					{
-						Json::Value deviceData;
-						Json::Value deviceAttribute;
-						deviceData["DEVICE_ID"] = id;
-						device->BuildTelemetryValue(deviceAttribute);
-						deviceData["PROPERTIES"] = deviceAttribute;
-						pushDataValue["CMD"] = "DEVICE";
-						pushDataValue["DATA"].append(deviceData);
+						bleProtocol->GetOnoffLight(device->GetAddr());
 					}
 				}
-
-				if (dataValueOld != pushDataValue)
-				{
-					dataValueOld.clear();
-					dataValueOld = pushDataValue;
-					gateway->LocalPublish(pushDataValue);
-					gateway->CloudPublish(pushDataValue);
-				}
-
-				pushDataValue.clear();
 			}
 		}
 		// Check have device screen touch -> send datetime, weather data
@@ -743,6 +740,16 @@ void Gateway::StopUdpBroadcast()
 {
 	LOGW("StopUdpBroadcast");
 	isUdpBroadcasting = false;
+}
+
+void Gateway::setCheckStatusLights(bool status)
+{
+	this->isCheckStatusLights = status;
+}
+
+bool Gateway::getCheckStatusLights()
+{
+	return this->isCheckStatusLights;
 }
 
 int Gateway::GatewayConnectToCloudNotice()

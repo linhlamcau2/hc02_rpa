@@ -118,6 +118,12 @@ void ModuleControlPause::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = id;
 	dataValue["VALUE"] = value;
 	jsonValue.append(dataValue);
+	dataValue["ID"] = BLE_ATTRIBUTE_CURTAIN_CLOSE;
+	dataValue["VALUE"] = 0;
+	jsonValue.append(dataValue);
+	dataValue["ID"] = BLE_ATTRIBUTE_CURTAIN_OPEN;
+	dataValue["VALUE"] = 0;
+	jsonValue.append(dataValue);
 #endif
 }
 
