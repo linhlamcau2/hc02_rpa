@@ -245,6 +245,7 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
+		/*
 		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
 		{
 			if ((time(NULL) - oldTimeCheckStatus) >= 3)
@@ -253,7 +254,7 @@ int Gateway::CheckOnlineThread()
 				Json::Value devicesStatus = Json::Value::null;
 				for (const auto &[id, device] : deviceList)
 				{
-					if (((device->GetType() / 10000) == 1) || ((device->GetType() / 1000) == 22) || ((device->GetType() / 1000) == 24) || ((device->GetType() / 1000) == 26))
+					if (((device->GetType() / 10000) == 1))
 					{
 						Json::Value deviceValue;
 						deviceValue["id"] = device->GetId();
@@ -268,13 +269,12 @@ int Gateway::CheckOnlineThread()
 					devicesStatusOld = devicesStatus;
 					Json::Value dataPush;
 					dataPush["device"] = devicesStatus;
-					LOGE("%s", dataPush.toString().c_str());
 					gateway->pushDeviceUpdateLocal(dataPush);
 					gateway->pushDeviceUpdateCloud(dataPush);
 				}
 			}
 		}
-
+		*/
 		if ((time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);

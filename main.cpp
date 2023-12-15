@@ -88,13 +88,10 @@ int main(int argc, char *argv[])
 		certFile.close();
 	}
 	
-	// string mac = Wifi::GetMacAddress();
-	string mac = "cc:cc:cc:cc:cc:cc";
+	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
-	// gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER "server.pem",
-	// 					  "localhost", 1883, "RD", "", 10);
-	gateway = new Gateway(mac, "13.214.202.131", 8883, "hc-" + mac, "hc-" + mac, "ABC123456", config->GetKeepAlive(), TMP_FOLDER "server.pem",
-	 					  "localhost", 1883, "RD", "", 10);
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER "server.pem",
+						  "localhost", 1883, "RD", "", 10);
 	gateway->init();
 
 	bleProtocol->InitKey();

@@ -201,10 +201,10 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		if (deviceBle)
 		{
 			deviceBle->UpdateLastTimeActive();
-			if (data_message->data[0] == 0x52 && (data_message->data[1] == 0x0a || data_message->data[1] == 0x02))
-			{
-				UpdateLights(0xffff);
-			}
+			// if (data_message->data[0] == 0x52 && (data_message->data[1] == 0x0a || data_message->data[1] == 0x02))
+			// {
+				// UpdateLights(0xffff);
+			// }
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
 				Json::Value dataValues = Json::objectValue;
