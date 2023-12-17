@@ -245,36 +245,7 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
-		/*
-		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
-		{
-			if ((time(NULL) - oldTimeCheckStatus) >= 3)
-			{
-				oldTimeCheckStatus = time(NULL);
-				Json::Value devicesStatus = Json::Value::null;
-				for (const auto &[id, device] : deviceList)
-				{
-					if (((device->GetType() / 10000) == 1))
-					{
-						Json::Value deviceValue;
-						deviceValue["id"] = device->GetId();
-						Json::Value deviceAttbute;
-						device->BuildTelemetryValue(deviceAttbute);
-						deviceValue["data"] = deviceAttbute;
-						devicesStatus.append(deviceValue);
-					}
-				}
-				if (!devicesStatus.isNull() && devicesStatus != devicesStatusOld)
-				{
-					devicesStatusOld = devicesStatus;
-					Json::Value dataPush;
-					dataPush["device"] = devicesStatus;
-					gateway->pushDeviceUpdateLocal(dataPush);
-					gateway->pushDeviceUpdateCloud(dataPush);
-				}
-			}
-		}
-		*/
+
 		if ((time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);
@@ -313,7 +284,7 @@ int Gateway::CheckOnlineThread()
 			}
 		}
 
-		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy() && bleProtocol->isInitKey)
 		{
 			// deviceListMtx.lock();
 			devicesData = Json::Value::null;

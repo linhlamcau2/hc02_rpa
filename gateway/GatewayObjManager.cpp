@@ -337,3 +337,27 @@ uint32_t Gateway::GetNextAndroidProvisionAddr()
 	deviceListMtx.unlock();
 	return nextAddr;
 }
+
+uint32_t Gateway::GetMaxAddrBle()
+{
+	uint32_t nextAddr = 2;
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		if (device->GetAddr() > nextAddr)
+		{
+			nextAddr = device->GetAddr();
+		}
+	}
+	deviceListMtx.unlock();
+	return nextAddr;
+}
+
+map<string, Device *> Gateway::GetListDevices()
+{
+	map<string, Device *> listDevs;
+	deviceListMtx.lock();
+	listDevs = deviceList;
+	deviceListMtx.unlock();
+	return listDevs;
+}

@@ -219,6 +219,7 @@ public:
 	atomic<bool> haveNewMac;
 	atomic<bool> haveGetMacRsp;
 	atomic<bool> isProvisioning;
+	atomic<bool> isInitKey;
 	scan_device_message_t scanDeviceMessage;
 
 #ifdef ESP_PLATFORM
@@ -233,7 +234,8 @@ public:
 	void CheckOpcodeException(message_rsp_st *message);
 
 	void InitKey();
-	string GetAppKey();
+	void CheckKeyBle();
+	// string GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
 	int SetGwKey();

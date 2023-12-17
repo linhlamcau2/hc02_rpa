@@ -33,6 +33,7 @@ BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate
 	haveNewMac = false;
 	haveGetMacRsp = true;
 	isProvisioning = false;
+	isInitKey = false;
 }
 
 BleProtocol::~BleProtocol()
@@ -115,8 +116,6 @@ void BleProtocol::init()
 
 void BleProtocol::InitKey()
 {
-	if (GetAppKey() == "")
-		ResetBle();
 	while (GetNetKey())
 	{
 #ifdef ESP_PLATFORM
@@ -124,6 +123,126 @@ void BleProtocol::InitKey()
 #else
 		sleep(4);
 #endif
+	}
+	CheckKeyBle();
+	isInitKey = true;
+}
+
+void BleProtocol::CheckKeyBle()
+{
+	string bleAppkey = gateway->getBleAppKey();
+	string bleNetkey = gateway->getBleNetKey();
+	string bleDevicekey = gateway->getBleDeviceKey();
+	srand(time(NULL));
+
+	string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
+
+	LOGW("bleNetkey: %s, netKey: %s", bleNetkey.c_str(), netkeyStr.c_str());
+
+	if (bleAppkey != "")
+	{
+		string tempAppKey = bleAppkey;
+		LOGD("Appkey: %s", tempAppKey.c_str());
+		tempAppKey.erase(std::remove(tempAppKey.begin(), tempAppKey.end(), '-'), tempAppKey.end());
+		if (tempAppKey.size() == 32)
+		{
+			for (int i = 0; i < tempAppKey.length(); i += 2)
+			{
+				std::string hexByte = tempAppKey.substr(i, 2);
+				appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+			}
+		}
+	}
+
+	if (bleAppkey == "" || bleDevicekey == "" || bleNetkey == "" || bleNetkey != netkeyStr)
+	{
+		ResetBle();
+
+		// this->UpdateDeviceKeyGateway(gateway->getBleAddr(), gateway->getBleDeviceKey());
+		map<string, Device *> listDevs = gateway->GetListDevices();
+		for (const auto &[id, device] : listDevs)
+		{
+			this->UpdateDeviceKeyDev(device->GetAddr(), device->GetDeviceKey());
+		}
+
+		if (bleNetkey != "")
+		{
+			string tempNetKey = bleNetkey;
+			LOGD("Netkey: %s", tempNetKey.c_str());
+			tempNetKey.erase(std::remove(tempNetKey.begin(), tempNetKey.end(), '-'), tempNetKey.end());
+			if (tempNetKey.size() == 32)
+			{
+				for (int i = 0; i < tempNetKey.length(); i += 2)
+				{
+					std::string hexByte = tempNetKey.substr(i, 2);
+					netKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+				}
+			}
+		}
+		else
+		{
+			bleNetkey = netkeyStr;
+			database->GatewayUpdateNetKey(gateway, bleNetkey);
+			gateway->setBleNetkey(bleNetkey);
+		}
+		LOGD("New ble_netkey: %s", bleNetkey.c_str());
+		SetNetKey();
+
+		if (bleDevicekey != "")
+		{
+			string tempDeviceKey = bleDevicekey;
+			LOGD("Gwkey: %s", tempDeviceKey.c_str());
+			tempDeviceKey.erase(std::remove(tempDeviceKey.begin(), tempDeviceKey.end(), '-'), tempDeviceKey.end());
+			if (tempDeviceKey.size() == 32)
+			{
+				for (int i = 0; i < tempDeviceKey.length(); i += 2)
+				{
+					std::string hexByte = tempDeviceKey.substr(i, 2);
+					gwKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				gwKey[i] = rand() % 256;
+			}
+			bleDevicekey = Util::uuidToStr((uint8_t *)gwKey);
+			database->GatewayUpdateDeviceKey(gateway, bleDevicekey);
+			gateway->setBleDevicekey(bleDevicekey);
+		}
+
+		LOGD("New ble_devicekey: %s", bleDevicekey.c_str());
+		SetGwKey();
+
+		if (bleAppkey != "")
+		{
+			string tempAppKey = bleAppkey;
+			LOGD("Appkey: %s", tempAppKey.c_str());
+			tempAppKey.erase(std::remove(tempAppKey.begin(), tempAppKey.end(), '-'), tempAppKey.end());
+			if (tempAppKey.size() == 32)
+			{
+				for (int i = 0; i < tempAppKey.length(); i += 2)
+				{
+					std::string hexByte = tempAppKey.substr(i, 2);
+					appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				// appKey[i] = appKeyDefault[i];
+				appKey[i] = rand() % 256;
+			}
+			bleAppkey = Util::uuidToStr((uint8_t *)appKey);
+			database->GatewayUpdateAppKey(gateway, bleAppkey);
+			gateway->setBleAppkey(bleAppkey);
+		}
+		LOGD("New ble_appkey: %s", bleAppkey.c_str());
+		UpdateAppKey(bleAppkey);
 	}
 }
 
@@ -446,6 +565,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	// return Write(dataReq, lenReq);
 }
 
+/*
 string BleProtocol::GetAppKey()
 {
 	string appkeyStr = gateway->getBleAppKey();
@@ -484,6 +604,7 @@ string BleProtocol::GetAppKey()
 	}
 	return appkeyStr;
 }
+*/
 
 int BleProtocol::GetNetKey()
 {
@@ -509,6 +630,9 @@ int BleProtocol::GetNetKey()
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
 				nextAddr = 2;
+			uint32_t maxAddr = gateway->GetMaxAddrBle();
+			if (nextAddr <= maxAddr)
+				nextAddr = maxAddr + 4;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else
@@ -517,21 +641,8 @@ int BleProtocol::GetNetKey()
 			for (int i = 0; i < 16; i++)
 			{
 				netKey[i] = rand() % 256;
-				gwKey[i] = rand() % 256;
 			}
-			SetNetKey();
-			SetGwKey();
 			string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
-			LOGD("New ble_netkey: %s", netkeyStr.c_str());
-			database->GatewayUpdateNetKey(gateway, netkeyStr);
-
-			string devicekeyGwStr = Util::uuidToStr((uint8_t *)gwKey);
-			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
-			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
-
-			gateway->setBleDevicekey(devicekeyGwStr);
-			gateway->setBleNetkey(netkeyStr);
-			UpdateAppKey(gateway->getBleAppKey());
 		}
 	}
 	else
@@ -3217,7 +3328,7 @@ int BleProtocol::GetInfoMesh()
 
 int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 {
-	LOGD("UpdateDeviceKeyDev");
+	LOGD("UpdateDeviceKeyDev: %d, devKey: %s", devAddr, devKeyDev.c_str());
 	devKeyDev.erase(std::remove(devKeyDev.begin(), devKeyDev.end(), '-'), devKeyDev.end());
 	if (devKeyDev.size() == 32)
 	{
@@ -3232,11 +3343,12 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			.header = 0x12,
 			.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < devKeyDev.length(); i += 2)
 		{
-			sscanf(devKeyDev.c_str() + i * 2, "%2x", (unsigned int *)&update_devkey_device.devKey[i]);
+			std::string hexByte = devKeyDev.substr(i, 2);
+			update_devkey_device.devKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
-		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, sizeof(update_devkey_device_t), 0, 0, 0, 1000);
+		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, sizeof(update_devkey_device_t), 0, 0, 0, 600);
 	}
 	else
 	{
@@ -3247,7 +3359,7 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 
 int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 {
-	LOGD("UpdateDeviceKeyGateway");
+	LOGD("UpdateDeviceKeyGateway: %s", devKeyDev.c_str());
 	devKeyDev.erase(std::remove(devKeyDev.begin(), devKeyDev.end(), '-'), devKeyDev.end());
 	if (devKeyDev.size() == 32)
 	{
@@ -3262,9 +3374,10 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			.header = 0x12,
 			.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < devKeyDev.length(); i += 2)
 		{
-			sscanf(devKeyDev.c_str() + i * 2, "%2x", (unsigned int *)&update_devkey_device.devKey[i]);
+			std::string hexByte = devKeyDev.substr(i, 2);
+			update_devkey_device.devKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, sizeof(update_devkey_device_t), 0, 0, 0, 1000);
 	}
@@ -3277,7 +3390,7 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 
 int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 {
-	LOGD("UpdateNetKey");
+	LOGD("UpdateNetKey: %s, indexId: %d", netKey.c_str(), indexId);
 	netKey.erase(std::remove(netKey.begin(), netKey.end(), '-'), netKey.end());
 	if (netKey.size() == 32)
 	{
@@ -3292,9 +3405,10 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 		set_netkey_message_t set_netkey_message;
 		memset(&set_netkey_message, 0x00, sizeof(set_netkey_message));
 		set_netkey_message.opcode = HCI_GATEWAY_CMD_SET_PRO_PARA;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < netKey.length(); i += 2)
 		{
-			sscanf(netKey.c_str() + i * 2, "%2x", (unsigned int *)&set_netkey_message.netKey[i]);
+			std::string hexByte = netKey.substr(i, 2);
+			set_netkey_message.netKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		set_netkey_message.index = bswap_32(indexId);
 		set_netkey_message.addGw = gwAddr;
@@ -3312,7 +3426,7 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 
 int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 {
-	LOGD("UpdateDevKey");
+	LOGD("UpdateDevKey %s", devKey.c_str());
 	devKey.erase(std::remove(devKey.begin(), devKey.end(), '-'), devKey.end());
 	if (devKey.size() == 32)
 	{
@@ -3325,9 +3439,10 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 		set_gwkey_message_t set_gwkey_message;
 		set_gwkey_message.opcode = 0x0D;
 		set_gwkey_message.gwAddr = (gwAddr);
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < devKey.length(); i += 2)
 		{
-			sscanf(devKey.c_str() + i * 2, "%2x", (unsigned int *)&set_gwkey_message.gwKey[i]);
+			std::string hexByte = devKey.substr(i, 2);
+			set_gwkey_message.gwKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&set_gwkey_message, sizeof(set_gwkey_message_t), 0, 0, 0, 1000);
 	}
@@ -3340,7 +3455,7 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 
 int BleProtocol::UpdateAppKey(string appKey)
 {
-	LOGD("UpdateAppKey");
+	LOGD("UpdateAppKey %s", appKey.c_str());
 	appKey.erase(std::remove(appKey.begin(), appKey.end(), '-'), appKey.end());
 	if (appKey.size() == 32)
 	{
@@ -3355,9 +3470,10 @@ int BleProtocol::UpdateAppKey(string appKey)
 		binding_all_message_t binding_all_message;
 		memset(&binding_all_message, 0x00, sizeof(binding_all_message));
 		binding_all_message.opcode = HCI_GATEWAY_CMD_START_KEYBIND;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < appKey.length(); i += 2)
 		{
-			sscanf(appKey.c_str() + i * 2, "%2x", (unsigned int *)&binding_all_message.appKey[i]);
+			std::string hexByte = appKey.substr(i, 2);
+			binding_all_message.appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, sizeof(binding_all_message_t), HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
 	}
@@ -3370,7 +3486,7 @@ int BleProtocol::UpdateAppKey(string appKey)
 
 int BleProtocol::UpdateMaxAddr(uint16_t addr)
 {
-	LOGD("UpdateMaxAddr");
+	LOGD("UpdateMaxAddr: %d", addr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct __attribute__((packed))

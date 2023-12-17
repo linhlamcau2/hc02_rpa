@@ -223,6 +223,8 @@ public:
 	uint16_t getNextRoomAddr();
 
 	uint32_t GetNextAndroidProvisionAddr();
+	uint32_t GetMaxAddrBle();
+	map<string, Device *> GetListDevices();
 
 	uint16_t getBleAddr();
 	uint32_t getBleIvIndex();
