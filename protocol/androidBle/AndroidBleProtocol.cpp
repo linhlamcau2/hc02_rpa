@@ -45,6 +45,35 @@ int AndroidBleProtocol::StartScan()
 	infoProvision["ivIndex"] = gateway->getBleIvIndex();
 	infoProvision["addrGw"] = gateway->getBleAddr();
 	infoProvision["addProvision"] = gateway->GetNextAndroidProvisionAddr();
+	infoProvision["mapTypeElement"][to_string(BLE_DOWNLIGHT_SMT)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_DOWNLIGHT_COB_GOC_RONG)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_DOWNLIGHT_COB_GOC_HEP)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_DOWNLIGHT_COB_TRANG_TRI)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_PANEL_TRON)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_PANEL_VUONG)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_OP_TRAN)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_OP_TUONG)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_CHIEU_TRANH)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_TRACKLIGHT)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_THA_TRAN)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_CHIEU_GUONG)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_DAY_LINEAR)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_TUBE_M16)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_DEN_BAN)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_FLOOD)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_RLT03_06W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_RLT02_10W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_RLT02_20W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_RLT01_10W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_TRL08_20W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_TRL08_10W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_RLT03_12W)] = 2;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_DAY_RGB)] = 3;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_DAY_RGBCW)] = 4;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_BULB)] = 4;
+	infoProvision["mapTypeElement"][to_string(BLE_DOWNLIGHT_RGBCW)] = 4;
+	infoProvision["mapTypeElement"][to_string(BLE_LED_OP_TRAN_LOA)] = 2;
+
 	Json::Value dataResponse;
 	return PublishToAndroidBleMessage(cmd, dataRequest, cmd, &dataResponse, 2000);
 }
