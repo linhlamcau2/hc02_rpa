@@ -134,6 +134,12 @@ void ModuleControlPercent::BuildTelemetryValue(Json::Value &jsonValue)
 	dataValue["ID"] = idStatus;
 	dataValue["VALUE"] = 1;
 	jsonValue.append(dataValue);
+	dataValue["ID"] = BLE_ATTRIBUTE_CURTAIN_CLOSE;
+	dataValue["VALUE"] = 0;
+	jsonValue.append(dataValue);
+	dataValue["ID"] = BLE_ATTRIBUTE_CURTAIN_OPEN;
+	dataValue["VALUE"] = 0;
+	jsonValue.append(dataValue);
 #endif
 }
 

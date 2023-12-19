@@ -344,7 +344,8 @@ void Gateway::init()
 
 	// Check old version to do something
 	string firmwareVersionCurrent = STR(VERSION);
-	if (getVersion() == "" && firmwareVersionCurrent == "1.0.10")
+	LOGI("Version: %s", firmwareVersionCurrent.c_str());
+	if (getVersion() != firmwareVersionCurrent && firmwareVersionCurrent == "1.0.14")
 	{
 		int addColumnSuccess = database->checkAndAddColumn("Gateway", "data", "TEXT");
 		if (addColumnSuccess == CODE_OK || addColumnSuccess == CODE_EXIST)

@@ -3497,7 +3497,7 @@ int Gateway::OnRpcControlGroup(Json::Value &reqValue, Json::Value &respValue)
 			{
 				if (properties.isArray())
 				{
-					group->Do(properties, false);
+					group->Do(properties, true);
 				}
 			}
 			else
