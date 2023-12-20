@@ -293,8 +293,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											tempSuccessList.append(deviceAddScene->GetId());
 										}
 									}
-									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 								}
+								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 							}
 						}
 					}
