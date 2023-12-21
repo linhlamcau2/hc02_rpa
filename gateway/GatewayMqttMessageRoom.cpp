@@ -582,8 +582,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											tempSuccessList.append(devInScene->GetId());
 										}
 									}
-									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 								}
+								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 							}
 						}
 					}
@@ -736,9 +736,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(deviceId);
 										}
 									}
-									pushMsgHcCoreToHcApp("delDevToScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, "");
 								}
 							}
+							pushMsgHcCoreToHcApp("delDevToScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, "");
 						}
 						printScene();
 					}
@@ -865,9 +865,6 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 
 			printScene();
 
-			pushMsgHcCoreToHcApp("delRoom", roomId, room->GetName(), successList, "");
-			delRoom(room);
-
 			for (auto &[id, status] : devicesStatusConfig)
 			{
 				if (status)
@@ -875,6 +872,10 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				else
 					failedList.append(id);
 			}
+
+			pushMsgHcCoreToHcApp("delRoom", roomId, room->GetName(), successList, "");
+			delRoom(room);
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -984,6 +985,7 @@ int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
 			group->SetName(name);
 		}
 	}
+	
 	Json::Value dataPushToHcApp;
 	dataPushToHcApp["cmd"] = "updateRoomName";
 	dataPushToHcApp["data"] = reqValue;
