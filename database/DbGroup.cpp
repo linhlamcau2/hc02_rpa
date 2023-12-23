@@ -19,6 +19,9 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				
 				Group *group = gateway->getGroupFromId(id);
 				if (!group)
 					group = new Group(id, addr, name);
@@ -55,7 +58,7 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr, create_at) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + "," + to_string(time(NULL)) + ")";
 	return Sqlite_Exec(sql);
 }
 

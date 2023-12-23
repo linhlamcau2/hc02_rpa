@@ -27,10 +27,10 @@ void Db::init(void)
 	LOGI("Initializing LITTLEFS");
 
 	esp_vfs_littlefs_conf_t conf = {
-			.base_path = "/spiffs",
-			.partition_label = "storage",
-			.format_if_mount_failed = true,
-			.dont_mount = false,
+		.base_path = "/spiffs",
+		.partition_label = "storage",
+		.format_if_mount_failed = true,
+		.dont_mount = false,
 	};
 
 	// Use settings defined above to initialize and mount LITTLEFS filesystem.
@@ -91,17 +91,17 @@ bool Db::IsHaveDb()
 
 int Db::createTableIfNotExists()
 {
-	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version INTEGER, hardware_version INTEGER, active_time INTEGER, update_time INTEGER, data TEXT,is_favorite INTEGER, PRIMARY KEY (device_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, PRIMARY KEY (room_id, device_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey VARCHAR, data TEXT, PRIMARY KEY (mac)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, room_id TEXT, PRIMARY KEY (group_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, data TEXT, PRIMARY KEY (room_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
-							 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, is_favorite INTEGER, PRIMARY KEY (scene_ble_id)) WITHOUT ROWID;";
+	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version INTEGER, hardware_version INTEGER, active_time INTEGER, update_time INTEGER, data TEXT,is_favorite BOOLEAN, PRIMARY KEY (device_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, create_at INTEGER, data TEXT, PRIMARY KEY (group_id, device_id, element)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, create_at INTEGER, data TEXT, PRIMARY KEY (room_id, device_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, create_at, data TEXT, PRIMARY KEY (scene_ble_id, device_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey VARCHAR, create_at INTEGER, data TEXT, PRIMARY KEY (mac)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, room_id TEXT, create_at INTEGER, data TEXT, PRIMARY KEY (group_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, create_at INTEGER, data TEXT, PRIMARY KEY (room_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, create_at INTEGER, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, is_favorite BOOLEAN, create_at INTEGER, data TEXT, PRIMARY KEY (scene_ble_id)) WITHOUT ROWID;";
 	return Sqlite_Exec(sql);
 }
 

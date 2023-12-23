@@ -27,6 +27,7 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string dormitory = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string refresh = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
 				// gateway->setMac(mac);

@@ -21,7 +21,8 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				int type = sqlite3_column_int(stmt, index++);
 				bool enable = sqlite3_column_blob(stmt, index++);
 				uint16_t addr = sqlite3_column_int(stmt, index++);
-				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
+
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);
 				if (decode == "")
@@ -67,7 +68,7 @@ int Db::RuleRead()
 
 int Db::RuleAdd(Rule *rule, string data, int type)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable, rule_addr) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " + to_string(rule->GetStatus()) + ", " + to_string(rule->GetAddr()) + ");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable, rule_addr, create_at) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " + to_string(rule->GetStatus()) + ", " + to_string(rule->GetAddr()) + "," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 

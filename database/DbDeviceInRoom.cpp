@@ -17,6 +17,10 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				uint16_t element = sqlite3_column_int(stmt, index++);
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				
 				Room *room = gateway->getRoomFromId(roomId);
 				Device *device = gateway->getDeviceFromId(deviceId);
 				if (room)
@@ -50,7 +54,7 @@ int Db::DeviceInRoomRead()
 
 int Db::DeviceInRoomAdd(Room *room, Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, device_id) VALUES ('" + room->GetId() + "','" + device->GetId() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, device_id, create_at) VALUES ('" + room->GetId() + "','" + device->GetId() + "', " + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 

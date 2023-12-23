@@ -17,7 +17,10 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string groupId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int element = sqlite3_column_int(stmt, index++);
+				uint16_t element = sqlite3_column_int(stmt, index++);
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
 				Group *group = gateway->getGroupFromId(groupId);
 				Device *device = gateway->getDeviceFromId(deviceId);
 				if (group)
@@ -56,7 +59,7 @@ int Db::DeviceInGroupRead()
 // TODO: add epId to db
 int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, device_id, element) VALUES ('" + group->GetId() + "','" + device->GetId() + "'," + to_string(epId) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, device_id, element, create_at) VALUES ('" + group->GetId() + "','" + device->GetId() + "'," + to_string(epId) + "," + to_string(time(NULL)) + ")";
 	return Sqlite_Exec(sql);
 }
 

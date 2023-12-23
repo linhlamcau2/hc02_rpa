@@ -19,6 +19,7 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string sceneBleId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneBleId);
@@ -76,7 +77,7 @@ int Db::DeviceInSceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *sceneBle, Device *device, string data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data, create_at) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "', " + to_string(time(NULL)) + ")";
 	return Sqlite_Exec(sql);
 }
 

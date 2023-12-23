@@ -26,7 +26,7 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				uint32_t activeTime = sqlite3_column_int(stmt, index++);
 				uint32_t updateTime = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_int(stmt, index++);
+				bool isFavorite = sqlite3_column_blob(stmt, index++);
 				string devData;
 				string decode = macaron::Base64::Decode(data, devData);
 				if (decode == "")
@@ -34,7 +34,8 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 					Json::Value dataJson;
 					dataJson.parse(devData);
 					Device *device = gateway->AddNewDevice(id, name, mac, dataJson, addr, type, firmwareVersion, false);
-					device->SetIsFavorite(isFavorite);
+					if (device)
+						device->SetIsFavorite(isFavorite);
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -58,7 +59,7 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData().toString()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + "," + to_string(device->GetVersion()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version, active_time) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData().toString()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + "," + to_string(device->GetVersion()) + "," + to_string(time(NULL)) + ")";
 	return Sqlite_Exec(sql);
 }
 

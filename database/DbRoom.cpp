@@ -19,7 +19,9 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
 				Room *room = new Room(roomId, addr, name);
 				if (room)
 				{
@@ -64,7 +66,7 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data, create_at) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "'," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 

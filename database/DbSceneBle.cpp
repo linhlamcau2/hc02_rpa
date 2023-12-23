@@ -20,7 +20,10 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_int(stmt, index++);
+				bool isFavorite = sqlite3_column_blob(stmt, index++);
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
 				SceneBle *sceneBle = new SceneBle(sceneId, addr, name);
 				if (sceneBle)
 				{
@@ -56,7 +59,7 @@ int Db::SceneBleRead()
 
 int Db::SceneBleAdd(SceneBle *sceneBle)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name) VALUES ('" + sceneBle->GetId() + "', " + to_string(sceneBle->GetAddr()) + ", '" + sceneBle->GetName() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name, create_at) VALUES ('" + sceneBle->GetId() + "', " + to_string(sceneBle->GetAddr()) + ", '" + sceneBle->GetName() + "'," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
