@@ -1519,7 +1519,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
-									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER || 
+									deviceInputRule->GetType() == BLE_SWITCH_RGB_SOCKET_1)
 								{
 									if (id == BLE_ATTRIBUTE_BUTTON_1 || id == BLE_ATTRIBUTE_BUTTON_2 || id == BLE_ATTRIBUTE_BUTTON_3 || id == BLE_ATTRIBUTE_BUTTON_4)
 									{
