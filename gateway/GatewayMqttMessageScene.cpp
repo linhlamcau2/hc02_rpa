@@ -46,7 +46,26 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
-			int rs = sceneBle->Do(true);
+			int rs = CODE_OK;
+			if (sceneBle->deviceList.size() <= 20)
+				rs = sceneBle->Do(true);
+			else
+			{
+				rs = sceneBle->Do(false);
+				Json::Value devicesData = Json::arrayValue;
+				for (auto &devInSceneBle : sceneBle->deviceList)
+				{
+					if (devInSceneBle->device->isOnline())
+					{
+						Json::Value deviceData;
+						deviceData["id"] = devInSceneBle->device->GetId();
+						deviceData["data"] = devInSceneBle->data;
+						devicesData.append(deviceData);
+					}
+				}
+				gateway->pushDeviceUpdateLocal(devicesData);
+				gateway->pushDeviceUpdateCloud(devicesData);
+			}
 			respValue["data"]["code"] = rs;
 		}
 		else

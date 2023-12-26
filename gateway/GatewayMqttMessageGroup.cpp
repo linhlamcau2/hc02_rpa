@@ -34,7 +34,26 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
-			int rs = group->Do(devData, true);
+			int rs = CODE_OK;
+			if (group->deviceList.size() <= 20)
+				rs = group->Do(devData, true);
+			else
+			{
+				rs = group->Do(devData, false);
+				Json::Value devicesData = Json::arrayValue;
+				for (auto &devInGroup : group->deviceList)
+				{
+					if (devInGroup->device->isOnline())
+					{
+						Json::Value deviceData;
+						deviceData["id"] = devInGroup->device->GetId();
+						deviceData["data"] = devData;
+						devicesData.append(deviceData);
+					}
+				}
+				gateway->pushDeviceUpdateLocal(devicesData);
+				gateway->pushDeviceUpdateCloud(devicesData);
+			}
 			respValue["data"]["code"] = rs;
 		}
 		else
