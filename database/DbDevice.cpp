@@ -26,7 +26,7 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				uint32_t activeTime = sqlite3_column_int(stmt, index++);
 				uint32_t updateTime = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_blob(stmt, index++);
+				bool isFavorite = sqlite3_column_int(stmt, index++) ? true: false;
 				string devData;
 				string decode = macaron::Base64::Decode(data, devData);
 				if (decode == "")
