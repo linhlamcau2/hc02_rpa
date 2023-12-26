@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
 
 	bleProtocol->InitKey();
 
-	mqttProtocol = new MqttProtocol();
-	mqttProtocol->init();
+	// mqttProtocol = new MqttProtocol();
+	// mqttProtocol->init();
 
 	Device::InitDeviceModelList();
 

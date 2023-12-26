@@ -93,11 +93,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 	int rsCode = CODE_OK;
 	if (androidBleProtocol)
 	{
-		if (androidBleProtocol->StartScan() != CODE_OK)
-		{
-			rsCode = CODE_ERROR;
-			LOGW("Android Scan error");
-		}
+		androidBleProtocol->StartScan();
 	}
 	else
 	{

@@ -22,11 +22,11 @@ void AndroidBleProtocol::init()
 	if (gateway)
 	{
 		gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnMessage, this, placeholders::_1, placeholders::_2), subTopic);
-		gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnAndroidBleResp, this, placeholders::_1, placeholders::_2), subTopic);
+		// gateway->localAddActionCallback(bind(&AndroidBleProtocol::OnAndroidBleResp, this, placeholders::_1, placeholders::_2), subTopic);
 		OnAndroidBleProtocolCallbackRegister("bleInfo", bind(&AndroidBleProtocol::OnBleInfo, this, placeholders::_1, placeholders::_2));
 		OnAndroidBleProtocolCallbackRegister("newDev", bind(&AndroidBleProtocol::OnNewDevice, this, placeholders::_1, placeholders::_2));
 		OnAndroidBleProtocolCallbackRegister("DeviceStatus", bind(&AndroidBleProtocol::OnDeviceStatus, this, placeholders::_1, placeholders::_2));
-		OnAndroidBleProtocolCallbackRegister("provisionNormal", bind(&AndroidBleProtocol::OnProvisionNormal, this, placeholders::_1, placeholders::_2));
+		// OnAndroidBleProtocolCallbackRegister("provisionNormal", bind(&AndroidBleProtocol::OnProvisionNormal, this, placeholders::_1, placeholders::_2));
 	}
 	else
 	{
@@ -44,34 +44,47 @@ int AndroidBleProtocol::StartScan()
 	dataRequest["ivIndex"] = gateway->getBleIvIndex();
 	dataRequest["addrGw"] = gateway->getBleAddr();
 	dataRequest["addProvision"] = gateway->GetNextAndroidProvisionAddr();
-	dataRequest["mapTypeElement"][to_string(BLE_DOWNLIGHT_SMT)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_DOWNLIGHT_COB_GOC_RONG)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_DOWNLIGHT_COB_GOC_HEP)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_DOWNLIGHT_COB_TRANG_TRI)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_PANEL_TRON)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_PANEL_VUONG)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_OP_TRAN)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_OP_TUONG)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_CHIEU_TRANH)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_TRACKLIGHT)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_THA_TRAN)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_CHIEU_GUONG)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_DAY_LINEAR)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_TUBE_M16)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_DEN_BAN)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_FLOOD)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_RLT03_06W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_RLT02_10W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_RLT02_20W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_RLT01_10W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_TRL08_20W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_TRL08_10W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_RLT03_12W)] = 2;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_DAY_RGB)] = 3;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_DAY_RGBCW)] = 4;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_BULB)] = 4;
-	dataRequest["mapTypeElement"][to_string(BLE_DOWNLIGHT_RGBCW)] = 4;
-	dataRequest["mapTypeElement"][to_string(BLE_LED_OP_TRAN_LOA)] = 2;
+
+	Json::Value element = Json::arrayValue;
+
+	Json::Value secondElements = Json::arrayValue;
+	secondElements.append(BLE_DOWNLIGHT_SMT);
+	secondElements.append(BLE_DOWNLIGHT_COB_GOC_RONG);
+	secondElements.append(BLE_DOWNLIGHT_COB_GOC_HEP);
+	secondElements.append(BLE_DOWNLIGHT_COB_TRANG_TRI);
+	secondElements.append(BLE_PANEL_TRON);
+	secondElements.append(BLE_PANEL_VUONG);
+	secondElements.append(BLE_LED_OP_TRAN);
+	secondElements.append(BLE_LED_OP_TUONG);
+	secondElements.append(BLE_LED_CHIEU_TRANH);
+	secondElements.append(BLE_TRACKLIGHT);
+	secondElements.append(BLE_LED_THA_TRAN);
+	secondElements.append(BLE_LED_CHIEU_GUONG);
+	secondElements.append(BLE_LED_DAY_LINEAR);
+	secondElements.append(BLE_LED_TUBE_M16);
+	secondElements.append(BLE_DEN_BAN);
+	secondElements.append(BLE_LED_FLOOD);
+	secondElements.append(BLE_LED_RLT03_06W);
+	secondElements.append(BLE_LED_RLT02_10W);
+	secondElements.append(BLE_LED_RLT02_20W);
+	secondElements.append(BLE_LED_RLT01_10W);
+	secondElements.append(BLE_LED_TRL08_20W);
+	secondElements.append(BLE_LED_TRL08_10W);
+	secondElements.append(BLE_LED_RLT03_12W);
+	secondElements.append(BLE_LED_OP_TRAN_LOA);
+
+	Json::Value thirdElements = Json::arrayValue;
+	thirdElements.append(BLE_LED_DAY_RGB);
+
+	Json::Value fourthElements = Json::arrayValue;
+	fourthElements.append(BLE_LED_DAY_RGBCW);
+	fourthElements.append(BLE_LED_BULB);
+	fourthElements.append(BLE_DOWNLIGHT_RGBCW);
+
+	dataRequest["mapTypeElement"]["1"] = element;
+	dataRequest["mapTypeElement"]["2"] = secondElements;
+	dataRequest["mapTypeElement"]["3"] = thirdElements;
+	dataRequest["mapTypeElement"]["4"] = fourthElements;
 
 	Json::Value dataResponse = Json::objectValue;
 	return PublishToAndroidBleMessage(cmd, dataRequest, cmd, &dataResponse, 2000);
@@ -288,7 +301,7 @@ int AndroidBleProtocol::OnDeviceStatus(Json::Value &reqValue, Json::Value &respV
 
 int AndroidBleProtocol::PublishToAndroidBleMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
-	LOGD("PublishToAndroidBleMessage: %s", reqValue.toString().c_str());
+	// LOGD("PublishToAndroidBleMessage: %s", reqValue.toString().c_str());
 	int rs = CODE_OK;
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
