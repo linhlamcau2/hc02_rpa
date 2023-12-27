@@ -51,8 +51,10 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 						devicesData.append(deviceData);
 					}
 				}
-				gateway->pushDeviceUpdateLocal(devicesData);
-				gateway->pushDeviceUpdateCloud(devicesData);
+				Json::Value dataPush;
+				dataPush["device"] = devicesData;
+				gateway->pushDeviceUpdateLocal(dataPush);
+				gateway->pushDeviceUpdateCloud(dataPush);
 			}
 			respValue["data"]["code"] = rs;
 		}
