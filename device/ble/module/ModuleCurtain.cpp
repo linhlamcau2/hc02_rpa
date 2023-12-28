@@ -8,8 +8,8 @@
 
 enum
 {
-	CURTAIN_UNKNOWN = 0,
-	CURTAIN_CLOSE,
+	CURTAIN_UNKNOWN = -1,
+	CURTAIN_CLOSE = 0,
 	CURTAIN_OPEN,
 	CURTAIN_PAUSE,
 	CURTAIN_PERCENT,
@@ -44,14 +44,13 @@ int ModuleCurtain::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) && dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
 		{
 			curtain = dataValue[KEY_ATTRIBUTE_CURTAIN].asInt();
-			// CheckTrigger();
-			BuildTelemetryValue(jsonValue);
+			BuildTelemetryValue(jsonValue, dataValue);
 			return CODE_OK;
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_MOTOR) && dataValue[KEY_ATTRIBUTE_MOTOR].isInt())
 		{
 			motor = dataValue[KEY_ATTRIBUTE_MOTOR].asInt();
-			BuildTelemetryValue(jsonValue);
+			BuildTelemetryValue(jsonValue, dataValue);
 			return CODE_OK;
 		}
 	}
@@ -70,28 +69,61 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 
-	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)) ||
-			(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CURTAIN_PERCENT))
+	if (data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN))
 	{
-		if (data_message->opcode == 0x52)
+		uint8_t status = data_message->header & 0xFF;
+		Json::Value telemetry;
+		telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
+		telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
+		telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+		switch (status)
 		{
-			curtain = (data_message->header >> 8) & 0xFF;
+		case CURTAIN_OPEN:
+			telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
+			break;
+		case CURTAIN_CLOSE:
+			telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
+			break;
+		case CURTAIN_PAUSE:
+			if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+			{
+				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+			}
+			telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
+			break;
+		case CURTAIN_PERCENT:
+			telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+			break;
 		}
-		if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
-		{
-			curtain = data_message->curtain;
-		}
-#ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
-#endif
 		CheckTrigger();
-		BuildTelemetryValue(jsonValue);
+		BuildTelemetryValue(jsonValue, telemetry);
 		return CODE_OK;
 	}
+
+	// 	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)) ||
+	// 		(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CURTAIN_PERCENT))
+	// 	{
+	// 		if (data_message->opcode == 0x52)
+	// 		{
+	// 			curtain = (data_message->header >> 8) & 0xFF;
+	// 		}
+	// 		if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
+	// 		{
+	// 			curtain = data_message->curtain;
+	// 		}
+	// #ifdef CONFIG_SAVE_ATTRIBUTE
+	// 		SaveAttribute();
+	// #endif
+	// 		CheckTrigger();
+	// 		// BuildTelemetryValue(jsonValue);
+	// 		return CODE_OK;
+	// 	}
 	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->vendorId == RD_VENDOR_ID && data_message->header == RD_OPCODE_CONFIG_MOTOR)
 	{
 		motor = data_message->type;
-		BuildTelemetryValue(jsonValue);
+		Json::Value dataMotor;
+		dataMotor[KEY_ATTRIBUTE_MOTOR] = motor;
+		BuildTelemetryValue(jsonValue, dataMotor);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -101,8 +133,8 @@ bool ModuleCurtain::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_CURTAIN) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_CURTAIN].isInt())
@@ -126,9 +158,9 @@ bool ModuleCurtain::CheckData(Json::Value &dataValue, bool &rs)
 	return false;
 }
 
-void ModuleCurtain::BuildTelemetryValue(Json::Value &jsonValue)
+void ModuleCurtain::BuildTelemetryValue(Json::Value &jsonValue, Json::Value &telemetryMessage)
 {
-	jsonValue[KEY_ATTRIBUTE_CURTAIN_OPENED] = curtain;
+	jsonValue = telemetryMessage;
 }
 
 int ModuleCurtain::Do(Json::Value &dataValue)

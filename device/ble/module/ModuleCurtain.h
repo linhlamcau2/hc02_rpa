@@ -56,7 +56,7 @@ public:
 	 *
 	 * @param jsonValue
 	 */
-	void BuildTelemetryValue(Json::Value &jsonValue);
+	void BuildTelemetryValue(Json::Value &jsonValue, Json::Value &telemetryMessage);
 
 	/**
 	 * @brief Do an action
