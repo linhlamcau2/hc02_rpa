@@ -30,9 +30,6 @@
 #include "DeviceZigbee.h"
 #endif
 
-#define STR_(x) #x
-#define STR(x) STR_(x)
-
 using namespace std;
 
 class Gateway : public CloudProtocol, public LocalProtocol, public Udp

@@ -12,6 +12,9 @@
 #endif
 #endif
 
+#define STR_(x) #x
+#define STR(x) STR_(x)
+
 #ifndef VERSION
 #ifdef ESP_PLATFORM
 #define VERSION 1.0.4
