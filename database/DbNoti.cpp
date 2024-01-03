@@ -17,7 +17,7 @@ static int NotiParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
                 string type = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isRead = sqlite3_column_blob(stmt, index++);
+				bool isRead = sqlite3_column_int(stmt, index++) ? true : false;
 				string content = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				long updateAt = sqlite3_column_int(stmt, index++);
                 long createAt = sqlite3_column_int(stmt, index++);
