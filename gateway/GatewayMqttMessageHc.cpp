@@ -10,8 +10,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "AndroidBleProtocol.h"
 #include "Db.h"
+
+#ifdef __ANDROID__
+#include "AndroidBleProtocol.h"
+#endif
 
 #define URL_PRO "https://rallismartv2.rangdong.com.vn" 
 #define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
@@ -95,6 +98,8 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rsCode = CODE_OK;
+
+#ifdef __ANDROID__
 	if (androidBleProtocol)
 	{
 		androidBleProtocol->StartScan();
@@ -104,6 +109,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 		rsCode = CODE_ERROR;
 		LOGW("androidProtocol null");
 	}
+#endif
 
 	if (bleProtocol)
 	{
@@ -137,6 +143,8 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rsCode = CODE_OK;
+
+#ifdef __ANDROID__
 	if (androidBleProtocol)
 	{
 		androidBleProtocol->StopScan();
@@ -146,6 +154,7 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 		rsCode = CODE_ERROR;
 		LOGW("AndroidBleProtocol null");
 	}
+#endif
 
 	if (bleProtocol)
 	{
@@ -304,6 +313,7 @@ int Gateway::OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OTA HC");
+#ifndef ESP_PLATFORM
 	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
 	{
 		string url = URL_PRO + reqValue["url"].asString();
@@ -364,6 +374,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
+#endif
 	return CODE_ERROR;
 }
 
