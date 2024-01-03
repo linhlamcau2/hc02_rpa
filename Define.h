@@ -26,9 +26,11 @@
 #if __ANDROID__
 #define CONFIG_FILE_NAME "/etc/smh/config.json"
 #define TMP_FOLDER "/data/rd/"
+#define TMP_FOLDER_CERT "/data/rd/"
 #elif defined(__OPENWRT__)
 #define CONFIG_FILE_NAME "config.json"
 #define TMP_FOLDER "/tmp/"
+#define TMP_FOLDER_CERT "/root/"
 #else
 #define CONFIG_FILE_NAME "config.json"
 #define TMP_FOLDER ""

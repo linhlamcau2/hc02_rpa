@@ -13,7 +13,7 @@
 #include "AndroidBleProtocol.h"
 #include "Db.h"
 
-#define URL_PRO "https://rallismartv2.rangdong.com.vn" 
+#define URL_PRO "https://rallismartv2.rangdong.com.vn"
 #define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
 #define URL_DEV "https://iot-dev.truesight.asia"
 
@@ -56,8 +56,13 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("dormitoryId") && reqValue["dormitoryId"].isString())
 	{
 		string dormitoryId = reqValue["dormitoryId"].asString();
-		this->setDormitory(dormitoryId);
-		database->GatewayUpdateDormitory(this, dormitoryId);
+		if (getDormitory() == "")
+		{
+			this->setDormitory(dormitoryId);
+			database->GatewayUpdateDormitory(this, dormitoryId);
+		}
+		else 
+			LOGW("Dormitory is already set");
 		respValue["data"]["code"] = CODE_OK;
 	}
 	else

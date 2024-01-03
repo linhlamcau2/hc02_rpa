@@ -7,7 +7,6 @@
 #include <vector>
 #include <algorithm>
 #include <signal.h>
-#include <iostream>
 #include <fstream>
 #include "json.h"
 #include "Log.h"
@@ -48,7 +47,7 @@ static void signal_handler(int sig)
 int main(int argc, char *argv[])
 {
 #ifndef __ANDROID__
-	log_set_level(LOG_DEBUG);
+	log_set_level(LOG_VERBOSE);
 #endif
 	LOGI("Start ver " STR(VERSION));
 
@@ -78,16 +77,36 @@ int main(int argc, char *argv[])
 	// zigbeeProtocol->CommissionFormation();
 #endif
 
+#ifdef __OPENWRT__
+	string certServer;
+	ifstream certFile(TMP_FOLDER_CERT "server.pem");
+	if (certFile.is_open())
+	{
+		stringstream buffer;
+		buffer << certFile.rdbuf();
+		certServer = buffer.str();
+		LOGI("cert: %s", certServer.c_str());
+		certFile.close();
+	}
+#endif
+
 	string cmd_get_cert = "openssl s_client -connect " + config->GetHost() + ":" + to_string(config->GetPort()) + " 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'";
 	string cert = Util::ExecuteCMD(cmd_get_cert.c_str());
 	LOGI("cert: %s", cert.c_str());
 	if (!cert.empty())
 	{
-		ofstream certFile(TMP_FOLDER "server.pem");
-		certFile << cert;
-		certFile.close();
+#ifdef __OPENWRT__
+		if (cert != certServer)
+		{
+#endif
+			ofstream certFile(TMP_FOLDER_CERT "server.pem");
+			certFile << cert;
+			certFile.close();
+#ifdef __OPENWRT__
+		}
+#endif
 	}
-	
+
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
 
@@ -104,7 +123,7 @@ int main(int argc, char *argv[])
 	}
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER "server.pem",
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER_CERT "server.pem",
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
@@ -119,6 +138,7 @@ int main(int argc, char *argv[])
 	androidBleProtocol->init();
 
 	Util::LedService(true);
+	Util::LedZigbee(false);
 
 	// fileTransfer = new FileTransfer();
 	// fileTransfer->init();

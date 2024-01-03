@@ -41,7 +41,7 @@ string Wifi::GetMacAddress()
 
 string Wifi::GetIP()
 {
-	LOGD("GetIP");
+	// LOGD("GetIP");
 	string string_ip_1;
 	string string_ip_2;
 	string string_ip_3;
@@ -179,8 +179,10 @@ int Wifi::ConnectToWifi(string ssid, string password, string encryption)
 		system("uci set wireless.wifinet1.device='radio0' >> /output.txt 2>&1");
 		system(string("uci set wireless.wifinet1.key='" + password + "' >> /output.txt 2>&1").c_str());
 		system(string("uci set wireless.wifinet1.encryption='" + encry + "' >> /output.txt 2>&1").c_str());
-		system("uci commit wireless");
-		system("wifi");
+		system("uci commit wireless >> /output.txt 2>&1");
+		system("uci commit network >> /output.txt 2>&1");
+		system("wifi >> /output.txt 2>&1");
+		system("/etc/init.d/network restart");
 	}
 	catch (...)
 	{

@@ -225,7 +225,11 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 								Json::Value jsonData;
 								jsonData["data"] = Json::objectValue;
 								gateway->pushStopAddHc(jsonData);
+#ifdef __OPENWRT__
+								return CODE_EXIT;
+#else
 								return CODE_OK;
+#endif
 							}
 							else
 							{
