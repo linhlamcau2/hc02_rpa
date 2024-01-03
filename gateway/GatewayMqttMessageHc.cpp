@@ -41,6 +41,9 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
@@ -90,6 +93,14 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 	dataValue["name"] = "RD HC";
 	dataValue["type"] = MODEL;
 	dataValue["ver"] = STR(VERSION);
+	if (this->dormitoryId == "")
+	{
+		dataValue["isInHome"] = false;
+	}
+	else
+	{
+		dataValue["isInHome"] = true;
+	}
 	respValue["data"] = dataValue;
 	respValue["cmd"] = "getHcInfoRsp";
 	return CODE_OK;
@@ -432,4 +443,66 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 	else
 		LOGW("format error: %s", reqValue.toString().c_str());
 	return CODE_ERROR;
+}
+
+int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetNotify");
+	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
+			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+	{
+		string groupType = reqValue["groupType"].asString();
+		int startIndex = reqValue["startIndex"].asInt();
+		int endIndex = reqValue["endIndex"].asInt();
+		for (auto temp: notiList)
+		{
+			string tempType = temp.second->GetType();
+			Json::Value payloadJson;
+			payloadJson.parse(temp.second->GetContent());
+			payloadJson["isRead"] = temp.second->GetIsRead();
+			if(tempType == groupType)
+			{
+				respValue["data"].append(payloadJson);
+			}
+		}
+	}
+	respValue["cmd"] = "getNotifyRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUpdateReadNotify");
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
+			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+	{
+		string id = reqValue["id"].asString();
+		Noti *noti = getNotifromId(id);
+		bool isRead = reqValue["isRead"].asBool();
+		if (noti)
+		{
+			noti->UpdateNoti(isRead);
+			respValue["data"]["id"] = id;
+		}
+		respValue["cmd"] = "isReadRsp";
+	}
+	return CODE_OK;
+}
+
+int Gateway::OnDelNotify(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnDelReadNotify");
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string id = reqValue["id"].asString();
+		Noti *noti = getNotifromId(id);
+		if (noti)
+		{
+			DelNoti(noti);
+			respValue["data"]["id"] = id;
+		}
+		respValue["cmd"] = "isDeleteRsp";
+	}
+	return CODE_OK;
 }

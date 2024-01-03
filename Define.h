@@ -48,7 +48,8 @@
 
 #ifndef BLE_UART_PORT
 #ifdef __OPENWRT__
-#define BLE_UART_PORT "/dev/ttyS1"
+// #define BLE_UART_PORT "/dev/ttyS1"
+#define BLE_UART_PORT "/dev/ttyUSB0"
 #elif defined(__ANDROID__)
 #define BLE_UART_PORT "/dev/ttyS5"
 #elif defined(ESP_PLATFORM)

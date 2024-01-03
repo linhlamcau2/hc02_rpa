@@ -88,7 +88,8 @@ int main(int argc, char *argv[])
 		certFile.close();
 	}
 	
-	string mac = Wifi::GetMacAddress();
+	// string mac = Wifi::GetMacAddress();
+	string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
 
 	string passMqttLocal = "1";

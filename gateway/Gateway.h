@@ -22,6 +22,7 @@
 #include "RuleOutputGroup.h"
 #include "RuleOutputDelay.h"
 #include "Room.h"
+#include "Noti.h"
 
 #include "BleDefine.h"
 #include "BleProtocol.h"
@@ -56,6 +57,7 @@ private:
 	map<string, SceneBle *> sceneBleList;
 	map<string, Rule *> ruleList;
 	map<string, Room *> roomList;
+	map<string, Noti *> notiList;
 
 	mutex deviceListMtx;
 	mutex groupListMtx;
@@ -170,6 +172,11 @@ private:
 	int OnOtaHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue);
 
+	//Noti
+	int OnGetNotify(Json::Value &reqValue, Json::Value &respValue);
+	int OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelNotify(Json::Value &reqValue, Json::Value &respValue);
+
 public:
 	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
 	~Gateway();
@@ -279,6 +286,12 @@ public:
 	void printGroup();
 	void printScene();
 	void printRoom();
+
+	// Noti
+	int CreateNoti(Noti *noti, bool addDatabase);
+	int DelNoti(Noti * noti);
+	Noti *getNotifromId(string id);
+	Json::Value BuildJsonDataNoti(string id, string type, string content);
 };
 
 extern Gateway *gateway;

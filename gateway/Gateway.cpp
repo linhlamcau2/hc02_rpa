@@ -1281,3 +1281,39 @@ void Gateway::printRoom()
 		}
 	}
 }
+
+int Gateway::CreateNoti(Noti *noti, bool addDatabase)
+{
+	if (addDatabase)
+	{
+		database->NotiAdd(noti);
+	}
+	notiList[noti->GetId()] = noti;
+	return CODE_OK;
+}
+
+int Gateway::DelNoti(Noti * noti)
+{
+	database->NotiDel(noti);
+	notiList.erase(noti->GetId());
+	return CODE_OK;
+}
+
+Noti *Gateway::getNotifromId(string id)
+{
+	if (notiList.find(id) != notiList.end())
+	{
+		return notiList[id];
+	}
+	return NULL;
+}
+
+Json::Value Gateway::BuildJsonDataNoti(string id, string type, string content)
+{
+    Json::Value notiData;
+	notiData["id"] = id;
+	notiData["type"] = type;
+	notiData["content"] = content;
+	notiData["time"] = to_string(time(NULL));
+	return notiData;
+}
