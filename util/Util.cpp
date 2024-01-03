@@ -21,7 +21,69 @@
 #include <sstream>
 #include <iomanip>
 
+#include <iostream>
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <string>
+#include <cstring>
+
 using namespace std;
+
+static void handleErrors(void)
+{
+    ERR_print_errors_fp(stderr);
+    abort();
+}
+
+string Util::encryptAes128(string key, string plaintext)
+{
+    unsigned char * key_c = new unsigned char[key.length() + 1];
+    memcpy((char*)key_c, key.c_str(), key.length());
+    key_c[key.length()] = '\0';
+
+    unsigned char * plaintext_c = new unsigned char[plaintext.length() + 1];
+    memcpy((char*)plaintext_c, plaintext.c_str(), plaintext.length());
+    plaintext_c[plaintext.length()] = '\0';
+
+    int plaintext_len = plaintext.length();
+
+    EVP_CIPHER_CTX *ctx;
+    unsigned char ciphertext[128] = {0};
+    int len;
+    int ciphertext_len;
+
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors();
+
+    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key_c, NULL))
+    {
+        handleErrors();
+    }
+
+    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext_c, plaintext_len))
+    {
+        handleErrors();
+    }
+    ciphertext_len = len;
+
+    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+        handleErrors();
+    ciphertext_len += len;
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (int i = 0; i < ciphertext_len; ++i) {
+        ss << std::setw(2) << static_cast<int>(ciphertext[i]);
+    }
+
+    delete[] key_c;
+    delete[] plaintext_c;
+
+    return ss.str();
+}
 
 string Util::genRandRQI(int size)
 {

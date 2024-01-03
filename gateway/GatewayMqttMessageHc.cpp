@@ -13,6 +13,10 @@
 #include "AndroidBleProtocol.h"
 #include "Db.h"
 
+#define URL_PRO "https://rallismartv2.rangdong.com.vn" 
+#define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
+#define URL_DEV "https://iot-dev.truesight.asia"
+
 void Gateway::InitMqttMessageHc()
 {
 	OnDeviceRpcCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
@@ -302,7 +306,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OTA HC");
 	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
 	{
-		string url = "https://rallismartv2-staging.rangdong.com.vn" + reqValue["url"].asString();
+		string url = URL_PRO + reqValue["url"].asString();
 		string sha = reqValue["checksum"].asString();
 		LOGD("url: %s", url.c_str());
 		LOGD("sha: %s", sha.c_str());

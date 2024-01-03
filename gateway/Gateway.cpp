@@ -211,7 +211,7 @@ void Gateway::ResetFactory()
 	if (bleProtocol)
 	{
 		bleProtocol->ResetDelAll();
-		bleProtocol->ResetFactory();
+		// bleProtocol->ResetFactory();
 	}
 	else
 		LOGW("BleProtocol null");

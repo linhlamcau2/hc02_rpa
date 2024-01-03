@@ -34,6 +34,7 @@ namespace Util
 	 */
 	double millis();
 
+	string encryptAes128(string key, string plaintext);
 	string genRandRQI(int size);
 	string GenIdDeviceByElement(string id, int element);
 

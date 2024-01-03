@@ -5,6 +5,7 @@
 #include "Util.h"
 #include "Wifi.h"
 #include "Gateway.h"
+#include "Db.h"
 
 #define DOUBLE_CLICK_TIME 400
 #define AP_MODE_WIFI 5
@@ -32,13 +33,13 @@ void ButtonSignal::OnPress()
 	}
 	isBlinkLed = true;
 	sleep(1);
-	while (isBlinkLed && blinkCount < 7)
+	while (isBlinkLed /*&& blinkCount < 7*/)
 	{
-		blinkCount++;
+		// blinkCount++;
 		Util::LedAll(false);
-		usleep(500000);
+		usleep(490000);
 		Util::LedAll(true);
-		usleep(500000);
+		usleep(490000);
 	}
 	Util::LedRestoreLastValue();
 }
@@ -54,21 +55,28 @@ void ButtonSignal::OnRelease()
 		LOGI("clickCount: %d", clickCount);
 		if (clickCount == MODE_SEND_UDP_BROADCAST)
 		{
-			gateway->StartUdpBroadcast();
+			// gateway->StartUdpBroadcast();
 		}
 	}
 	else if (startProcess)
 	{
-		if (releaseTime - pressTime > 5000 && releaseTime - pressTime < 8000)
+		if (releaseTime - pressTime > 6000 && releaseTime - pressTime < 9000)
 		{
 			LOGW("set AP mode wifi");
 			Wifi::SetModeApWifi();
 		}
-		else if (releaseTime - pressTime > 15000 && releaseTime - pressTime < 20000)
+		else if (releaseTime - pressTime > 12000 && releaseTime - pressTime < 15000)
+		{
+			LOGW("Reset Dormitory");
+			gateway->setDormitory("");
+			database->GatewayUpdateDormitory(gateway,"");
+		}
+		else if (releaseTime - pressTime > 20000 && releaseTime - pressTime < 23000)
 		{
 			LOGW("Reset HC");
 			gateway->ResetFactory();
 			Wifi::SetModeApWifi();
+			system("killall smh");
 		}
 	}
 }

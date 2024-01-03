@@ -137,7 +137,7 @@ void BleProtocol::CheckKeyBle()
 
 	string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
 
-	LOGW("bleNetkey: %s, netKey: %s", bleNetkey.c_str(), netkeyStr.c_str());
+	// LOGW("bleNetkey: %s, netKey: %s", bleNetkey.c_str(), netkeyStr.c_str());
 
 	if (bleAppkey != "")
 	{

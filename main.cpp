@@ -90,8 +90,22 @@ int main(int argc, char *argv[])
 	
 	string mac = Wifi::GetMacAddress();
 	LOGI("mac: %s", mac.c_str());
+
+	string passMqttLocal = "1";
+#ifdef __OPENWRT__
+	string macNotDot = mac;
+	macNotDot.erase(std::remove(macNotDot.begin(), macNotDot.end(), ':'), macNotDot.end());
+	string key = "RANGDONGRALSMART";
+	string plainText = "2804" + macNotDot;
+	passMqttLocal = Util::encryptAes128(key, plainText);
+	for (char &c : passMqttLocal)
+	{
+		c = std::toupper(c);
+	}
+	LOGI("Passsword: %s", passMqttLocal.c_str());
+#endif
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER "server.pem",
-						  "localhost", 1883, "RD", "", 10);
+						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
 	bleProtocol->InitKey();

@@ -12,9 +12,9 @@
 #define PORT_KEY "port"
 #define PORT_DEFAULT 8883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT "hc-be:3e:25:2e:a1:ca"
+#define CLIENT_ID_DEFAULT "hc"
 #define USERNAME_KEY "username"
-#define USERNAME_DEFAULT "hc-be:3e:25:2e:a1:ca"
+#define USERNAME_DEFAULT "hc"
 #define PASSWORD_KEY "password"
 #define PASSWORD_DEFAULT "ABC123456"
 #define KEEP_ALIVE_KEY "keep_alive"

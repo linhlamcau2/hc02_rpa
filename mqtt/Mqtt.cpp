@@ -56,7 +56,7 @@ void Mqtt::SetWillset(string willset_topic, string willset_payload)
 
 int Mqtt::Connect()
 {
-	LOGI("Connect host %s, port %d", host.c_str(), port);
+	LOGI("Connect host %s, port %d, username: %s, pass: %s", host.c_str(), port, username.c_str(), password.c_str());
 	if (cert)
 	{
 		LOGI("Cert: %s", cert);
