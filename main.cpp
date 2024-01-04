@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
 #ifdef __OPENWRT__
 	string certServer;
-	ifstream certFile(TMP_FOLDER_CERT "server.pem");
+	ifstream certFile(CERT_FILE_NAME);
 	if (certFile.is_open())
 	{
 		stringstream buffer;
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 		if (cert != certServer)
 		{
 #endif
-			ofstream certFile(TMP_FOLDER_CERT "server.pem");
+			ofstream certFile(CERT_FILE_NAME);
 			certFile << cert;
 			certFile.close();
 #ifdef __OPENWRT__
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	}
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), TMP_FOLDER_CERT "server.pem",
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), CERT_FILE_NAME,
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
