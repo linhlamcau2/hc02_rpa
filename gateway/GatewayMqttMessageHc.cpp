@@ -10,10 +10,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "AndroidBleProtocol.h"
 #include "Db.h"
 
-#define URL_PRO "https://rallismartv2.rangdong.com.vn"
+#ifdef __ANDROID__
+#include "AndroidBleProtocol.h"
+#endif
+
+#define URL_PRO "https://rallismartv2.rangdong.com.vn" 
 #define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
 #define URL_DEV "https://iot-dev.truesight.asia"
 
@@ -38,6 +41,9 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
@@ -92,6 +98,14 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 	dataValue["name"] = "RD HC";
 	dataValue["type"] = MODEL;
 	dataValue["ver"] = STR(VERSION);
+	if (this->dormitoryId == "")
+	{
+		dataValue["isInHome"] = false;
+	}
+	else
+	{
+		dataValue["isInHome"] = true;
+	}
 	respValue["data"] = dataValue;
 	respValue["cmd"] = "getHcInfoRsp";
 	return CODE_OK;
@@ -100,6 +114,8 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rsCode = CODE_OK;
+
+#ifdef __ANDROID__
 	if (androidBleProtocol)
 	{
 		androidBleProtocol->StartScan();
@@ -109,6 +125,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 		rsCode = CODE_ERROR;
 		LOGW("androidProtocol null");
 	}
+#endif
 
 	if (bleProtocol)
 	{
@@ -142,6 +159,8 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
 	int rsCode = CODE_OK;
+
+#ifdef __ANDROID__
 	if (androidBleProtocol)
 	{
 		androidBleProtocol->StopScan();
@@ -151,6 +170,7 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 		rsCode = CODE_ERROR;
 		LOGW("AndroidBleProtocol null");
 	}
+#endif
 
 	if (bleProtocol)
 	{
@@ -309,6 +329,7 @@ int Gateway::OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OTA HC");
+#ifndef ESP_PLATFORM
 	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
 	{
 		string url = URL_PRO + reqValue["url"].asString();
@@ -369,6 +390,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
+#endif
 	return CODE_ERROR;
 }
 
@@ -426,4 +448,66 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 	else
 		LOGW("format error: %s", reqValue.toString().c_str());
 	return CODE_ERROR;
+}
+
+int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetNotify");
+	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
+			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+	{
+		string groupType = reqValue["groupType"].asString();
+		int startIndex = reqValue["startIndex"].asInt();
+		int endIndex = reqValue["endIndex"].asInt();
+		for (auto temp: notiList)
+		{
+			string tempType = temp.second->GetType();
+			Json::Value payloadJson;
+			payloadJson.parse(temp.second->GetContent());
+			payloadJson["isRead"] = temp.second->GetIsRead();
+			if(tempType == groupType)
+			{
+				respValue["data"].append(payloadJson);
+			}
+		}
+	}
+	respValue["cmd"] = "getNotifyRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUpdateReadNotify");
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
+			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+	{
+		string id = reqValue["id"].asString();
+		Noti *noti = getNotifromId(id);
+		bool isRead = reqValue["isRead"].asBool();
+		if (noti)
+		{
+			noti->UpdateNoti(isRead);
+			respValue["data"]["id"] = id;
+		}
+		respValue["cmd"] = "isReadRsp";
+	}
+	return CODE_OK;
+}
+
+int Gateway::OnDelNotify(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnDelReadNotify");
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string id = reqValue["id"].asString();
+		Noti *noti = getNotifromId(id);
+		if (noti)
+		{
+			DelNoti(noti);
+			respValue["data"]["id"] = id;
+		}
+		respValue["cmd"] = "isDeleteRsp";
+	}
+	return CODE_OK;
 }

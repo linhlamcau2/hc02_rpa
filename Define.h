@@ -34,6 +34,7 @@
 #else
 #define CONFIG_FILE_NAME "config.json"
 #define TMP_FOLDER ""
+#define TMP_FOLDER_CERT ""
 #endif
 
 #ifndef DB_NAME

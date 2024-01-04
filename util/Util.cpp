@@ -16,74 +16,22 @@
 #include <locale>
 #include "Base64.h"
 #include "Log.h"
-#include <openssl/sha.h>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 
 #include <iostream>
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
 #include <string>
 #include <cstring>
 
+#ifndef ESP_PLATFORM
+#include <openssl/sha.h>
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#endif
+
 using namespace std;
-
-static void handleErrors(void)
-{
-    ERR_print_errors_fp(stderr);
-    abort();
-}
-
-string Util::encryptAes128(string key, string plaintext)
-{
-    unsigned char * key_c = new unsigned char[key.length() + 1];
-    memcpy((char*)key_c, key.c_str(), key.length());
-    key_c[key.length()] = '\0';
-
-    unsigned char * plaintext_c = new unsigned char[plaintext.length() + 1];
-    memcpy((char*)plaintext_c, plaintext.c_str(), plaintext.length());
-    plaintext_c[plaintext.length()] = '\0';
-
-    int plaintext_len = plaintext.length();
-
-    EVP_CIPHER_CTX *ctx;
-    unsigned char ciphertext[128] = {0};
-    int len;
-    int ciphertext_len;
-
-    if (!(ctx = EVP_CIPHER_CTX_new()))
-        handleErrors();
-
-    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key_c, NULL))
-    {
-        handleErrors();
-    }
-
-    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext_c, plaintext_len))
-    {
-        handleErrors();
-    }
-    ciphertext_len = len;
-
-    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
-        handleErrors();
-    ciphertext_len += len;
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (int i = 0; i < ciphertext_len; ++i) {
-        ss << std::setw(2) << static_cast<int>(ciphertext[i]);
-    }
-
-    delete[] key_c;
-    delete[] plaintext_c;
-
-    return ss.str();
-}
 
 string Util::genRandRQI(int size)
 {
@@ -298,32 +246,6 @@ bool Util::CompareNumber(string op, int a, int b, int c)
 	else if (op == "><")
 		return ((a <= b) || (a >= c));
 	return false;
-}
-
-string Util::calculateSHA256Checksum(string& filePath) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Failed to open file.");
-    }
-
-    SHA256_CTX sha256Context;
-    SHA256_Init(&sha256Context);
-
-    char buffer[1024];
-    while (!file.eof()) {
-        file.read(buffer, sizeof(buffer));
-        SHA256_Update(&sha256Context, buffer, file.gcount());
-    }
-
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_Final(hash, &sha256Context);
-
-    std::stringstream checksum;
-    checksum << std::hex << std::setfill('0');
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        checksum << std::setw(2) << static_cast<int>(hash[i]);
-    }
-    return checksum.str();
 }
 
 string Util::ExecuteCMD(char const *command)
@@ -601,3 +523,86 @@ Json::Value Util::arrangeJson(Json::Value &property)
 	}
 	return Json::Value::null;
 }
+
+#ifndef ESP_PLATFORM
+static void handleErrors(void)
+{
+    ERR_print_errors_fp(stderr);
+    abort();
+}
+
+string Util::encryptAes128(string key, string plaintext)
+{
+    unsigned char * key_c = new unsigned char[key.length() + 1];
+    memcpy((char*)key_c, key.c_str(), key.length());
+    key_c[key.length()] = '\0';
+
+    unsigned char * plaintext_c = new unsigned char[plaintext.length() + 1];
+    memcpy((char*)plaintext_c, plaintext.c_str(), plaintext.length());
+    plaintext_c[plaintext.length()] = '\0';
+
+    int plaintext_len = plaintext.length();
+
+    EVP_CIPHER_CTX *ctx;
+    unsigned char ciphertext[128] = {0};
+    int len;
+    int ciphertext_len;
+
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors();
+
+    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key_c, NULL))
+    {
+        handleErrors();
+    }
+
+    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext_c, plaintext_len))
+    {
+        handleErrors();
+    }
+    ciphertext_len = len;
+
+    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+        handleErrors();
+    ciphertext_len += len;
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (int i = 0; i < ciphertext_len; ++i) {
+        ss << std::setw(2) << static_cast<int>(ciphertext[i]);
+    }
+
+    delete[] key_c;
+    delete[] plaintext_c;
+
+    return ss.str();
+}
+
+string Util::calculateSHA256Checksum(string& filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open file.");
+    }
+
+    SHA256_CTX sha256Context;
+    SHA256_Init(&sha256Context);
+
+    char buffer[1024];
+    while (!file.eof()) {
+        file.read(buffer, sizeof(buffer));
+        SHA256_Update(&sha256Context, buffer, file.gcount());
+    }
+
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_Final(hash, &sha256Context);
+
+    std::stringstream checksum;
+    checksum << std::hex << std::setfill('0');
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        checksum << std::setw(2) << static_cast<int>(hash[i]);
+    }
+    return checksum.str();
+}
+#endif

@@ -34,7 +34,6 @@ namespace Util
 	 */
 	double millis();
 
-	string encryptAes128(string key, string plaintext);
 	string genRandRQI(int size);
 	string GenIdDeviceByElement(string id, int element);
 
@@ -47,8 +46,6 @@ namespace Util
 	int CheckDayInWeek(int day, int repeater);
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(string op, int a, int b, int c = 0);
-
-	string calculateSHA256Checksum(string &filePath);
 
 	string ExecuteCMD(char const *command);
 	string GetCurrentTimeStr();
@@ -85,4 +82,9 @@ namespace Util
 
 	bool compareByID(const Json::Value &obj1, const Json::Value &obj2);
 	Json::Value arrangeJson(Json::Value &obj);
+
+#ifndef ESP_PLATFORM
+	string encryptAes128(string key, string plaintext);
+	string calculateSHA256Checksum(string &filePath);
+#endif
 }

@@ -9,6 +9,7 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 #include "Room.h"
+#include "Noti.h"
 
 using namespace std;
 
@@ -119,6 +120,11 @@ public:
 	int SceneBleDel(SceneBle *sceneBle);
 	int SceneBleDelAll();
 	int SceneBleUpdateFavorite(SceneBle *scene);
+
+	int NotiRead();
+	int NotiAdd(Noti *noti);
+	int NotiUpdate(Noti *noti);
+	int NotiDel(Noti *noti);
 };
 
 extern Db *database;
