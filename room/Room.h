@@ -24,8 +24,7 @@ public:
 
 	Room(string id, uint16_t addr, string name);
 	~Room();
-
-	int GetPositionDevice(Device *device);
+	
 	int GetPositionGroup(Group *group);
 	int GetPositionSceneBle(SceneBle *sceneBle);
 	int AddDeviceOneMessage(Device *device, bool sendBle, bool addDb);

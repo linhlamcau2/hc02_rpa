@@ -16,7 +16,7 @@
 #include "AndroidBleProtocol.h"
 #endif
 
-#define URL_PRO "https://rallismartv2.rangdong.com.vn" 
+#define URL_PRO "https://rallismartv2.rangdong.com.vn"
 #define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
 #define URL_DEV "https://iot-dev.truesight.asia"
 
@@ -449,21 +449,30 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
 	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
-			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
-			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+		reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+		reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
 	{
 		string groupType = reqValue["groupType"].asString();
 		int startIndex = reqValue["startIndex"].asInt();
 		int endIndex = reqValue["endIndex"].asInt();
-		for (auto temp: notiList)
+		int countIndex = 0;
+		for (auto temp : notiList)
 		{
 			string tempType = temp.second->GetType();
-			Json::Value payloadJson;
-			payloadJson.parse(temp.second->GetContent());
-			payloadJson["isRead"] = temp.second->GetIsRead();
-			if(tempType == groupType)
+			if (tempType == groupType)
 			{
-				respValue["data"].append(payloadJson);
+				if (countIndex == startIndex)
+				{
+					Json::Value payloadJson;
+					payloadJson.parse(temp.second->GetContent());
+					payloadJson["isRead"] = temp.second->GetIsRead();
+					respValue["data"].append(payloadJson);
+				}
+				countIndex ++;
+			}
+			if (countIndex > endIndex)
+			{
+				break;
 			}
 		}
 	}
@@ -475,7 +484,7 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);

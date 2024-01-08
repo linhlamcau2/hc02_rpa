@@ -143,6 +143,7 @@ void Gateway::init()
 	database->DeviceInSceneBleRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
+	database->NotiRead();
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -1292,7 +1293,7 @@ int Gateway::CreateNoti(Noti *noti, bool addDatabase)
 	return CODE_OK;
 }
 
-int Gateway::DelNoti(Noti * noti)
+int Gateway::DelNoti(Noti *noti)
 {
 	database->NotiDel(noti);
 	notiList.erase(noti->GetId());
@@ -1308,12 +1309,22 @@ Noti *Gateway::getNotifromId(string id)
 	return NULL;
 }
 
-Json::Value Gateway::BuildJsonDataNoti(string id, string type, string content)
+Json::Value Gateway::BuildJsonDataNoti(Device *device, string id, string type, string content)
 {
-    Json::Value notiData;
+	Json::Value notiData;
 	notiData["id"] = id;
 	notiData["type"] = type;
 	notiData["content"] = content;
+	notiData["title"] = device->GetName();
 	notiData["time"] = to_string(time(NULL));
+	notiData["location"] = "";
+	for (auto temp : roomList)
+	{
+		Room *room = temp.second;
+		if(room->GetPositionDevice(device, device->GetAddr()) != CODE_ERROR)
+		{
+			notiData["location"] = room->GetName();
+		}
+	}
 	return notiData;
 }

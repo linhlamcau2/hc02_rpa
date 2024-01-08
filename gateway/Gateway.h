@@ -291,7 +291,7 @@ public:
 	int CreateNoti(Noti *noti, bool addDatabase);
 	int DelNoti(Noti * noti);
 	Noti *getNotifromId(string id);
-	Json::Value BuildJsonDataNoti(string id, string type, string content);
+	Json::Value BuildJsonDataNoti(Device *device, string id, string type, string content);
 };
 
 extern Gateway *gateway;
