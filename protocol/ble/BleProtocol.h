@@ -52,6 +52,8 @@
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2 0x000D
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3 0x000C
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4 0x000B
+#define RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH 0x100B
+#define RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF 0x0012
 
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
@@ -305,6 +307,8 @@ public:
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int CountDownSwitch(uint16_t devAddr, uint16_t timer, uint8_t status);
 	int UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type = 0);
+	int ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uint32_t type = 0);
+	int ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode);
 
 	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);

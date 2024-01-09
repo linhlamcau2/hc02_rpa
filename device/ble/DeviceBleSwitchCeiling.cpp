@@ -1,7 +1,7 @@
-#include "DeviceBleSwitchTouchRgb.h"
+#include "DeviceBleSwitchCeiling.h"
 #include "Log.h"
 
-DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element)
+DeviceBleSwitchCeiling::DeviceBleSwitchCeiling(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element)
 	: DeviceBle(id, name, mac, data, addr, type, version)
 {
 	this->element = element;
@@ -12,8 +12,6 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 	}
 	moduleOnOff = new ModuleOnOff(this, addr);
 	modules.push_back(moduleOnOff);
-	moduleRgb = new ModuleRgb(this, addr, 0);
-	modules.push_back(moduleRgb);
 	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
 	modules.push_back(moduleCountDownSwitch);
 	moduleStatusStartup = new ModuleStatusStartup(this, addr);
@@ -21,7 +19,7 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 	powerSource = POWER_AC;
 }
 
-int DeviceBleSwitchTouchRgb::BuildTelemetryValue(Json::Value &pushDataValue)
+int DeviceBleSwitchCeiling::BuildTelemetryValue(Json::Value &pushDataValue)
 {
 	moduleOnOff->BuildTelemetryValue(pushDataValue);
 	return CODE_OK;

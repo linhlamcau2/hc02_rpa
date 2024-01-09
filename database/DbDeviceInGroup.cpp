@@ -28,13 +28,13 @@ static int DeviceInGroupParse(sqlite3_stmt *stmt, void *ptr)
 					}
 					else
 					{
-						database->DeviceInGroupDel(groupId, deviceId, element);
+						// database->DeviceInGroupDel(groupId, deviceId, element);
 						LOGW("Device not found: %s", deviceId.c_str());
 					}
 				}
 				else
 				{
-					database->GroupDel(groupId);
+					// database->GroupDel(groupId);
 					LOGW("Group not found: %s", groupId.c_str());
 				}
 			}

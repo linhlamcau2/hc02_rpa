@@ -689,8 +689,9 @@ int BleProtocol::ResetBle()
 int BleProtocol::ResetFactory()
 {
 	LOGD("ResetFactory");
-	InitKey();
-	database->GatewayRead();
+	ResetBle();
+	// InitKey();
+	// database->GatewayRead();
 	return CODE_OK;
 }
 
@@ -1162,7 +1163,6 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
 	case BLE_LED_DAY_RGB:
-	case BLE_SWITCH_ONOFF:
 		if (version > 256)
 			BleProtocol::UpdateLights(devAddr);
 		else
@@ -1187,13 +1187,29 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_2:
 	case BLE_SWITCH_3:
 	case BLE_SWITCH_4:
+	case BLE_SWITCH_RGB_1_V2:
+	case BLE_SWITCH_RGB_1_SQUARE_V2:
+	case BLE_SWITCH_RGB_2_V2:
+	case BLE_SWITCH_RGB_2_SQUARE_V2:
+	case BLE_SWITCH_RGB_3_V2:
+	case BLE_SWITCH_RGB_3_SQUARE_V2:
+	case BLE_SWITCH_RGB_4_V2:
+	case BLE_SWITCH_RGB_4_SQUARE_V2:
+	case BLE_SWITCH_2_CEILING:
+	case BLE_SWITCH_3_CEILING:
+	case BLE_SWITCH_5_CEILING:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		break;
 	case BLE_REPEATER:
 		BleProtocol::GetTTL(devAddr);
 		break;
+	case BLE_SWITCH_ONOFF:
+		if (version >= 515)
+			BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
+		else
+			BleProtocol::GetOnoffLight(devAddr);
+		break;
 	}
-
 	return CODE_OK;
 }
 
@@ -3421,6 +3437,100 @@ int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type)
 		return CODE_OK;
 	}
 	LOGW("request status switch err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uint32_t type)
+{
+	LOGD("ConfigStatusStartup 0x%04x, status %d", devAddr, status);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t statusHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t status;
+	} status_message_t;
+	status_message_t status_message = {0};
+	memset(&status_message, 0x00, sizeof(status_message));
+	status_message.ble_message_header.devAddr = devAddr;
+	status_message.opcodeVendor = RD_OPCODE_CONFIG;
+	status_message.vendorId = RD_VENDOR_ID;
+	status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	status_message.header = RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH;
+	status_message.status = status;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&status_message, sizeof(status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, statusHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t status;
+		} status_rsp_message_t;
+		status_rsp_message_t *status_rsp_message = (status_rsp_message_t *)dataRsp;
+		if (status_rsp_message->header == RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH && status_rsp_message->status == status)
+		{
+			return CODE_OK;
+		}
+		LOGW("status startup resp state not match with input control");
+	}
+	LOGW("status startup switch err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode)
+{
+	LOGD("ConfigModeInputStatusOnoff 0x%04x, mode %d", devAddr, mode);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+	} mode_message_t;
+	mode_message_t mode_message = {0};
+	memset(&mode_message, 0x00, sizeof(mode_message));
+	mode_message.ble_message_header.devAddr = devAddr;
+	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_message.vendorId = RD_VENDOR_ID;
+	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_message.header = RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF;
+	mode_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+		} mode_rsp_message_t;
+		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
+		if (mode_rsp_message->header == RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF && mode_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode input resp state not match with input control");
+	}
+	LOGW("mode input switch err");
 	return CODE_ERROR;
 }
 

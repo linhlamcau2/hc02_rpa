@@ -5,6 +5,7 @@
 #include "module/ModuleOnOff.h"
 #include "module/ModuleCountDownSwitch.h"
 #include "module/ModuleRgb.h"
+#include "module/ModuleStatusStartup.h"
 
 using namespace std;
 
@@ -15,6 +16,7 @@ private:
 	ModuleOnOff *moduleOnOff;
 	ModuleRgb *moduleRgb;
 	ModuleCountDownSwitch *moduleCountDownSwitch;
+	ModuleStatusStartup *moduleStatusStartup;
 	uint8_t element;
 
 public:
