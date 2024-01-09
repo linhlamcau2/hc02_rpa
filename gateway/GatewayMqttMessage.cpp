@@ -3205,7 +3205,7 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 					if (deviceChild)
 					{
 						// LOGW("deviceChild: %s", deviceChild->GetId().c_str());
-						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
+						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue, true);
 						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceChild, properties, 0);
 						if (rule && ruleOutputDevice)
 						{
@@ -3234,7 +3234,7 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 						properties["ID"] = buttonId;
 						properties["VALUE"] = value;
 
-						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue);
+						rule = new Rule(id, "and", repeat, "", 0, Util::ConvertStrTimeToInt(time), Util::ConvertStrTimeToInt(""), reqValue, true);
 						RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(deviceParent, properties, 0);
 						if (rule && ruleOutputDevice)
 						{
@@ -3786,7 +3786,7 @@ int Gateway::OnRpcCreateCountDown(Json::Value &reqValue, Json::Value &respValue)
 					break;
 				}
 				int repeat = Util::ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
-				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue);
+				rule = new Rule(eventTriggerId, "and", repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(""), reqValue, true);
 				RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle, 0);
 				if (rule && ruleOutputSceneBle)
 				{

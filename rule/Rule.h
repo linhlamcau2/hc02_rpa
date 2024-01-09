@@ -29,13 +29,12 @@ private:
 	Json::Value ruleData;
 	string type;
 	string name;
-	
+
 	unsigned char repeater;
 	bool fullDay;
 	int startTime;
 	int endTime;
-	int count;
-	time_t lastTimeActive;
+	bool isFirstRun;
 
 	bool isAvailable;
 	bool isEnable;
@@ -45,8 +44,8 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData);
-	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData);
+	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData, bool isFirstRun);
+	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData, bool isFirstRun);
 	~Rule();
 
 	Json::Value GetRuleData();
@@ -55,6 +54,7 @@ public:
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();
 	void DelAllRuleOutput();
+	void UpdateFirstRun();
 	void Check();
 	void RunOutput();
 

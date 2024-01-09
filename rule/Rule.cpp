@@ -1,4 +1,5 @@
 #include "Rule.h"
+#include "Db.h"
 #include <functional>
 #include "TimerSchedule.h"
 #include "Util.h"
@@ -7,19 +8,18 @@
 #include "Sntp.h"
 #endif
 
-Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData, bool isFirstRun) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
-	count = 0;
-	lastTimeActive = 0;
 	timerRegisterIndex = 0;
+	this->isFirstRun = isFirstRun;
 }
 
-Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData, bool isFirstRun) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
@@ -28,8 +28,7 @@ Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t
 	this->ruleData = ruleData;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, this);
 	// timerSchedule->RegisterTimer(endTime, this);
-	count = 0;
-	lastTimeActive = 0;
+	this->isFirstRun = isFirstRun;
 }
 
 Rule::~Rule()
@@ -57,6 +56,14 @@ string Rule::GetType()
 	return type;
 }
 
+void Rule::UpdateFirstRun()
+{
+	isFirstRun = false;
+	Json::Value ruleData = GetRuleData();
+	ruleData["isFirstRun"] = false;
+	database->RuleUpdateData(this, ruleData.toString());
+}
+
 void Rule::Check()
 {
 	if (isEnable)
@@ -67,7 +74,7 @@ void Rule::Check()
 		LOGI("currentWeekDay : %d", currentWeekDay);
 		LOGI("currenWeekDay convert: %d", Util::ConvertWeekDayToIntCompare(currentWeekDay));
 		LOGI("repeater : 0x%02X", repeater);
-		if (Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater)
+		if ((Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater) || (!repeater & isFirstRun))
 		{
 			LOGI("Check repeater day OK");
 			if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime))
@@ -103,8 +110,7 @@ void Rule::Check()
 		{
 			LOGI("Do output rule id: %s", id.c_str());
 			RunOutput();
-			count++;
-			lastTimeActive = time(NULL);
+			UpdateFirstRun();
 		}
 	}
 }

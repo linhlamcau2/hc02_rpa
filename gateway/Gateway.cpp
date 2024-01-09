@@ -1457,6 +1457,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		else
 			name = id;
 
+		bool isFirstRun = true;
+		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			isFirstRun = ruleValue["isFirstRun"].asBool();
+
 		Json::Value repeatDays = ruleValue["EACH_DAY"];
 		int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
 		int repeat;
@@ -1518,7 +1522,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					endAt = ruleValue["END_AT"].asString();
 				}
 				string startAt = ruleValue["START_AT"].asString();
-				rule = new Rule(id, type, repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+				rule = new Rule(id, type, repeat, "", 0, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue, isFirstRun);
 				if (!rule)
 				{
 					LOGW("New rule error");
@@ -1541,7 +1545,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			{
 				type = "and";
 			}
-			rule = new Rule(id, type, repeat, "", 0, ruleValue);
+			rule = new Rule(id, type, repeat, "", 0, ruleValue, isFirstRun);
 			if (!rule)
 			{
 				LOGW("New rule error");
@@ -1550,7 +1554,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 		else if (logical == -2)
 		{
 			type = "or";
-			rule = new Rule(id, type, repeat, "", 0, ruleValue);
+			rule = new Rule(id, type, repeat, "", 0, ruleValue, isFirstRun);
 			if (!rule)
 			{
 				LOGW("New rule error");
@@ -1765,6 +1769,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 			}
 			if (addDatabase)
 			{
+				ruleValue["isFirstRun"] = true;
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, status);
