@@ -461,7 +461,7 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 			string tempType = temp.second->GetType();
 			if (tempType == groupType)
 			{
-				if (countIndex == startIndex)
+				if (countIndex >= startIndex)
 				{
 					Json::Value payloadJson;
 					payloadJson.parse(temp.second->GetContent());
@@ -469,10 +469,10 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 					respValue["data"].append(payloadJson);
 				}
 				countIndex ++;
-			}
-			if (countIndex > endIndex)
-			{
-				break;
+				if (countIndex > endIndex)
+				{
+					break;
+				}
 			}
 		}
 	}

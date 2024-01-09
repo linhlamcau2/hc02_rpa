@@ -51,7 +51,7 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			string id = Util::genRandRQI(16);
 			Json::Value tempJson = gateway->BuildJsonDataNoti(device, id, "warning", "cảnh báo cửa mở");
 			Noti *temp = new Noti(id, "warning", tempJson.toString(), to_string(time(NULL)), to_string(time(NULL)));
-			gateway->CreateNoti(temp, true);
+			gateway->CreateNoti(temp, true, true);
 		}
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

@@ -280,6 +280,7 @@ public:
 	int pushStartAddHc(Json::Value &dataValue);
 	int pushStopAddHc(Json::Value &dataValue);
 	int pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId);
+	int pushNotify(Json::Value &dataValue);
 	string CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId);
 
 	// debug
@@ -288,7 +289,7 @@ public:
 	void printRoom();
 
 	// Noti
-	int CreateNoti(Noti *noti, bool addDatabase);
+	int CreateNoti(Noti *noti, bool addDatabase, bool pushNoti);
 	int DelNoti(Noti * noti);
 	Noti *getNotifromId(string id);
 	Json::Value BuildJsonDataNoti(Device *device, string id, string type, string content);

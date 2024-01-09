@@ -25,7 +25,7 @@ static int NotiParse(sqlite3_stmt *stmt, void *ptr)
 				Noti *noti = new Noti(id, type, content, to_string(updateAt), to_string(createAt));
 				if (noti)
 				{
-					gateway->CreateNoti(noti, false);
+					gateway->CreateNoti(noti, false, false);
 				}
 			}
 			else if (s == SQLITE_DONE)

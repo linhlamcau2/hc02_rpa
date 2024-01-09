@@ -1222,6 +1222,11 @@ int Gateway::pushStopAddHc(Json::Value &dataValue)
 	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
 }
 
+int Gateway::pushNotify(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("newNotify", dataValue, "newNotifyRsp", NULL, 0);
+}
+
 int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
 {
 	Json::Value msg;
@@ -1283,11 +1288,22 @@ void Gateway::printRoom()
 	}
 }
 
-int Gateway::CreateNoti(Noti *noti, bool addDatabase)
+int Gateway::CreateNoti(Noti *noti, bool addDatabase, bool pushNoti)
 {
 	if (addDatabase)
 	{
 		database->NotiAdd(noti);
+	}
+	if (pushNoti)
+	{
+		Json::Value notiValue;
+		notiValue["cmd"] = "newNotify";
+		notiValue["rqi"] = Util::genRandRQI(16);
+		notiValue["data"] = Json::arrayValue;
+		Json::Value payloadJson;
+		payloadJson.parse(noti->GetContent());
+		payloadJson["isRead"] = noti->GetContent();
+		notiValue["data"].append(payloadJson);
 	}
 	notiList[noti->GetId()] = noti;
 	return CODE_OK;
