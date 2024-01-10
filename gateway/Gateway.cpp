@@ -1225,7 +1225,7 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 {
 	Json::Value msg;
 	msg["cmd"] = cmd;
-	string rqi = Util::genRandRQI(16);
+	msg["rqi"] = Util::genRandRQI(16);
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
@@ -1238,7 +1238,7 @@ string Gateway::CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, str
 {
 	Json::Value msg;
 	msg["cmd"] = cmd;
-	string rqi = Util::genRandRQI(16);
+	msg["rqi"] = Util::genRandRQI(16);
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
