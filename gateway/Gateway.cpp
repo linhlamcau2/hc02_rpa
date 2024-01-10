@@ -1739,23 +1739,39 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 					{
 						if (scenesOutputRule.isMember("SCENE_ID") && scenesOutputRule["SCENE_ID"].isString())
 						{
+							int delay = 0;
+							if (scenesOutputRule.isMember("TIME") && scenesOutputRule["TIME"].isInt())
+								delay = scenesOutputRule["TIME"].asInt();
 							string sceneId = scenesOutputRule["SCENE_ID"].asString();
-							SceneBle *sceneOutputRule = getSceneBleFromId(sceneId);
-							if (sceneOutputRule)
+							SceneBle *sceneBleOutputRule = getSceneBleFromId(sceneId);
+							if (sceneBleOutputRule)
 							{
-								RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneOutputRule, 0);
+								RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBleOutputRule, delay);
 								if (ruleOutputSceneBle)
 								{
 									rule->AddRuleOutput(ruleOutputSceneBle);
 								}
 								else
 								{
-									LOGW("Create rule output scene error");
+									LOGW("Create rule output scene ble error");
 								}
 							}
 							else
 							{
-								LOGW("Scene %s does not exist", sceneId.c_str());
+								LOGW("SceneBle %s does not exist", sceneId.c_str());
+								SceneDelay *sceneDelayOutputRule = getSceneDelayFromId(sceneId);
+								if (sceneDelayOutputRule)
+								{
+									RuleOutputSceneDelay *ruleOutputSceneDelay = new RuleOutputSceneDelay(sceneDelayOutputRule, delay);
+									if (ruleOutputSceneDelay)
+									{
+										rule->AddRuleOutput(ruleOutputSceneDelay);
+									}
+									else
+									{
+										LOGW("Create rule output scene delay error");
+									}
+								}
 							}
 						}
 					}
@@ -2150,10 +2166,10 @@ void Gateway::printGroup()
 {
 	for (auto &[id, grp] : groupList)
 	{
-		LOGW("group: %s", id.c_str());
+		LOGI("group: %s", id.c_str());
 		for (auto &dev : grp->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }
@@ -2162,10 +2178,10 @@ void Gateway::printScene()
 {
 	for (auto &[id, sce] : sceneBleList)
 	{
-		LOGW("scene: %s", id.c_str());
+		LOGI("scene: %s", id.c_str());
 		for (auto &dev : sce->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }
@@ -2173,10 +2189,10 @@ void Gateway::printRoom()
 {
 	for (auto &[id, rm] : roomList)
 	{
-		LOGW("room: %s", id.c_str());
+		LOGI("room: %s", id.c_str());
 		for (auto &dev : rm->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }

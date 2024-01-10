@@ -16,6 +16,7 @@ void RuleOutputSceneBle::RunOutput()
 {
 	if (sceneBle)
 	{
+		sleep(delayTime);
 		sceneBle->Do();
 	}
 }

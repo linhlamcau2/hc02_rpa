@@ -17,6 +17,7 @@ void RuleOutputGroup::RunOutput()
 {
 	if (group)
 	{
+		sleep(delayTime);
 		group->Do(data, true);
 	}
 }

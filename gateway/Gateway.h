@@ -21,6 +21,7 @@
 #include "RuleOutputSceneBle.h"
 #include "RuleOutputDevice.h"
 #include "RuleOutputGroup.h"
+#include "RuleOutputSceneDelay.h"
 #include "SceneDelayDeviceOutput.h"
 #include "SceneDelayGroupOutput.h"
 #include "Room.h"
