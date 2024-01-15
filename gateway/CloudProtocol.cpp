@@ -183,8 +183,8 @@ void CloudProtocol::OnServerResp(string &topic, string &payload)
 		}
 		else
 		{
-			LOGW("rqi %s not found", rqi.c_str());
-			LOGW("OnServerResp payload: %s", payload.c_str());
+			// LOGW("rqi %s not found", rqi.c_str());
+			// LOGW("OnServerResp payload: %s", payload.c_str());
 		}
 	}
 	else

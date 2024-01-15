@@ -646,6 +646,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleSensorPm(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
+	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
 		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
@@ -1251,10 +1252,10 @@ void Gateway::printGroup()
 {
 	for (auto &[id, grp] : groupList)
 	{
-		LOGW("group: %s", id.c_str());
+		LOGI("group: %s", id.c_str());
 		for (auto &dev : grp->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }
@@ -1263,10 +1264,10 @@ void Gateway::printScene()
 {
 	for (auto &[id, sce] : sceneBleList)
 	{
-		LOGW("scene: %s", id.c_str());
+		LOGI("scene: %s", id.c_str());
 		for (auto &dev : sce->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }
@@ -1274,10 +1275,10 @@ void Gateway::printRoom()
 {
 	for (auto &[id, rm] : roomList)
 	{
-		LOGW("room: %s", id.c_str());
+		LOGI("room: %s", id.c_str());
 		for (auto &dev : rm->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }

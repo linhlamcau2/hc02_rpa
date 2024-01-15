@@ -16,7 +16,7 @@
 #include "AndroidBleProtocol.h"
 #endif
 
-#define URL_PRO "https://rallismartv2.rangdong.com.vn" 
+#define URL_PRO "https://rallismartv2.rangdong.com.vn"
 #define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
 #define URL_DEV "https://iot-dev.truesight.asia"
 
@@ -67,7 +67,7 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 			this->setDormitory(dormitoryId);
 			database->GatewayUpdateDormitory(this, dormitoryId);
 		}
-		else 
+		else
 			LOGW("Dormitory is already set");
 		respValue["data"]["code"] = CODE_OK;
 	}
@@ -203,6 +203,9 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
 	ResetFactory();
+#ifdef __OPENWRT__
+	Wifi::SetModeApWifi();
+#endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
 	return CODE_EXIT;
@@ -454,19 +457,19 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
 	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
-			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
-			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+		reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+		reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
 	{
 		string groupType = reqValue["groupType"].asString();
 		int startIndex = reqValue["startIndex"].asInt();
 		int endIndex = reqValue["endIndex"].asInt();
-		for (auto temp: notiList)
+		for (auto temp : notiList)
 		{
 			string tempType = temp.second->GetType();
 			Json::Value payloadJson;
 			payloadJson.parse(temp.second->GetContent());
 			payloadJson["isRead"] = temp.second->GetIsRead();
-			if(tempType == groupType)
+			if (tempType == groupType)
 			{
 				respValue["data"].append(payloadJson);
 			}
@@ -480,7 +483,7 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);

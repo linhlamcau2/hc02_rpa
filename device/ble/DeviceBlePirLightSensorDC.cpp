@@ -11,10 +11,12 @@ DeviceBlePirLightSensorDC::DeviceBlePirLightSensorDC(string id, string name, str
 	moduleLightSensor = new ModuleLightSensor(this, addr);
 	moduleBatteryLevel = new ModuleBatteryLevel(this, addr);
 	moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
+	moduleSensiPir = new ModuleSensiPir(this, addr);
 	modules.push_back(modulePirLight);
 	modules.push_back(modulePirSensor);
 	modules.push_back(moduleLightSensor);
 	modules.push_back(moduleBatteryLevel);
 	modules.push_back(moduleTimeActionPir);
+	modules.push_back(moduleSensiPir);
 	powerSource = POWER_BATTERY;
 }

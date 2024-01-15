@@ -154,7 +154,7 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnActiveRule(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("status") && reqValue["status"].isInt())
+		reqValue.isMember("status") && reqValue["status"].isInt())
 	{
 		string id = reqValue["id"].asString();
 		int status = reqValue["status"].asInt();
@@ -179,6 +179,8 @@ int Gateway::OnActionRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			rule->RunOutput();
 			respValue["data"]["id"] = rule->GetId();
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("actionRuleRsp", rule->GetId(), rule->GetName(), deviceList, "");
 		}
 	}
 	respValue["data"]["code"] = CODE_OK;

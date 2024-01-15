@@ -64,7 +64,7 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 				Room *temp_room = getRoomFromId(roomId);
 				if (temp_room)
 				{
-					Json::Value temp_devicesList;
+					Json::Value temp_devicesList = Json::arrayValue;
 					for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
 					{
 						Json::Value device;
@@ -158,6 +158,12 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
 										if (room->AddDevice(device, false, true) == CODE_OK)
 											devicesStatusConfig[deviceId] = true;
+							}
+							else
+							{
+								devicesStatusConfig[deviceId] = false;
+								if (room->AddDevice(device, false, true) == CODE_OK)
+									devicesStatusConfig[deviceId] = true;
 							}
 						}
 						else
@@ -400,6 +406,12 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 								if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
 									if (room->AddDevice(device, false, true) == CODE_OK)
 										devicesStatusConfig[deviceId] = true;
+						}
+						else
+						{
+							devicesStatusConfig[deviceId] = false;
+							if (room->AddDevice(device, false, true) == CODE_OK)
+								devicesStatusConfig[deviceId] = true;
 						}
 					}
 					else
@@ -985,7 +997,7 @@ int Gateway::OnUpdateRoomName(Json::Value &reqValue, Json::Value &respValue)
 			group->SetName(name);
 		}
 	}
-	
+
 	Json::Value dataPushToHcApp;
 	dataPushToHcApp["cmd"] = "updateRoomName";
 	dataPushToHcApp["data"] = reqValue;

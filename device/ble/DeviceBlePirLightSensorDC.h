@@ -6,6 +6,7 @@
 #include "module/ModuleBatteryLevel.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
+#include "module/ModuleSensiPir.h"
 
 using namespace std;
 
@@ -17,6 +18,7 @@ private:
 	ModuleLightSensor *moduleLightSensor;
 	ModuleBatteryLevel *moduleBatteryLevel;
 	ModuleTimeActionPir *moduleTimeActionPir;
+	ModuleSensiPir *moduleSensiPir;
 
 public:
 	DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version);

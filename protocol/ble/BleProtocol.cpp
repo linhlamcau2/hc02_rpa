@@ -234,8 +234,8 @@ void BleProtocol::CheckKeyBle()
 		{
 			for (int i = 0; i < 16; i++)
 			{
-				// appKey[i] = appKeyDefault[i];
-				appKey[i] = rand() % 256;
+				appKey[i] = appKeyDefault[i];
+				// appKey[i] = rand() % 256;
 			}
 			bleAppkey = Util::uuidToStr((uint8_t *)appKey);
 			database->GatewayUpdateAppKey(gateway, bleAppkey);
@@ -322,7 +322,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			deviceBle->UpdateLastTimeActive();
 			// if (data_message->data[0] == 0x52 && (data_message->data[1] == 0x0a || data_message->data[1] == 0x02))
 			// {
-				// UpdateLights(0xffff);
+			// UpdateLights(0xffff);
 			// }
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
@@ -1092,6 +1092,39 @@ int BleProtocol::ResetDelAll()
 	return CODE_ERROR;
 }
 
+int BleProtocol::GetTTL(uint16_t devAddr)
+{
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint16_t opcode;
+	} ttl_message_t;
+	ttl_message_t ttl_message = {0};
+	memset(&ttl_message, 0x00, sizeof(ttl_message));
+	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
+	ttl_message.ble_message_header.devAddr = devAddr;
+	ttl_message.opcode = CFG_DEFAULT_TTL_GET;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&ttl_message, sizeof(ttl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t data[1];
+		} ttl_rsp_message_t;
+		ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
+		if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
+		{
+			return CODE_OK;
+		}
+	}
+	return CODE_ERROR;
+}
+
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
 	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
@@ -1151,6 +1184,9 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_4:
 	case BLE_REPEATER:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
+		break;
+	default:
+		BleProtocol::GetTTL(devAddr);
 		break;
 	}
 	return CODE_OK;
@@ -2333,6 +2369,41 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 		LOGW("time action pir light resp state not match with input control");
 	}
 	LOGW("time action pir light err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi)
+{
+	LOGD("Set sensiPirLightSensor: 0x%04X, sensi: %d", devAddr, sensi);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sensiHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t sensi;
+	}
+	sensi_message_t;
+	sensi_message_t sensi_message = {0};
+	memset(&sensi_message, 0x00, sizeof(sensi_message));
+	sensi_message.ble_message_header.devAddr = devAddr;
+	sensi_message.opcodeVendor = RD_OPCODE_CONFIG;
+	sensi_message.vendorId = RD_VENDOR_ID;
+	sensi_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	sensi_message.header = RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR;
+	sensi_message.sensi = sensi;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&sensi_message, sizeof(sensi_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sensiHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	else
+		LOGW("Set sensi error");
 	return CODE_ERROR;
 }
 
