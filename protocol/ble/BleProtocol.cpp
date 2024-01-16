@@ -114,8 +114,49 @@ void BleProtocol::init()
 	usleep(100000); // wait for thread start
 }
 
+string BleProtocol::GetAppKey()
+{
+	string appkeyStr = gateway->getBleAppKey();
+	if (appkeyStr.compare("") == 0)
+	{
+		LOGD("Appkey null");
+		// srand((int)time(0));
+		for (int i = 0; i < 16; i++)
+		{
+			appKey[i] = appKeyDefault[i];
+		}
+		string appkey = Util::uuidToStr((uint8_t *)appKey);
+		LOGD("New ble_appkey: %s", appkey.c_str());
+		database->GatewayUpdateAppKey(gateway, appkey);
+		gateway->setBleAppkey(appkey);
+	}
+	else
+	{
+		LOGD("Appkey: %s", appkeyStr.c_str());
+		appkeyStr.erase(appkeyStr.begin() + 8, appkeyStr.begin() + 9);
+		appkeyStr.erase(appkeyStr.begin() + 12, appkeyStr.begin() + 13);
+		appkeyStr.erase(appkeyStr.begin() + 16, appkeyStr.begin() + 17);
+		appkeyStr.erase(appkeyStr.begin() + 20, appkeyStr.begin() + 21);
+		if (appkeyStr.length() % 2 == 0 && appkeyStr.length() > 0)
+		{
+			for (int i = 0; i < appkeyStr.length(); i += 2)
+			{
+				std::string hexByte = appkeyStr.substr(i, 2);
+				appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+			}
+		}
+		else
+		{
+			LOGW("App key error");
+		}
+	}
+	return appkeyStr;
+}
+
 void BleProtocol::InitKey()
 {
+	if (GetAppKey() == "")
+		ResetBle();
 	while (GetNetKey())
 	{
 #ifdef ESP_PLATFORM
@@ -124,8 +165,6 @@ void BleProtocol::InitKey()
 		sleep(4);
 #endif
 	}
-	CheckKeyBle();
-	isInitKey = true;
 }
 
 void BleProtocol::CheckKeyBle()
@@ -612,7 +651,7 @@ int BleProtocol::GetNetKey()
 	uint8_t d = HCI_GATEWAY_CMD_GET_PRO_SELF_STS;
 	uint8_t dataRsp[100];
 	int lenRsp;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 5000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
 	if (rs == CODE_OK)
 	{
 		// pro_net_info = (pro_net_info_t *)&dataRsp[1];
@@ -626,13 +665,9 @@ int BleProtocol::GetNetKey()
 			{
 				netKey[i] = pro_net_info.netKey[i];
 			}
-
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
 				nextAddr = 2;
-			uint32_t maxAddr = gateway->GetMaxAddrBle();
-			if (nextAddr <= maxAddr)
-				nextAddr = maxAddr + 4;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else
@@ -641,8 +676,20 @@ int BleProtocol::GetNetKey()
 			for (int i = 0; i < 16; i++)
 			{
 				netKey[i] = rand() % 256;
+				gwKey[i] = rand() % 256;
 			}
+			SetNetKey();
+			SetGwKey();
 			string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
+			LOGD("New ble_netkey: %s", netkeyStr.c_str());
+			database->GatewayUpdateNetKey(gateway, netkeyStr);
+
+			string devicekeyGwStr = Util::uuidToStr((uint8_t *)gwKey);
+			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
+			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
+
+			gateway->setBleDevicekey(devicekeyGwStr);
+			gateway->setBleNetkey(netkeyStr);
 		}
 	}
 	else

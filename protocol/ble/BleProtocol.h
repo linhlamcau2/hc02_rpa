@@ -240,6 +240,7 @@ public:
 	int GetNetKey();
 	int SetNetKey();
 	int SetGwKey();
+	string GetAppKey();
 
 	int StartScan();
 	int StopScan();
