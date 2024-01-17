@@ -128,8 +128,8 @@ void Gateway::init()
 #else
 	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
 	udpBroadcastThread.detach();
-	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
-	checkOnlineThread.detach();
+	// thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
+	// checkOnlineThread.detach();
 #endif
 
 	database->GatewayRead();
