@@ -93,6 +93,7 @@ void Gateway::initMqttMessage()
 
 	OnDeviceRpcCallbackRegister("DEL_ALL_RULE", bind(&Gateway::OnRpcDelAllRuleInDB, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("UPLOAD", bind(&Gateway::OnRpcUpload, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("setAutoOta", bind(&Gateway::OnRpcAutoOta, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnRpcHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("HC_BACKUP_DATA", bind(&Gateway::OnRpcHcBackup, this, placeholders::_1, placeholders::_2));
@@ -169,6 +170,8 @@ void Gateway::initMqttMessage()
 	OnLocalCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("DEL_ALL_RULE", bind(&Gateway::OnRpcDelAllRuleInDB, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("ADD_DEVICE_BY_MAC", bind(&Gateway::OnRpcAddDeviceByMac, this, placeholders::_1, placeholders::_2));
+
+	OnLocalCallbackRegister("setAutoOta", bind(&Gateway::OnRpcAutoOta, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnRpcHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
@@ -3431,7 +3434,11 @@ int Gateway::OnRpcCablibDevice(Json::Value &reqValue, Json::Value &respValue)
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				if (device->GetType() == BLE_SWITCH_RGB_CURTAIN || device->GetType() == BLE_SWITCH_RGB_CURTAIN_SQUARE || device->GetType() == BLE_SWITCH_CURTAIN)
+				if (device->GetType() == BLE_SWITCH_RGB_CURTAIN ||
+					device->GetType() == BLE_SWITCH_RGB_CURTAIN_SQUARE ||
+					device->GetType() == BLE_SWITCH_CURTAIN ||
+					device->GetType() == BLE_SWITCH_RGB_CURTAIN_HCN ||
+					device->GetType() == BLE_SWITCH_RGB_CURTAIN_SQUARE_V2)
 				{
 					for (int i = 0; i < properties.size(); i++)
 					{
@@ -3981,6 +3988,40 @@ int Gateway::OnRpcUpload(Json::Value &reqValue, Json::Value &respValue)
 				if (type == "DATABASE")
 				{
 					rs = fileTransfer->uploadFile("/spiffs", "smh.sqlite");
+				}
+			}
+		}
+	}
+	if (rs == CODE_OK)
+	{
+		respValue["DATA"]["STATUS"] = "SUCCESS";
+	}
+	else
+	{
+		respValue["DATA"]["STATUS"] = "FAILED";
+	}
+	return rs;
+}
+
+int Gateway::OnRpcAutoOta(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcAutoOta");
+	respValue["cmd"] = "setAutoOtaRsp";
+	int rs = CODE_ERROR;
+	{
+		if (reqValue.isMember("data") && reqValue["data"].isObject())
+		{
+			Json::Value data = reqValue["data"];
+			if (data.isMember("isAutoOta") && data["isAutoOta"].isBool())
+			{
+				bool isAutoOta = data["isAutoOta"].asBool();
+				string dataGateway = this->getData();
+				Json::Value dataJson;
+				dataJson.parse(dataGateway);
+				if (dataJson.isObject())
+				{
+					dataJson["isAutoOta"] = isAutoOta;
+					this->setData(dataJson.toString());
 				}
 			}
 		}

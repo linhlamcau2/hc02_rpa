@@ -1200,14 +1200,14 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_5_CEILING:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		break;
-	case BLE_REPEATER:
-		BleProtocol::GetTTL(devAddr);
-		break;
 	case BLE_SWITCH_ONOFF:
 		if (version >= 515)
 			BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		else
 			BleProtocol::GetOnoffLight(devAddr);
+		break;
+	default:
+		BleProtocol::GetTTL(devAddr);
 		break;
 	}
 	return CODE_OK;

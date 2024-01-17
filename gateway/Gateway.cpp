@@ -71,6 +71,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	this->data = "";
+	this->isAutoOta = true;
 }
 
 Gateway::~Gateway()
@@ -346,7 +347,7 @@ void Gateway::init()
 	// Check old version to do something
 	string firmwareVersionCurrent = STR(VERSION);
 	LOGI("Version: %s", firmwareVersionCurrent.c_str());
-	if (getVersion() != firmwareVersionCurrent && firmwareVersionCurrent == "1.0.15")
+	if (getVersion() != firmwareVersionCurrent)
 	{
 		int addColumnSuccess = database->checkAndAddColumn("Gateway", "data", "TEXT");
 		if (addColumnSuccess == CODE_OK || addColumnSuccess == CODE_EXIST)
@@ -355,6 +356,13 @@ void Gateway::init()
 			sleep(5);
 			exit(1);
 		}
+	}
+
+	Json::Value dataGateway;
+	dataGateway.parse(getData());
+	if (dataGateway.isObject() && dataGateway.isMember("isAutoOta") && dataGateway["isAutoOta"].isBool())
+	{
+		this->setAutoOta(dataGateway["isAutoOta"].asBool());
 	}
 
 	CloudConnect();
@@ -456,6 +464,26 @@ void Gateway::PushTelemetryAllLights()
 	deviceListMtx.unlock();
 }
 */
+
+void Gateway::CheckAutoOta()
+{
+	if (this->getAutoOta() & (Util::GetCurrentTimer() == 1))
+	{
+		Json::Value data;
+		data["cmd"] = "checkAutoOta";
+		data["rqi"] = Util::genRandRQI(16);
+		data["data"]["mac"] = this->getMac();
+		data["data"]["version"] = this->getVersion();
+#ifdef ESP_PLATFORM
+		data["data"]["type"] = 2;
+#elif defined(__OPENWRT__)
+		data["data"]["type"] = 1;
+#else
+		data["data"]["type"] = 3;
+#endif
+		CloudPublish(data);
+	}
+}
 
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
 
@@ -658,6 +686,8 @@ int Gateway::CheckOnlineThread()
 			}
 #endif
 		}
+
+		CheckAutoOta(); // Check ota with cloud
 		sleep(1);
 	}
 	return CODE_OK;
@@ -1997,6 +2027,11 @@ string Gateway::getMac()
 	return mac;
 }
 
+bool Gateway::getAutoOta()
+{
+	return this->isAutoOta;
+}
+
 void Gateway::setBleAddr(uint16_t addr)
 {
 	this->ble_addr = addr;
@@ -2035,6 +2070,11 @@ void Gateway::setRefreshToken(string refresh_token)
 void Gateway::setData(string data)
 {
 	this->data = data;
+}
+
+void Gateway::setAutoOta(bool isAutoOta)
+{
+	this->isAutoOta = isAutoOta;
 }
 
 void Gateway::setId(string id)

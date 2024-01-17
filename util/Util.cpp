@@ -75,7 +75,7 @@ string Util::GetCurrentTimeStr()
 	return getTimeStrFromTime(time(NULL));
 }
 
-int Util::GetCurrentTimer()
+uint32_t Util::GetCurrentTimer()
 {
 	time_t t = time(NULL);
 	struct tm lt = *localtime(&t);

@@ -55,6 +55,7 @@ private:
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
 	atomic<bool> isCheckStatusLights;
+	atomic<bool> isAutoOta;
 
 	map<string, Device *> deviceList;
 	map<string, Group *> groupList;
@@ -171,6 +172,8 @@ private:
 	int OnRpcAddDeviceByMac(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcUpload(Json::Value &reqValue, Json::Value &respValue);
+
+	int OnRpcAutoOta(Json::Value &reqValue, Json::Value &respValue);
 #else
 	// Bản tin điều khiển
 	int OnControlDevice(Json::Value &reqValue, Json::Value &respValue);
@@ -259,6 +262,7 @@ public:
 	bool getCheckStatusLights();
 
 	// void SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp);
+	void CheckAutoOta();
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
@@ -297,6 +301,7 @@ public:
 	string getRefreshToken();
 	string getData();
 	string getMac();
+	bool getAutoOta();
 
 	void setBleAddr(uint16_t addr);
 	void setBleIvIndex(uint32_t ivIndex);
@@ -310,6 +315,7 @@ public:
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
 	void setData(string data);
+	void setAutoOta(bool isAutoOta);
 
 	void DelAllDevice();
 	void DelAllGroup();

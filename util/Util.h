@@ -17,7 +17,7 @@ namespace Util
 	 *
 	 * @return int
 	 */
-	int GetCurrentTimer();
+	uint32_t GetCurrentTimer();
 
 	int GetYearsCurrent();
 	int GetMonthsCurrent();

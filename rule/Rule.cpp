@@ -74,6 +74,10 @@ void Rule::Check()
 		LOGI("currentWeekDay : %d", currentWeekDay);
 		LOGI("currenWeekDay convert: %d", Util::ConvertWeekDayToIntCompare(currentWeekDay));
 		LOGI("repeater : 0x%02X", repeater);
+		/**
+		 * Kiem tra ngay trong tuan
+		 * Kiem tra khong chon ngay trong tuan thi chay 1 lan 
+		*/
 		if ((Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater) || (!repeater & isFirstRun))
 		{
 			LOGI("Check repeater day OK");
