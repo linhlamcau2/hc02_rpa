@@ -202,9 +202,9 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
-	ResetFactory();
+	// ResetFactory();
 #ifdef __OPENWRT__
-	Wifi::SetModeApWifi();
+	// Wifi::SetModeApWifi();
 #endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";

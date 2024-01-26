@@ -181,6 +181,11 @@ void BleProtocol::CheckKeyBle()
 		}
 		else
 		{
+			for (int i = 0; i < 16; i++)
+			{
+				netKey[i] = rand() % 256;
+			}
+			netkeyStr = Util::uuidToStr((uint8_t *)netKey);
 			bleNetkey = netkeyStr;
 			database->GatewayUpdateNetKey(gateway, bleNetkey);
 			gateway->setBleNetkey(bleNetkey);

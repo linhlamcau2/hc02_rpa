@@ -92,7 +92,7 @@ int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetSceneList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetSceneList");
-	Json::Value sceneData;
+	Json::Value sceneData = Json::arrayValue;
 	sceneBleListMtx.lock();
 	for (const auto &[id, scene] : sceneBleList)
 	{
@@ -343,8 +343,8 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string sceneId = reqValue["id"].asString();
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
