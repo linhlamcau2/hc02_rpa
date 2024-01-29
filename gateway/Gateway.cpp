@@ -157,6 +157,14 @@ void Gateway::init()
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
 	LOGI("OnCloudConnect: %d", isConnected);
+	Json::Value jsonValue;
+	Json::Value dataValue;
+	dataValue["status"] = isConnected;
+	dataValue["version"] = STR(VERSION);
+	dataValue["ip"] = Wifi::GetIP();
+	jsonValue["cmd"] = "homeController";
+	jsonValue["data"] = dataValue;
+	LocalPublish(jsonValue);
 	if (isConnected)
 	{
 		Util::LedInternet(true);
