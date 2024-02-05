@@ -38,6 +38,7 @@
 #include "DeviceBleSwitchCeiling.h"
 #include "DeviceBleRepeater.h"
 #include "DeviceBleRadaSensorAc.h"
+#include "DeviceBleSeftPowerRemote.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -310,12 +311,12 @@ void Gateway::init()
 	}
 	vTaskDelay(10);
 #endif
-	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
-	{
-		LOGE("Failed to create task");
-		SetLedService(false);
-	}
-	vTaskDelay(10);
+	// if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
+	// {
+	// 	LOGE("Failed to create task");
+	// 	SetLedService(false);
+	// }
+	// vTaskDelay(10);
 #else
 	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
 	udpBroadcastThread.detach();
@@ -857,8 +858,8 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 
 	dataValue["DEVICE_ID"] = scanDevice->GetId();
-	dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
-	dataValue["DEVICE_TYPE_ID"] = (int)scanDevice->GetType();
+	dataValue["DEVICE_UNICAST_ID"] = (uint16_t)scanDevice->GetAddr();
+	dataValue["DEVICE_TYPE_ID"] = (uint32_t)scanDevice->GetType();
 	dataValue["MAC_ADDRESS"] = scanDevice->GetMac();
 	dataValue["FIRMWARE_VERSION"] = scanDevice->GetVersionStr();
 	dataValue["DEVICE_KEY"] = devKey;
@@ -883,7 +884,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	{
 		dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
 		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), 1, Util::checkGenIdDeviceChild(scanDevice->GetData(), KEYJSON_GEN_DEVICEID));
-		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
+		dataValue["DEVICE_UNICAST_ID"] = (uint16_t)scanDevice->GetAddr() + 1;
 		dataValue["BUTTON_ID"] = 12;
 		jsonValue["DATA"] = dataValue;
 		LocalPublish(jsonValue);
@@ -899,7 +900,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
 			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i, Util::checkGenIdDeviceChild(scanDevice->GetData(), KEYJSON_GEN_DEVICEID));
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
+			dataValue["DEVICE_UNICAST_ID"] = (uint16_t)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
 			LocalPublish(jsonValue);
@@ -915,7 +916,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
 			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i, Util::checkGenIdDeviceChild(scanDevice->GetData(), KEYJSON_GEN_DEVICEID));
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
+			dataValue["DEVICE_UNICAST_ID"] = (uint16_t)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
 			LocalPublish(jsonValue);
@@ -927,7 +928,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
 			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i, Util::checkGenIdDeviceChild(scanDevice->GetData(), KEYJSON_GEN_DEVICEID));
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
+			dataValue["DEVICE_UNICAST_ID"] = (uint16_t)scanDevice->GetAddr() + i;
 			dataValue["BUTTON_ID"] = 11 + i;
 			jsonValue["DATA"] = dataValue;
 			LocalPublish(jsonValue);
@@ -939,8 +940,23 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		{
 			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
 			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i, Util::checkGenIdDeviceChild(scanDevice->GetData(), KEYJSON_GEN_DEVICEID));
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
+			dataValue["DEVICE_UNICAST_ID"] = (uint16_t)scanDevice->GetAddr();
 			dataValue["BUTTON_ID"] = 11 + i;
+			jsonValue["DATA"] = dataValue;
+			LocalPublish(jsonValue);
+		}
+	}
+	else if (scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_1 ||
+			 scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_2 ||
+			 scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_3)
+	{
+		DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(scanDevice);
+		if (deviceBleSeftPowerRemote->GetParent())
+		{
+			dataValue["PARENT_DEVICE_ID"] = deviceBleSeftPowerRemote->GetParent()->GetId();
+			dataValue["DEVICE_ID"] = deviceBleSeftPowerRemote->GetId();
+			dataValue["DEVICE_UNICAST_ID"] = (uint16_t)deviceBleSeftPowerRemote->GetAddr();
+			dataValue["BUTTON_ID"] = 11;
 			jsonValue["DATA"] = dataValue;
 			LocalPublish(jsonValue);
 		}
@@ -1235,6 +1251,16 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	case BLE_REPEATER:
 		device = new DeviceBleRepeater(id, name, mac, data, addr, type, version);
+		break;
+	case BLE_SEFTPOWER_REMOTE_1:
+	case BLE_SEFTPOWER_REMOTE_2:
+	case BLE_SEFTPOWER_REMOTE_3:
+		device = getDeviceFromId(id);
+		if (device)
+		{
+			delDevice(device);
+		}
+		device = new DeviceBleSeftPowerRemote(id, name, mac, data, addr, type, version, NULL);
 		break;
 
 #ifndef ESP_PLATFORM
@@ -2150,6 +2176,23 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 		}
 	}
 	return CODE_ERROR;
+}
+
+uint32_t Gateway::getMaxAddrBle()
+{
+	uint32_t maxAddrBle = 2;
+	deviceListMtx.lock();
+	for (const auto &[id, device] : deviceList)
+	{
+		if ((device->GetAddr() > maxAddrBle) && (device->GetAddr() < 49152))
+		{
+			maxAddrBle = device->GetAddr();
+			LOGW("max assiged: %d", maxAddrBle);
+		}
+	}
+	deviceListMtx.unlock();
+	LOGW("max return: %d", maxAddrBle);
+	return maxAddrBle;
 }
 
 void Gateway::DelAllDevice()

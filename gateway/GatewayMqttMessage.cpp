@@ -101,6 +101,8 @@ void Gateway::initMqttMessage()
 
 	OnLocalCallbackRegister("SCAN", bind(&Gateway::OnRpcBleStartScan, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("STOP", bind(&Gateway::OnRpcBleStopScan, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("SCAN_PAIRING_DEVICE", bind(&Gateway::OnRpcBleStartScanPairDev, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("STOP_SCAN_PAIRING_DEVICE", bind(&Gateway::OnRpcBleStopScanPairDev, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_NODE", bind(&Gateway::OnRpcBleDelDevice, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_BLE", bind(&Gateway::OnRpcBleReset, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("RESET_HC", bind(&Gateway::OnRpcResetFactory, this, placeholders::_1, placeholders::_2));
@@ -334,6 +336,44 @@ int Gateway::OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnRpcBleStartScanPairDev(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		{
+			string devId = data["DEVICE_ID"].asString();
+			Device *device = getDeviceFromId(devId);
+			if (device)
+			{
+				uint32_t maxAddr = getMaxAddrBle();
+				LOGW("max addr: %d", maxAddr + BLE_MAX_ELEMENT);
+				if (bleProtocol)
+					bleProtocol->AddPairDevice(device->GetAddr(), maxAddr + BLE_MAX_ELEMENT);
+				else
+					LOGW("BleProtocol null");
+			}
+		}
+	}
+	else
+	{
+		LOGW("Data scan device pair error");
+	}
+	respValue["CMD"] = "STOP_SCAN_PAIRING_DEVICE";
+	return CODE_OK;
+}
+
+int Gateway::OnRpcBleStopScanPairDev(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (bleProtocol)
+	{
+	}
+	else
+		LOGW("BleProtocol null");
+	return CODE_OK;
+}
+
 int Gateway::OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("Reset ble");
@@ -429,22 +469,18 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 
 					if (bleProtocol)
 					{
-						if (bleProtocol->ResetDev(device->GetAddr()) == CODE_OK)
-						{
-							dataJsonRsp["SUCCESS"].append(device->GetId());
-							database->DeviceInGroupDelDev(device);
-							database->DeviceInSceneBleDelDev(device);
-							database->DeviceInRoomDelDev(device);
-							// bleProtocol->listMac.erase(remove(bleProtocol->listMac.begin(), bleProtocol->listMac.end(), device->GetMac()), bleProtocol->listMac.end());
-							delDevice(device);
-						}
-						else
-						{
+						if (bleProtocol->ResetDev(device->GetAddr()) != CODE_OK)
 							dataJsonRsp["FAILED"].append(device->GetId());
-						}
 					}
 					else
 						LOGW("BleProtocol null");
+
+					dataJsonRsp["SUCCESS"].append(device->GetId());
+					database->DeviceInGroupDelDev(device);
+					database->DeviceInSceneBleDelDev(device);
+					database->DeviceInRoomDelDev(device);
+					// bleProtocol->listMac.erase(remove(bleProtocol->listMac.begin(), bleProtocol->listMac.end(), device->GetMac()), bleProtocol->listMac.end());
+					delDevice(device);
 				}
 			}
 			else

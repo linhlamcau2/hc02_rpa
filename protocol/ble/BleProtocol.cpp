@@ -12,6 +12,7 @@
 #include "BleOpCode.h"
 #include "DeviceBle.h"
 #include "DeviceBleSwitchScene6ACRgb.h"
+#include "DeviceBleSeftPowerRemote.h"
 #include "AES.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -104,13 +105,6 @@ void BleProtocol::init()
 
 #ifdef ESP_PLATFORM
 	opcodeMessageQueue = xQueueCreate(10, sizeof(message_rsp_st *));
-	// LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	// if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 8192, this, 10, NULL) != pdPASS)
-	// {
-	// 	LOGE("Failed to create task");
-	// 	Led::SetLedService(MODE_OFF);
-	// }
-	// vTaskDelay(10);
 	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 15360, this, 10, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
@@ -452,6 +446,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 		}
 		while ((std::chrono::high_resolution_clock::now() - start_time) < std::chrono::microseconds(TIME_WAIT))
 		{
+			vTaskDelay(10 / portTICK_PERIOD_MS);
 		}
 		start_time = std::chrono::high_resolution_clock::now();
 		Write((uint8_t *)&message_req, lenReq + 2);
@@ -541,6 +536,9 @@ int BleProtocol::GetNetKey()
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
 				nextAddr = 2;
+			uint32_t maxAddr = gateway->getMaxAddrBle();
+			if (nextAddr <= maxAddr)
+				nextAddr = maxAddr + BLE_MAX_ELEMENT;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else
@@ -859,6 +857,60 @@ void BleProtocol::FunctionAddDevice()
 #endif
 		}
 	}
+}
+
+int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
+{
+	if (ScanStopSeftPowerRemote(parentAddr, 1) == CODE_OK)
+	{
+		uint16_t adr = gateway->getMaxAddrBle() + BLE_MAX_ELEMENT;
+		if (SaveSeftPowerRemote(scanDevicePairMessage, adr) == CODE_OK)
+		{
+			uint16_t version = 0;
+			uint32_t deviceType = 0;
+			char tempId[100] = {0};
+			sprintf((char *)tempId,"%02x%02x%02x%02x-0000-0000-0000-000000000000", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
+			tempId[36] = '\0';
+			// string uuid = string(tempId);
+			std::string uuid(tempId);
+
+			char tempMac[100] = {0};
+			sprintf((char *)tempMac,"%02x%02x%02x%02x0000", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
+			tempMac[12] = '\0';
+			// string mac = string(tempMac);
+			std::string mac(tempMac);
+			
+			// LOGW("id: %s, mac: %s", uuid.c_str(), mac.c_str());
+
+			Json::Value dataJson = Json::objectValue;
+			switch (scanDevicePairMessage.type)
+			{
+			case 1:
+				deviceType = BLE_SEFTPOWER_REMOTE_1;
+				break;
+			case 2:
+				deviceType = BLE_SEFTPOWER_REMOTE_2;
+				break;
+			case 3:
+				deviceType = BLE_SEFTPOWER_REMOTE_3;
+				break;
+			}
+			Device *device = gateway->AddNewDevice(uuid, "", mac, dataJson.toString(), childAddr, deviceType, 257, true, true);
+			if (device)
+			{
+				Device * parent = gateway->getDeviceBleFromAddr(parentAddr);
+				DeviceBleSeftPowerRemote * deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+				if (parent && deviceBleSeftPowerRemote)
+					deviceBleSeftPowerRemote->SetParentDev(parent);
+
+				if (deviceBleSeftPowerRemote->GetParent())
+					gateway->AddDeviceToScanList(device);		
+			}
+		}
+	}
+	else
+		ScanStopSeftPowerRemote(parentAddr, 0);
+	return CODE_OK;
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -1766,7 +1818,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 		callscene_message.scene = scene;
 		callscene_message.offset = 0;
 		callscene_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, callSceneHeader, 0, 6);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 600, callSceneHeader, 0, 6);
 		if (rs == CODE_OK)
 		{
 			typedef struct __attribute__((packed))
@@ -3123,6 +3175,125 @@ int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
 	}
 	LOGW("update err");
 	return CODE_ERROR;
+}
+
+int BleProtocol::ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status)
+{
+	LOGD("Scan SeftPowerRemote: 0x%04X", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dataCompare[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t status;
+		uint8_t future[5];
+	} scan_message_t;
+	scan_message_t scan_message = {0};
+	memset(&scan_message, 0x00, sizeof(scan_message));
+	scan_message.ble_message_header.devAddr = devAddr;
+	scan_message.opcodeVendor = RD_OPCODE_CONFIG;
+	scan_message.vendorId = RD_VENDOR_ID;
+	scan_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	scan_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SCAN;
+	scan_message.status = status;
+	uint16_t timeout = 10000;
+	if (!status)
+		timeout = 1000;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scan_message, sizeof(scan_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, timeout, dataCompare, 0, 7);
+	if (rs == CODE_OK)
+	{
+		memcpy(&scanDevicePairMessage, dataRsp, sizeof(scan_device_pair_message_t));
+		// LOGW("parent: %d", scanDevicePairMessage.parentAddr);
+		// LOGW("mac: %02x%02x%02x%02x", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
+		// LOGW("type: %d", scanDevicePairMessage.type);
+	}
+	return rs;
+}
+
+/*
+Scan SeftPowerRemote: 0x0003
+tx: E8 FF 00 00 00 00 00 00 03 00 E2 11 02 E3 00 0B 0A 01 00 00 00 00 00 
+rx: 10 00 91 B5 01 00 03 00 E2 00 0B 0A 01 00 00 00 00 00 
+rx: 11 00 91 81 03 00 01 00 E3 11 02 0B 0A 00 01 66 08 03 C0 
+Save SeftPowerRemote
+tx: E8 FF 00 00 00 00 00 00 03 00 E2 11 02 E3 00 0B 0D 00 00 00 00 00 00 
+rx: 10 00 91 B5 01 00 03 00 E2 00 0B 0D 00 00 00 00 00 00 
+rx: 10 00 91 81 03 00 01 00 E3 11 02 0B 0D 00 00 00 00 01 
+*/
+
+int BleProtocol::SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uint16_t childDev)
+{
+	LOGD("Save SeftPowerRemote");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dataCompare[] = {(uint8_t)(scanMessage.parentAddr & 0xFF), (uint8_t)((scanMessage.parentAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mac[4];
+		uint16_t childDev;
+	} save_message_t;
+	save_message_t save_message = {0};
+	memset(&save_message, 0x00, sizeof(save_message));
+	save_message.ble_message_header.devAddr = scanMessage.parentAddr;
+	save_message.opcodeVendor = RD_OPCODE_CONFIG;
+	save_message.vendorId = RD_VENDOR_ID;
+	save_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	save_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SAVE;
+	for (int i = 0; i < 4; i++)
+	{
+		save_message.mac[i] = scanMessage.mac[i];
+	}
+	int rs = SendMessage(APP_REQ, (uint8_t *)&save_message, sizeof(save_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 3000, dataCompare, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mac[4];
+			uint8_t status;
+		} save_rsp_message_t;
+		save_rsp_message_t *save_rsp_message = (save_rsp_message_t *)dataRsp;
+		uint32_t parentAddrRsp = save_rsp_message->mac[0] | save_rsp_message->mac[1] << 8 | save_rsp_message->mac[2] << 16 | save_rsp_message->mac[3] << 24;
+		uint32_t parentAddr = scanMessage.mac[0] | scanMessage.mac[1] << 8 | scanMessage.mac[2] << 16 | scanMessage.mac[3] << 24;
+		// LOGW("parent %d, rsp: %d, status: %d", parentAddrRsp, parentAddr, save_rsp_message->status);
+		if ((parentAddrRsp != parentAddr) || (save_rsp_message->status == 0))
+			rs = CODE_ERROR;
+	}
+	return rs;
+}
+
+int BleProtocol::SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode, uint16_t scene)
+{
+	int rs = CODE_OK;
+	return rs;
+}
+
+int BleProtocol::DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode)
+{
+	int rs = CODE_OK;
+	return rs;
+}
+
+int BleProtocol::ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr)
+{
+	int rs = CODE_OK;
+	return rs;
 }
 
 int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)

@@ -99,7 +99,7 @@ int Db::createTableIfNotExists()
 #ifdef ESP_PLATFORM
 	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version VARCHAR, hardware_version VARCHAR, active_time INTEGER, update_time INTEGER, data TEXT,is_favorite INTEGER, PRIMARY KEY (device_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id)) WITHOUT ROWID;"
-				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, parent_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (device_id, parent_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, PRIMARY KEY (room_id, device_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id)) WITHOUT ROWID;"
@@ -112,7 +112,7 @@ int Db::createTableIfNotExists()
 #else
 	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version VARCHAR, hardware_version VARCHAR, active_time INTEGER, update_time INTEGER, data TEXT,is_favorite INTEGER, PRIMARY KEY (device_id));"
 				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute_id INTEGER, value DOUBLE, PRIMARY KEY (device_id, attribute_id));"
-				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, element INTEGER NOT NULL, PRIMARY KEY (device_id, element));"
+				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, parent_id VARCHAR NOT NULL, data TEXT PRIMARY KEY (device_id, parent_id));"
 				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, PRIMARY KEY (group_id, device_id, element));"
 				 "CREATE TABLE IF NOT EXISTS DeviceInRoom (room_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, PRIMARY KEY (room_id, device_id));"
 				 "CREATE TABLE IF NOT EXISTS DeviceInSceneBle (scene_ble_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (scene_ble_id, device_id));"

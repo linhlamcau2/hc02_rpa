@@ -93,6 +93,8 @@ private:
 	int OnRpcVersionHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleStartScan(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleStopScan(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleStartScanPairDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleStopScanPairDev(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleReset(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleAddDevice(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue);
@@ -316,6 +318,8 @@ public:
 	void setRefreshToken(string refresh_token);
 	void setData(string data);
 	void setAutoOta(bool isAutoOta);
+
+	uint32_t getMaxAddrBle();
 
 	void DelAllDevice();
 	void DelAllGroup();

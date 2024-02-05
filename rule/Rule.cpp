@@ -76,8 +76,8 @@ void Rule::Check()
 		LOGI("repeater : 0x%02X", repeater);
 		/**
 		 * Kiem tra ngay trong tuan
-		 * Kiem tra khong chon ngay trong tuan thi chay 1 lan 
-		*/
+		 * Kiem tra khong chon ngay trong tuan thi chay 1 lan
+		 */
 		if ((Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater) || (!repeater & isFirstRun))
 		{
 			LOGI("Check repeater day OK");
@@ -114,7 +114,8 @@ void Rule::Check()
 		{
 			LOGI("Do output rule id: %s", id.c_str());
 			RunOutput();
-			UpdateFirstRun();
+			if (isFirstRun)
+				UpdateFirstRun();
 		}
 	}
 }

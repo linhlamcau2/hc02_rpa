@@ -72,6 +72,13 @@
 #define RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME 0xF00A
 #define RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP 0xF10A
 
+#define RD_OPCODE_SEFTPOWER_REMOTE_SCAN 0x0a0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_SAVE	0x0d0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_RESET 0x0e0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_PRESS 0x0b0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE 0x0c0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE 0x0f0b
+
 #define TRANSITION_DEFAULT 5
 
 enum
@@ -129,6 +136,7 @@ enum
 };
 
 #define CONNECT_DEVICE_TIMEOUT 40 // seconds
+#define BLE_MAX_ELEMENT 4 
 
 using namespace std;
 
@@ -144,6 +152,18 @@ typedef struct __attribute__((packed))
 	int8_t rssi;
 	uint16_t dc;
 } scan_device_message_t;
+
+typedef struct __attribute__((packed))
+{
+	uint16_t parentAddr;
+	uint16_t gwAddr;
+	uint8_t opcodeRsp;
+	uint16_t vendorId;
+	uint16_t header;
+	uint8_t mac[4];
+	uint8_t type;
+	uint8_t rssi;
+} scan_device_pair_message_t;
 
 typedef struct __attribute__((packed))
 {
@@ -223,6 +243,7 @@ public:
 	atomic<bool> haveNewMac;
 	atomic<bool> isProvisioning;
 	scan_device_message_t scanDeviceMessage;
+	scan_device_pair_message_t scanDevicePairMessage;
 	vector<string> listMac;
 
 #ifdef ESP_PLATFORM
@@ -240,6 +261,13 @@ public:
 	int SetNetKey();
 	int SetGwKey();
 
+	//SeftPower Remote
+	int ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status);
+	int SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uint16_t childDev);
+	int SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode, uint16_t scene);
+	int DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode);
+	int ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr);
+
 	int StartScan();
 	int ScanByMac(string mac, uint32_t timeout, scan_device_message_t &dataScan);
 	int StopScan();
@@ -251,6 +279,7 @@ public:
 	void FunctionAddDevice();
 	int AddDevice(scan_device_message_t *scan_device_message);
 	int AddDeviceByMac(scan_device_message_t *scan_device_message);
+	int AddPairDevice(uint32_t parentAddr, uint32_t childAddr);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();

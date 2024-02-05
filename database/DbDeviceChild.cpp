@@ -1,6 +1,7 @@
 #include "Db.h"
 #include "Log.h"
 #include "Util.h"
+#include "DeviceBleSeftPowerRemote.h"
 
 #define TABLE_NAME "[DeviceBleChild]"
 
@@ -16,7 +17,24 @@ static int DeviceBleChildParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int element = sqlite3_column_int(stmt, index++);
+				string parentId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
+				Device *child = gateway->getDeviceFromId(deviceId);
+				Device *parent = gateway->getDeviceFromId(parentId);
+				if (parent)
+				{
+					if (child)
+					{
+						DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(child);
+						if (deviceBleSeftPowerRemote)
+							deviceBleSeftPowerRemote->SetParentDev(parent);
+					}
+					else
+						LOGW("child device not found");
+				}
+				else
+					LOGW("parent device not found");
 			}
 			else if (s == SQLITE_DONE)
 			{
