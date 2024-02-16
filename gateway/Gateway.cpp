@@ -1302,7 +1302,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		LOGW("Add new device not support type: 0x%04X", type);
 	}
 
-	printDevice();
+	// printDevice();
 
 	return device;
 }

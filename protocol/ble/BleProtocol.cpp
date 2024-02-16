@@ -912,12 +912,13 @@ int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
 				DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
 				if (parent && deviceBleSeftPowerRemote)
 				{
-					deviceBleSeftPowerRemote->SetParentDev(parent);
-					database->DeviceBleChildAdd(deviceBleSeftPowerRemote, parent, "");	
-					database->DeviceBleChildRead();
+					deviceBleSeftPowerRemote->SetParentDev(parent);	
 				}
 				if (deviceBleSeftPowerRemote->GetParent())
+				{
 					gateway->AddDeviceToScanList(device);
+					database->DeviceBleChildAdd(deviceBleSeftPowerRemote, parent, "");
+				}
 			}
 		}
 		// else
