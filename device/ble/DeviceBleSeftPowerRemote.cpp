@@ -6,27 +6,9 @@ DeviceBleSeftPowerRemote::DeviceBleSeftPowerRemote(string id, string name, strin
     : DeviceBle(id, name, mac, data, addr, type, version)
 {
     this->parent = parent;
-    for (int i = 0; i < 6; i++)
-    {
-        moduleButton[i] = new ModuleButton(this, addr, i);
-        modules.push_back(moduleButton[i]);
-    }
+    moduleButtonSeftPowerRemote = new ModuleButtonSeftPowerRemote(this, addr);
+    modules.push_back(moduleButtonSeftPowerRemote);
     powerSource = POWER_BATTERY;
-}
-
-DeviceBleSeftPowerRemote::~DeviceBleSeftPowerRemote()
-{
-    if (this->parent)
-    {
-        if (bleProtocol)
-        {
-            bleProtocol->ResetSeftPowerRemote(this->parent->GetAddr(), addr);
-        }
-        else
-            LOGW("Ble protocol null");
-    }
-    else
-        LOGW("parent device null");
 }
 
 void DeviceBleSeftPowerRemote::SetParentDev(Device *parent)

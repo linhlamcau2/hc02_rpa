@@ -12,6 +12,7 @@
 #include "Config.h"
 #include "Base64.h"
 #include "DeviceBleSwitchScene6ACRgb.h"
+#include "DeviceBleSeftPowerRemote.h"
 #include "FileTransfer.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -439,15 +440,27 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
 					int numDeviceChild = 0;
-					if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2_SQUARE)
+					if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+						deviceBle->GetType() == BLE_SWITCH_RGB_2 ||
+						deviceBle->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+						deviceBle->GetType() == BLE_SWITCH_RGB_2_V2 ||
+						deviceBle->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2)
 					{
 						numDeviceChild = 1;
 					}
-					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_3 ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_3_V2 ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2)
 					{
 						numDeviceChild = 2;
 					}
-					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_4 || deviceBle->GetType() == BLE_SWITCH_RGB_4 || deviceBle->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_4 ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_4_V2 ||
+							 deviceBle->GetType() == BLE_SWITCH_RGB_4_SQUARE_V2)
 					{
 						numDeviceChild = 3;
 					}
@@ -469,8 +482,29 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 
 					if (bleProtocol)
 					{
-						if (bleProtocol->ResetDev(device->GetAddr()) != CODE_OK)
-							dataJsonRsp["FAILED"].append(device->GetId());
+						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+						{
+							DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+							if (deviceBleSeftPowerRemote)
+							{
+								Device *parent = deviceBleSeftPowerRemote->GetParent();
+								if (parent)
+								{
+									database->DeviceBleChildDel(deviceBleSeftPowerRemote, parent);
+									if (bleProtocol->ResetSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr()) != CODE_OK)
+										dataJsonRsp["FAILED"].append(deviceBleSeftPowerRemote->GetId());
+								}
+								else
+									LOGW("parent device null");
+							}
+						}
+						else
+						{
+							if (bleProtocol->ResetDev(device->GetAddr()) != CODE_OK)
+							{
+								dataJsonRsp["FAILED"].append(device->GetId());
+							}
+						}
 					}
 					else
 						LOGW("BleProtocol null");
@@ -2441,17 +2475,38 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 					{
 						if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
 						{
-							if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == 0)
+							if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == CODE_OK)
 							{
 								return CODE_OK;
 							}
 						}
 						else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 						{
-							if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == 0)
+							if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == CODE_OK)
 							{
 								return CODE_OK;
 							}
+						}
+						else if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+						{
+							DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+							if (deviceBleSeftPowerRemote)
+							{
+								Device *parent = deviceBleSeftPowerRemote->GetParent();
+								if (parent)
+								{
+									if (bleProtocol->SetSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), buttonId, modeValue, sceneBle->GetAddr()) == CODE_OK)
+									{
+										return CODE_OK;
+									}
+								}
+								else
+								{
+									LOGW("Parent null");
+								}
+							}
+							else
+								LOGW("Seft Power remote null");
 						}
 						else
 						{

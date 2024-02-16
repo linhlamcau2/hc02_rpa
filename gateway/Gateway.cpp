@@ -311,12 +311,12 @@ void Gateway::init()
 	}
 	vTaskDelay(10);
 #endif
-	// if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
-	// {
-	// 	LOGE("Failed to create task");
-	// 	SetLedService(false);
-	// }
-	// vTaskDelay(10);
+	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		SetLedService(false);
+	}
+	vTaskDelay(10);
 #else
 	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
 	udpBroadcastThread.detach();
@@ -1301,6 +1301,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	{
 		LOGW("Add new device not support type: 0x%04X", type);
 	}
+
+	printDevice();
+
 	return device;
 }
 
@@ -2187,11 +2190,9 @@ uint32_t Gateway::getMaxAddrBle()
 		if ((device->GetAddr() > maxAddrBle) && (device->GetAddr() < 49152))
 		{
 			maxAddrBle = device->GetAddr();
-			LOGW("max assiged: %d", maxAddrBle);
 		}
 	}
 	deviceListMtx.unlock();
-	LOGW("max return: %d", maxAddrBle);
 	return maxAddrBle;
 }
 
@@ -2243,6 +2244,15 @@ void Gateway::DelAllRoom()
 		delete room;
 	roomList.clear();
 	roomListMtx.unlock();
+}
+
+void Gateway::printDevice()
+{
+	LOGW("device:");
+	for (auto &[id, device] : deviceList)
+	{
+		LOGI("\tdev:%s: %d", device->GetId().c_str(), device->GetAddr());
+	}
 }
 
 void Gateway::printGroup()

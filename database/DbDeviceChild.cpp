@@ -19,7 +19,7 @@ static int DeviceBleChildParse(sqlite3_stmt *stmt, void *ptr)
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string parentId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-
+				LOGD("deviceId: %s, parentId: %s, data: %s", deviceId.c_str(), parentId.c_str(), data.c_str());
 				Device *child = gateway->getDeviceFromId(deviceId);
 				Device *parent = gateway->getDeviceFromId(parentId);
 				if (parent)
@@ -55,21 +55,21 @@ int Db::DeviceBleChildRead()
 	return ReadAll(TABLE_NAME, NULL, DeviceBleChildParse);
 }
 
-int Db::DeviceBleChildAdd(string deviceId, int element)
+int Db::DeviceBleChildAdd(Device * child, Device * parent, string data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, element) VALUES ('" + deviceId + "'," + to_string(element) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, parent_id, data) VALUES ('" + child->GetId() + "','" + parent->GetId() + "','"+data+"');";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceBleChildUpdate(string deviceId, int element)
+int Db::DeviceBleChildUpdateData(Device * child, Device * parent, string data)
 {
-	string sql = "UPDATE " TABLE_NAME " SET device_id='" + deviceId + "', element=" + to_string(element) + ";";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + data + "' where device_id = '"+child->GetId()+"' AND parent_id = '"+parent->GetId()+"';";
 	return Sqlite_Exec(sql);
 }
 
-int Db::DeviceBleChildDel(string deviceId)
+int Db::DeviceBleChildDel(Device * child, Device * parent)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id = '" + deviceId + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id ='" + child->GetId() + "' AND parent_id='"+parent->GetId()+"';";
 	return Sqlite_Exec(sql);
 }
 

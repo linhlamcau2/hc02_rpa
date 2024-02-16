@@ -341,6 +341,7 @@ public:
 	int Do(Json::Value &dataValue);
 
 		// debug
+	void printDevice();
 	void printGroup();
 	void printScene();
 	void printRoom();
