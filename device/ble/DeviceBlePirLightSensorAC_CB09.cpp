@@ -1,22 +1,27 @@
-#include "DeviceBlePirLightSensorDC.h"
+
+#include "DeviceBlePirLightSensorAC_CB09.h"
 #include "BleProtocol.h"
 #include "Log.h"
 #include "Util.h"
 
-DeviceBlePirLightSensorDC::DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version)
+DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
 	modulePirLight = new ModulePirLight(this, addr);
 	modulePirSensor = new ModulePirSensor(this, addr);
 	moduleLightSensor = new ModuleLightSensor(this, addr);
-	moduleBatteryLevel = new ModuleBatteryLevel(this, addr);
 	moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
+    moduleModeActionPir = new ModuleModeActionPir(this, addr);
 	moduleSensiPir = new ModuleSensiPir(this, addr);
+    moduleOnOff = new ModuleOnOff(this, addr);
+	modulePirLightSensorStartup = new ModulePirLightSensorStartup(this, addr);
 	modules.push_back(modulePirLight);
 	modules.push_back(modulePirSensor);
 	modules.push_back(moduleLightSensor);
-	modules.push_back(moduleBatteryLevel);
 	modules.push_back(moduleTimeActionPir);
+    modules.push_back(moduleModeActionPir);
 	modules.push_back(moduleSensiPir);
-	powerSource = POWER_BATTERY;
+    modules.push_back(moduleOnOff);
+	modules.push_back(modulePirLightSensorStartup);
+	powerSource = POWER_AC;
 }

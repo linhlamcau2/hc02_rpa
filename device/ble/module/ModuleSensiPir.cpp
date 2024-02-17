@@ -9,42 +9,20 @@
 ModuleSensiPir::ModuleSensiPir(Device *device, uint32_t addr) : Module(device, addr)
 {
     sensi = 0;
-    id = BLE_ATTRIBUTE_SENSI_SENSOR;
 }
 
 ModuleSensiPir::~ModuleSensiPir()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleSensiPir::InitAttribute(int id, double value)
-{
-    if (this->id == id)
-        sensi = value;
-}
-
-void ModuleSensiPir::SaveAttribute()
-{
-    database->DeviceAttributeAddOrReplace(device, id, sensi);
-}
-#endif
-
 int ModuleSensiPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-    if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+    if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_SENSI) && dataValue[KEY_ATTRIBUTE_SENSI].isInt())
     {
-        int id = dataValue["ID"].asInt();
-        if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-        {
-            sensi = dataValue["VALUE"].asInt();
-            BuildTelemetryValue(jsonValue);
-            CheckTrigger();
-            return CODE_OK;
-        }
+        sensi = dataValue[KEY_ATTRIBUTE_SENSI].asInt();
+        BuildTelemetryValue(jsonValue);
+        return CODE_OK;
     }
-#endif
     return CODE_ERROR;
 }
 
@@ -63,55 +41,40 @@ int ModuleSensiPir::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 bool ModuleSensiPir::CheckData(Json::Value &dataValue, bool &rs)
 {
     LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-    if (dataValue.isObject() &&
-        dataValue.isMember("ID") && dataValue["ID"].isInt())
-    {
-        int id = dataValue["ID"].asInt();
-        if (this->id == id &&
-            dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-            dataValue.isMember("OP") && dataValue["OP"].isString())
-        {
-            uint16_t value1 = 0, value2 = 0;
-            string op = dataValue["OP"].asString();
-            Json::Value listValue = dataValue["VALUE"];
-            if (listValue.size() > 0)
-            {
-                if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-                {
-                    value1 = listValue[0].asInt();
-                    value2 = listValue[1].asInt();
-                }
-                else if (listValue.size() == 1 && listValue[0].isInt())
-                {
-                    value1 = listValue[0].asInt();
-                }
-                rs = Util::CompareNumber(op, this->sensi, value1, value2);
-                return true;
-            }
-        }
-    }
-#endif
-    return false;
+	if (dataValue.isObject() &&
+		dataValue.isMember(KEY_ATTRIBUTE_SENSI) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
+	{
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_SENSI].isInt())
+		{
+			int value = dataValue[KEY_ATTRIBUTE_SENSI].asInt();
+			rs = Util::CompareNumber(op, this->sensi, value);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_SENSI].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_SENSI];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+			{
+				int value1 = listValue[0].asInt();
+				int value2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->sensi, value1, value2);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 void ModuleSensiPir::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
     jsonValue[KEY_ATTRIBUTE_SENSI] = sensi;
-#else
-    Json::Value dataValue;
-    dataValue["ID"] = id;
-    dataValue["VALUE"] = sensi;
-    jsonValue.append(dataValue);
-#endif
 }
 
 int ModuleSensiPir::Do(Json::Value &dataValue)
 {
     LOGV("ModuleSensiPir Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
     if (bleProtocol && dataValue.isObject() &&
         dataValue.isMember(KEY_ATTRIBUTE_SENSI) && dataValue[KEY_ATTRIBUTE_SENSI].isInt())
     {
@@ -122,23 +85,5 @@ int ModuleSensiPir::Do(Json::Value &dataValue)
             return CODE_OK;
         }
     }
-#else
-    if (dataValue.isObject() &&
-        dataValue.isMember("ID") && dataValue["ID"].isInt())
-    {
-        int id = dataValue["ID"].asInt();
-        if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-        {
-            int value = dataValue["VALUE"].asInt();
-            if (bleProtocol)
-            {
-                bleProtocol->SetSensiPirLightSensor(addr, value);
-            }
-            else
-                LOGW("BleProtocol null");
-            return CODE_OK;
-        }
-    }
-#endif
     return CODE_ERROR;
 }

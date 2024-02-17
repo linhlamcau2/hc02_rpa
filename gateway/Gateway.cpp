@@ -28,6 +28,7 @@
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
 #include "DeviceBlePirLightSensorAC.h"
+#include "DeviceBlePirLightSensorAC_CB09.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
@@ -577,6 +578,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_LED_FLOOD:
 	case BLE_LED_DAY_LINEAR:
 	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TRAN_40W:
 	case BLE_LED_OP_TUONG:
 	case BLE_LED_OP_TRAN_LOA:
 	case BLE_PANEL_TRON:
@@ -655,11 +657,14 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
 	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
-		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, version);
+	case BLE_PIR_LIGHT_SENSOR_DC_CB09:
+		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
+		device = new DeviceBlePirLightSensorAC(id, name, mac, dataJson, addr, type, version);
+		break;
 	case BLE_PIR_LIGHT_SENSOR_AC_AMTRAN:
-		device = new DeviceBlePirLightSensorAC(id, name, mac, dataJson, addr, version);
+		device = new DeviceBlePirLightSensorAC_CB09(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SMOKE_SENSOR:
 		device = new DeviceBleSmokeSensor(id, name, mac, dataJson, addr, version);

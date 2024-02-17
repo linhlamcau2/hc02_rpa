@@ -13,7 +13,7 @@ using namespace std;
 class DeviceBlePirLightSensorDC : public DeviceBle
 {
 private:
-	ModulePirLight * modulePirLight;
+	ModulePirLight *modulePirLight;
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
 	ModuleBatteryLevel *moduleBatteryLevel;
@@ -21,5 +21,5 @@ private:
 	ModuleSensiPir *moduleSensiPir;
 
 public:
-	DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version);
+	DeviceBlePirLightSensorDC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 };

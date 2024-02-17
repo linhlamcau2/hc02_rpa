@@ -35,7 +35,9 @@
 #define RD_OPCODE_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR 0x0145
 #define RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR 0x0245
 #define RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR 0x0345
+#define RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR 0x0445
 #define RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR 0x0545
+#define RD_OPCODE_RSP_PIR_LIGHT_SENSOR_STARTUP 0x0645
 #define RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH 0x010A
 #define RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH 0x020A
 #define RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR 0x030A
@@ -52,6 +54,8 @@
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2 0x000D
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3 0x000C
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4 0x000B
+#define RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH 0x100B
+#define RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF 0x0012
 
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
@@ -299,6 +303,7 @@ public:
 	int SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
 	int DelScenePirLightSensor(uint16_t devAddr, uint16_t scene);
 	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
+	int SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode);
 	int SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi);
 
 	// switch
@@ -307,6 +312,8 @@ public:
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int CountDownSwitch(uint16_t devAddr, uint32_t timer, uint8_t status);
 	int UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type = 0);
+	int ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uint32_t type = 0);
+	int ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode);
 
 	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);
