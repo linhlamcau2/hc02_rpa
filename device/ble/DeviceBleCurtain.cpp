@@ -8,7 +8,5 @@ DeviceBleCurtain::DeviceBleCurtain(string id, string name, string mac, Json::Val
     modules.push_back(moduleCurtain);
     moduleRgb = new ModuleRgb(this, addr);
     modules.push_back(moduleRgb);
-    // moduleSelectMotor = new ModuleSelectMotor(this, addr);
-    // modules.push_back(moduleSelectMotor);
     powerSource = POWER_AC;
 }

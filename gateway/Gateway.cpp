@@ -29,6 +29,7 @@
 #include "DeviceBlePirLightSensorDC.h"
 #include "DeviceBlePirLightSensorAC.h"
 #include "DeviceBlePirLightSensorAC_CB09.h"
+#include "DeviceBleRadaSensorAc.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
@@ -659,6 +660,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
 	case BLE_PIR_LIGHT_SENSOR_DC_CB09:
 		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_RADA_LIGHT_SENSOR_AC_CB15:
+		device = new DeviceBleRadaSensorAc(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
 		device = new DeviceBlePirLightSensorAC(id, name, mac, dataJson, addr, type, version);
@@ -1306,7 +1310,7 @@ int Gateway::CreateNoti(Noti *noti, bool addDatabase)
 	return CODE_OK;
 }
 
-int Gateway::DelNoti(Noti * noti)
+int Gateway::DelNoti(Noti *noti)
 {
 	database->NotiDel(noti);
 	notiList.erase(noti->GetId());
@@ -1324,7 +1328,7 @@ Noti *Gateway::getNotifromId(string id)
 
 Json::Value Gateway::BuildJsonDataNoti(string id, string type, string content)
 {
-    Json::Value notiData;
+	Json::Value notiData;
 	notiData["id"] = id;
 	notiData["type"] = type;
 	notiData["content"] = content;
