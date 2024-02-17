@@ -19,7 +19,7 @@
 #ifdef ESP_PLATFORM
 #define VERSION 1.0.4
 #else
-#define VERSION 2.0.5
+#define VERSION 2.0.6
 #endif
 #endif
 
