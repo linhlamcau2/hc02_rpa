@@ -127,7 +127,7 @@ int ModuleModeInput::Do(Json::Value &dataValue)
 		dataValue.isMember(KEY_ATTRIBUTE_MODE_INPUT) && dataValue[KEY_ATTRIBUTE_MODE_INPUT].isInt())
 	{
 		int mode = dataValue[KEY_ATTRIBUTE_MODE_INPUT].asInt();
-		if (bleProtocol->ConfigStatusStartupSwitch(addr, mode) == CODE_OK)
+		if (bleProtocol->ConfigModeInputSwitchOnoff(addr, mode) == CODE_OK)
 		{
 			this->mode = mode;
 			return CODE_OK;
