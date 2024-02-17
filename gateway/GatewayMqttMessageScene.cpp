@@ -1,6 +1,7 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "Db.h"
+#include "DeviceBleSeftPowerRemote.h"
 
 void Gateway::InitMqttMessageScene()
 {
@@ -650,6 +651,46 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 6, dt["bt6"].isInt()) != CODE_OK)
 										result = CODE_ERROR;
 							}
+						}
+						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+						{
+							uint16_t convertButton = 0;
+							uint8_t bt1 = 0;
+							uint8_t bt2 = 0;
+							uint8_t bt3 = 0;
+							uint8_t bt4 = 0;
+							if (dt.isMember("bt") && dt["bt"].isInt())
+								bt1 = 1;
+							else if (dt.isMember("bt2") && dt["bt2"].isInt())
+								bt2 = 1;
+							else if (dt.isMember("bt3") && dt["bt3"].isInt())
+								bt3 = 1;
+							else if (dt.isMember("bt4") && dt["bt4"].isInt())
+								bt4 = 1;
+
+							convertButton = bt1 + bt2 * 2 + bt3 * 4 + bt4 * 8;
+							DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+							if (deviceBleSeftPowerRemote)
+							{
+								Device *parent = deviceBleSeftPowerRemote->GetParent();
+								if (parent)
+								{
+									if (isAddScene)
+									{
+										if (bleProtocol->SetSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), convertButton, 1, sceneBle->GetAddr()) != CODE_OK)
+											result = CODE_ERROR;
+									}
+									else
+									{
+										if (bleProtocol->DelSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), convertButton, 1) != CODE_OK)
+											result = CODE_ERROR;
+									}
+								}
+								else
+									LOGW("Parent is null");
+							}
+							else
+								LOGW("device seftpower remote is null");
 						}
 					}
 				}

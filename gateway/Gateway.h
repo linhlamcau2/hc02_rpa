@@ -164,6 +164,8 @@ private:
 	int OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnStopScanBle(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleStartScanPairDev(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcBleStopScanPairDev(Json::Value &reqValue, Json::Value &respValue);
 	int OnResetHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnVersionHC(Json::Value &reqValue, Json::Value &respValue);
 	int OnSSHRemote(Json::Value &reqValue, Json::Value &respValue);

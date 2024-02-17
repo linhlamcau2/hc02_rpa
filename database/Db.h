@@ -49,9 +49,9 @@ public:
 	int DeviceAttributeDelAll();
 
 	int DeviceBleChildRead();
-	int DeviceBleChildAdd(string deviceId, int element);
-	int DeviceBleChildUpdate(string deviceId, int element);
-	int DeviceBleChildDel(string deviceId);
+	int DeviceBleChildAdd(Device *child, Device *parent, string data);
+	int DeviceBleChildUpdateData(Device *child, Device *parent, string data);
+	int DeviceBleChildDel(Device *child, Device *parent);
 	int DeviceBleChildDelAll();
 
 	int DeviceInGroupRead();
