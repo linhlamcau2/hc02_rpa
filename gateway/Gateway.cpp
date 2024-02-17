@@ -28,12 +28,16 @@
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
 #include "DeviceBlePirLightSensorAC.h"
+#include "DeviceBlePirLightSensorAC_CB09.h"
+#include "DeviceBleRadaSensorAc.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
 #include "DeviceBleCurtain.h"
+#include "DeviceBleRepeater.h"
 #include "DeviceBleRoolDoor.h"
 #include "DeviceBleSwitchTouch.h"
+#include "DeviceBleSwitchCeiling.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -158,6 +162,14 @@ void Gateway::init()
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
 	LOGI("OnCloudConnect: %d", isConnected);
+	Json::Value jsonValue;
+	Json::Value dataValue;
+	dataValue["status"] = isConnected;
+	dataValue["version"] = STR(VERSION);
+	dataValue["ip"] = Wifi::GetIP();
+	jsonValue["cmd"] = "homeController";
+	jsonValue["data"] = dataValue;
+	LocalPublish(jsonValue);
 	if (isConnected)
 	{
 		Util::LedInternet(true);
@@ -570,6 +582,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_LED_FLOOD:
 	case BLE_LED_DAY_LINEAR:
 	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TRAN_40W:
 	case BLE_LED_OP_TUONG:
 	case BLE_LED_OP_TRAN_LOA:
 	case BLE_PANEL_TRON:
@@ -600,18 +613,27 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
+	case BLE_SWITCH_RGB_SOCKET_1:
+	case BLE_SWITCH_RGB_1_V2:
+	case BLE_SWITCH_RGB_1_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
+	case BLE_SWITCH_RGB_2_V2:
+	case BLE_SWITCH_RGB_2_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
+	case BLE_SWITCH_RGB_3_V2:
+	case BLE_SWITCH_RGB_3_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
+	case BLE_SWITCH_RGB_4_V2:
+	case BLE_SWITCH_RGB_4_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
@@ -626,6 +648,15 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_SWITCH_2_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_SWITCH_3_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_SWITCH_5_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 5);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
@@ -647,16 +678,24 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleSensorPm(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
-		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, version);
+	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
+	case BLE_PIR_LIGHT_SENSOR_DC_CB09:
+		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_RADA_LIGHT_SENSOR_AC_CB15:
+		device = new DeviceBleRadaSensorAc(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
+		device = new DeviceBlePirLightSensorAC(id, name, mac, dataJson, addr, type, version);
+		break;
 	case BLE_PIR_LIGHT_SENSOR_AC_AMTRAN:
-		device = new DeviceBlePirLightSensorAC(id, name, mac, dataJson, addr, version);
+		device = new DeviceBlePirLightSensorAC_CB09(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SMOKE_SENSOR:
 		device = new DeviceBleSmokeSensor(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_DOOR_SENSOR:
+	case BLE_DOOR_CB16_SENSOR:
 		device = new DeviceBleDoorSensor(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
@@ -665,9 +704,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
+	case BLE_SWITCH_RGB_CURTAIN_HCN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE_V2:
 		device = new DeviceBleCurtain(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_ROOLING_DOOR:
+	case BLE_SWITCH_ROOLING_DOOR_V2:
+	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
 		device = new DeviceBleRoolDoor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_1:
@@ -682,6 +725,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_SWITCH_4:
 		device = new DeviceBleSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_REPEATER:
+		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
 		break;
 
 #ifndef ESP_PLATFORM
@@ -1231,7 +1277,7 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 {
 	Json::Value msg;
 	msg["cmd"] = cmd;
-	string rqi = Util::genRandRQI(16);
+	msg["rqi"] = Util::genRandRQI(16);
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
@@ -1244,7 +1290,7 @@ string Gateway::CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, str
 {
 	Json::Value msg;
 	msg["cmd"] = cmd;
-	string rqi = Util::genRandRQI(16);
+	msg["rqi"] = Util::genRandRQI(16);
 	msg["data"]["id"] = id;
 	msg["data"]["name"] = name;
 	msg["data"]["devices"] = listDevice;
@@ -1257,10 +1303,10 @@ void Gateway::printGroup()
 {
 	for (auto &[id, grp] : groupList)
 	{
-		LOGW("group: %s", id.c_str());
+		LOGI("group: %s", id.c_str());
 		for (auto &dev : grp->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }
@@ -1269,10 +1315,10 @@ void Gateway::printScene()
 {
 	for (auto &[id, sce] : sceneBleList)
 	{
-		LOGW("scene: %s", id.c_str());
+		LOGI("scene: %s", id.c_str());
 		for (auto &dev : sce->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }
@@ -1280,10 +1326,10 @@ void Gateway::printRoom()
 {
 	for (auto &[id, rm] : roomList)
 	{
-		LOGW("room: %s", id.c_str());
+		LOGI("room: %s", id.c_str());
 		for (auto &dev : rm->deviceList)
 		{
-			LOGW("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
 		}
 	}
 }

@@ -76,7 +76,7 @@ void ButtonSignal::OnRelease()
 			LOGW("Reset HC");
 			gateway->ResetFactory();
 			Wifi::SetModeApWifi();
-			system("killall smh");
+			exit(1);
 		}
 	}
 }

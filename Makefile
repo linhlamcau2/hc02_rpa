@@ -12,7 +12,7 @@ LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Iprotocol/androidBle -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota -Inoti
 # DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
 # DEFINES 	+= -D__OPENWRT__
-LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -luci -lcurl -lssl -lcrypto
+LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -lssl -lcrypto
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee

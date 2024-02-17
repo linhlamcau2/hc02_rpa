@@ -75,6 +75,8 @@ int Gateway::OnCreateRule(Json::Value &reqValue, Json::Value &respValue)
 	if (rule)
 	{
 		LOGI("Add Rule %s", rule->GetId().c_str());
+		Json::Value deviceList = Json::arrayValue;
+		pushMsgHcCoreToHcApp("createRule", rule->GetId(), rule->GetName(), deviceList, "");
 		// rule->Check();
 		respValue["data"]["code"] = CODE_OK;
 		respValue["data"]["id"] = rule->GetId();
@@ -102,6 +104,8 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 		if (rule)
 		{
 			LOGI("Edit Rule %s", rule->GetId().c_str());
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("editRule", rule->GetId(), rule->GetName(), deviceList, "");
 			// rule->Check();
 			rs = CODE_OK;
 		}
@@ -128,6 +132,8 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 		Rule *rule = getRuleFromId(ruleId);
 		if (rule)
 		{
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("delRule", rule->GetId(), rule->GetName(), deviceList, "");
 			delRule(rule);
 			respValue["data"]["code"] = CODE_OK;
 		}
@@ -148,7 +154,7 @@ int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnActiveRule(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("status") && reqValue["status"].isInt())
+		reqValue.isMember("status") && reqValue["status"].isInt())
 	{
 		string id = reqValue["id"].asString();
 		int status = reqValue["status"].asInt();
@@ -172,6 +178,9 @@ int Gateway::OnActionRule(Json::Value &reqValue, Json::Value &respValue)
 		if (rule)
 		{
 			rule->RunOutput();
+			respValue["data"]["id"] = rule->GetId();
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("actionRuleRsp", rule->GetId(), rule->GetName(), deviceList, "");
 		}
 	}
 	respValue["data"]["code"] = CODE_OK;

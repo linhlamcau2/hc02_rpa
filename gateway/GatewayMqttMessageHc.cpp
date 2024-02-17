@@ -37,6 +37,8 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("startScanChildBle", bind(&Gateway::OnRpcBleStartScanPairDev, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("stopScanChildBle", bind(&Gateway::OnRpcBleStopScanPairDev, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
@@ -62,8 +64,13 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("dormitoryId") && reqValue["dormitoryId"].isString())
 	{
 		string dormitoryId = reqValue["dormitoryId"].asString();
-		this->setDormitory(dormitoryId);
-		database->GatewayUpdateDormitory(this, dormitoryId);
+		if (getDormitory() == "")
+		{
+			this->setDormitory(dormitoryId);
+			database->GatewayUpdateDormitory(this, dormitoryId);
+		}
+		else
+			LOGW("Dormitory is already set");
 		respValue["data"]["code"] = CODE_OK;
 	}
 	else
@@ -194,10 +201,52 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnRpcBleStartScanPairDev(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	{
+		Json::Value data = reqValue["DATA"];
+		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		{
+			string devId = data["DEVICE_ID"].asString();
+			Device *device = getDeviceFromId(devId);
+			if (device)
+			{
+				uint32_t maxAddr = GetMaxAddrBle();
+				LOGW("max addr: %d", maxAddr + BLE_MAX_ELEMENT);
+				if (bleProtocol)
+					bleProtocol->AddPairDevice(device->GetAddr(), maxAddr + BLE_MAX_ELEMENT);
+				else
+					LOGW("BleProtocol null");
+			}
+		}
+	}
+	else
+	{
+		LOGW("Data scan device pair error");
+	}
+	respValue["CMD"] = "STOP_SCAN_PAIRING_DEVICE";
+	return CODE_OK;
+}
+
+int Gateway::OnRpcBleStopScanPairDev(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (bleProtocol)
+	{
+		
+	}
+	else
+		LOGW("BleProtocol null");
+	return CODE_OK;
+}
+
 int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
-	ResetFactory();
+	// ResetFactory();
+#ifdef __OPENWRT__
+	// Wifi::SetModeApWifi();
+#endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
 	return CODE_EXIT;

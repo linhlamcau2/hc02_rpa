@@ -1,10 +1,11 @@
 #include "CloudProtocol.h"
-#include <string.h>
-#include <unistd.h>
 #include "Log.h"
 #include "Util.h"
 #include "Wifi.h"
 #include "Gateway.h"
+#include <string.h>
+#include <unistd.h>
+#include <fstream>
 
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -27,7 +28,16 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 
 	subBinRespTopic = "v2/bin/resp/server/" + mac + "/+/+";
 	pubBinReqTopic = "v2/bin/req/" + mac + "/server/";
-	isConfig = false;
+
+	// willset
+	Json::Value jsonValue;
+	Json::Value datanValue;
+	datanValue["status"] = 0;
+	datanValue["version"] = STR(VERSION);
+	datanValue["ip"] = Wifi::GetIP();
+	jsonValue["cmd"] = "homeController";
+	jsonValue["data"] = datanValue;
+	SetWillset(pubServerReqTopic, jsonValue.toString());
 }
 
 CloudProtocol::~CloudProtocol()
@@ -38,7 +48,6 @@ void CloudProtocol::init()
 {
 	Mqtt::init();
 	isBusy = false;
-	isConfig = true;
 	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subServerReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnMobileReq, this, placeholders::_1, placeholders::_2), subMobileReqTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subServerRespTopic);
@@ -74,11 +83,6 @@ int CloudProtocol::CloudConnect()
 void CloudProtocol::OnConnect(bool isConnected, bool isReconnect)
 {
 	OnCloudConnect(isConnected, isReconnect);
-}
-
-void CloudProtocol::SetConfig(bool value)
-{
-	this->isConfig = value;
 }
 
 void CloudProtocol::OnServerReq(string &topic, string &payload)
@@ -179,8 +183,8 @@ void CloudProtocol::OnServerResp(string &topic, string &payload)
 		}
 		else
 		{
-			LOGW("rqi %s not found", rqi.c_str());
-			LOGW("OnServerResp payload: %s", payload.c_str());
+			// LOGW("rqi %s not found", rqi.c_str());
+			// LOGW("OnServerResp payload: %s", payload.c_str());
 		}
 	}
 	else

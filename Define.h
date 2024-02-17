@@ -26,17 +26,20 @@
 #if __ANDROID__
 #define CONFIG_FILE_NAME "/etc/smh/config.json"
 #define TMP_FOLDER "/data/rd/"
+#define CERT_FILE_NAME "/data/rd/server.pem"
 #elif defined(__OPENWRT__)
-#define CONFIG_FILE_NAME "config.json"
+#define CONFIG_FILE_NAME "/root/smh/config.json"
 #define TMP_FOLDER "/tmp/"
+#define CERT_FILE_NAME "/root/smh/server.pem"
 #else
 #define CONFIG_FILE_NAME "config.json"
 #define TMP_FOLDER ""
+#define CERT_FILE_NAME ""
 #endif
 
 #ifndef DB_NAME
 #ifdef __OPENWRT__
-#define DB_NAME "/root/smh.sqlite"
+#define DB_NAME "/root/smh/smh.sqlite"
 #elif defined(__ANDROID__)
 #define DB_NAME "/data/rd/smh.sqlite"
 #elif defined(ESP_PLATFORM)

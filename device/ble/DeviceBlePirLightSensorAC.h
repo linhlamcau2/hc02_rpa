@@ -5,6 +5,7 @@
 #include "module/ModuleLightSensor.h"
 #include "module/ModuleTimeActionPir.h"
 #include "module/ModulePirLight.h"
+#include "module/ModuleSensiPir.h"
 
 using namespace std;
 
@@ -15,7 +16,8 @@ private:
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
 	ModuleTimeActionPir *moduleTimeActionPir;
+	ModuleSensiPir *moduleSensiPir;
 
 public:
-	DeviceBlePirLightSensorAC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version);
+	DeviceBlePirLightSensorAC(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 };

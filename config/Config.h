@@ -4,8 +4,8 @@
 #include <string.h>
 
 #define STRING_VALUE_MAX_SIZE 128
-#define CONFIG_ENV "smh.@server[0]."
-#define CONFIG_ENV_LOCAL "smh.@local[0]."
+// #define CONFIG_ENV "smh.@server[0]."
+// #define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
 #define HOST_DEFAULT "mqtt.rangdong.com.vn"

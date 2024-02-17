@@ -35,6 +35,10 @@
 #define RD_OPCODE_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR 0x0145
 #define RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR 0x0245
 #define RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR 0x0345
+#define RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR 0x0445
+#define RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR 0x0545
+#define RD_OPCODE_RSP_PIR_LIGHT_SENSOR_STARTUP 0x0645
+#define RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR 0x0745
 #define RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH 0x010A
 #define RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH 0x020A
 #define RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR 0x030A
@@ -51,6 +55,8 @@
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2 0x000D
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3 0x000C
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4 0x000B
+#define RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH 0x100B
+#define RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF 0x0012
 
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
@@ -69,6 +75,13 @@
 
 #define RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME 0xF00A
 #define RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP 0xF10A
+
+#define RD_OPCODE_SEFTPOWER_REMOTE_SCAN 0x0a0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_SAVE 0x0d0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_RESET 0x0e0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_PRESS 0x0b0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE 0x0c0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE 0x0f0b
 
 #define TRANSITION_DEFAULT 5
 
@@ -127,6 +140,7 @@ enum
 };
 
 #define CONNECT_DEVICE_TIMEOUT 40 // seconds
+#define BLE_MAX_ELEMENT 4 
 
 using namespace std;
 
@@ -142,6 +156,18 @@ typedef struct __attribute__((packed))
 	int8_t rssi;
 	uint16_t dc;
 } scan_device_message_t;
+
+typedef struct __attribute__((packed))
+{
+	uint16_t parentAddr;
+	uint16_t gwAddr;
+	uint8_t opcodeRsp;
+	uint16_t vendorId;
+	uint16_t header;
+	uint8_t mac[4];
+	uint8_t type;
+	uint8_t rssi;
+} scan_device_pair_message_t;
 
 typedef struct __attribute__((packed))
 {
@@ -221,6 +247,7 @@ public:
 	atomic<bool> isProvisioning;
 	atomic<bool> isInitKey;
 	scan_device_message_t scanDeviceMessage;
+	scan_device_pair_message_t scanDevicePairMessage;
 
 #ifdef ESP_PLATFORM
 	BleProtocol(int num, int txPin, int rxPin, int baudrate);
@@ -240,6 +267,13 @@ public:
 	int SetNetKey();
 	int SetGwKey();
 
+	// SeftPower Remote
+	int ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status);
+	int SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uint16_t childDev);
+	int SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode, uint16_t scene);
+	int DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode);
+	int ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr);
+
 	int StartScan();
 	int StopScan();
 	int ResetBle();
@@ -248,6 +282,7 @@ public:
 	bool IsProvision();
 	void SetProvisioning(bool isProvision);
 	int AddDevice(scan_device_message_t *scan_device_message);
+	int AddPairDevice(uint32_t parentAddr, uint32_t childAddr);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
@@ -258,6 +293,7 @@ public:
 	int ResetDelAll();
 
 	int SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version);
+	int GetTTL(uint16_t devAddr);
 
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);
@@ -297,6 +333,9 @@ public:
 	int SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
 	int DelScenePirLightSensor(uint16_t devAddr, uint16_t scene);
 	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
+	int SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode);
+	int SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi);
+	int SetDistanceSensor(uint16_t devAddr, uint8_t distance);
 
 	// switch
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
@@ -304,6 +343,8 @@ public:
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
 	int CountDownSwitch(uint16_t devAddr, uint32_t timer, uint8_t status);
 	int UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type = 0);
+	int ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uint32_t type = 0);
+	int ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode);
 
 	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);

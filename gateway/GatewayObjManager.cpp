@@ -344,7 +344,7 @@ uint32_t Gateway::GetMaxAddrBle()
 	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
 	{
-		if (device->GetAddr() > nextAddr)
+		if ((device->GetAddr() > nextAddr) && (device->GetAddr() < 49152))
 		{
 			nextAddr = device->GetAddr();
 		}
