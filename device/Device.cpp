@@ -192,6 +192,7 @@ static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
 static map<uint32_t, uint32_t> bleTypeToGroupIdList;
 
+// TODO: Check list device to Name
 void Device::InitDeviceModelList()
 {
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_SMT] = BLE_DOWNLIGHT_SMT_GROUP;
@@ -286,7 +287,7 @@ void Device::InitDeviceModelList()
 
 	RegisterDeviceModel(26001, "", "Ổ cắm đơn");
 	RegisterDeviceModel(26002, "", "Ổ cắm kéo dài");
-	RegisterDeviceModel(BLE_SOCKET_SWITCH, "", "Ổ cắm công tắc chữ nhật");
+	RegisterDeviceModel(BLE_SWITCH_RGB_SOCKET_1, "", "Ổ cắm công tắc chữ nhật");
 	RegisterDeviceModel(31001, "", "Cảm biến ánh sáng");
 
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC, "", "Cảm biến chuyển động");
@@ -297,7 +298,7 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_CB015_RADA, "", "Cảm biến chuyển động CB015 rada");
 	RegisterDeviceModel(BLE_SMOKE_SENSOR, "", "Cảm biến khói");
 	RegisterDeviceModel(BLE_DOOR_SENSOR, "", "Cảm biến cửa");
-	RegisterDeviceModel(BLE_DOOR_SENSOR_CB16, "", "Cảm biến cửa");
+	RegisterDeviceModel(BLE_DOOR_CB16_SENSOR, "", "Cảm biến cửa");
 	RegisterDeviceModel(BLE_PM_SENSOR, "", "Cảm biến bụi mịn");
 	RegisterDeviceModel(BLE_TEMP_HUM_SENSOR, "", "Cảm biến nhiệt/ẩm");
 
@@ -360,7 +361,7 @@ uint32_t Device::ConverPidToDeviveType(uint16_t pid)
 	uint8_t type1 = (pid >> 12) & 0x0F;
 	uint8_t type2 = (pid >> 8) & 0x0F;
 	uint8_t type3 = (pid) & 0xFF;
-	return (type3+ (type2 * 1000) + (type1 * 10000));
+	return (type3 + (type2 * 1000) + (type1 * 10000));
 }
 
 bool Device::GetIsFavorite()

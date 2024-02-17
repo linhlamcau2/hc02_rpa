@@ -34,8 +34,10 @@
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
 #include "DeviceBleCurtain.h"
+#include "DeviceBleRepeater.h"
 #include "DeviceBleRoolDoor.h"
 #include "DeviceBleSwitchTouch.h"
+#include "DeviceBleSwitchCeiling.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -610,18 +612,27 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
+	case BLE_SWITCH_RGB_SOCKET_1:
+	case BLE_SWITCH_RGB_1_V2:
+	case BLE_SWITCH_RGB_1_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
+	case BLE_SWITCH_RGB_2_V2:
+	case BLE_SWITCH_RGB_2_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
+	case BLE_SWITCH_RGB_3_V2:
+	case BLE_SWITCH_RGB_3_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
+	case BLE_SWITCH_RGB_4_V2:
+	case BLE_SWITCH_RGB_4_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
@@ -636,6 +647,15 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_SWITCH_2_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_SWITCH_3_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_SWITCH_5_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 5);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
@@ -674,6 +694,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleSmokeSensor(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_DOOR_SENSOR:
+	case BLE_DOOR_CB16_SENSOR:
 		device = new DeviceBleDoorSensor(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
@@ -682,9 +703,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
+	case BLE_SWITCH_RGB_CURTAIN_HCN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE_V2:
 		device = new DeviceBleCurtain(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_ROOLING_DOOR:
+	case BLE_SWITCH_ROOLING_DOOR_V2:
+	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
 		device = new DeviceBleRoolDoor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_1:
@@ -699,6 +724,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_SWITCH_4:
 		device = new DeviceBleSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_REPEATER:
+		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
 		break;
 
 #ifndef ESP_PLATFORM
