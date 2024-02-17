@@ -49,7 +49,7 @@ int Db::NotiRead()
 
 int Db::NotiAdd(Noti *noti)
 {
-    string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, type, is_read, content, update_time, create_time) VALUES ('" + noti->GetId() + "','" + noti->GetType() + "'," + to_string(noti->GetIsRead()) + ", '" + noti->GetContent() + "', " + to_string(time(NULL)) + ", " + to_string(time(NULL)) + ")";
+    string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (id, type, is_read, content, update_time, create_time) VALUES ('" + noti->GetId() + "','" + noti->GetType() + "'," + to_string(noti->GetIsRead()) + ", '" + noti->GetContent() + "', " + to_string(time(NULL)) + ", " + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 

@@ -38,6 +38,7 @@
 #include "DeviceBleRoolDoor.h"
 #include "DeviceBleSwitchTouch.h"
 #include "DeviceBleSwitchCeiling.h"
+#include "DeviceBleSeftPowerRemote.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -729,6 +730,16 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_REPEATER:
 		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
 		break;
+	case BLE_SEFTPOWER_REMOTE_1:
+	case BLE_SEFTPOWER_REMOTE_2:
+	case BLE_SEFTPOWER_REMOTE_3:
+		device = getDeviceFromId(id);
+		if (device)
+		{
+			delDevice(device);
+		}
+		device = new DeviceBleSeftPowerRemote(id, name, mac, dataJson, addr, type, version, NULL);
+		break;
 
 #ifndef ESP_PLATFORM
 	case MQTT_AI_HUB:
@@ -1383,7 +1394,7 @@ Json::Value Gateway::BuildJsonDataNoti(Device *device, string id, string type, s
 	for (auto temp : roomList)
 	{
 		Room *room = temp.second;
-		if(room->GetPositionDevice(device, device->GetAddr()) != CODE_ERROR)
+		if (room->GetPositionDevice(device, device->GetAddr()) != CODE_ERROR)
 		{
 			notiData["location"] = room->GetName();
 		}

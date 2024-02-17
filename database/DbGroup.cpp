@@ -58,7 +58,7 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr, create_at) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + "," + to_string(time(NULL)) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr, create_at) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + "," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
@@ -81,7 +81,7 @@ int Db::GroupDel(Group *group)
 
 int Db::GroupDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id = \'" + id + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id = '" + id + "';";
 	return Sqlite_Exec(sql);
 }
 

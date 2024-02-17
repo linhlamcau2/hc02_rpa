@@ -77,7 +77,7 @@ int Db::DeviceInSceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *sceneBle, Device *device, string data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data, create_at) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "', " + to_string(time(NULL)) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data, create_at) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "', " + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
