@@ -75,6 +75,9 @@ static void UdpHandleMessage(void *data)
 
 		buf[recv_len] = '\0';
 		udp->UdpOnMessage(string(buf), &si_other, slen);
+#ifdef ESP_PLATFORM
+		vTaskDelay(10 / portTICK_PERIOD_MS);
+#endif
 	}
 #ifdef ESP_PLATFORM
 	vTaskDelete(NULL);

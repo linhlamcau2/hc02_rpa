@@ -17,6 +17,7 @@
 #ifdef ESP_PLATFORM
 #include "Led.h"
 #include "ButtonSignal.h"
+#include "esp_task_wdt.h"
 #endif
 
 #define TIME_WAIT 500000
@@ -319,6 +320,9 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 #endif
 	while (l >= 4)
 	{
+#ifdef ESP_PLATFORM
+		esp_task_wdt_reset();
+#endif
 		message_rsp = (message_rsp_st *)d;
 		if (message_rsp->len >= 3)
 		{
@@ -912,7 +916,7 @@ int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
 				DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
 				if (parent && deviceBleSeftPowerRemote)
 				{
-					deviceBleSeftPowerRemote->SetParentDev(parent);	
+					deviceBleSeftPowerRemote->SetParentDev(parent);
 				}
 				if (deviceBleSeftPowerRemote->GetParent())
 				{
@@ -1248,8 +1252,12 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_RGB_4_SQUARE:
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
+	case BLE_SWITCH_ELECTRICAL_2:
 	case BLE_SWITCH_ELECTRICAL_3:
 	case BLE_SWITCH_ELECTRICAL_4:
+	case BLE_SWITCH_ELECTRICAL_1_V2:
+	case BLE_SWITCH_ELECTRICAL_2_V2:
+	case BLE_SWITCH_ELECTRICAL_3_V2:
 	case BLE_SWITCH_1:
 	case BLE_SWITCH_WATER_HEATER:
 	case BLE_SWITCH_2:
@@ -3231,7 +3239,6 @@ int BleProtocol::ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status)
 	}
 	return rs;
 }
-
 
 int BleProtocol::SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uint16_t childDev)
 {
