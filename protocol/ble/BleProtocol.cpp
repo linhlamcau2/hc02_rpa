@@ -1221,11 +1221,13 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
 	case BLE_LED_DAY_RGB:
-	case BLE_SWITCH_ONOFF:
 		if (version > 256)
 			BleProtocol::UpdateLights(devAddr);
 		else
 			BleProtocol::GetOnoffLight(devAddr);
+		break;
+	case BLE_SWITCH_ONOFF:
+		BleProtocol::GetOnoffLight(devAddr);
 		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
