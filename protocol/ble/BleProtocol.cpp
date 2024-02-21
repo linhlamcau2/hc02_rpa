@@ -312,11 +312,12 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedService = GetStatusLedService();
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(!statusLedService);
-	}
+	// bool statusLedService = GetStatusLedService();
+	// if (!buttonSignal->GetStatus())
+	// {
+	// 	SetLedService(!statusLedService);
+	// }
+	SetLedService(false);
 #endif
 	while (l >= 4)
 	{
@@ -369,7 +370,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 									if (messageResp->len)
 									{
 										*(messageResp->len) = message_rsp->len - 2;
-										if (messageResp->data)
+										if (messageResp->data && message_rsp->data)
 											memcpy(messageResp->data, message_rsp->data, *messageResp->len);
 									}
 								}
@@ -423,10 +424,11 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(statusLedService);
-	}
+	// if (!buttonSignal->GetStatus())
+	// {
+	// 	SetLedService(statusLedService);
+	// }
+	SetLedService(true);
 #endif
 	return l;
 }
@@ -907,6 +909,9 @@ int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
 				break;
 			case 3:
 				deviceType = BLE_SEFTPOWER_REMOTE_3;
+				break;
+			case 6:
+				deviceType = BLE_SEFTPOWER_REMOTE_6;
 				break;
 			}
 			Device *device = gateway->AddNewDevice(uuid, "", mac, dataJson.toString(), childAddr, deviceType, 257, true, true);

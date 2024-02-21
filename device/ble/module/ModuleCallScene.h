@@ -8,28 +8,12 @@ class ModuleCallScene : public Module
 {
 protected:
 	uint16_t idScene;
-	uint8_t id;
-	uint16_t value;
+	// uint8_t id;
+	// uint16_t value;
 
 public:
 	ModuleCallScene(Device *device, uint32_t addr);
 	~ModuleCallScene();
-
-#ifdef CONFIG_SAVE_ATTRIBUTE
-	/**
-	 * @brief Init parameter value from database after system start
-	 *
-	 * @param attributeId id of attribute
-	 * @param value value of attribute
-	 */
-	void InitAttribute(int attributeId, double value);
-
-	/**
-	 * @brief Save parameter value to database
-	 *
-	 */
-	void SaveAttribute();
-#endif
 
 	// int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
@@ -43,21 +27,4 @@ public:
 	 * @return false
 	 */
 	int InputData(uint8_t *data, int len, Json::Value &jsonValue);
-
-	/**
-	 * @brief Check rule input
-	 *
-	 * @param dataValue json rule data input
-	 * @param rs result of checking
-	 * @return true if dataValue uses this module paramter
-	 * @return false if dataValue don't use this module paramter
-	 */
-	bool CheckData(Json::Value &dataValue, bool &rs);
-
-	/**
-	 * @brief Build telemetry message with this module
-	 *
-	 * @param jsonValue
-	 */
-	// void BuildTelemetryValue(Json::Value &jsonValue);
 };

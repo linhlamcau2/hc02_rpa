@@ -41,9 +41,9 @@ void MqttProtocol::OnMessage(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-			payloadJson.isMember("data") && payloadJson["data"].isObject())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -101,8 +101,8 @@ int MqttProtocol::OnAddDevice(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnAddDevice");
 	respValue["data"]["code"] = CODE_OK;
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("type") && reqValue["type"].isInt() &&
-			reqValue.isMember("mac") && reqValue["mac"].isString())
+		reqValue.isMember("type") && reqValue["type"].isInt() &&
+		reqValue.isMember("mac") && reqValue["mac"].isString())
 	{
 		string deviceId = reqValue["id"].asString();
 		uint32_t type = reqValue["type"].asInt();
@@ -137,7 +137,7 @@ int MqttProtocol::OnAddFunction(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnAddFunction");
 	respValue["data"]["code"] = CODE_OK;
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("data") && reqValue["data"].isObject())
+		reqValue.isMember("data") && reqValue["data"].isObject())
 	{
 		string deviceId = reqValue["id"].asString();
 		Json::Value devData = reqValue["data"];
@@ -180,14 +180,15 @@ int MqttProtocol::OnDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 		for (auto deviceJson : deviceJsonList)
 		{
 			if (deviceJson.isMember("id") && deviceJson["id"].isString() &&
-					deviceJson.isMember("data") && deviceJson["data"].isObject())
+				deviceJson.isMember("data") && deviceJson["data"].isObject())
 			{
 				string deviceId = deviceJson["id"].asString();
 				Json::Value devData = deviceJson["data"];
 				Device *device = gateway->getDeviceFromId(deviceId);
 				if (device)
 				{
-					device->InputData(devData);
+					if (devData.isArray() || devData.isObject())
+						device->InputData(devData);
 				}
 				else
 				{

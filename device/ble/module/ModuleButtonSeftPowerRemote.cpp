@@ -72,6 +72,18 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
             case 12:
                 id = 135;
                 break;
+            case 16:
+                id = 137;
+                break;
+            case 32:
+                id = 138;
+                break;
+            case 24:
+                id = 139;
+                break;
+            case 48:
+                id = 140;
+                break;
             }
             BuildTelemetryValue(jsonValue);
             CheckTrigger();
@@ -85,17 +97,7 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
                         DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
                         if (dev)
                         {
-                            if (sceneBle->deviceList[i]->data.isArray())
-                            {
-                                for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
-                                {
-                                    if (sceneBle->deviceList[i]->data[j].isObject())
-                                    {
-                                        dev->InputData(sceneBle->deviceList[i]->data[j]);
-                                    }
-                                }
-                            }
-                            else if (sceneBle->deviceList[i]->data.isObject())
+                            if (sceneBle->deviceList[i]->data.isArray() || sceneBle->deviceList[i]->data.isObject())
                             {
                                 dev->InputData(sceneBle->deviceList[i]->data);
                             }

@@ -482,7 +482,7 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 
 					if (bleProtocol)
 					{
-						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3 || device->GetType() == BLE_SEFTPOWER_REMOTE_6)
 						{
 							DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
 							if (deviceBleSeftPowerRemote)
@@ -2433,17 +2433,15 @@ int Gateway::OnRpcDelDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 	return CODE_OK;
 }
 
-static int GetIdButton(string button)
+static int GetIdButton(string bt)
 {
-	string listButtonId[] = {"BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", "BUTTON_5", "BUTTON_6"};
-	for (int i = 0; i < 6; i++)
+	int result = -1;
+	if (bt.find("BUTTON_") != std::string::npos)
 	{
-		if (listButtonId[i].compare(button) == 0)
-		{
-			return (i + 1);
-		}
+		std::string xxx_str = bt.substr(7);
+		result = std::stoi(xxx_str);
 	}
-	return CODE_ERROR;
+	return result;
 }
 
 int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValue)
@@ -2458,72 +2456,79 @@ int Gateway::OnRpcSetSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			string buttonValue = dataValue["BUTTON_VALUE"].asString();
 			int buttonId = GetIdButton(buttonValue);
-			string sceneId = dataValue["SCENE_ID"].asString();
-			int modeValue = dataValue["MODE_VALUE"].asInt();
-			dataJsonRsp["DEVICE_ID"] = deviceId;
-			dataJsonRsp["BUTTON_VALUE"] = buttonValue;
-			dataJsonRsp["MODE_VALUE"] = modeValue;
-			dataJsonRsp["SCENE_ID"] = sceneId;
-			respValue["DATA"] = dataJsonRsp;
-			Device *device = getDeviceFromId(deviceId);
-			if (device)
+			if (buttonId > 0)
 			{
-				SceneBle *sceneBle = getSceneBleFromId(sceneId);
-				if (sceneBle)
+				string sceneId = dataValue["SCENE_ID"].asString();
+				int modeValue = dataValue["MODE_VALUE"].asInt();
+				dataJsonRsp["DEVICE_ID"] = deviceId;
+				dataJsonRsp["BUTTON_VALUE"] = buttonValue;
+				dataJsonRsp["MODE_VALUE"] = modeValue;
+				dataJsonRsp["SCENE_ID"] = sceneId;
+				respValue["DATA"] = dataJsonRsp;
+				Device *device = getDeviceFromId(deviceId);
+				if (device)
 				{
-					if (bleProtocol)
+					SceneBle *sceneBle = getSceneBleFromId(sceneId);
+					if (sceneBle)
 					{
-						if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
+						if (bleProtocol)
 						{
-							if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == CODE_OK)
+							if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
 							{
-								return CODE_OK;
-							}
-						}
-						else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
-						{
-							if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == CODE_OK)
-							{
-								return CODE_OK;
-							}
-						}
-						else if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
-						{
-							DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
-							if (deviceBleSeftPowerRemote)
-							{
-								Device *parent = deviceBleSeftPowerRemote->GetParent();
-								if (parent)
+								if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == CODE_OK)
 								{
-									if (bleProtocol->SetSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), buttonId, modeValue, sceneBle->GetAddr()) == CODE_OK)
+									return CODE_OK;
+								}
+							}
+							else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+							{
+								if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, sceneBle->GetAddr(), 0) == CODE_OK)
+								{
+									return CODE_OK;
+								}
+							}
+							else if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3 || device->GetType() == BLE_SEFTPOWER_REMOTE_6)
+							{
+								DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+								if (deviceBleSeftPowerRemote)
+								{
+									Device *parent = deviceBleSeftPowerRemote->GetParent();
+									if (parent)
 									{
-										return CODE_OK;
+										if (bleProtocol->SetSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), buttonId, modeValue, sceneBle->GetAddr()) == CODE_OK)
+										{
+											return CODE_OK;
+										}
+									}
+									else
+									{
+										LOGW("Parent null");
 									}
 								}
 								else
-								{
-									LOGW("Parent null");
-								}
+									LOGW("Seft Power remote null");
 							}
 							else
-								LOGW("Seft Power remote null");
+							{
+								LOGW("Type dev don't support function");
+							}
 						}
 						else
-						{
-							LOGW("Type dev don't support function");
-						}
+							LOGW("BleProtocol null");
 					}
 					else
-						LOGW("BleProtocol null");
+					{
+						LOGW("Scene %s does not exist", sceneId.c_str())
+					}
 				}
 				else
 				{
-					LOGW("Scene %s does not exist", sceneId.c_str())
+					LOGW("Device %s does not exist", deviceId.c_str());
 				}
 			}
 			else
 			{
-				LOGW("Device %s does not exist", deviceId.c_str());
+				LOGW("ButtonId %s error", buttonValue.c_str());
 			}
 		}
 		else
@@ -2546,40 +2551,47 @@ int Gateway::OnRpcDelSceneForRemote(Json::Value &reqValue, Json::Value &respValu
 			string deviceId = dataValue["DEVICE_ID"].asString();
 			string buttonValue = dataValue["BUTTON_VALUE"].asString();
 			int buttonId = GetIdButton(buttonValue);
-			string sceneId = dataValue["SCENE_ID"].asString();
-			int modeValue = dataValue["MODE_VALUE"].asInt();
-			dataJsonRsp["DEVICE_ID"] = deviceId;
-			dataJsonRsp["BUTTON_VALUE"] = buttonValue;
-			dataJsonRsp["MODE_VALUE"] = modeValue;
-			dataJsonRsp["SCENE_ID"] = sceneId;
-			respValue["DATA"] = dataJsonRsp;
-			Device *device = getDeviceFromId(deviceId);
-			if (device)
+			if (buttonId > 0)
 			{
-				if (bleProtocol)
+				string sceneId = dataValue["SCENE_ID"].asString();
+				int modeValue = dataValue["MODE_VALUE"].asInt();
+				dataJsonRsp["DEVICE_ID"] = deviceId;
+				dataJsonRsp["BUTTON_VALUE"] = buttonValue;
+				dataJsonRsp["MODE_VALUE"] = modeValue;
+				dataJsonRsp["SCENE_ID"] = sceneId;
+				respValue["DATA"] = dataJsonRsp;
+				Device *device = getDeviceFromId(deviceId);
+				if (device)
 				{
-					if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
+					if (bleProtocol)
 					{
-						if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, 0, 0) == 0)
+						if (device->GetType() == BLE_DC_SCENE_CONTACT || device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4)
 						{
-							return CODE_OK;
+							if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), buttonId, modeValue, 0, 0) == 0)
+							{
+								return CODE_OK;
+							}
 						}
-					}
-					else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
-					{
-						if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, 0, 0) == 0)
+						else if (device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
 						{
-							return CODE_OK;
+							if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), buttonId, modeValue, 0, 0) == 0)
+							{
+								return CODE_OK;
+							}
 						}
+						else
+							LOGW("Device don't support");
 					}
 					else
-						LOGW("Device don't support");
+						LOGW("BleProtocol null");
 				}
 				else
-					LOGW("BleProtocol null");
+					LOGW("Device %s does not exist", deviceId.c_str());
 			}
 			else
-				LOGW("Device %s does not exist", deviceId.c_str());
+			{
+				LOGW("ButtonId %s error", buttonValue.c_str());
+			}
 		}
 		else
 			LOGW("Data error %s", dataValue.toString().c_str());

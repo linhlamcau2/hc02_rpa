@@ -46,7 +46,29 @@ int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->idDimOff == id || this->idDimOn == id)
+				{
+					if (dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+					{
+						if (this->idDimOff == id)
+							dimOff = dataValue[i]["VALUE"].asInt();
+						else if (this->idDimOn == id)
+							dimOn = dataValue[i]["VALUE"].asInt();
+						BuildTelemetryValue(jsonValue);
+					}
+				}
+			}
+		}
+		return CODE_OK;
+	}
+	else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idDimOff == id || this->idDimOn == id)
@@ -58,7 +80,7 @@ int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 				else if (this->idDimOn == id)
 					dimOn = dataValue["VALUE"].asInt();
 				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
+				// CheckTrigger();
 				return CODE_OK;
 			}
 		}
@@ -102,13 +124,13 @@ bool ModuleDimonDimoff::CheckData(Json::Value &dataValue, bool &rs)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idDimOn == id || this->idDimOff == id)
 		{
 			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+				dataValue.isMember("OP") && dataValue["OP"].isString())
 			{
 				uint16_t value1 = 0, value2 = 0;
 				string op = dataValue["OP"].asString();
@@ -158,8 +180,8 @@ int ModuleDimonDimoff::Do(Json::Value &dataValue)
 	LOGD("Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();

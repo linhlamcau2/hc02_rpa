@@ -33,7 +33,24 @@ int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->id == id && dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+				{
+					dim = (dataValue[i]["VALUE"].asInt() * 65535) / 100;
+					BuildTelemetryValue(jsonValue);
+					// CheckTrigger();
+					return CODE_OK;
+				}
+			}
+		}
+	}
+	else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
@@ -90,12 +107,12 @@ bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
+			dataValue.isMember("OP") && dataValue["OP"].isString())
 		{
 			uint16_t dim1 = 0, dim2 = 0;
 			string op = dataValue["OP"].asString();
@@ -137,7 +154,7 @@ int ModuleDim::Do(Json::Value &dataValue)
 	// LOGD("ModuleDim Do data: %s", dataValue.toString().c_str());
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		uint16_t value = (dim * 65535) / 100;
@@ -149,11 +166,11 @@ int ModuleDim::Do(Json::Value &dataValue)
 	}
 #else
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
+			dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
 		{
 			int value = dataValue["VALUE"].asInt();
 			uint16_t dim = (value * 65535) / 100;

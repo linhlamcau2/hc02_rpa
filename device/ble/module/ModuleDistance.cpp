@@ -33,7 +33,23 @@ int ModuleDistance::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-    if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+    if (dataValue.isArray())
+    {
+        for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+        {
+            if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+            {
+                int id = dataValue[i]["ID"].asInt();
+                if (this->id == id && dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+                {
+                    distance = dataValue[i]["VALUE"].asInt();
+                    BuildTelemetryValue(jsonValue);
+                    return CODE_OK;
+                }
+            }
+        }
+    }
+    else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
     {
         int id = dataValue["ID"].asInt();
         if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())

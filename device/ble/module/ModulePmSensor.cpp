@@ -43,7 +43,32 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->idPm10 == id || this->idPm1_0 == id || this->idPm25 == id)
+				{
+					if (dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+					{
+						if (this->idPm10 == id)
+							pm10 = dataValue[i]["VALUE"].asInt();
+						else if (this->idPm1_0 == id)
+							pm1_0 = dataValue[i]["VALUE"].asInt();
+						else if (this->idPm25 == id)
+							pm25 = dataValue[i]["VALUE"].asInt();
+						BuildTelemetryValue(jsonValue);
+						// CheckTrigger();
+					}
+				}
+			}
+		}
+		return CODE_OK;
+	}
+	else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idPm25 == id || this->idPm10 == id || this->idPm1_0 == id)

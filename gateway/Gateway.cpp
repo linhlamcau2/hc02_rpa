@@ -878,6 +878,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 ||
 		scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
 		scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+		scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 ||
 		scanDevice->GetType() == BLE_SWITCH_RGB_2_V2 ||
 		scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2 ||
 		scanDevice->GetType() == BLE_SWITCH_2_CEILING)
@@ -892,6 +893,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 ||
 			 scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
 			 scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+			 scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3_V2 ||
 			 scanDevice->GetType() == BLE_SWITCH_RGB_3_V2 ||
 			 scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2 ||
 			 scanDevice->GetType() == BLE_SWITCH_3_CEILING)
@@ -948,7 +950,8 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 	else if (scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_1 ||
 			 scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_2 ||
-			 scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_3)
+			 scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_3 ||
+			 scanDevice->GetType() == BLE_SEFTPOWER_REMOTE_6)
 	{
 		DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(scanDevice);
 		if (deviceBleSeftPowerRemote->GetParent())
@@ -1258,6 +1261,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_SEFTPOWER_REMOTE_1:
 	case BLE_SEFTPOWER_REMOTE_2:
 	case BLE_SEFTPOWER_REMOTE_3:
+	case BLE_SEFTPOWER_REMOTE_6:
 		device = getDeviceFromId(id);
 		if (device)
 		{

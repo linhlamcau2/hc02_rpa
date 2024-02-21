@@ -71,6 +71,36 @@ int ModuleRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->idB == id || this->idG == id || this->idR == id || this->idDimOff == id || this->idDimOn == id)
+				{
+					if (dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+					{
+						if (this->idB == id)
+							b = dataValue[i]["VALUE"].asInt();
+						else if (this->idG == id)
+							g = dataValue[i]["VALUE"].asInt();
+						else if (this->idR == id)
+							r = dataValue[i]["VALUE"].asInt();
+						else if (this->idDimOff == id)
+							dimOff = dataValue[i]["VALUE"].asInt();
+						else if (this->idDimOn == id)
+							dimOn = dataValue[i]["VALUE"].asInt();
+						BuildTelemetryValue(jsonValue);
+						// CheckTrigger();
+					}
+				}
+			}
+		}
+		return CODE_OK;
+	}
+	else
 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();

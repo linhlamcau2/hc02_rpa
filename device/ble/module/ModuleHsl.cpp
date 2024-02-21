@@ -52,7 +52,32 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->idH == id || this->idL == id || this->idS == id)
+				{
+					if (dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+					{
+						if (this->idH == id)
+							h = dataValue[i]["VALUE"].asInt();
+						else if (this->idL == id)
+							l = dataValue[i]["VALUE"].asInt();
+						else if (this->idS == id)
+							s = dataValue[i]["VALUE"].asInt();
+						BuildTelemetryValue(jsonValue);
+						// CheckTrigger();
+					}
+				}
+			}
+		}
+		return CODE_OK;
+	}
+	else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idH == id || this->idL == id || this->idS == id)

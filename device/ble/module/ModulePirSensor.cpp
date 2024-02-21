@@ -35,7 +35,23 @@ int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->id == id && dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+				{
+					pir = dataValue[i]["VALUE"].asInt();
+					BuildTelemetryValue(jsonValue);
+					return CODE_OK;
+				}
+			}
+		}
+	}
+	else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
@@ -74,17 +90,7 @@ int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 					DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
 					if (dev)
 					{
-						if (sceneBle->deviceList[i]->data.isArray())
-						{
-							for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
-							{
-								if (sceneBle->deviceList[i]->data[j].isObject())
-								{
-									dev->InputData(sceneBle->deviceList[i]->data[j]);
-								}
-							}
-						}
-						else if (sceneBle->deviceList[i]->data.isObject())
+						if (sceneBle->deviceList[i]->data.isArray() || sceneBle->deviceList[i]->data.isObject())
 						{
 							dev->InputData(sceneBle->deviceList[i]->data);
 						}

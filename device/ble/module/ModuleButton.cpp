@@ -35,25 +35,6 @@ void ModuleButton::SaveAttribute()
 }
 #endif
 
-// int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-// {
-// #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-// #else
-// 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-// 	{
-// 		int id = dataValue["ID"].asInt();
-// 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-// 		{
-// 			bt = dataValue["VALUE"].asInt();
-// 			BuildTelemetryValue(jsonValue);
-// 			CheckTrigger();
-// 			return CODE_OK;
-// 		}
-// 	}
-// #endif
-// 	return CODE_ERROR;
-// }
-
 int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	typedef struct __attribute__((packed))
@@ -83,17 +64,7 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 						DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
 						if (dev)
 						{
-							if (sceneBle->deviceList[i]->data.isArray())
-							{
-								for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
-								{
-									if (sceneBle->deviceList[i]->data[j].isObject())
-									{
-										dev->InputData(sceneBle->deviceList[i]->data[j]);
-									}
-								}
-							}
-							else if (sceneBle->deviceList[i]->data.isObject())
+							if (sceneBle->deviceList[i]->data.isArray() || sceneBle->deviceList[i]->data.isObject())
 							{
 								dev->InputData(sceneBle->deviceList[i]->data);
 							}

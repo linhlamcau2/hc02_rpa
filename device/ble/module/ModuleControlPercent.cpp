@@ -34,7 +34,23 @@ int ModuleControlPercent::InputData(Json::Value &dataValue, Json::Value &jsonVal
 {
 #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 #else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isArray())
+	{
+		for (Json::ArrayIndex i = 0; i < dataValue.size(); i++)
+		{
+			if (dataValue[i].isObject() && dataValue[i].isMember("ID") && dataValue[i]["ID"].isInt())
+			{
+				int id = dataValue[i]["ID"].asInt();
+				if (this->idPercent == id && dataValue[i].isMember("VALUE") && dataValue[i]["VALUE"].isInt())
+				{
+					percent = dataValue[i]["VALUE"].asInt();
+					BuildTelemetryValue(jsonValue);
+					return CODE_OK;
+				}
+			}
+		}
+	}
+	else if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
 	{
 		int id = dataValue["ID"].asInt();
 		if (this->idPercent == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
