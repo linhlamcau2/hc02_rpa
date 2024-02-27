@@ -220,17 +220,14 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
 				if (dataArray.size() > 0)
 				{
-					for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
-					{
-						deviceBle->InputData(dataArray[i], false);
-					}
+					deviceBle->InputData(dataArray, false);
 				}
 			}
 			else if (opcodeVendor == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 			{
 				Json::Value dataJson;
 				GetDataUpdateSwitch(data_message->data[6], dataJson);
-				deviceBle->InputData(dataJson, false);
+				deviceBle->InputData(dataJson, true);
 				uint8_t numRelay = data_message->data[5];
 				for (int n = 1; n < numRelay; n++)
 				{
@@ -239,7 +236,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 					{
 						dataJson.clear();
 						GetDataUpdateSwitch(data_message->data[6 + n], dataJson);
-						deviceChild->InputData(dataJson, false);
+						deviceChild->InputData(dataJson, true);
 					}
 				}
 			}
@@ -1245,42 +1242,42 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 		else
 			BleProtocol::GetOnoffLight(devAddr);
 		break;
-	case BLE_SWITCH_RGB_1:
-	case BLE_SWITCH_RGB_1_SQUARE:
-	case BLE_SWITCH_RGB_WATER_HEATER:
-	case BLE_SWITCH_RGB_SOCKET_1:
-	case BLE_SWITCH_RGB_2:
-	case BLE_SWITCH_RGB_2_SQUARE:
-	case BLE_SWITCH_RGB_3:
-	case BLE_SWITCH_RGB_3_SQUARE:
-	case BLE_SWITCH_RGB_4:
-	case BLE_SWITCH_RGB_4_SQUARE:
-	case BLE_SWITCH_ELECTRICAL_1:
-	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-	case BLE_SWITCH_ELECTRICAL_2:
-	case BLE_SWITCH_ELECTRICAL_3:
-	case BLE_SWITCH_ELECTRICAL_4:
-	case BLE_SWITCH_ELECTRICAL_1_V2:
-	case BLE_SWITCH_ELECTRICAL_2_V2:
-	case BLE_SWITCH_ELECTRICAL_3_V2:
-	case BLE_SWITCH_1:
-	case BLE_SWITCH_WATER_HEATER:
-	case BLE_SWITCH_2:
-	case BLE_SWITCH_3:
-	case BLE_SWITCH_4:
-	case BLE_SWITCH_RGB_1_V2:
-	case BLE_SWITCH_RGB_1_SQUARE_V2:
-	case BLE_SWITCH_RGB_2_V2:
-	case BLE_SWITCH_RGB_2_SQUARE_V2:
-	case BLE_SWITCH_RGB_3_V2:
-	case BLE_SWITCH_RGB_3_SQUARE_V2:
-	case BLE_SWITCH_RGB_4_V2:
-	case BLE_SWITCH_RGB_4_SQUARE_V2:
-	case BLE_SWITCH_2_CEILING:
-	case BLE_SWITCH_3_CEILING:
-	case BLE_SWITCH_5_CEILING:
-		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
-		break;
+	// case BLE_SWITCH_RGB_1:
+	// case BLE_SWITCH_RGB_1_SQUARE:
+	// case BLE_SWITCH_RGB_WATER_HEATER:
+	// case BLE_SWITCH_RGB_SOCKET_1:
+	// case BLE_SWITCH_RGB_2:
+	// case BLE_SWITCH_RGB_2_SQUARE:
+	// case BLE_SWITCH_RGB_3:
+	// case BLE_SWITCH_RGB_3_SQUARE:
+	// case BLE_SWITCH_RGB_4:
+	// case BLE_SWITCH_RGB_4_SQUARE:
+	// case BLE_SWITCH_ELECTRICAL_1:
+	// case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
+	// case BLE_SWITCH_ELECTRICAL_2:
+	// case BLE_SWITCH_ELECTRICAL_3:
+	// case BLE_SWITCH_ELECTRICAL_4:
+	// case BLE_SWITCH_ELECTRICAL_1_V2:
+	// case BLE_SWITCH_ELECTRICAL_2_V2:
+	// case BLE_SWITCH_ELECTRICAL_3_V2:
+	// case BLE_SWITCH_1:
+	// case BLE_SWITCH_WATER_HEATER:
+	// case BLE_SWITCH_2:
+	// case BLE_SWITCH_3:
+	// case BLE_SWITCH_4:
+	// case BLE_SWITCH_RGB_1_V2:
+	// case BLE_SWITCH_RGB_1_SQUARE_V2:
+	// case BLE_SWITCH_RGB_2_V2:
+	// case BLE_SWITCH_RGB_2_SQUARE_V2:
+	// case BLE_SWITCH_RGB_3_V2:
+	// case BLE_SWITCH_RGB_3_SQUARE_V2:
+	// case BLE_SWITCH_RGB_4_V2:
+	// case BLE_SWITCH_RGB_4_SQUARE_V2:
+	// case BLE_SWITCH_2_CEILING:
+	// case BLE_SWITCH_3_CEILING:
+	// case BLE_SWITCH_5_CEILING:
+	// 	BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
+	// 	break;
 	case BLE_SWITCH_ONOFF:
 		if (version >= 515)
 			BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
