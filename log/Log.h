@@ -25,11 +25,15 @@
 // 	ANDROID_LOG_SILENT, /* only for SetMinPriority(); must be last */
 // } android_LogPriority;
 
-#define LOGV(...) ((void)__android_log_print(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
-#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
-#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
-#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
-#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
+void logPrint(int priority, const char* tag, const char* format, ...);
+
+#define LOGV(...) ((void)logPrint(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
+#define LOGD(...) ((void)logPrint(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
+#define LOGI(...) ((void)logPrint(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
+#define LOGW(...) ((void)logPrint(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
+#define LOGE(...) ((void)logPrint(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
+
+void checkLogFile();
 
 #else
 

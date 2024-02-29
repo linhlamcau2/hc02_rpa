@@ -46,7 +46,9 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-#ifndef __ANDROID__
+#ifdef __ANDROID__
+	checkLogFile();
+#else
 	log_set_level(LOG_VERBOSE);
 #endif
 	LOGI("Start ver " STR(VERSION));
