@@ -19,7 +19,7 @@
 #ifdef ESP_PLATFORM
 #define VERSION 1.0.4
 #else
-#define VERSION 2.0.6
+#define VERSION 2.0.7
 #endif
 #endif
 
@@ -27,14 +27,20 @@
 #define CONFIG_FILE_NAME "/etc/smh/config.json"
 #define TMP_FOLDER "/data/rd/"
 #define CERT_FILE_NAME "/data/rd/server.pem"
+#define LOG_FILE_PATH "/data/rd/"
+#define LOG_FILE_NAME "smh-"
 #elif defined(__OPENWRT__)
 #define CONFIG_FILE_NAME "/root/smh/config.json"
 #define TMP_FOLDER "/tmp/"
 #define CERT_FILE_NAME "/root/smh/server.pem"
+#define LOG_FILE_PATH "/root/smh/"
+#define LOG_FILE_NAME "smh-"
 #else
 #define CONFIG_FILE_NAME "config.json"
 #define TMP_FOLDER ""
 #define CERT_FILE_NAME ""
+#define LOG_FILE_PATH ""
+#define LOG_FILE_NAME "smh-"
 #endif
 
 #ifndef DB_NAME
