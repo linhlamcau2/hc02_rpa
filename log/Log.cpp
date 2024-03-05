@@ -25,14 +25,16 @@ using namespace std::chrono;
 #ifdef __ANDROID__
 const long maxLogFileSize = 4 * 1024 * 1024;
 const int maxNumLogFiles = 7;
+namespace fs = std::__fs::filesystem;
 #else
 const long maxLogFileSize = 2 * 1024 * 1024;
 const int maxNumLogFiles = 5;
+namespace fs = std::filesystem;
 #endif
 
 bool checkLogFileSize(const char *filePath)
 {
-	return std::filesystem::exists(filePath) && std::filesystem::file_size(filePath) < maxLogFileSize;
+	return fs::exists(filePath) && fs::file_size(filePath) < maxLogFileSize;
 }
 
 std::string getCurrentDate()
@@ -47,7 +49,7 @@ std::string getCurrentDate()
 	return std::string(buffer);
 }
 
-bool isLogFile(const std::filesystem::directory_entry &entry)
+bool isLogFile(const fs::directory_entry &entry)
 {
 	std::string filename = entry.path().filename().string();
 	return filename.find(LOG_FILE_NAME) == 0 && filename.find(".log") != std::string::npos;
@@ -196,11 +198,11 @@ void checkLogFile()
 
 	std::string currentDate = getCurrentDate();
 
-	std::multimap<std::string, std::filesystem::directory_entry> logFiles;
+	std::multimap<std::string, fs::directory_entry> logFiles;
 
-	for (const auto &entry : std::filesystem::directory_iterator(LOG_FILE_PATH))
+	for (const auto &entry : fs::directory_iterator(LOG_FILE_PATH))
 	{
-		if (std::filesystem::is_regular_file(entry))
+		if (fs::is_regular_file(entry))
 		{
 			std::string filename = entry.path().filename().string();
 			std::string dateString = filename.substr(4, 8);
@@ -215,7 +217,7 @@ void checkLogFile()
 	{
 		if (logCount >= maxNumLogFiles)
 		{
-			std::filesystem::remove(it->second.path());
+			fs::remove(it->second.path());
 			std::cout << "Removed old log file: " << it->second.path().filename() << std::endl;
 		}
 		else
