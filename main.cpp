@@ -46,10 +46,7 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-#ifdef __ANDROID__
-	thread CheckLogFile(threadCheckLog);
-	CheckLogFile.detach();
-#else
+#ifndef __ANDROID__
 	log_set_level(LOG_VERBOSE);
 #endif
 	LOGI("Start ver " STR(VERSION));
@@ -67,6 +64,9 @@ int main(int argc, char *argv[])
 
 	timerSchedule = new TimerSchedule();
 	timerSchedule->init();
+#ifndef ESP_PLATFORM
+	timerSchedule->RegisterTimer(1, checkLogFile);
+#endif
 
 	database = new Db();
 	database->init();

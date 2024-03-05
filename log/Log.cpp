@@ -19,14 +19,20 @@
 #include <regex>
 #include <unistd.h>
 
+#ifndef ESP_PLATFORM
 using namespace std::chrono;
 
+#ifdef __ANDROID__
+const long maxLogFileSize = 4 * 1024 * 1024;
+const int maxNumLogFiles = 7;
+#else
 const long maxLogFileSize = 2 * 1024 * 1024;
 const int maxNumLogFiles = 5;
+#endif
 
 bool checkLogFileSize(const char *filePath)
 {
-	return std::__fs::filesystem::exists(filePath) && std::__fs::filesystem::file_size(filePath) < maxLogFileSize;
+	return std::filesystem::exists(filePath) && std::filesystem::file_size(filePath) < maxLogFileSize;
 }
 
 std::string getCurrentDate()
@@ -41,7 +47,7 @@ std::string getCurrentDate()
 	return std::string(buffer);
 }
 
-bool isLogFile(const std::__fs::filesystem::directory_entry &entry)
+bool isLogFile(const std::filesystem::directory_entry &entry)
 {
 	std::string filename = entry.path().filename().string();
 	return filename.find(LOG_FILE_NAME) == 0 && filename.find(".log") != std::string::npos;
@@ -52,6 +58,8 @@ bool isValidDateFormat(const std::string &dateString)
 	static const std::regex dateRegex("[0-9]{8}");
 	return std::regex_match(dateString, dateRegex);
 }
+
+#endif //
 
 #ifndef __ANDROID__
 
@@ -87,8 +95,8 @@ void log_write(const char *format, ...)
 	(*s_log_print_func)(format, list);
 	va_end(list);
 
-	//Log to File
-
+#ifndef ESP_PLATFORM
+	// Log to File
 	time_t rawtime;
 	struct tm *timeinfo;
 	char timeBuffer[80];
@@ -101,7 +109,7 @@ void log_write(const char *format, ...)
 	char dataBuffer[80];
 	strftime(dataBuffer, sizeof(dataBuffer), "%Y%m%d", timeinfo);
 
-		std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
+	std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
 
 	std::ofstream logFile(logFilename, std::ios::app);
 
@@ -114,12 +122,13 @@ void log_write(const char *format, ...)
 	{
 		char buffer[1024];
 		snprintf(buffer, sizeof(buffer), "%s ", timeBuffer);
-		vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, args);
+		vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, list);
 		logFile << buffer << std::endl;
 		logFile.close();
 	}
 	else
 		std::cout << "open file error" << std::endl;
+#endif
 }
 
 char *log_cut_str(char *full_path, uint8_t len)
@@ -181,16 +190,17 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 
 #endif /* __ANDROID__ */
 
+#ifndef ESP_PLATFORM
 void checkLogFile()
 {
 
 	std::string currentDate = getCurrentDate();
 
-	std::multimap<std::string, std::__fs::filesystem::directory_entry> logFiles;
+	std::multimap<std::string, std::filesystem::directory_entry> logFiles;
 
-	for (const auto &entry : std::__fs::filesystem::directory_iterator(LOG_FILE_PATH))
+	for (const auto &entry : std::filesystem::directory_iterator(LOG_FILE_PATH))
 	{
-		if (std::__fs::filesystem::is_regular_file(entry))
+		if (std::filesystem::is_regular_file(entry))
 		{
 			std::string filename = entry.path().filename().string();
 			std::string dateString = filename.substr(4, 8);
@@ -205,7 +215,7 @@ void checkLogFile()
 	{
 		if (logCount >= maxNumLogFiles)
 		{
-			std::__fs::filesystem::remove(it->second.path());
+			std::filesystem::remove(it->second.path());
 			std::cout << "Removed old log file: " << it->second.path().filename() << std::endl;
 		}
 		else
@@ -214,18 +224,19 @@ void checkLogFile()
 		}
 	}
 }
+#endif
 
-static time_t oldTime;
-void threadCheckLog()
-{
-	while (1)
-	{
-		if (time(nullptr) - oldTime >= 82800)
-		{
-			oldTime = time(nullptr);
-			checkLogFile();
-		}
-		else
-			sleep(1);
-	}
-}
+// static time_t oldTime;
+// void threadCheckLog()
+// {
+// 	while (1)
+// 	{
+// 		if (time(nullptr) - oldTime >= 82800)
+// 		{
+// 			oldTime = time(nullptr);
+// 			checkLogFile();
+// 		}
+// 		else
+// 			sleep(1);
+// 	}
+// }

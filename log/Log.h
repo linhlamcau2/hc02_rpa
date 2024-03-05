@@ -104,6 +104,7 @@ char* log_cut_str(char* full_path, uint8_t len);
 #endif
 
 #endif /* __ANDROID__ */
-void threadCheckLog();
-
+#ifndef ESP_PLATFORM
+void checkLogFile();
+#endif 
 #endif /* LOG_H__ */
