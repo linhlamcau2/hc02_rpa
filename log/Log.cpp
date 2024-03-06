@@ -1,23 +1,22 @@
-
 /*
  * log.c
  *
  *  Created on: Jan 5, 2019
  *      Author: Thinpv
  */
-
+#include "Log.h"
 #include <stdio.h>
 #include <string.h>
-#include "Log.h"
 #include <iostream>
 #include <fstream>
-#include <cstdarg>
 #include <ctime>
-#include <filesystem>
 #include <chrono>
-#include <map>
 #include <regex>
 #include <unistd.h>
+#include <vector>
+#include <sys/types.h>
+#include <dirent.h>
+#include <cstdarg>
 
 #ifndef ESP_PLATFORM
 using namespace std::chrono;
@@ -25,16 +24,23 @@ using namespace std::chrono;
 #ifdef __ANDROID__
 const long maxLogFileSize = 4 * 1024 * 1024;
 const int maxNumLogFiles = 7;
-namespace fs = std::__fs::filesystem;
 #else
 const long maxLogFileSize = 2 * 1024 * 1024;
-const int maxNumLogFiles = 5;
-namespace fs = std::filesystem;
+const int maxNumLogFiles = 3;
 #endif
 
-bool checkLogFileSize(const char *filePath)
+bool checkLogFileSize(std::fstream &file)
 {
-	return fs::exists(filePath) && fs::file_size(filePath) < maxLogFileSize;
+	if (file.is_open())
+	{
+		file.seekg(0, std::ios::end);
+		long size = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		if (size < maxLogFileSize)
+			return true;
+	}
+	return false;
 }
 
 std::string getCurrentDate()
@@ -47,12 +53,6 @@ std::string getCurrentDate()
 	std::strftime(buffer, sizeof(buffer), "%Y%m%d", timeinfo);
 
 	return std::string(buffer);
-}
-
-bool isLogFile(const fs::directory_entry &entry)
-{
-	std::string filename = entry.path().filename().string();
-	return filename.find(LOG_FILE_NAME) == 0 && filename.find(".log") != std::string::npos;
 }
 
 bool isValidDateFormat(const std::string &dateString)
@@ -113,9 +113,9 @@ void log_write(const char *format, ...)
 
 	std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
 
-	std::ofstream logFile(logFilename, std::ios::app);
+	std::fstream logFile(logFilename, std::ios::app);
 
-	if (!checkLogFileSize(logFilename.c_str()))
+	if (!checkLogFileSize(logFile))
 	{
 		return;
 	}
@@ -171,9 +171,9 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 
 	std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
 
-	std::ofstream logFile(logFilename, std::ios::app);
+	std::fstream logFile(logFilename, std::ios::app);
 
-	if (!checkLogFileSize(logFilename.c_str()))
+	if (!checkLogFileSize(logFile))
 	{
 		return;
 	}
@@ -190,7 +190,7 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 		std::cout << "open file error" << std::endl;
 }
 
-#endif /* __ANDROID__ */
+#endif /* ANDROID */
 
 #ifndef ESP_PLATFORM
 void checkLogFile()
@@ -198,18 +198,29 @@ void checkLogFile()
 
 	std::string currentDate = getCurrentDate();
 
-	std::multimap<std::string, fs::directory_entry> logFiles;
+	std::vector<std::pair<std::string, std::string>> logFiles;
 
-	for (const auto &entry : fs::directory_iterator(LOG_FILE_PATH))
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir(std::string(LOG_FILE_PATH).c_str())) != nullptr)
 	{
-		if (fs::is_regular_file(entry))
+		while ((ent = readdir(dir)) != nullptr)
 		{
-			std::string filename = entry.path().filename().string();
-			std::string dateString = filename.substr(4, 8);
+			if (ent->d_type == DT_REG)
+			{
+				std::string filename = ent->d_name;
+				std::string dateString = filename.substr(4, 8);
 
-			if (isValidDateFormat(dateString))
-				logFiles.emplace(dateString, entry);
+				if (isValidDateFormat(dateString))
+					logFiles.emplace_back(dateString, filename);
+			}
 		}
+		closedir(dir);
+	}
+	else
+	{
+		std::cerr << "Error opening directory" << std::endl;
+		return;
 	}
 
 	int logCount = 0;
@@ -217,8 +228,15 @@ void checkLogFile()
 	{
 		if (logCount >= maxNumLogFiles)
 		{
-			fs::remove(it->second.path());
-			std::cout << "Removed old log file: " << it->second.path().filename() << std::endl;
+			std::string filePath = LOG_FILE_PATH + it->second;
+			if (remove(filePath.c_str()) == 0)
+			{
+				std::cout << "Removed old log file: " << it->second << std::endl;
+			}
+			else
+			{
+				std::cerr << "Error removing old log file: " << it->second << std::endl;
+			}
 		}
 		else
 		{
@@ -227,18 +245,3 @@ void checkLogFile()
 	}
 }
 #endif
-
-// static time_t oldTime;
-// void threadCheckLog()
-// {
-// 	while (1)
-// 	{
-// 		if (time(nullptr) - oldTime >= 82800)
-// 		{
-// 			oldTime = time(nullptr);
-// 			checkLogFile();
-// 		}
-// 		else
-// 			sleep(1);
-// 	}
-// }
