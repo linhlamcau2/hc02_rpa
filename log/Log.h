@@ -8,28 +8,18 @@
 #ifndef LOG_H__
 #define LOG_H__
 
+#include "Define.h"
+
 #ifdef __ANDROID__
 
 #include <android/log.h>
+void logPrint(int priority, const char* tag, const char* format, ...);
 
-// typedef enum android_LogPriority
-// {
-// 	ANDROID_LOG_UNKNOWN = 0,
-// 	ANDROID_LOG_DEFAULT, /* only for SetMinPriority() */
-// 	ANDROID_LOG_VERBOSE,
-// 	ANDROID_LOG_DEBUG,
-// 	ANDROID_LOG_INFO,
-// 	ANDROID_LOG_WARN,
-// 	ANDROID_LOG_ERROR,
-// 	ANDROID_LOG_FATAL,
-// 	ANDROID_LOG_SILENT, /* only for SetMinPriority(); must be last */
-// } android_LogPriority;
-
-#define LOGV(...) ((void)__android_log_print(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
-#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
-#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
-#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
-#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
+#define LOGV(...) ((void)logPrint(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
+#define LOGD(...) ((void)logPrint(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
+#define LOGI(...) ((void)logPrint(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
+#define LOGW(...) ((void)logPrint(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
+#define LOGE(...) ((void)logPrint(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
 
 #else
 
@@ -66,7 +56,7 @@ char* log_cut_str(char* full_path, uint8_t len);
 
 #define CONFIG_LOG_COLORS 1
 
-#define TAG_DEFAULT		  "Thin"
+#define TAG_DEFAULT		  "smh"
 
 #if CONFIG_LOG_COLORS
 #define LOG_COLOR_BLACK   "30"
@@ -114,4 +104,7 @@ char* log_cut_str(char* full_path, uint8_t len);
 #endif
 
 #endif /* __ANDROID__ */
+#ifndef ESP_PLATFORM
+void checkLogFile();
+#endif 
 #endif /* LOG_H__ */

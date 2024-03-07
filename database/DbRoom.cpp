@@ -78,7 +78,7 @@ int Db::RoomUpdate(Room *room)
 
 int Db::RoomDel(Room *room)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id = \'" + room->GetId() + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id = '" + room->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

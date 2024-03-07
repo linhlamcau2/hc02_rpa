@@ -76,13 +76,13 @@ int Db::GatewayRead()
 
 int Db::GatewayAdd(Gateway *gateway)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, gateway_id, name, version, ble_netkey, ble_appkey, ble_devicekey, ble_addr, ble_iv_index, dormitory,refresh_token) VALUES ('" + gateway->getMac() + "','" + gateway->getId() + "','" + gateway->getName() + "','" + gateway->getVersion() + "','" + gateway->getBleNetKey() + "','" + gateway->getBleAppKey() + "','" + gateway->getBleDeviceKey() + "'," + to_string(gateway->getBleAddr()) + "," + to_string(gateway->getBleIvIndex()) + ",'" + gateway->getDormitory() + "','" + gateway->getRefreshToken() + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, gateway_id, name, version, ble_netkey, ble_appkey, ble_devicekey, ble_addr, ble_iv_index, dormitory,refresh_token) VALUES ('" + gateway->getMac() + "','" + gateway->getId() + "','" + gateway->getName() + "','" + gateway->getVersion() + "','" + gateway->getBleNetKey() + "','" + gateway->getBleAppKey() + "','" + gateway->getBleDeviceKey() + "'," + to_string(gateway->getBleAddr()) + "," + to_string(gateway->getBleIvIndex()) + ",'" + gateway->getDormitory() + "','" + gateway->getRefreshToken() + "');";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateId(Gateway *gateway, string id)
 {
-	string sql = "UPDATE " TABLE_NAME " SET gateway_id = '" + id + "' WHERE mac = '" + gateway->getMac() + "'";
+	string sql = "UPDATE " TABLE_NAME " SET gateway_id = '" + id + "' WHERE mac = '" + gateway->getMac() + "';";
 	return Sqlite_Exec(sql);
 }
 

@@ -45,7 +45,7 @@ int Db::DeviceAttributeRead()
 
 int Db::DeviceAttributeAdd(Device *device, int attributeId, double value)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, attribute_id, value) VALUES ('" + device->GetId() + "', " + to_string(attributeId) + ", " + to_string(value) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, attribute_id, value) VALUES ('" + device->GetId() + "', " + to_string(attributeId) + ", " + to_string(value) + ");";
 	return Sqlite_Exec(sql);
 }
 

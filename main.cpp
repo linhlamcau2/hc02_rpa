@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
 
 	timerSchedule = new TimerSchedule();
 	timerSchedule->init();
+#ifndef ESP_PLATFORM
+	timerSchedule->RegisterTimer(1, checkLogFile);
+#endif
 
 	database = new Db();
 	database->init();
@@ -77,34 +80,14 @@ int main(int argc, char *argv[])
 	// zigbeeProtocol->CommissionFormation();
 #endif
 
-#ifdef __OPENWRT__
-	string certServer;
-	ifstream certFile(CERT_FILE_NAME);
-	if (certFile.is_open())
-	{
-		stringstream buffer;
-		buffer << certFile.rdbuf();
-		certServer = buffer.str();
-		LOGI("cert: %s", certServer.c_str());
-		certFile.close();
-	}
-#endif
-
 	string cmd_get_cert = "openssl s_client -connect " + config->GetHost() + ":" + to_string(config->GetPort()) + " 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'";
 	string cert = Util::ExecuteCMD(cmd_get_cert.c_str());
 	LOGI("cert: %s", cert.c_str());
 	if (!cert.empty())
 	{
-#ifdef __OPENWRT__
-		if (cert != certServer)
-		{
-#endif
-			ofstream certFile(CERT_FILE_NAME);
-			certFile << cert;
-			certFile.close();
-#ifdef __OPENWRT__
-		}
-#endif
+		ofstream certFile(CERT_FILE_NAME);
+		certFile << cert;
+		certFile.close();
 	}
 
 	string mac = Wifi::GetMacAddress();

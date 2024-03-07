@@ -59,7 +59,7 @@ int Db::DeviceInGroupRead()
 // TODO: add epId to db
 int Db::DeviceInGroupAdd(Group *group, Device *device, int epId)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, device_id, element, create_at) VALUES ('" + group->GetId() + "','" + device->GetId() + "'," + to_string(epId) + "," + to_string(time(NULL)) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, device_id, element, create_at) VALUES ('" + group->GetId() + "','" + device->GetId() + "'," + to_string(epId) + "," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
