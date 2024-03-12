@@ -137,7 +137,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						{
 							uint32_t type = device->GetType() / 10000;
 							devicesAddRoom.push_back(device);
-							if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF)
+							if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF || device->GetType() == BLE_SWITCH_ONOFF_V2)
 							{
 								if (device->GetVersion() >= 0x0300) // fast add device to room
 								{
@@ -386,7 +386,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					{
 						devicesAddRoom.push_back(device);
 						uint32_t type = device->GetType() / 10000;
-						if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF)
+						if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF || device->GetType() == BLE_SWITCH_ONOFF_V2)
 						{
 							if (device->GetVersion() >= 0x0300)
 							{

@@ -223,6 +223,7 @@ void Device::InitDeviceModelList()
 	bleTypeToGroupIdList[BLE_LED_TRL08_20W] = BLE_LED_TRL08_20W_GROUP;
 	bleTypeToGroupIdList[BLE_LED_TRL08_10W] = BLE_LED_TRL08_10W_GROUP;
 	bleTypeToGroupIdList[BLE_LED_RLT03_12W] = BLE_LED_RLT03_12W_GROUP;
+	bleTypeToGroupIdList[BLE_SWITCH_ONOFF_V2] = BLE_SWITCH_ONOFF_V2_GROUP;
 
 	RegisterDeviceModel(BLE_DOWNLIGHT_SMT, "", "Downlight SMT");
 	RegisterDeviceModel(BLE_DOWNLIGHT_COB_GOC_RONG, "", "Downlight COB");

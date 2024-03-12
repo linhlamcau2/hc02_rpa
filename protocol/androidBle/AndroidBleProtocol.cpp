@@ -46,6 +46,25 @@ int AndroidBleProtocol::StartScan()
 	dataRequest["addProvision"] = gateway->GetNextAndroidProvisionAddr();
 
 	Json::Value element = Json::arrayValue;
+	element.append(BLE_SWITCH_RGB_1);
+	element.append(BLE_SWITCH_WATER_HEATER);
+	element.append(BLE_SWITCH_RGB_WATER_HEATER);
+	element.append(BLE_SWITCH_RGB_1_SQUARE);
+	element.append(BLE_SWITCH_RGB_1_V2);
+	element.append(BLE_SWITCH_RGB_1_SQUARE_V2);
+	element.append(BLE_SWITCH_CURTAIN);
+	element.append(BLE_SWITCH_RGB_CURTAIN);
+	element.append(BLE_SWITCH_RGB_CURTAIN_SQUARE);
+	element.append(BLE_SWITCH_RGB_CURTAIN_HCN);
+	element.append(BLE_SWITCH_RGB_CURTAIN_SQUARE_V2);
+	element.append(BLE_SWITCH_ROOLING_DOOR);
+	element.append(BLE_SWITCH_ROOLING_DOOR_V2);
+	element.append(BLE_SWITCH_ROOLING_DOOR_SQUARE);
+	element.append(BLE_SWITCH_ELECTRICAL_1);
+	element.append(BLE_SWITCH_RGB_SOCKET_1);
+	element.append(BLE_SWITCH_ONOFF_V2);
+	element.append(BLE_SWITCH_ONOFF);
+	element.append(BLE_REPEATER);
 
 	Json::Value secondElements = Json::arrayValue;
 	secondElements.append(BLE_DOWNLIGHT_SMT);
@@ -73,18 +92,40 @@ int AndroidBleProtocol::StartScan()
 	secondElements.append(BLE_LED_RLT03_12W);
 	secondElements.append(BLE_LED_OP_TRAN_LOA);
 
+	secondElements.append(BLE_SWITCH_RGB_2);
+	secondElements.append(BLE_SWITCH_RGB_2_SQUARE);
+	secondElements.append(BLE_SWITCH_RGB_2_V2);
+	secondElements.append(BLE_SWITCH_RGB_2_SQUARE_V2);
+	secondElements.append(BLE_SWITCH_2_CEILING);
+	secondElements.append(BLE_SWITCH_ELECTRICAL_2);
+
 	Json::Value thirdElements = Json::arrayValue;
 	thirdElements.append(BLE_LED_DAY_RGB);
+	thirdElements.append(BLE_SWITCH_RGB_3);
+	thirdElements.append(BLE_SWITCH_RGB_3_SQUARE);
+	thirdElements.append(BLE_SWITCH_RGB_3_V2);
+	thirdElements.append(BLE_SWITCH_RGB_3_SQUARE_V2);
+	thirdElements.append(BLE_SWITCH_3_CEILING);
+	thirdElements.append(BLE_SWITCH_ELECTRICAL_3);
 
 	Json::Value fourthElements = Json::arrayValue;
 	fourthElements.append(BLE_LED_DAY_RGBCW);
 	fourthElements.append(BLE_LED_BULB);
 	fourthElements.append(BLE_DOWNLIGHT_RGBCW);
 
+	fourthElements.append(BLE_SWITCH_RGB_4);
+	fourthElements.append(BLE_SWITCH_RGB_4_SQUARE);
+	fourthElements.append(BLE_SWITCH_RGB_4_V2);
+	fourthElements.append(BLE_SWITCH_RGB_4_SQUARE_V2);
+
+	Json::Value fiveElements = Json::arrayValue;
+	fiveElements.append(BLE_SWITCH_5_CEILING);
+
 	dataRequest["mapTypeElement"]["1"] = element;
 	dataRequest["mapTypeElement"]["2"] = secondElements;
 	dataRequest["mapTypeElement"]["3"] = thirdElements;
 	dataRequest["mapTypeElement"]["4"] = fourthElements;
+	dataRequest["mapTypeElement"]["5"] = fiveElements;
 
 	Json::Value dataResponse = Json::objectValue;
 	return PublishToAndroidBleMessage(cmd, dataRequest, cmd, &dataResponse, 2000);

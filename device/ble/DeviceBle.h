@@ -35,6 +35,7 @@ enum
 	BLE_LED_TRL08_20W_GROUP = 27,
 	BLE_LED_TRL08_10W_GROUP = 28,
 	BLE_LED_RLT03_12W_GROUP = 29,
+	BLE_SWITCH_ONOFF_V2_GROUP = 30
 };
 
 class DeviceBle : public Device
