@@ -183,11 +183,11 @@ void Gateway::delGroup(Group *group)
 
 uint16_t Gateway::getNextGroupAddr()
 {
-	uint16_t groupAddr = 10000; // start add of normal group
+	uint16_t groupAddr = 0; // start add of normal group
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
-		if (group->GetAddr() >= groupAddr)
+		if (group->GetAddr() >= groupAddr && group->GetAddr() < 4096)
 		{
 			groupAddr = group->GetAddr() + 1;
 		}
@@ -248,11 +248,11 @@ void Gateway::delSceneBle(SceneBle *sceneBle)
 
 uint16_t Gateway::getNextSceneBleAddr()
 {
-	uint16_t sceneAddr = 10000;
+	uint16_t sceneAddr = 1;
 	sceneBleListMtx.lock();
 	for (const auto &[id, sceneBle] : sceneBleList)
 	{
-		if (sceneBle->GetAddr() >= sceneAddr)
+		if (sceneBle->GetAddr() >= sceneAddr && sceneBle->GetAddr() < 4096)
 		{
 			sceneAddr = sceneBle->GetAddr() + 1;
 		}
@@ -308,15 +308,17 @@ void Gateway::delRoom(Room *room)
 	delete room;
 }
 
+//Id Room bắt đầu từ 0xd000 -> index Room = 0xd000-0xc000 = 4096
+//1 Hc có tối đa 45 phòng, mỗi phòng 256 group -> index Room max = 4096 + (256*40) = 15616
 uint16_t Gateway::getNextRoomAddr()
 {
-	uint16_t roomAddr = 1; // start add of room
+	uint16_t roomAddr = 4096; // start add of room
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
-		if (group->GetAddr() >= roomAddr)
+		if (group->GetAddr() >= roomAddr && group->GetAddr() < 15616)
 		{
-			roomAddr = (group->GetAddr() / 200 + 1) * 200; // every room has 200 group
+			roomAddr = (group->GetAddr() / 256 + 1) * 256; // every room has 200 group
 		}
 	}
 	groupListMtx.unlock();

@@ -203,40 +203,47 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnRpcBleStartScanPairDev(Json::Value &reqValue, Json::Value &respValue)
 {
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
+	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
-		Json::Value data = reqValue["DATA"];
-		if (data.isMember("DEVICE_ID") && data["DEVICE_ID"].isString())
+		string devId = reqValue["id"].asString();
+		Device *device = getDeviceFromId(devId);
+		if (device)
 		{
-			string devId = data["DEVICE_ID"].asString();
-			Device *device = getDeviceFromId(devId);
-			if (device)
-			{
-				uint32_t maxAddr = GetMaxAddrBle();
-				LOGW("max addr: %d", maxAddr + BLE_MAX_ELEMENT);
-				if (bleProtocol)
-					bleProtocol->AddPairDevice(device->GetAddr(), maxAddr + BLE_MAX_ELEMENT);
-				else
-					LOGW("BleProtocol null");
-			}
+			uint32_t maxAddr = GetMaxAddrBle();
+			LOGW("max addr: %d", maxAddr + BLE_MAX_ELEMENT);
+			if (bleProtocol)
+				bleProtocol->AddPairDevice(device->GetAddr(), maxAddr + BLE_MAX_ELEMENT);
+			else
+				LOGW("BleProtocol null");
 		}
 	}
 	else
 	{
 		LOGW("Data scan device pair error");
 	}
-	respValue["CMD"] = "STOP_SCAN_PAIRING_DEVICE";
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "stopScanChildBle";
 	return CODE_OK;
 }
 
 int Gateway::OnRpcBleStopScanPairDev(Json::Value &reqValue, Json::Value &respValue)
 {
-	if (bleProtocol)
+	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
-		
+		string deviceId = reqValue["id"].asString();
+		Device *device = getDeviceFromId(deviceId);
+		if (device)
+		{
+			if (bleProtocol)
+			{
+				bleProtocol->ScanStopSeftPowerRemote(device->GetAddr(), 0);
+			}
+			else
+				LOGW("BleProtocol null");
+		}
 	}
-	else
-		LOGW("BleProtocol null");
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "stopScanChildBle";
 	return CODE_OK;
 }
 
@@ -517,7 +524,7 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 					payloadJson["isRead"] = temp.second->GetIsRead();
 					respValue["data"].append(payloadJson);
 				}
-				countIndex ++;
+				countIndex++;
 				if (countIndex > endIndex)
 				{
 					break;
