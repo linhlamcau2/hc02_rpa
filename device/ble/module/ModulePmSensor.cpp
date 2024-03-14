@@ -17,24 +17,25 @@ ModulePmSensor::~ModulePmSensor()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModulePmSensor::InitAttribute(int id, double value)
+void ModulePmSensor::InitAttribute(string attribute, double value)
 {
-	if (this->id == idPm25)
+	if (attribute == KEY_ATTRIBUTE_PM2_5)
 		pm25 = value;
-	else if (this->id == idPm10)
+	else if (attribute == KEY_ATTRIBUTE_PM10)
 		pm10 = value;
-	else if (this->id == idPm1_0)
+	else if (attribute == KEY_ATTRIBUTE_PM1_0)
 		pm1_0 = value;
 }
 
-void ModulePmSensor::SaveAttribute()
+void ModulePmSensor::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, idPm25, pm25);
-	database->DeviceAttributeAddOrReplace(device, idPm10, pm10);
-	database->DeviceAttributeAddOrReplace(device, idPm1_0, pm1_0);
+	if (key == KEY_ATTRIBUTE_PM2_5)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PM2_5, pm25);
+	else if (key == KEY_ATTRIBUTE_PM10)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PM10, pm10);
+	else if (key == KEY_ATTRIBUTE_PM1_0)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PM1_0, pm1_0);
 }
-#endif
 
 int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -43,10 +44,9 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_PM10) && dataValue[KEY_ATTRIBUTE_PM10].isInt() &&
 			dataValue.isMember(KEY_ATTRIBUTE_PM1_0) && dataValue[KEY_ATTRIBUTE_PM1_0].isInt())
 	{
-		pm1_0 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
+		pm25 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
 		pm10 = dataValue[KEY_ATTRIBUTE_PM10].asInt();
 		pm1_0 = dataValue[KEY_ATTRIBUTE_PM1_0].asInt();
-		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -64,9 +64,31 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint16_t pm1_0;
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)&data[3];
-		pm25 = bswap_16(data_message->pm25);
-		pm10 = bswap_16(data_message->pm10);
-		pm1_0 = bswap_16(data_message->pm1_0);
+
+		int tepm_pm25 = bswap_16(data_message->pm25);
+		int temp_pm10 = bswap_16(data_message->pm10);
+		int temp_pm1_0 = bswap_16(data_message->pm1_0);
+		if (tepm_pm25 != pm25)
+		{
+			pm25 = tepm_pm25;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_PM2_5);
+			#endif		
+		}
+		if (temp_pm10 != pm10)
+		{
+			pm10 = temp_pm10;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_PM10);
+			#endif			
+		}
+		if (temp_pm1_0 != pm1_0)
+		{
+			pm1_0 = temp_pm1_0;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_PM1_0);
+			#endif	
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

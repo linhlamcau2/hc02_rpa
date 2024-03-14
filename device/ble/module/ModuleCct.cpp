@@ -15,18 +15,16 @@ ModuleCct::~ModuleCct()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleCct::InitAttribute(int id, double value)
+void ModuleCct::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_CCT)
 		cct = value;
 }
 
 void ModuleCct::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, cct);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_CCT, cct);
 }
-#endif
 
 int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -52,13 +50,21 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_CCT)
 	{
+		int temp_cct;
 		if (len <= 6)
 		{
-			cct = (data_message->cct_first - 800) / 192;
+			temp_cct = (data_message->cct_first - 800) / 192;
 		}
 		else
 		{
-			cct = (data_message->cct - 800) / 192;
+			temp_cct = (data_message->cct - 800) / 192;
+		}
+		if (temp_cct != cct)
+		{
+			cct = temp_cct;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+			#endif
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);

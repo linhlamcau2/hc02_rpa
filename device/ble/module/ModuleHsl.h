@@ -12,21 +12,19 @@ public:
 	ModuleHsl(Device *device, uint16_t addr);
 	~ModuleHsl();
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
-#endif
+	void SaveAttribute(string key);
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 

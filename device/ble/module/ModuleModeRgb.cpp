@@ -16,15 +16,15 @@ ModuleModeRgb::~ModuleModeRgb()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleModeRgb::InitAttribute(int id, double value)
+void ModuleModeRgb::InitAttribute(string attridute, double value)
 {
-	if (this->id == id)
+	if (attridute == KEY_ATTRIBUTE_MODE_RGB)
 		mode = value;
 }
 
 void ModuleModeRgb::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, mode);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_MODE_RGB, mode);
 }
 #endif
 

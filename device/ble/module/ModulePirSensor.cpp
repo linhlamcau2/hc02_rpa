@@ -18,15 +18,15 @@ ModulePirSensor::~ModulePirSensor()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModulePirSensor::InitAttribute(int id, double value)
+void ModulePirSensor::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_PIR)
 		pir = value;
 }
 
 void ModulePirSensor::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, pir);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PIR, pir);
 }
 #endif
 

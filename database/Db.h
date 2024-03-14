@@ -47,10 +47,10 @@ public:
 	int DeviceUpdateFavorite(Device *device);
 
 	int DeviceAttributeRead();
-	int DeviceAttributeAdd(Device *device, int attributeId, double value);
-	int DeviceAttributeUpdate(Device *device, int attributeId, double value);
-	int DeviceAttributeAddOrReplace(Device *device, int attributeId, double value);
-	int DeviceAttributeDel(Device *device, int attributeId);
+	int DeviceAttributeAdd(Device *device, string attribute, double value);
+	int DeviceAttributeUpdate(Device *device, string attribute, double value);
+	int DeviceAttributeAddOrReplace(Device *device, string attribute, double value);
+	int DeviceAttributeDel(Device *device, string attribute);
 	int DeviceAttributeDelAll();
 
 	int DeviceBleChildRead();

@@ -17,30 +17,38 @@ ModuleHsl::~ModuleHsl()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleHsl::InitAttribute(int id, double value)
+void ModuleHsl::InitAttribute(string attribute, double value)
 {
-	if (this->idH == id)
+	if (attribute == KEY_ATTRIBUTE_HUE)
 	{
 		h = value;
 	}
-	else if (this->idS == id)
+	else if (attribute == KEY_ATTRIBUTE_SATURATION)
 	{
 		s = value;
 	}
-	else if (this->idL == id)
+	else if (attribute == KEY_ATTRIBUTE_LUMINANCE)
 	{
 		l = value;
 	}
 }
 
-void ModuleHsl::SaveAttribute()
+void ModuleHsl::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, idH, h);
-	database->DeviceAttributeAddOrReplace(device, idS, s);
-	database->DeviceAttributeAddOrReplace(device, idL, l);
+	if (key == KEY_ATTRIBUTE_HUE)
+	{
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_HUE, h);
+	}
+	else if (key == KEY_ATTRIBUTE_SATURATION)
+	{
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_SATURATION, s);
+	}
+	else if (key == KEY_ATTRIBUTE_LUMINANCE)
+	{
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_LUMINANCE, l);
+	}
+	
 }
-#endif
 
 int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -71,9 +79,27 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_HSL)
 	{
-		l = data_message->l;
-		h = data_message->h;
-		s = data_message->s;
+		if (data_message->l != l)
+		{
+			l = data_message->l;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_LUMINANCE);
+			#endif		
+		}
+		if (data_message->s != s)
+		{
+			s = data_message->s;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_SATURATION);
+			#endif			
+		}
+		if (data_message->h != h)
+		{
+			h = data_message->h;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_HUE);
+			#endif	
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

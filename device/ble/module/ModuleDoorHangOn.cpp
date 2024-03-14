@@ -15,18 +15,16 @@ ModuleDoorHangOn::~ModuleDoorHangOn()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDoorHangOn::InitAttribute(int id, double value)
+void ModuleDoorHangOn::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_HANGON)
 		hangOn = value;
 }
 
 void ModuleDoorHangOn::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, hangOn);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_HANGON, hangOn);
 }
-#endif
 
 int ModuleDoorHangOn::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -44,7 +42,13 @@ int ModuleDoorHangOn::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x04)
 	{
-		hangOn = data[3];
+		if (hangOn != data[3])
+		{
+			hangOn = data[3];
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+			#endif
+		}		
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

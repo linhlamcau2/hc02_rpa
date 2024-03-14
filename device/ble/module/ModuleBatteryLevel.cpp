@@ -15,18 +15,17 @@ ModuleBatteryLevel::~ModuleBatteryLevel()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleBatteryLevel::InitAttribute(int id, double value)
+void ModuleBatteryLevel::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_BATTERY)
 		bat = value;
 }
 
 void ModuleBatteryLevel::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, bat);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_BATTERY, bat);
 }
-#endif
+
 
 int ModuleBatteryLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -45,7 +44,13 @@ int ModuleBatteryLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue
 {
 	if (data[0] == 0x52 && data[1] == 0x01 && data[2] == 0x00)
 	{
-		bat = data[4];
+		#ifdef CONFIG_SAVE_ATTRIBUTE
+		if (bat != data[4])
+		{
+			bat = data[4];
+			SaveAttribute();
+		}
+		#endif
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

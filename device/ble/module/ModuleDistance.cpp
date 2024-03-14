@@ -44,9 +44,6 @@ int ModuleDistance::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         {
             distance = data_message->distance;
             BuildTelemetryValue(jsonValue);
-#ifdef CONFIG_SAVE_ATTRIBUTE
-            SaveAttribute();
-#endif
             CheckTrigger();
             return CODE_OK;
         }

@@ -16,18 +16,16 @@ ModuleDim::~ModuleDim()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDim::InitAttribute(int id, double value)
+void ModuleDim::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_DIM)
 		dim = value;
 }
 
 void ModuleDim::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, dim);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_DIM, dim);
 }
-#endif
 
 int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -53,14 +51,22 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
 	{
+		int temp_dim;
 		if (len <= 5)
 		{
-			dim = ceil(data_message->dim_first * 100 / 65535.0);
+			temp_dim = ceil(data_message->dim_first * 100 / 65535.0);
 		}
 		else
 		{
-			dim = ceil(data_message->dim * 100 / 65535.0);
-		}
+			temp_dim = ceil(data_message->dim * 100 / 65535.0);
+		}		
+		if (temp_dim != dim)
+		{
+			dim = temp_dim;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+			#endif
+		}		
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

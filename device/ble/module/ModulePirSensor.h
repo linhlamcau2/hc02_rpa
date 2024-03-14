@@ -16,10 +16,10 @@ public:
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database

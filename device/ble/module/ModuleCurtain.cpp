@@ -24,18 +24,18 @@ ModuleCurtain::~ModuleCurtain()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleCurtain::InitAttribute(int id, double value)
+void ModuleCurtain::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
-		this->curtain = value;
+	if (attribute == KEY_ATTRIBUTE_CURTAIN)
+	{
+		curtain = value;
+	}
 }
 
 void ModuleCurtain::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, curtain);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_CURTAIN, curtain);
 }
-#endif
 
 int ModuleCurtain::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {

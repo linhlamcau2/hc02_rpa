@@ -96,3 +96,12 @@ int DeviceBle::Do(Json::Value &dataValue)
 	}
 	return CODE_OK;
 }
+
+int DeviceBle::InitAttribute(string attribute, int value)
+{
+	for (auto &module : modules)
+	{
+		module->InitAttribute(attribute, value);
+	}
+	return CODE_OK;
+}

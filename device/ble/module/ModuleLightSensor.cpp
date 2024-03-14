@@ -15,18 +15,16 @@ ModuleLightSensor::~ModuleLightSensor()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleLightSensor::InitAttribute(int id, double value)
+void ModuleLightSensor::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_LUX)
 		lux = value;
 }
 
 void ModuleLightSensor::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, lux);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_LUX, lux);
 }
-#endif
 
 int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -34,7 +32,6 @@ int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
 	{
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
-		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -71,7 +68,14 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				uint16_t scene;
 			} data_message_t;
 			data_message_t *data_message = (data_message_t *)&data[3];
-			lux = CalculateLux(bswap_16(data_message->lux));
+			int temp_lux = CalculateLux(bswap_16(data_message->lux));
+			if (temp_lux != lux)
+			{
+				lux = temp_lux;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+				#endif
+			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
 			return false;

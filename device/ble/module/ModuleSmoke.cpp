@@ -16,21 +16,21 @@ ModuleSmoke::~ModuleSmoke()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleSmoke::InitAttribute(int id, double value)
+void ModuleSmoke::InitAttribute(string attribute, double value)
 {
-	if (this->id == idSmoke)
+	if (attribute == KEY_ATTRIBUTE_SMOKE)
 		smoke = value;
-	else if (this->id == idPower)
+	else if (attribute == KEY_ATTRIBUTE_SMOKE_PIN)
 		power = value;
 }
 
-void ModuleSmoke::SaveAttribute()
+void ModuleSmoke::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, idSmoke, smoke);
-	database->DeviceAttributeAddOrReplace(device, idPower, power);
+	if (key == KEY_ATTRIBUTE_SMOKE)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_SMOKE, smoke);
+	else if (key == KEY_ATTRIBUTE_SMOKE_PIN)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_SMOKE_PIN, power);
 }
-#endif
 
 int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -57,8 +57,22 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint8_t power;
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)&data[3];
-		smoke = (data_message->smoke);
-		power = (data_message->power);
+		int temp_smoke = (data_message->smoke);
+		int temp_power = (data_message->power);
+		if (temp_smoke != smoke)
+		{
+			smoke = temp_smoke;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_SMOKE);
+			#endif	
+		}
+		if (temp_power != power)
+		{
+			power = temp_power;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(KEY_ATTRIBUTE_SMOKE_PIN);
+			#endif	
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 #ifdef __ANDROID__

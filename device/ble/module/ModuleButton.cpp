@@ -17,18 +17,16 @@ ModuleButton::~ModuleButton()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleButton::InitAttribute(int id, double value)
+void ModuleButton::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == key)
 		bt = value;
 }
 
 void ModuleButton::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, bt);
+	database->DeviceAttributeAddOrReplace(device, key, bt);
 }
-#endif
 
 int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {

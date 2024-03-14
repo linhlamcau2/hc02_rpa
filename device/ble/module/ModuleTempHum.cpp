@@ -16,21 +16,21 @@ ModuleTempHum::~ModuleTempHum()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleTempHum::InitAttribute(int id, double value)
+void ModuleTempHum::InitAttribute(string attribute, double value)
 {
-	if (this->id == idTemp)
+	if (attribute == KEY_ATTRIBUTE_TEMP)
 		temp = value;
-	else if (this->id == idHum)
+	else if (attribute == KEY_ATTRIBUTE_HUMIDITY)
 		hum = value;
 }
 
-void ModuleTempHum::SaveAttribute()
+void ModuleTempHum::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, idTemp, temp);
-	database->DeviceAttributeAddOrReplace(device, idHum, hum);
+	if (key == KEY_ATTRIBUTE_TEMP)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_TEMP, temp);
+	else if (key == KEY_ATTRIBUTE_HUMIDITY)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_HUMIDITY, hum);
 }
-#endif
 
 int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -40,7 +40,6 @@ int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 	{
 		temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
 		hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
-		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -62,10 +61,24 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (data_message->header == 0x0006)
 		{
-			temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
+			int temp_temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
 			if (data_message->value1[0] & 0x80)
-				temp = (-1) * temp;
-			hum = (data_message->value2[0] << 8) | data_message->value2[1];
+				temp_temp = (-1) * temp_temp;
+			int temp_hum = (data_message->value2[0] << 8) | data_message->value2[1];
+			if (temp_temp != temp)
+			{
+				temp = temp_temp;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_TEMP);
+				#endif	
+			}
+			if (temp_hum != hum)
+			{
+				hum = temp_hum;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
+				#endif	
+			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
 			Util::SetTempOfScreenTouch(temp);
@@ -74,10 +87,24 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		}
 		else if (data_message->header == 0x0107 && len >= 9)
 		{
-			hum = (data_message->value1[0] << 8) | data_message->value1[1];
-			temp = (data[7] << 8) | data[8];
+			int temp_hum = (data_message->value1[0] << 8) | data_message->value1[1];
+			int temp_temp = (data[7] << 8) | data[8];
 			if (data[5] == 0xff)
-				temp = (-1) * temp;
+				temp_temp = (-1) * temp_temp;
+			if (temp_temp != temp)
+			{
+				temp = temp_temp;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_TEMP);
+				#endif	
+			}
+			if (temp_hum != hum)
+			{
+				hum = temp_hum;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
+				#endif	
+			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
 			return CODE_OK;

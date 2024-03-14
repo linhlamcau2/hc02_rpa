@@ -15,18 +15,16 @@ ModuleDoorStatus::~ModuleDoorStatus()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDoorStatus::InitAttribute(int id, double value)
+void ModuleDoorStatus::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_DOOR)
 		status = value;
 }
 
 void ModuleDoorStatus::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, status);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_DOOR, status);
 }
-#endif
 
 int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -43,8 +41,14 @@ int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
-	{
-		status = data[3];
+	{		
+		if (status != data[3])
+		{
+			status = data[3];
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+			#endif
+		}
 		CheckTrigger();
 #ifdef __ANDROID__
 		if (status == 1)

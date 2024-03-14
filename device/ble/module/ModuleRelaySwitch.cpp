@@ -4,6 +4,7 @@
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "Db.h"
 
 ModuleRelaySwitch::ModuleRelaySwitch(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
@@ -15,25 +16,22 @@ ModuleRelaySwitch::~ModuleRelaySwitch()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleRelaySwitch::InitAttribute(int id, double bt)
+void ModuleRelaySwitch::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
-		this->bt = bt;
+	if (attribute == key)
+		this->bt = value;
 }
 
 void ModuleRelaySwitch::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, bt);
+	database->DeviceAttributeAddOrReplace(device, key, bt);
 }
-#endif
 
 int ModuleRelaySwitch::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		bt = dataValue[key].asInt();
-		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -42,6 +40,7 @@ int ModuleRelaySwitch::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
+	int temp_bt = 0;
 	if (data[0] == RD_OPCODE_CONFIG_RSP)
 	{
 		typedef struct __attribute__((packed))
@@ -62,7 +61,14 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			{
 				if (data_message->relayId == index)
 				{
-					bt = data_message->value;
+					temp_bt = data_message->value;
+					if (temp_bt != bt)
+					{
+						bt = temp_bt;
+						#ifdef CONFIG_SAVE_ATTRIBUTE
+						SaveAttribute();
+						#endif
+					}
 					BuildTelemetryValue(jsonValue);
 					CheckTrigger();
 					return CODE_OK;
@@ -84,7 +90,7 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			if (data_message->relayId == index)
 			{
-				bt = data_message->value;
+				temp_bt = data_message->value;
 				CheckTrigger();
 				BuildTelemetryValue(jsonValue);
 				return CODE_OK;

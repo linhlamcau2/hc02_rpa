@@ -16,15 +16,15 @@ ModuleTimeActionPir::~ModuleTimeActionPir()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleTimeActionPir::InitAttribute(int id, double value)
+void ModuleTimeActionPir::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_ACTIME)
 		time = value;
 }
 
 void ModuleTimeActionPir::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, time);
+	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_ACTIME, time);
 }
 #endif
 

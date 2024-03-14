@@ -1210,6 +1210,7 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
 	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+	#ifndef CONFIG_SAVE_ATTRIBUTE
 	switch (typeDev)
 	{
 	case BLE_LED_CHIEU_TRANH:
@@ -1292,6 +1293,9 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 		BleProtocol::GetTTL(devAddr);
 		break;
 	}
+	#else
+	BleProtocol::GetTTL(devAddr);
+	#endif
 	return CODE_OK;
 }
 

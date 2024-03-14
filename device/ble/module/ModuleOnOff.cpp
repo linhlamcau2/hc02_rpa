@@ -16,18 +16,16 @@ ModuleOnOff::~ModuleOnOff()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleOnOff::InitAttribute(int id, double value)
+void ModuleOnOff::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == key)
 		onoff = value;
 }
 
 void ModuleOnOff::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, onoff);
+	database->DeviceAttributeAddOrReplace(device, key, onoff);
 }
-#endif
 
 int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -35,7 +33,6 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 			dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		onoff = dataValue[key].asInt();
-		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
 	}
@@ -44,6 +41,7 @@ int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
+	int temp_onoff = 0;
 	if (data[0] == 0x82)
 	{
 		typedef struct __attribute__((packed))
@@ -57,11 +55,18 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			if (len == 3)
 			{
-				onoff = data_message->state;
+				temp_onoff = data_message->state;
 			}
 			else
 			{
-				onoff = data_message->onoff;
+				temp_onoff = data_message->onoff;
+			}
+			if (temp_onoff != onoff)
+			{
+				onoff = temp_onoff;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+				#endif
 			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
@@ -82,7 +87,14 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			if (data_message->header == RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4)
 			{
-				onoff = data_message->data[index+1];
+				temp_onoff = data_message->data[index+1];
+				if (temp_onoff != onoff)
+				{
+					onoff = temp_onoff;
+					#ifdef CONFIG_SAVE_ATTRIBUTE
+					SaveAttribute();
+					#endif
+				}
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
 				return CODE_OK;

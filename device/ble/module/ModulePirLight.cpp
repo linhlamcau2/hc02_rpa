@@ -18,21 +18,21 @@ ModulePirLight::~ModulePirLight()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModulePirLight::InitAttribute(int id, double value)
+void ModulePirLight::InitAttribute(string attribute, double value)
 {
-	if (this->id == idPir)
+	if (attribute == KEY_ATTRIBUTE_PIR)
 		pir = value;
-	else if (this->id == idLux)
+	else if (attribute == KEY_ATTRIBUTE_LUX)
 		lux = value;
 }
 
-void ModulePirLight::SaveAttribute()
+void ModulePirLight::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, idPir, pir);
-	database->DeviceAttributeAddOrReplace(device, idLux, lux);
+	if (key == KEY_ATTRIBUTE_PIR)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PIR, pir);
+	else if (key == KEY_ATTRIBUTE_LUX)
+		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_LUX, lux);
 }
-#endif
 
 int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -60,10 +60,24 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint16_t lux;
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)&data[3];
-		pir = data_message->pir;
-		lux = data_message->lux;
+		int temp_pir = data_message->pir;
+		int temp_lux = data_message->lux;
 		if (lux > 0 && len > 7)
 		{
+			if (temp_pir != pir)
+			{
+				pir = temp_pir;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_PIR);
+				#endif
+			}
+			if (temp_lux != lux)
+			{
+				lux = temp_lux;
+				#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_LUX);
+				#endif
+			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
 

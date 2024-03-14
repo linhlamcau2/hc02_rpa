@@ -64,4 +64,5 @@ public:
 	 * @return false
 	 */
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
+	virtual int InitAttribute(string attribute, int value) { return CODE_ERROR; }
 };

@@ -11,7 +11,7 @@ LDFLAGS ?= -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 LDFLAGS += -static-libstdc++
 
 INCLUDES 		+= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Iprotocol/androidBle -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota -Inoti
-# DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
+DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
 LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -llog -lssl -lcrypto
 
 ifeq ($(ZIGBEE),ON)

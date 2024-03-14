@@ -25,25 +25,25 @@ ModuleRgb::~ModuleRgb()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleRgb::InitAttribute(int id, double value)
+void ModuleRgb::InitAttribute(string attribute, double value)
 {
-	if (this->id == idR)
+	if (attribute == keyR)
 	{
 		r = value;
 	}
-	else if (this->id = idG)
+	else if (attribute == keyG)
 	{
 		g = value;
 	}
-	else if (this->id = idB)
+	else if (attribute == keyB)
 	{
 		b = value;
 	}
-	else if (this->id = idDimOn)
+	else if (attribute == keyDimOn)
 	{
 		dimOn = value;
 	}
-	else if (this->id = idDimOff)
+	else if (attribute == keyDimOff)
 	{
 		dimOff = value;
 	}
@@ -51,11 +51,11 @@ void ModuleRgb::InitAttribute(int id, double value)
 
 void ModuleRgb::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, idR, r);
-	database->DeviceAttributeAddOrReplace(device, idG, g);
-	database->DeviceAttributeAddOrReplace(device, idB, b);
-	database->DeviceAttributeAddOrReplace(device, idDimOn, dimOn);
-	database->DeviceAttributeAddOrReplace(device, idDimOff, dimOff);
+	database->DeviceAttributeAddOrReplace(device, keyR, r);
+	database->DeviceAttributeAddOrReplace(device, keyG, g);
+	database->DeviceAttributeAddOrReplace(device, keyB, b);
+	database->DeviceAttributeAddOrReplace(device, keyDimOn, dimOn);
+	database->DeviceAttributeAddOrReplace(device, keyDimOff, dimOff);
 }
 #endif
 

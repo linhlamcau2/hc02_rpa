@@ -18,14 +18,13 @@ ModuleDimonDimoff::~ModuleDimonDimoff()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDimonDimoff::InitAttribute(int id, double value)
+void ModuleDimonDimoff::InitAttribute(string attribute, double value)
 {
-	if (this->id = idDimOn)
+	if (attribute == keyDimOn)
 	{
 		dimOn = value;
 	}
-	else if (this->id = idDimOff)
+	else if (attribute == keyDimOff)
 	{
 		dimOff = value;
 	}
@@ -33,10 +32,9 @@ void ModuleDimonDimoff::InitAttribute(int id, double value)
 
 void ModuleDimonDimoff::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, idDimOn, dimOn);
-	database->DeviceAttributeAddOrReplace(device, idDimOff, dimOff);
+	database->DeviceAttributeAddOrReplace(device, keyDimOn, dimOn);
+	database->DeviceAttributeAddOrReplace(device, keyDimOff, dimOff);
 }
-#endif
 
 int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -70,11 +68,20 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == 0xE3 && data_message->header == 0x050b)
 	{
-		dimOn = data_message->dimOn;
-		dimOff = data_message->dimOff;
+		int temp_dimOn, temp_dimOff;
+		temp_dimOn = data_message->dimOn;
+		temp_dimOff = data_message->dimOff;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 		SaveAttribute();
 #endif
+		if (temp_dimOff != dimOff || temp_dimOn != dimOn)
+		{
+			dimOn = temp_dimOn;
+			dimOff = temp_dimOff;
+			#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+			#endif
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
