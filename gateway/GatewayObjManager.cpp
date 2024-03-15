@@ -308,8 +308,8 @@ void Gateway::delRoom(Room *room)
 	delete room;
 }
 
-//Id Room bắt đầu từ 0xd000 -> index Room = 0xd000-0xc000 = 4096
-//1 Hc có tối đa 45 phòng, mỗi phòng 256 group -> index Room max = 4096 + (256*40) = 15616
+// Id Room bắt đầu từ 0xd000 -> index Room = 0xd000-0xc000 = 4096
+// 1 Hc có tối đa 45 phòng, mỗi phòng 256 group -> index Room max = 4096 + (256*40) = 15616
 uint16_t Gateway::getNextRoomAddr()
 {
 	uint16_t roomAddr = 4096; // start add of room
@@ -362,4 +362,65 @@ map<string, Device *> Gateway::GetListDevices()
 	listDevs = deviceList;
 	deviceListMtx.unlock();
 	return listDevs;
+}
+
+#define FAST2ROOM_VER_LIGHT 0x0300
+#define FAST2ROOM_VER_SWITCH_RGB_V1 0x0112
+#define FAST2ROOM_VER_SWITCH_RGB_V2 0x0100
+#define FAST2ROOM_VER_SWITCH_ELECTRICAL_V2 0x112
+#define FAST2ROOM_VER_SWITCH_CURTAIN_V2 0x0100
+#define FAST2ROOM_VER_SWITCH_CELING 0x0100
+
+int Gateway::isDevFast2Room(Device *device)
+{
+	int rs = -1;
+	if ((device->GetType() / 10000) == 1 || device->GetType() == BLE_SWITCH_ONOFF || device->GetType() == BLE_SWITCH_ONOFF_V2)
+	{
+		if (device->GetVersion() >= FAST2ROOM_VER_LIGHT) // fast add device to room
+			rs = 0;
+		else // normal add device to room
+			rs = 1;
+	}
+	else if (device->GetType() == BLE_SWITCH_RGB_1 ||
+			 device->GetType() == BLE_SWITCH_RGB_2 ||
+			 device->GetType() == BLE_SWITCH_RGB_3 ||
+			 device->GetType() == BLE_SWITCH_RGB_4 ||
+			 device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
+			 device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
+			 device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
+			 device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+	{
+		if (device->GetVersion() >= FAST2ROOM_VER_SWITCH_RGB_V1)
+			rs = 0;
+		else
+			rs = 1;
+	}
+	else if (device->GetType() == BLE_SWITCH_RGB_1_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_2_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_3_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_4_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_1_SQUARE_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2 ||
+			 device->GetType() == BLE_SWITCH_RGB_4_SQUARE_V2)
+	{
+		if (device->GetVersion() >= FAST2ROOM_VER_SWITCH_RGB_V2)
+			rs = 0;
+		else
+			rs = 1;
+	}
+	else if (device->GetType() == BLE_SWITCH_2_CEILING ||
+			 device->GetType() == BLE_SWITCH_3_CEILING ||
+			 device->GetType() == BLE_SWITCH_5_CEILING)
+	{
+		if (device->GetVersion() >= FAST2ROOM_VER_SWITCH_CELING)
+			rs = 0;
+		else
+			rs = 1;
+	}
+	else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4) // set group for remote
+	{
+		rs = 2;
+	}
+	return rs;
 }

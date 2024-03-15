@@ -135,23 +135,19 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							uint32_t type = device->GetType() / 10000;
 							devicesAddRoom.push_back(device);
-							if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF || device->GetType() == BLE_SWITCH_ONOFF_V2)
+							int devFast2Room = isDevFast2Room(device);
+							if (devFast2Room == 0)
 							{
-								if (device->GetVersion() >= 0x0300) // fast add device to room
-								{
-									if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
-										devicesStatusConfig[deviceId] = false;
-								}
-								else // normal add device to room
-								{
-									// Check lightBle send ble
-									if (room->AddDevice(device, true, true) != CODE_OK)
-										devicesStatusConfig[deviceId] = false;
-								}
+								if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
+									devicesStatusConfig[deviceId] = false;
 							}
-							else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4) // set group for remote
+							else if (devFast2Room == 1)
+							{
+								if (room->AddDevice(device, true, true) != CODE_OK)
+									devicesStatusConfig[deviceId] = false;
+							}
+							else if (devFast2Room == 2)
 							{
 								devicesStatusConfig[deviceId] = false;
 								if (bleProtocol)
@@ -159,7 +155,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 										if (room->AddDevice(device, false, true) == CODE_OK)
 											devicesStatusConfig[deviceId] = true;
 							}
-							else
+							else if (devFast2Room == -1)
 							{
 								devicesStatusConfig[deviceId] = false;
 								if (room->AddDevice(device, false, true) == CODE_OK)
@@ -167,7 +163,10 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 						}
 						else
+						{
+							devicesStatusConfig[deviceId] = false;
 							LOGW("Device %s not found", deviceId.c_str());
+						}
 					}
 				}
 				printRoom();
@@ -195,7 +194,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									{
 										if (deviceInRoom->device->GetType() == type)
 										{
-											if (deviceInRoom->device->GetVersion() < 0x0300)
+											int devGroupFast2Room = isDevFast2Room(deviceInRoom->device);
+											if (devGroupFast2Room == 1)
 											{
 												if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
 												{
@@ -207,7 +207,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 													tempSuccessList.append(deviceInRoom->device->GetId());
 												}
 											}
-											else
+											else if (devGroupFast2Room == 0)
 											{
 												if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), false, true) != CODE_OK)
 												{
@@ -253,7 +253,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								room->AddSceneBle(sceneBle, true, true);
 								for (auto &deviceAddScene : devicesAddRoom)
 								{
-									if (deviceAddScene->GetVersion() < 0x0300)
+									int devSceneFast2Room = isDevFast2Room(deviceAddScene);
+									if (devSceneFast2Room == 1)
 									{
 										if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 										{
@@ -286,7 +287,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											}
 										}
 									}
-									else
+									else if (devSceneFast2Room == 0)
 									{
 										Json::Value dataScene = DataSceneBle::GetDataDeviceInScene(deviceAddScene->GetType(), i + 1);
 										if (sceneBle->AddDevice(deviceAddScene, dataScene, false, true) != CODE_OK)
@@ -385,21 +386,18 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (device)
 					{
 						devicesAddRoom.push_back(device);
-						uint32_t type = device->GetType() / 10000;
-						if (type == 1 || device->GetType() == BLE_SWITCH_ONOFF || device->GetType() == BLE_SWITCH_ONOFF_V2)
+						int devFast2Room = isDevFast2Room(device);
+						if (devFast2Room == 0)
 						{
-							if (device->GetVersion() >= 0x0300)
-							{
-								if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
-									devicesStatusConfig[deviceId] = false;
-							}
-							else
-							{
-								if (room->AddDevice(device, true, true) != CODE_OK)
-									devicesStatusConfig[deviceId] = false;
-							}
+							if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
+								devicesStatusConfig[deviceId] = false;
 						}
-						else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4) // set group for remote
+						else if (devFast2Room == 1)
+						{
+							if (room->AddDevice(device, true, true) != CODE_OK)
+								devicesStatusConfig[deviceId] = false;
+						}
+						else if (devFast2Room == 2)
 						{
 							devicesStatusConfig[deviceId] = false;
 							if (bleProtocol)
@@ -407,7 +405,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 									if (room->AddDevice(device, false, true) == CODE_OK)
 										devicesStatusConfig[deviceId] = true;
 						}
-						else
+						else if (devFast2Room == -1)
 						{
 							devicesStatusConfig[deviceId] = false;
 							if (room->AddDevice(device, false, true) == CODE_OK)
@@ -469,7 +467,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 								{
 									if (dev->GetType() == type)
 									{
-										if (dev->GetVersion() < 0x0300)
+										int devGroupFast2Room = isDevFast2Room(dev);
+										if (devGroupFast2Room == 1)
 										{
 											if (group->AddDevice(dev, dev->GetAddr(), true, true) != CODE_OK)
 											{
@@ -481,7 +480,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 												tempSuccessList.append(dev->GetId());
 											}
 										}
-										else
+										else if (devGroupFast2Room == 0)
 										{
 											if (group->AddDevice(dev, dev->GetAddr(), false, true) != CODE_OK)
 											{
@@ -549,7 +548,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 							{
 								for (auto &devInScene : devicesAddRoom)
 								{
-									if (devInScene->GetVersion() < 0x0300)
+									int devSceneFast2Room = isDevFast2Room(devInScene);
+									if (devSceneFast2Room == 1)
 									{
 										if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 										{
@@ -582,7 +582,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											}
 										}
 									}
-									else
+									else if (devSceneFast2Room == 0)
 									{
 										if (sceneBle->AddDevice(devInScene, DataSceneBle::GetDataDeviceInScene(devInScene->GetType(), i + 1), false, true) != CODE_OK)
 										{
@@ -667,12 +667,13 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						if (device->GetVersion() >= 0x0300)
+						int devFast2Room = isDevFast2Room(device);
+						if (devFast2Room == 0)
 						{
 							if (room->DelDeviceOneMessage(device, true, true) != CODE_OK)
 								devicesStatusConfig[deviceId] = false;
 						}
-						else
+						else if (devFast2Room == 1)
 						{
 							if (room->DelDevice(device, true, true) != CODE_OK)
 								devicesStatusConfig[deviceId] = false;
@@ -687,7 +688,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							{
 								if (devInGr->device->GetId() == device->GetId())
 								{
-									if (device->GetVersion() < 0x0300)
+									if (devFast2Room == 1)
 									{
 										if (group->DelDevice(device, device->GetAddr(), true, true) != CODE_OK)
 										{
@@ -699,7 +700,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(device->GetId());
 										}
 									}
-									else
+									else if (devFast2Room == 0)
 									{
 										if (group->DelDevice(device, device->GetAddr(), false, true) != CODE_OK)
 										{
@@ -724,7 +725,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							{
 								if (devInScene->device->GetId() == device->GetId())
 								{
-									if (device->GetVersion() < 0x0300)
+									if (devFast2Room == 1)
 									{
 										if (sceneBle->DelDevice(device, true, true) != CODE_OK)
 										{
@@ -736,7 +737,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(deviceId);
 										}
 									}
-									else
+									else if (devFast2Room == 0)
 									{
 										if (sceneBle->DelDevice(device, false, true) != CODE_OK)
 										{
@@ -811,13 +812,14 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			vector<DeviceInGroup *> devInRoom = room->deviceList;
 			for (auto &deviceInRoom : devInRoom)
 			{
-				if (deviceInRoom->device->GetVersion() >= 0x0300)
+				int devFast2Room = isDevFast2Room(deviceInRoom->device);
+				if (devFast2Room == 0)
 				{
 					if (room->DelDeviceOneMessage(deviceInRoom->device, true, true) != CODE_OK)
 						if (devicesStatusConfig[deviceInRoom->device->GetId()])
 							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 				}
-				else
+				else if (devFast2Room == 1)
 				{
 					if (room->DelDevice(deviceInRoom->device, true, true) != CODE_OK)
 						if (devicesStatusConfig[deviceInRoom->device->GetId()])
@@ -833,13 +835,14 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				vector<DeviceInGroup *> devInGroup = groupInRoom->deviceList;
 				for (auto &deviceInGroup : devInGroup)
 				{
-					if (deviceInGroup->device->GetVersion() < 0x0300)
+					int devGroupFast2Room = isDevFast2Room(deviceInGroup->device);
+					if (devGroupFast2Room == 1)
 					{
 						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
 								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 					}
-					else
+					else if (devGroupFast2Room == 0)
 					{
 						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), false, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
@@ -858,13 +861,14 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				vector<DeviceInSceneBle *> devInSceneBle = sceneInRoom->deviceList;
 				for (auto &deviceInScene : devInSceneBle)
 				{
-					if (deviceInScene->device->GetVersion() < 0x0300)
+					int devSceneFast2Room = isDevFast2Room(deviceInScene->device);
+					if (devSceneFast2Room == 1)
 					{
 						if (sceneInRoom->DelDevice(deviceInScene->device, true, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInScene->device->GetId()])
 								devicesStatusConfig[deviceInScene->device->GetId()] = false;
 					}
-					else
+					else if (devSceneFast2Room == 0)
 					{
 						if (sceneInRoom->DelDevice(deviceInScene->device, false, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInScene->device->GetId()])

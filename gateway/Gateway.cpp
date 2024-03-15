@@ -609,6 +609,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_ONOFF:
+	case BLE_SWITCH_ONOFF_V2:
 		device = new DeviceBleSwitchOnoff(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_RGB_1:

@@ -557,6 +557,12 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 			SceneBle *sceneBle = getSceneBleFromId(sceneBleId);
 			if (sceneBle)
 			{
+				uint16_t convertButton = 0;
+				uint8_t bt1 = 0;
+				uint8_t bt2 = 0;
+				uint8_t bt3 = 0;
+				uint8_t bt4 = 0;
+				int sizeData = data.size();
 				for (auto &dt : data)
 				{
 					if (dt.isObject())
@@ -654,11 +660,6 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 						}
 						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
 						{
-							uint16_t convertButton = 0;
-							uint8_t bt1 = 0;
-							uint8_t bt2 = 0;
-							uint8_t bt3 = 0;
-							uint8_t bt4 = 0;
 							if (dt.isMember("bt") && dt["bt"].isInt())
 								bt1 = 1;
 							else if (dt.isMember("bt2") && dt["bt2"].isInt())
@@ -667,30 +668,33 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 								bt3 = 1;
 							else if (dt.isMember("bt4") && dt["bt4"].isInt())
 								bt4 = 1;
-
-							convertButton = bt1 + bt2 * 2 + bt3 * 4 + bt4 * 8;
-							DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
-							if (deviceBleSeftPowerRemote)
+							if (sizeData == 1)
 							{
-								Device *parent = deviceBleSeftPowerRemote->GetParent();
-								if (parent)
+								convertButton = bt1 + bt2 * 2 + bt3 * 4 + bt4 * 8;
+								DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+								if (deviceBleSeftPowerRemote)
 								{
-									if (isAddScene)
+									Device *parent = deviceBleSeftPowerRemote->GetParent();
+									if (parent)
 									{
-										if (bleProtocol->SetSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), convertButton, 1, sceneBle->GetAddr()) != CODE_OK)
-											result = CODE_ERROR;
+										if (isAddScene)
+										{
+											if (bleProtocol->SetSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), convertButton, 1, sceneBle->GetAddr()) != CODE_OK)
+												result = CODE_ERROR;
+										}
+										else
+										{
+											if (bleProtocol->DelSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), convertButton, 1) != CODE_OK)
+												result = CODE_ERROR;
+										}
 									}
 									else
-									{
-										if (bleProtocol->DelSceneSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr(), convertButton, 1) != CODE_OK)
-											result = CODE_ERROR;
-									}
+										LOGW("Parent is null");
 								}
 								else
-									LOGW("Parent is null");
+									LOGW("device seftpower remote is null");
 							}
-							else
-								LOGW("device seftpower remote is null");
+							sizeData--;
 						}
 					}
 				}
@@ -823,8 +827,10 @@ int Gateway::OnCreateSceneController(Json::Value &reqValue, Json::Value &respVal
 				{
 					Json::Value propertiesJson = dt["properties"];
 					Json::Value sceneJson = dt["scene"];
+					int typeDev = device->GetType() / 1000;
 					if (device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4 || device->GetType() == BLE_DC_SCENE_CONTACT ||
-						device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+						device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE ||
+						typeDev == 27)
 					{
 						result = ConfigSceneForRemote(device, propertiesJson, sceneJson, true);
 					}
@@ -836,6 +842,10 @@ int Gateway::OnCreateSceneController(Json::Value &reqValue, Json::Value &respVal
 					{
 						result = ConfigSceneForScreenTouch(device, propertiesJson, sceneJson, true);
 					}
+				}
+				else
+				{
+					LOGW("Data error");
 				}
 			}
 			respValue["data"]["code"] = result;

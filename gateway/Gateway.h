@@ -285,6 +285,8 @@ public:
 	int pushNotify(Json::Value &dataValue);
 	string CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId);
 
+	int isDevFast2Room(Device *device);
+
 	// debug
 	void printGroup();
 	void printScene();

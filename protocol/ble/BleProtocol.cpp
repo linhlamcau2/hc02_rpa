@@ -322,6 +322,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
 		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
+		uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
@@ -336,19 +337,21 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->InputData(dataValues, false);
 			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP)
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 			{
-				uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
-				if (vendorId == RD_VENDOR_ID)
+				for (int i = 0; i < deviceBle->GetNumElement(); i++)
 				{
-					if (header == RD_OPCODE_REQUEST_STATUS_SWITCH)
-					{
-						for (int i = 0; i < deviceBle->GetNumElement(); i++)
-						{
-							deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr + i);
-						}
-					}
+					deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr + i);
 				}
+			}
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
+			{
+				DeviceBle * deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
+				if (deviceBleChild)
+				{
+					deviceBleChild->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->data[5] | (data_message->data[6] << 8));
+				}
+				
 			}
 			else
 			{
