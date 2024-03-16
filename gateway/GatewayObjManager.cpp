@@ -327,17 +327,29 @@ uint16_t Gateway::getNextRoomAddr()
 
 uint32_t Gateway::GetNextAndroidProvisionAddr()
 {
-	uint32_t nextAddr = 20000;
-	deviceListMtx.lock();
-	for (const auto &[id, device] : deviceList)
+	uint32_t rs = 20000;
+	if (deviceList.empty())
+		return rs;
+
+	auto it = deviceList.begin();
+	Device *devMaxAddr = it->second;
+	for (; it != deviceList.end(); ++it)
 	{
-		if (device->GetAddr() > nextAddr)
+		if (it->second->GetAddr() > devMaxAddr->GetAddr())
 		{
-			nextAddr = device->GetAddr() + ELEMENT_MAX;
+			devMaxAddr = it->second;
 		}
 	}
-	deviceListMtx.unlock();
-	return nextAddr;
+
+	DeviceBle *devBleMaxAddr = dynamic_cast<DeviceBle *>(devMaxAddr);
+	if (devBleMaxAddr)
+	{
+		if ((devBleMaxAddr->GetAddr() + devBleMaxAddr->GetNumElement()) > rs)
+		{
+			rs = devBleMaxAddr->GetAddr() + devBleMaxAddr->GetNumElement();
+		}
+	}
+	return rs;
 }
 
 uint32_t Gateway::GetMaxAddrBle()
