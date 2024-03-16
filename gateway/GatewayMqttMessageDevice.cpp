@@ -1,6 +1,7 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "Db.h"
+#include "DeviceBleSeftPowerRemote.h"
 
 void Gateway::InitMqttMessageDevice()
 {
@@ -295,7 +296,22 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 				Device *device = getDeviceFromId(deviceId);
 				if (device)
 				{
-					if (bleProtocol)
+					if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+					{
+						DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+						if (deviceBleSeftPowerRemote)
+						{
+							Device *parent = deviceBleSeftPowerRemote->GetParent();
+							if (parent)
+							{
+								database->DeviceBleChildDel(deviceBleSeftPowerRemote, parent);
+								bleProtocol->ResetSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr());
+							}
+							else
+								LOGW("parent device null");
+						}
+					}
+					else if (bleProtocol)
 						bleProtocol->ResetDev(device->GetAddr());
 
 					delDevice(device);
