@@ -346,12 +346,11 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
 			{
-				DeviceBle * deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
+				DeviceBle *deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
 				if (deviceBleChild)
 				{
 					deviceBleChild->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->data[5] | (data_message->data[6] << 8));
 				}
-				
 			}
 			else
 			{
@@ -871,7 +870,7 @@ int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
 				DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
 				if (parent && deviceBleSeftPowerRemote)
 				{
-					deviceBleSeftPowerRemote->SetParentDev(parent);	
+					deviceBleSeftPowerRemote->SetParentDev(parent);
 				}
 				if (deviceBleSeftPowerRemote->GetParent())
 				{
@@ -1242,9 +1241,13 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
 	case BLE_SWITCH_ELECTRICAL_1:
-	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
+	case BLE_SWITCH_ELECTRICAL_2:
 	case BLE_SWITCH_ELECTRICAL_3:
 	case BLE_SWITCH_ELECTRICAL_4:
+	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
+	case BLE_SWITCH_ELECTRICAL_1_V2:
+	case BLE_SWITCH_ELECTRICAL_2_V2:
+	case BLE_SWITCH_ELECTRICAL_3_V2:
 	case BLE_SWITCH_1:
 	case BLE_SWITCH_WATER_HEATER:
 	case BLE_SWITCH_2:
