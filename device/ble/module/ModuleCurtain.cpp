@@ -69,55 +69,70 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 
-	if (data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN))
+	uint8_t status;
+	Json::Value telemetry;
+	telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
+	telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
+	telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+	if (data_message->opcode == 0x52)
 	{
-		uint8_t status = data_message->header & 0xFF;
-		Json::Value telemetry;
-		telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
-		telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
-		telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
-		switch (status)
+		if (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
 		{
-		case CURTAIN_OPEN:
-			telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
-			break;
-		case CURTAIN_CLOSE:
-			telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
-			break;
-		case CURTAIN_PAUSE:
-			if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+			status = data_message->header & 0xFF;
+			switch (status)
 			{
+			case CURTAIN_OPEN:
+				telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
+				break;
+			case CURTAIN_CLOSE:
+				telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
+				break;
+			case CURTAIN_PAUSE:
+				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+				{
+					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				}
+				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
+				break;
+			case CURTAIN_PERCENT:
 				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				break;
 			}
-			telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
-			break;
-		case CURTAIN_PERCENT:
-			telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
-			break;
+			CheckTrigger();
+			BuildTelemetryValue(jsonValue, telemetry);
+			return CODE_OK;
 		}
-		CheckTrigger();
-		BuildTelemetryValue(jsonValue, telemetry);
-		return CODE_OK;
+	}
+	else if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
+	{
+		if (data_message->header == RD_OPCODE_REQUEST_STATUS_CURTAIN || data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE)
+		{
+			status = data_message->type;
+			switch (status)
+			{
+			case CURTAIN_OPEN:
+				telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
+				break;
+			case CURTAIN_CLOSE:
+				telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
+				break;
+			case CURTAIN_PAUSE:
+				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+				{
+					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				}
+				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
+				break;
+			case CURTAIN_PERCENT:
+				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				break;
+			}
+			CheckTrigger();
+			BuildTelemetryValue(jsonValue, telemetry);
+			return CODE_OK;
+		}
 	}
 
-	// 	if ((data_message->opcode == 0x52 && (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)) ||
-	// 		(data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && data_message->type == CURTAIN_PERCENT))
-	// 	{
-	// 		if (data_message->opcode == 0x52)
-	// 		{
-	// 			curtain = (data_message->header >> 8) & 0xFF;
-	// 		}
-	// 		if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
-	// 		{
-	// 			curtain = data_message->curtain;
-	// 		}
-	// #ifdef CONFIG_SAVE_ATTRIBUTE
-	// 		SaveAttribute();
-	// #endif
-	// 		CheckTrigger();
-	// 		// BuildTelemetryValue(jsonValue);
-	// 		return CODE_OK;
-	// 	}
 	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->vendorId == RD_VENDOR_ID && data_message->header == RD_OPCODE_CONFIG_MOTOR)
 	{
 		motor = data_message->type;

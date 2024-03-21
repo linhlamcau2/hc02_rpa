@@ -1443,7 +1443,7 @@ Request:
         "addr": 2,
         "mac": "AB:DE:EF",
         "data": {
-          "deviceKey": "b717f8d8-6f18-43c0-ae46-69c32998f653",
+          "devicekey": "b717f8d8-6f18-43c0-ae46-69c32998f653",
           "vid": 768,
           "pid": 4631
         }
