@@ -639,13 +639,16 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_1_V2:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
+	case BLE_SWITCH_ELECTRICAL_2_V2:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
+	case BLE_SWITCH_ELECTRICAL_3_V2:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:

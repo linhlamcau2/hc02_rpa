@@ -61,6 +61,7 @@ int AndroidBleProtocol::StartScan()
 	element.append(BLE_SWITCH_ROOLING_DOOR_V2);
 	element.append(BLE_SWITCH_ROOLING_DOOR_SQUARE);
 	element.append(BLE_SWITCH_ELECTRICAL_1);
+	element.append(BLE_SWITCH_ELECTRICAL_1_V2);
 	element.append(BLE_SWITCH_RGB_SOCKET_1);
 	element.append(BLE_SWITCH_ONOFF_V2);
 	element.append(BLE_SWITCH_ONOFF);
@@ -98,6 +99,7 @@ int AndroidBleProtocol::StartScan()
 	secondElements.append(BLE_SWITCH_RGB_2_SQUARE_V2);
 	secondElements.append(BLE_SWITCH_2_CEILING);
 	secondElements.append(BLE_SWITCH_ELECTRICAL_2);
+	secondElements.append(BLE_SWITCH_ELECTRICAL_2_V2);
 
 	Json::Value thirdElements = Json::arrayValue;
 	thirdElements.append(BLE_LED_DAY_RGB);
@@ -107,6 +109,7 @@ int AndroidBleProtocol::StartScan()
 	thirdElements.append(BLE_SWITCH_RGB_3_SQUARE_V2);
 	thirdElements.append(BLE_SWITCH_3_CEILING);
 	thirdElements.append(BLE_SWITCH_ELECTRICAL_3);
+	thirdElements.append(BLE_SWITCH_ELECTRICAL_3_V2);
 
 	Json::Value fourthElements = Json::arrayValue;
 	fourthElements.append(BLE_LED_DAY_RGBCW);
