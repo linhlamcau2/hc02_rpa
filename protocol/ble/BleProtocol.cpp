@@ -282,6 +282,29 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataValues)
 	}
 }
 
+static void GetDataUpdateSwitch(uint8_t *data, int len, Json::Value &dataValues)
+{
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t element;
+		uint8_t bt;
+		uint8_t bt2;
+		uint8_t bt3;
+		uint8_t bt4;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+
+	int u;
+	for (int i = 0; i < data_message->element; i++)
+	{
+		dataValues[KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")] = ((uint8_t *)data_message)[i + offsetof(data_message_t, bt)];
+	}
+}
+
+// dataValues[KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")] = ;
 int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 {
 	int rs = CODE_ERROR;
@@ -327,22 +350,21 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		if (deviceBle)
 		{
 			deviceBle->UpdateLastTimeActive();
-			// if (data_message->data[0] == 0x52 && (data_message->data[1] == 0x0a || data_message->data[1] == 0x02))
-			// {
-			// UpdateLights(0xffff);
-			// }
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
-				deviceBle->InputData(dataValues, false);
+				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 			{
-				for (int i = 0; i < deviceBle->GetNumElement(); i++)
-				{
-					deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr + i);
-				}
+				// for (int i = 0; i < deviceBle->GetNumElement(); i++)
+				// {
+				// 	deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr + i);
+				// }
+				Json::Value dataValues = Json::objectValue;
+				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
+				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
 			{
@@ -1240,6 +1262,14 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_RGB_3_SQUARE:
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
+	case BLE_SWITCH_RGB_1_V2:
+	case BLE_SWITCH_RGB_2_V2:
+	case BLE_SWITCH_RGB_3_V2:
+	case BLE_SWITCH_RGB_4_V2:
+	case BLE_SWITCH_RGB_1_SQUARE_V2:
+	case BLE_SWITCH_RGB_2_SQUARE_V2:
+	case BLE_SWITCH_RGB_3_SQUARE_V2:
+	case BLE_SWITCH_RGB_4_SQUARE_V2:
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_2:
 	case BLE_SWITCH_ELECTRICAL_3:

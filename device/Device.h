@@ -162,7 +162,6 @@ enum
 	BLE_SWITCH_ELECTRICAL_2_V2 = 24007,
 	BLE_SWITCH_ELECTRICAL_3_V2 = 24008,
 
-	// TODO: update this device
 	BLE_SWITCH_RGB_SOCKET_1 = 26003,
 
 	BLE_SEFTPOWER_REMOTE_1 = 27001,
@@ -178,16 +177,10 @@ enum
 	BLE_RADA_LIGHT_SENSOR_AC_CB15 = 32008,
 	BLE_PIR_LIGHT_SENSOR_AC_AMTRAN = 32004,
 
-	// TODO: update this devices
-	BLE_PIR_LIGHT_SENSOR_CB10 = 32006,
-	BLE_PIR_LIGHT_SENSOR_CB09 = 32007,
-	BLE_PIR_LIGHT_SENSOR_CB015_RADA = 32008,
-
 	BLE_DOOR_SENSOR = 36001,
 	BLE_DOOR_CB16_SENSOR = 36002,
 	BLE_SMOKE_SENSOR = 33001,
 
-	// TODO: update this device
 	BLE_REPEATER = 91001,
 
 	ZIGBEE_LUMI_PLUG = 0x02000001,
@@ -265,6 +258,7 @@ protected:
 	bool isFavorite;
 	Json::Value dataJson;
 	Json::Value values;
+	Json::Value propertyJsonUpdate;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -309,6 +303,9 @@ public:
 	virtual void InitAttribute(int attributeId, double value) {}
 	virtual void CheckTrigger();
 	virtual int DoJsonArray(Json::Value &dataValue);
+
+	virtual void SetPropertyJsonUpdate(Json::Value property);
+	virtual Json::Value GetPropertyJsonUpdate();
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value &jsonValue);

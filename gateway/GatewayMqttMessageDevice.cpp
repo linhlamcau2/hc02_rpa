@@ -498,7 +498,15 @@ int Gateway::OnCreateSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 								device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
 								device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
 								device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
-								device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_1_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_1_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_2_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_3_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_4_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE_V2)
 							{
 								for (auto &bt : btn["bt"])
 								{
@@ -626,7 +634,15 @@ int Gateway::OnAddBtToSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 								device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
 								device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
 								device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
-								device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_1_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_1_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_2_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_3_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_4_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE_V2)
 							{
 								for (auto &bt : btn["bt"])
 								{
@@ -747,7 +763,15 @@ int Gateway::OnDelBtFromSwitchLink(Json::Value &reqValue, Json::Value &respValue
 								device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
 								device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
 								device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
-								device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+								device->GetType() == BLE_SWITCH_RGB_1_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_1_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_2_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_3_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_4_V2 ||
+								device->GetType() == BLE_SWITCH_RGB_4_SQUARE_V2)
 							{
 								for (auto &bt : btn["bt"])
 								{

@@ -13,6 +13,7 @@ Device::Device(string id, string name, string mac, Json::Value &dataJson, uint16
 	this->version = version;
 	powerSource = POWER_UNKNOWN;
 	this->isFavorite = false;
+	propertyJsonUpdate = Json::objectValue;
 
 	lastOnlineState = false;
 	lastTimeActive = 0;
@@ -137,6 +138,20 @@ int Device::DoJsonArray(Json::Value &dataValue)
 		Do(dataValue);
 	}
 	return CODE_OK;
+}
+
+void Device::SetPropertyJsonUpdate(Json::Value property)
+{
+	if (this->propertyJsonUpdate != property)
+	{
+		PushTelemetry(property);
+		this->propertyJsonUpdate = property;
+	}
+}
+
+Json::Value Device::GetPropertyJsonUpdate()
+{
+	return this->propertyJsonUpdate;
 }
 
 int Device::PushTelemetry()
@@ -325,9 +340,9 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC, "", "Cảm biến chuyển động");
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_AC, "", "Cảm biến chuyển động AC");
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_AC_AMTRAN, "", "Cảm biến chuyển động âm trần");
-	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_CB10, "", "Cảm biến chuyển động CB10");
-	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_CB09, "", "Cảm biến chuyển động CB09");
-	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_CB015_RADA, "", "Cảm biến chuyển động CB015 rada");
+	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC_CB10, "", "Cảm biến chuyển động CB10");
+	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC_CB09, "", "Cảm biến chuyển động CB09");
+	RegisterDeviceModel(BLE_RADA_LIGHT_SENSOR_AC_CB15, "", "Cảm biến chuyển động CB015 rada");
 	RegisterDeviceModel(BLE_SMOKE_SENSOR, "", "Cảm biến khói");
 	RegisterDeviceModel(BLE_DOOR_SENSOR, "", "Cảm biến cửa");
 	RegisterDeviceModel(BLE_DOOR_CB16_SENSOR, "", "Cảm biến cửa");
