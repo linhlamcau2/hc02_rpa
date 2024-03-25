@@ -76,7 +76,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->refresh_token = "";
 	this->ble_addr = 0;
 	this->ble_iv_index = 0;
-	this->ble_appkey = "";
+	this->ble_netkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	this->data = "";

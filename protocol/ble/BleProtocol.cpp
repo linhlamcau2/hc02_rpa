@@ -1251,6 +1251,7 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 			BleProtocol::GetOnoffLight(devAddr);
 		break;
 	case BLE_SWITCH_ONOFF:
+	case BLE_SWITCH_ONOFF_V2:
 		BleProtocol::GetOnoffLight(devAddr);
 		break;
 	case BLE_SWITCH_RGB_1:
@@ -1782,9 +1783,9 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t group, uint16_t scene)
 	return rs;
 }
 
-int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
+int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene)
 {
-	LOGW("Del dev addr: 0x%04X from room: 0x%04X", devAddr, room);
+	LOGW("Del dev addr: 0x%04X from room: %d, scene: %d", devAddr, room, scene);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t delDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -1796,7 +1797,9 @@ int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
 		uint8_t opcodeRsp;
 		uint8_t tidPos;
 		uint16_t header;
-		uint8_t data[6];
+		uint16_t group;
+		uint16_t scene;
+		uint8_t data[2];
 	} delDev2Room_t;
 	delDev2Room_t delDev2Room = {0};
 	memset(&delDev2Room, 0x00, sizeof(delDev2Room));
@@ -1805,6 +1808,8 @@ int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room)
 	delDev2Room.vendorId = RD_VENDOR_ID;
 	delDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	delDev2Room.header = RD_OPCODE_CONFIG_DEL_ROOM;
+	delDev2Room.group = room;
+	delDev2Room.scene = scene;
 
 	int rs = SendMessage(APP_REQ, (uint8_t *)&delDev2Room, sizeof(delDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delDev2RoomHeader, 0, 7);
 	if (rs != CODE_OK)
@@ -3479,52 +3484,52 @@ int BleProtocol::ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr)
 	return rs;
 }
 
-int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
-{
-	LOGD("AddDeviceToRoom 0x%04x, roomAddr %d", devAddr, roomAddr);
-	uint8_t dataRsp[100];
-	int lenRsp;
-	uint8_t addDevToRoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
-	typedef struct __attribute__((packed))
-	{
-		ble_message_header_t ble_message_header;
-		uint8_t opcodeVendor;
-		uint16_t vendorId;
-		uint8_t opcodeRsp;
-		uint8_t tidPos;
-		uint16_t header;
-		uint16_t roomAddr;
-	} add_dev_to_room_message_t;
-	add_dev_to_room_message_t add_dev_to_room_message = {0};
-	memset(&add_dev_to_room_message, 0x00, sizeof(add_dev_to_room_message));
-	add_dev_to_room_message.ble_message_header.devAddr = devAddr;
-	add_dev_to_room_message.opcodeVendor = RD_OPCODE_CONFIG;
-	add_dev_to_room_message.vendorId = RD_VENDOR_ID;
-	add_dev_to_room_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	add_dev_to_room_message.header = 0x0b0a;
-	add_dev_to_room_message.roomAddr = bswap_16(roomAddr);
-	int rs = SendMessage(APP_REQ, (uint8_t *)&add_dev_to_room_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDevToRoomHeader, 0, 7);
-	if (rs == CODE_OK)
-	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t devAddr;
-			uint16_t gwAddr;
-			uint8_t opcodeRsp;
-			uint16_t vendorId;
-			uint16_t header;
-			uint16_t group;
-		} group_screen_touch_rsp_message_t;
-		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
-		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(roomAddr))
-		{
-			return CODE_OK;
-		}
-		LOGW("group screen touch resp state not match with input control");
-	}
-	LOGW("group screen touch err");
-	return CODE_ERROR;
-}
+// int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
+// {
+// 	LOGD("AddDeviceToRoom 0x%04x, roomAddr %d", devAddr, roomAddr);
+// 	uint8_t dataRsp[100];
+// 	int lenRsp;
+// 	uint8_t addDevToRoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+// 	typedef struct __attribute__((packed))
+// 	{
+// 		ble_message_header_t ble_message_header;
+// 		uint8_t opcodeVendor;
+// 		uint16_t vendorId;
+// 		uint8_t opcodeRsp;
+// 		uint8_t tidPos;
+// 		uint16_t header;
+// 		uint16_t roomAddr;
+// 	} add_dev_to_room_message_t;
+// 	add_dev_to_room_message_t add_dev_to_room_message = {0};
+// 	memset(&add_dev_to_room_message, 0x00, sizeof(add_dev_to_room_message));
+// 	add_dev_to_room_message.ble_message_header.devAddr = devAddr;
+// 	add_dev_to_room_message.opcodeVendor = RD_OPCODE_CONFIG;
+// 	add_dev_to_room_message.vendorId = RD_VENDOR_ID;
+// 	add_dev_to_room_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+// 	add_dev_to_room_message.header = 0x0b0a;
+// 	add_dev_to_room_message.roomAddr = bswap_16(roomAddr);
+// 	int rs = SendMessage(APP_REQ, (uint8_t *)&add_dev_to_room_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDevToRoomHeader, 0, 7);
+// 	if (rs == CODE_OK)
+// 	{
+// 		typedef struct __attribute__((packed))
+// 		{
+// 			uint16_t devAddr;
+// 			uint16_t gwAddr;
+// 			uint8_t opcodeRsp;
+// 			uint16_t vendorId;
+// 			uint16_t header;
+// 			uint16_t group;
+// 		} group_screen_touch_rsp_message_t;
+// 		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
+// 		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(roomAddr))
+// 		{
+// 			return CODE_OK;
+// 		}
+// 		LOGW("group screen touch resp state not match with input control");
+// 	}
+// 	LOGW("group screen touch err");
+// 	return CODE_ERROR;
+// }
 
 int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff)
 {

@@ -76,7 +76,7 @@ int Room::DelDeviceOneMessage(Device *device, bool sendBle, bool delDb)
 	if (delDb)
 		database->DeviceInRoomDel(this, device);
 	if (bleProtocol && sendBle)
-		bleProtocol->DelDev2Room(device->GetAddr(), addr + ID_START);
+		bleProtocol->DelDev2Room(device->GetAddr(), addr + ID_START, addr);
 	return Group::DelDevice(device, device->GetAddr(), false, false);
 }
 

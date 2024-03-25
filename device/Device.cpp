@@ -300,6 +300,7 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_DOWNLIGHT_RGBCW, "", "Downlight màu");
 	RegisterDeviceModel(BLE_LED_OP_TRAN_LOA, "", "Ốp trần có loa");
 	RegisterDeviceModel(BLE_SWITCH_ONOFF, "", "Công tắc đèn");
+	RegisterDeviceModel(BLE_SWITCH_ONOFF_V2, "", "Công tắc đèn");
 	RegisterDeviceModel(BLE_SWITCH_1, "", "Công tắc 1 nút");
 	RegisterDeviceModel(BLE_SWITCH_2, "", "Công tắc 2 nút");
 	RegisterDeviceModel(BLE_SWITCH_3, "", "Công tắc 3 nút");
