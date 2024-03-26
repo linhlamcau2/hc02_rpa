@@ -333,22 +333,22 @@ uint32_t Gateway::GetNextAndroidProvisionAddr()
 
 	auto it = deviceList.begin();
 	Device *devMaxAddr = it->second;
-	for (; it != deviceList.end(); ++it)
+	if (devMaxAddr)
 	{
-		if (it->second->GetAddr() > devMaxAddr->GetAddr())
+		for (; it != deviceList.end(); ++it)
 		{
-			devMaxAddr = it->second;
+			if (it->second->GetAddr() > devMaxAddr->GetAddr())
+			{
+				devMaxAddr = it->second;
+			}
+		}
+
+		if ((devMaxAddr->GetAddr() + devMaxAddr->GetNumElement()) > rs)
+		{
+			rs = devMaxAddr->GetAddr() + devMaxAddr->GetNumElement();
 		}
 	}
 
-	DeviceBle *devBleMaxAddr = dynamic_cast<DeviceBle *>(devMaxAddr);
-	if (devBleMaxAddr)
-	{
-		if ((devBleMaxAddr->GetAddr() + devBleMaxAddr->GetNumElement()) > rs)
-		{
-			rs = devBleMaxAddr->GetAddr() + devBleMaxAddr->GetNumElement();
-		}
-	}
 	return rs;
 }
 
