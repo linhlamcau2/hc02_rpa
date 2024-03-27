@@ -143,6 +143,8 @@ int Util::ConvertStrTimeToInt(string time)
 	int second;
 	if (sscanf(time.c_str(), "%d:%d:%d", &hour, &minute, &second) == 3)
 		return hour * 3600 + minute * 60 + second;
+	else if (sscanf(time.c_str(), "%d:%d", &hour, &minute) == 2)
+		return hour * 3600 + minute * 60;
 	return CODE_ERROR;
 }
 
@@ -289,10 +291,10 @@ string Util::uuidToStr(uint8_t *uuid)
 {
 	char buf[100];
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-					uuid[0], uuid[1], uuid[2], uuid[3],
-					uuid[4], uuid[5], uuid[6], uuid[7],
-					uuid[8], uuid[9], uuid[10], uuid[11],
-					uuid[12], uuid[13], uuid[14], uuid[15]);
+			uuid[0], uuid[1], uuid[2], uuid[3],
+			uuid[4], uuid[5], uuid[6], uuid[7],
+			uuid[8], uuid[9], uuid[10], uuid[11],
+			uuid[12], uuid[13], uuid[14], uuid[15]);
 	buf[36] = '\0';
 	return string(buf);
 }
@@ -538,82 +540,87 @@ Json::Value Util::arrangeJson(Json::Value &property)
 #ifndef ESP_PLATFORM
 static void handleErrors(void)
 {
-    ERR_print_errors_fp(stderr);
-    abort();
+	ERR_print_errors_fp(stderr);
+	abort();
 }
 
 string Util::encryptAes128(string key, string plaintext)
 {
-    unsigned char * key_c = new unsigned char[key.length() + 1];
-    memcpy((char*)key_c, key.c_str(), key.length());
-    key_c[key.length()] = '\0';
+	unsigned char *key_c = new unsigned char[key.length() + 1];
+	memcpy((char *)key_c, key.c_str(), key.length());
+	key_c[key.length()] = '\0';
 
-    unsigned char * plaintext_c = new unsigned char[plaintext.length() + 1];
-    memcpy((char*)plaintext_c, plaintext.c_str(), plaintext.length());
-    plaintext_c[plaintext.length()] = '\0';
+	unsigned char *plaintext_c = new unsigned char[plaintext.length() + 1];
+	memcpy((char *)plaintext_c, plaintext.c_str(), plaintext.length());
+	plaintext_c[plaintext.length()] = '\0';
 
-    int plaintext_len = plaintext.length();
+	int plaintext_len = plaintext.length();
 
-    EVP_CIPHER_CTX *ctx;
-    unsigned char ciphertext[128] = {0};
-    int len;
-    int ciphertext_len;
+	EVP_CIPHER_CTX *ctx;
+	unsigned char ciphertext[128] = {0};
+	int len;
+	int ciphertext_len;
 
-    if (!(ctx = EVP_CIPHER_CTX_new()))
-        handleErrors();
+	if (!(ctx = EVP_CIPHER_CTX_new()))
+		handleErrors();
 
-    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key_c, NULL))
-    {
-        handleErrors();
-    }
+	if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key_c, NULL))
+	{
+		handleErrors();
+	}
 
-    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext_c, plaintext_len))
-    {
-        handleErrors();
-    }
-    ciphertext_len = len;
+	if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext_c, plaintext_len))
+	{
+		handleErrors();
+	}
+	ciphertext_len = len;
 
-    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
-        handleErrors();
-    ciphertext_len += len;
+	if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+		handleErrors();
+	ciphertext_len += len;
 
-    EVP_CIPHER_CTX_free(ctx);
+	EVP_CIPHER_CTX_free(ctx);
 
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (int i = 0; i < ciphertext_len; ++i) {
-        ss << std::setw(2) << static_cast<int>(ciphertext[i]);
-    }
+	std::stringstream ss;
+	ss << std::hex << std::setfill('0');
+	for (int i = 0; i < ciphertext_len; ++i)
+	{
+		ss << std::setw(2) << static_cast<int>(ciphertext[i]);
+	}
 
-    delete[] key_c;
-    delete[] plaintext_c;
+	delete[] key_c;
+	delete[] plaintext_c;
 
-    return ss.str();
+	return ss.str();
 }
 
-string Util::calculateSHA256Checksum(string& filePath) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Failed to open file.");
-    }
+string Util::calculateSHA256Checksum(string &filePath)
+{
+	std::ifstream file(filePath, std::ios::binary);
+	if (!file)
+	{
+		throw std::runtime_error("Failed to open file.");
+	}
 
-    SHA256_CTX sha256Context;
-    SHA256_Init(&sha256Context);
+	SHA256_CTX sha256Context;
+	SHA256_Init(&sha256Context);
 
-    char buffer[1024];
-    while (!file.eof()) {
-        file.read(buffer, sizeof(buffer));
-        SHA256_Update(&sha256Context, buffer, file.gcount());
-    }
+	char buffer[1024];
+	while (!file.eof())
+	{
+		file.read(buffer, sizeof(buffer));
+		SHA256_Update(&sha256Context, buffer, file.gcount());
+	}
 
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_Final(hash, &sha256Context);
+	unsigned char hash[SHA256_DIGEST_LENGTH];
+	SHA256_Final(hash, &sha256Context);
 
-    std::stringstream checksum;
-    checksum << std::hex << std::setfill('0');
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        checksum << std::setw(2) << static_cast<int>(hash[i]);
-    }
-    return checksum.str();
+	std::stringstream checksum;
+	checksum << std::hex << std::setfill('0');
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	{
+		checksum << std::setw(2) << static_cast<int>(hash[i]);
+	}
+	return checksum.str();
 }
 #endif
