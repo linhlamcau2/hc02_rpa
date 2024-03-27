@@ -838,60 +838,68 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		Json::Value inputValue = ruleValue["input"];
 		Json::Value outputValues = ruleValue["output"];
 		string name = ruleValue["name"].asString();
-		int repeat = 255;
 		uint16_t addr = 0;
 		Rule *rule = NULL;
 		bool isFirstRun = true;
-
-		bool hasInputTime = false;
-
-		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
-		{
-			Json::Value timeRule = inputValue["time"];
-			if (timeRule.isMember("fullDay") && timeRule["fullDay"].isBool())
-			{
-				repeat = (timeRule["fullDay"].asBool()) ? 255 : 0;
-				rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(""), Util::ConvertStrTimeToInt(""), ruleValue);
-				hasInputTime = true;
-			}
-			else if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
-					 timeRule.isMember("start") && timeRule["start"].isString() &&
-					 timeRule.isMember("end") && timeRule["end"].isString())
-			{
-				repeat = timeRule["repeat"].asInt();
-				string startRule = timeRule["start"].asString();
-				string endRule = timeRule["end"].asString();
-				rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
-				hasInputTime = true;
-			}
-		}
+		bool isFullDay = true;
+		int repeat = 255;
+		string startRule;
+		string endRule;
 
 		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
 			isFirstRun = ruleValue["isFirstRun"].asBool();
 
-		if (inputValue.isMember("timer") && inputValue["timer"].isArray())
+		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
 		{
-			if (inputValue["timer"].size() > 0)
+			Json::Value timeRule = ruleValue["time"];
+			if (timeRule.isMember("fullDay") && timeRule["fullDay"].isBool())
 			{
-				Json::Value timer = inputValue["timer"][0];
-				if (timer.isMember("time") && timer["time"].isString() &&
-					timer.isMember("repeat") && timer["repeat"].isInt())
+				isFullDay = timeRule["fullDay"].asBool();
+				if (isFullDay)
 				{
-					string timeStart = timer["time"].asString();
-					repeat = timer["repeat"].asInt();
-					rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(timeStart), Util::ConvertStrTimeToInt(""), ruleValue);
+					rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, ruleValue);
+				}
+				else
+				{
+					if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
+						timeRule.isMember("start") && timeRule["start"].isString() &&
+						timeRule.isMember("end") && timeRule["end"].isString())
+					{
+						repeat = timeRule["repeat"].asInt();
+						startRule = timeRule["start"].asString();
+						endRule = timeRule["end"].asString();
+						rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
+					}
+					else
+					{
+						LOGW("Time format error");
+						return NULL;
+					}
 				}
 			}
-		}
-		else if (!hasInputTime)
-		{
-			rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, ruleValue);
 		}
 
 		if (rule)
 		{
 			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
 				rule->SetStatus(ruleValue["enable"].asInt());
+
+			// parse input
+			if (inputValue.isMember("timer") && inputValue["timer"].isArray())
+			{
+				Json::Value timersJson = inputValue["timer"];
+				for (auto &timerJson : timersJson)
+				{
+					if (timerJson.isMember("time") && timerJson["time"].isString() &&
+						timerJson.isMember("repeat") && timerJson["repeat"].isInt())
+					{
+						string timerTime = timerJson["time"].asString();
+						int timerRepeat = timerJson["repeat"].asInt();
+						RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, Util::ConvertStrTimeToInt(timerTime), timerRepeat);
+						rule->AddRuleInput(ruleInputTimer);
+					}
+				}
+			}
 
 			if (inputValue.isMember("device") && inputValue["device"].isArray())
 			{
@@ -915,6 +923,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				}
 			}
 
+			// parse output
 			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
 			{
 				Json::Value outputValue = outputValues[i];
