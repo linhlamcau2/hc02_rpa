@@ -842,8 +842,6 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		Rule *rule = NULL;
 		bool isFullDay = true;
 		int repeat = 255;
-		string startRule;
-		string endRule;
 
 		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
 		{
@@ -862,8 +860,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 						timeRule.isMember("end") && timeRule["end"].isString())
 					{
 						repeat = timeRule["repeat"].asInt();
-						startRule = timeRule["start"].asString();
-						endRule = timeRule["end"].asString();
+						string startRule = timeRule["start"].asString();
+						string endRule = timeRule["end"].asString();
 						rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
 					}
 					else

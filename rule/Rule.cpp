@@ -75,7 +75,7 @@ void Rule::Check()
 		bool checkRuleInputResult = false;
 		int currentTimer = Util::GetCurrentTimer();
 		int currentWeekDay = Util::GetCurrentWeekDay();
-		if (Util::CheckDayInWeek(currentWeekDay, repeater) /*|| isFirstRun*/)
+		if (Util::CheckDayInWeek(currentWeekDay, repeater) || isFirstRun)
 		{
 			LOGD("Check repeater day OK");
 			if ((startTime < 0) ||																																											// fullDay
@@ -108,16 +108,15 @@ void Rule::Check()
 					}
 				}
 			}
-			if (((startTime <= currentTimer && currentTimer <= endTime) || (startTime <= currentTimer && endTime < 0)) && ruleOutputList.size() <= 0)
-			{
-				checkRuleInputResult = true;
-			}
 		}
 		if (checkRuleInputResult)
 		{
 			LOGI("Do output rule id: %s", id.c_str());
 			RunOutput();
-			// UpdateFirstRun();
+			if (isFirstRun)
+			{
+				UpdateFirstRun();
+			}
 		}
 	}
 }
