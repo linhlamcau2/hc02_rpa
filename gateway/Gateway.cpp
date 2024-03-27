@@ -840,14 +840,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		string name = ruleValue["name"].asString();
 		uint16_t addr = 0;
 		Rule *rule = NULL;
-		bool isFirstRun = true;
 		bool isFullDay = true;
 		int repeat = 255;
 		string startRule;
 		string endRule;
-
-		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
-			isFirstRun = ruleValue["isFirstRun"].asBool();
 
 		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
 		{
@@ -857,7 +853,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				isFullDay = timeRule["fullDay"].asBool();
 				if (isFullDay)
 				{
-					rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, ruleValue);
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
 				}
 				else
 				{
@@ -868,7 +864,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 						repeat = timeRule["repeat"].asInt();
 						startRule = timeRule["start"].asString();
 						endRule = timeRule["end"].asString();
-						rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
+						rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
 					}
 					else
 					{
@@ -883,6 +879,9 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		{
 			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
 				rule->SetStatus(ruleValue["enable"].asInt());
+
+			if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+				rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
 
 			// parse input
 			if (inputValue.isMember("timer") && inputValue["timer"].isArray())

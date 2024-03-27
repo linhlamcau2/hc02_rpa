@@ -8,26 +8,24 @@
 #include "Sntp.h"
 #endif
 
-Rule::Rule(string id, RuleType type, unsigned char repeater, bool isFirstRun, string name, uint16_t addr, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
-	this->isFirstRun = isFirstRun;
 	isEnable = true;
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, RuleType type, unsigned char repeater, bool isFirstRun, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
 	this->ruleData = ruleData;
-	this->isFirstRun = isFirstRun;
 	isEnable = true;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
 }
@@ -127,7 +125,6 @@ void Rule::RunOutput()
 #ifdef ESP_PLATFORM
 	if (Sntp::haveNtpTime())
 	{
-
 		for (auto &ruleOutput : ruleOutputList)
 		{
 			ruleOutput->RunOutput();
@@ -178,4 +175,14 @@ bool Rule::GetStatus()
 void Rule::SetStatus(bool enable)
 {
 	this->isEnable = enable;
+}
+
+bool Rule::GetFirstRun()
+{
+	return this->isFirstRun;
+}
+
+void Rule::SetFirstRun(bool isFirstRun)
+{
+	this->isFirstRun = isFirstRun;
 }

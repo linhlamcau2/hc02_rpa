@@ -48,8 +48,8 @@ private:
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, RuleType type, unsigned char repeater, bool isFirstRun, string name, uint16_t addr, Json::Value &ruleData);
-	Rule(string id, RuleType type, unsigned char repeater, bool isFirstRun, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData);
+	Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData);
+	Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData);
 	~Rule();
 
 	Json::Value GetRuleData();
@@ -66,4 +66,6 @@ public:
 	void UpdateData(Json::Value &ruleData);
 	bool GetStatus();
 	void SetStatus(bool enable);
+	bool GetFirstRun();
+	void SetFirstRun(bool isFirstRun);
 };
