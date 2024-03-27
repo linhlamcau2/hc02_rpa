@@ -146,6 +146,17 @@ int Util::ConvertStrTimeToInt(string time)
 	return CODE_ERROR;
 }
 
+bool Util::HaveRTC()
+{
+#ifdef ESP_PLATFORM
+	if (!Sntp::haveNtpTime())
+	{
+		return false;
+	}
+#endif
+	return true;
+}
+
 uint8_t Util::CalCrc(uint8_t length, uint8_t *data)
 {
 	uint8_t crc = 0;

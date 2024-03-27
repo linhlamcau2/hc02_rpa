@@ -78,7 +78,9 @@ void Rule::Check()
 		if (Util::CheckDayInWeek(currentWeekDay, repeater) /*|| isFirstRun*/)
 		{
 			LOGD("Check repeater day OK");
-			if ((startTime < 0) || (startTime <= currentTimer && currentTimer <= endTime) || (startTime == currentTimer))
+			if ((startTime < 0) ||																																											// fullDay
+					(Util::HaveRTC() && ((startTime <= currentTimer && currentTimer <= endTime) ||													// bắt đầu và kết thúc trong cùng 1 ngày
+															 (endTime < startTime && (startTime <= currentTimer || currentTimer <= endTime))))) // bắt đầu và kết thúc trong 2 ngày khác nhau
 			{
 				LOGD("Check time OK");
 				if (type == RULE_TYPE_OR || type == RULE_TYPE_TIME_OR)
@@ -122,20 +124,10 @@ void Rule::Check()
 
 void Rule::RunOutput()
 {
-#ifdef ESP_PLATFORM
-	if (Sntp::haveNtpTime())
-	{
-		for (auto &ruleOutput : ruleOutputList)
-		{
-			ruleOutput->RunOutput();
-		}
-	}
-#else
 	for (auto &ruleOutput : ruleOutputList)
 	{
 		ruleOutput->RunOutput();
 	}
-#endif
 }
 
 void Rule::AddRuleInput(RuleInput *ruleInput)

@@ -59,22 +59,30 @@ static void TimerThread(void *data)
 	int currentTimer, oldTimer = 0;
 	while (1)
 	{
-		currentTimer = Util::GetCurrentTimer();
-		if (currentTimer != oldTimer)
+		if (!Util::HaveRTC())
 		{
-			// LOGD("h:m: %d-%d", currentTimer, currentTimer);
-			timerSchedule->mtx.lock();
-			for (auto &timer : timerSchedule->timerList)
-			{
-				if (timer->IsAtTime(currentTimer))
-				{
-					timer->run();
-				}
-			}
-			timerSchedule->mtx.unlock();
-			oldTimer = currentTimer;
+			LOGW("Cannot get RTC");
+			sleep(60);
 		}
-		usleep(500000);
+		else
+		{
+			currentTimer = Util::GetCurrentTimer();
+			if (currentTimer != oldTimer)
+			{
+				// LOGD("h:m: %d-%d", currentTimer, currentTimer);
+				timerSchedule->mtx.lock();
+				for (auto &timer : timerSchedule->timerList)
+				{
+					if (timer->IsAtTime(currentTimer))
+					{
+						timer->run();
+					}
+				}
+				timerSchedule->mtx.unlock();
+				oldTimer = currentTimer;
+			}
+			usleep(500000);
+		}
 	}
 }
 

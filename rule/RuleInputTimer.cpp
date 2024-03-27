@@ -20,6 +20,11 @@ RuleInputTimer::~RuleInputTimer()
 
 bool RuleInputTimer::Check()
 {
+	if (!Util::HaveRTC())
+	{
+		LOGW("Not have RTC");
+		return false;
+	}
 	int currentWeekDay = Util::GetCurrentWeekDay();
 	LOGI("currentWeekDay : %d", currentWeekDay);
 	LOGI("repeat : 0x%02X", repeat);
