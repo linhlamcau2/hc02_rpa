@@ -841,27 +841,49 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		int repeat = 255;
 		uint16_t addr = 0;
 		Rule *rule = NULL;
-
 		bool isFirstRun = true;
+
+		bool hasInputTime = false;
+
+		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
+		{
+			Json::Value timeRule = inputValue["time"];
+			if (timeRule.isMember("fullDay") && timeRule["fullDay"].isBool())
+			{
+				repeat = (timeRule["fullDay"].asBool()) ? 255 : 0;
+				rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(""), Util::ConvertStrTimeToInt(""), ruleValue);
+				hasInputTime = true;
+			}
+			else if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
+					 timeRule.isMember("start") && timeRule["start"].isString() &&
+					 timeRule.isMember("end") && timeRule["end"].isString())
+			{
+				repeat = timeRule["repeat"].asInt();
+				string startRule = timeRule["start"].asString();
+				string endRule = timeRule["end"].asString();
+				rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
+				hasInputTime = true;
+			}
+		}
+
 		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
 			isFirstRun = ruleValue["isFirstRun"].asBool();
 
-		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
+		if (inputValue.isMember("timer") && inputValue["timer"].isArray())
 		{
-			Json::Value timer = inputValue["timer"];
-			string endAt = "";
-			string startAt = "";
-			if (timer.isMember("start") && timer["start"].isString())
-				startAt = timer["start"].asString();
-			if (timer.isMember("end") && timer["end"].isString())
-				endAt = timer["end"].asString();
-
-			repeat = 0;
-			if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
-				repeat = inputValue["repeat"].asInt();
-			rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+			if (inputValue["timer"].size() > 0)
+			{
+				Json::Value timer = inputValue["timer"][0];
+				if (timer.isMember("time") && timer["time"].isString() &&
+					timer.isMember("repeat") && timer["repeat"].isInt())
+				{
+					string timeStart = timer["time"].asString();
+					repeat = timer["repeat"].asInt();
+					rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, Util::ConvertStrTimeToInt(timeStart), Util::ConvertStrTimeToInt(""), ruleValue);
+				}
+			}
 		}
-		else
+		else if (!hasInputTime)
 		{
 			rule = new Rule(id, (RuleType)type, repeat, isFirstRun, name, addr, ruleValue);
 		}
@@ -896,17 +918,17 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
 			{
 				Json::Value outputValue = outputValues[i];
-				if (outputValue.isMember("delay"))
+				if (outputValue.isMember("time") && outputValue["time"].isInt())
 				{
-					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["delay"].asInt());
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["time"].asInt());
 					rule->AddRuleOutput(ruleOutputDelay);
 				}
-				else if (outputValue.isMember("deviceId"))
+				else if (outputValue.isMember("devId"))
 				{
-					if (outputValue["deviceId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					if (outputValue["devId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
 					{
 						Json::Value dataValue = outputValue["data"];
-						string id = outputValue["deviceId"].asString();
+						string id = outputValue["devId"].asString();
 						Device *device = gateway->getDeviceFromId(id);
 						if (device)
 						{

@@ -108,7 +108,7 @@ void Rule::Check()
 					}
 				}
 			}
-			if (((startTime <= currentTimer && currentTimer <= endTime) || (startTime <= currentTimer && endTime < 0)) && type == RULE_TYPE_TIME)
+			if (((startTime <= currentTimer && currentTimer <= endTime) || (startTime <= currentTimer && endTime < 0)) && ruleOutputList.size() <= 0)
 			{
 				checkRuleInputResult = true;
 			}
