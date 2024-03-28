@@ -982,6 +982,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
+				rule->SetFirstRun(true);
 			}
 		}
 		else
