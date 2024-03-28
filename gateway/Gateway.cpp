@@ -825,8 +825,154 @@ Group *Gateway::AddNewGroup(Group *group, bool addDatabase)
 
 Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 {
-	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
+	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
+	{
+		string id = ruleValue["id"].asString();
+		int type = ruleValue["type"].asInt();
+		Json::Value inputValue = ruleValue["input"];
+		Json::Value outputValues = ruleValue["output"];
+		string name = ruleValue["name"].asString();
+		int repeat = 255;
+		uint16_t addr = 0;
+		Rule *rule = NULL;
+
+		bool isFirstRun = true;
+		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			isFirstRun = ruleValue["isFirstRun"].asBool();
+
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
+		{
+			Json::Value timer = inputValue["timer"];
+			string endAt = "";
+			string startAt = "";
+			if (timer.isMember("start") && timer["start"].isString())
+				startAt = timer["start"].asString();
+			if (timer.isMember("end") && timer["end"].isString())
+				endAt = timer["end"].asString();
+
+			repeat = 0;
+			if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+				repeat = inputValue["repeat"].asInt();
+			rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+		}
+		else
+		{
+			rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+		}
+
+		if (rule)
+		{
+			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
+				rule->SetStatus(ruleValue["enable"].asInt());
+			if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			{
+				rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
+			}
+
+			if (inputValue.isMember("device") && inputValue["device"].isArray())
+			{
+				Json::Value devicesJson = inputValue["device"];
+				for (auto &deviceJson : devicesJson)
+				{
+					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
+					{
+						string deviceId = deviceJson["id"].asString();
+						Device *deviceInRule = getDeviceFromId(deviceId);
+						if (deviceInRule)
+						{
+							Json::Value dataJson = deviceJson["data"];
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInRule, dataJson);
+							rule->AddRuleInput(ruleInputDevice);
+						}
+						else
+							LOGW("Device not found");
+					}
+				}
+			}
+
+			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
+			{
+				Json::Value outputValue = outputValues[i];
+				if (outputValue.isMember("delay"))
+				{
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["delay"].asInt());
+					rule->AddRuleOutput(ruleOutputDelay);
+				}
+				else if (outputValue.isMember("deviceId"))
+				{
+					if (outputValue["deviceId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					{
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["deviceId"].asString();
+						Device *device = gateway->getDeviceFromId(id);
+						if (device)
+						{
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
+						}
+						else
+							LOGW("Device not found");
+					}
+				}
+				else if (outputValue.isMember("groupId"))
+				{
+					if (outputValue["groupId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					{
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["groupId"].asString();
+						Group *group = gateway->getGroupFromId(id);
+						if (group)
+						{
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
+						}
+					}
+				}
+				else if (outputValue.isMember("sceneId"))
+				{
+					if (outputValue["sceneId"].isString())
+					{
+						string id = outputValue["sceneId"].asString();
+						SceneBle *sceneBle = gateway->getSceneBleFromId(id);
+						if (sceneBle)
+						{
+							RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+							rule->AddRuleOutput(ruleOutputSceneBle);
+						}
+					}
+				}
+			}
+			ruleListMtx.lock();
+			ruleList[id] = rule;
+			ruleListMtx.unlock();
+			if (addDatabase)
+			{
+				ruleValue["isFirstRun"] = true;
+				string ruleStr = ruleValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->RuleAdd(rule, ruleStr, 0);
+				rule->SetFirstRun(true);
+			}
+		}
+		else
+			LOGW("Rule null");
+		return rule;
+	}
+	else
+		LOGE("New rule error, out of memory");
+	return NULL;
+}
+
+Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
+{
+	// TODO: Check Rule id exist
+	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
 		ruleValue.isMember("name") && ruleValue["name"].isString() &&
 		ruleValue.isMember("type") && ruleValue["type"].isInt() &&

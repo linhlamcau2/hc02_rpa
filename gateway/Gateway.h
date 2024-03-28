@@ -131,6 +131,8 @@ private:
 	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnEditRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue);
+	int OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActiveRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
@@ -174,7 +176,7 @@ private:
 	int OnOtaHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue);
 
-	//Noti
+	// Noti
 	int OnGetNotify(Json::Value &reqValue, Json::Value &respValue);
 	int OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelNotify(Json::Value &reqValue, Json::Value &respValue);
@@ -272,6 +274,7 @@ public:
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addDatabase);
 	Room *AddNewRoom(Room *room, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addDatabase);
+	Rule *AddRuleV2(Json::Value &ruleValue, bool addDatabase);
 
 	int Do(Json::Value &dataValue);
 
@@ -294,7 +297,7 @@ public:
 
 	// Noti
 	int CreateNoti(Noti *noti, bool addDatabase, bool pushNoti);
-	int DelNoti(Noti * noti);
+	int DelNoti(Noti *noti);
 	Noti *getNotifromId(string id);
 	Json::Value BuildJsonDataNoti(Device *device, string id, string type, string content);
 };
