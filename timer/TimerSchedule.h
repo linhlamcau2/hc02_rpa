@@ -19,7 +19,7 @@ public:
 	Timer(int index, int time, TimerCallbackFunc timerCallbackFunc);
 
 	int GetIndex();
-	bool IsAtTime(int time);
+	int GetTime();
 	void run();
 };
 

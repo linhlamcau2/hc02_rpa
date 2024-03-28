@@ -19,11 +19,9 @@ int Timer::GetIndex()
 	return index;
 }
 
-bool Timer::IsAtTime(int time)
+int Timer::GetTime()
 {
-	if (this->time == time)
-		return true;
-	return false;
+	return time;
 }
 
 static void TimerDoThread(void *data)
@@ -73,7 +71,7 @@ static void TimerThread(void *data)
 				timerSchedule->mtx.lock();
 				for (auto &timer : timerSchedule->timerList)
 				{
-					if (timer->IsAtTime(currentTimer))
+					if (oldTimer < timer->GetTime() && timer->GetTime() <= currentTimer)
 					{
 						timer->run();
 					}
