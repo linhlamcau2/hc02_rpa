@@ -9,7 +9,9 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 #include "Room.h"
+#ifdef __ANDROID__
 #include "Noti.h"
+#endif
 
 using namespace std;
 
@@ -121,10 +123,12 @@ public:
 	int SceneBleDelAll();
 	int SceneBleUpdateFavorite(SceneBle *scene);
 
+#ifdef __ANDROID__
 	int NotiRead();
 	int NotiAdd(Noti *noti);
 	int NotiUpdate(Noti *noti);
 	int NotiDel(Noti *noti);
+#endif
 };
 
 extern Db *database;

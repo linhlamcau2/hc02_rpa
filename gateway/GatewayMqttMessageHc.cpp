@@ -43,16 +43,18 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+#ifdef __ANDROID__
 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
+#endif
 }
 
 int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcHcConnectCloud");
 	if (reqValue.isMember("latitude") && reqValue["latitude"].isDouble() &&
-		reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
+			reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
 	{
 		Json::Value dataJson;
 		dataJson["latitude"] = reqValue["latitude"].asDouble();
@@ -276,11 +278,11 @@ int Gateway::OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value params = reqValue["params"];
 		if (params.isMember("type") && params["type"].isString() &&
-			params.isMember("key") && params["key"].isString() &&
-			params.isMember("user") && params["user"].isString() &&
-			params.isMember("host") && params["host"].isString() &&
-			params.isMember("serverPort") && params["serverPort"].isInt() &&
-			params.isMember("forwardPort") && params["forwardPort"].isInt())
+				params.isMember("key") && params["key"].isString() &&
+				params.isMember("user") && params["user"].isString() &&
+				params.isMember("host") && params["host"].isString() &&
+				params.isMember("serverPort") && params["serverPort"].isInt() &&
+				params.isMember("forwardPort") && params["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = params["type"].asString();
@@ -447,11 +449,11 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 
 /*
 {
-  "cmd": "setPasswordMqtt",
-  "rqi": "abc-xyz-mnl",
-  "data": {
+	"cmd": "setPasswordMqtt",
+	"rqi": "abc-xyz-mnl",
+	"data": {
 	"password": "ABC123456"
-  }
+	}
 }
 */
 
@@ -501,12 +503,13 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_ERROR;
 }
 
+#ifdef __ANDROID__
 int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
 	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
-		reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
-		reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
 	{
 		string groupType = reqValue["groupType"].asString();
 		int startIndex = reqValue["startIndex"].asInt();
@@ -540,7 +543,7 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);
@@ -571,3 +574,4 @@ int Gateway::OnDelNotify(Json::Value &reqValue, Json::Value &respValue)
 	}
 	return CODE_OK;
 }
+#endif

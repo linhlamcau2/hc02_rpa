@@ -225,7 +225,7 @@ int LocalProtocol::LocalPublish(Json::Value &payloadJson)
 int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToLocalMessage: %s", reqValue.toString().c_str());
-	if (!connected)
+	if (!isConnected())
 		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	Json::Value sendValue;

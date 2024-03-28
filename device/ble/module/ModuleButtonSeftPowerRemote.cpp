@@ -7,7 +7,7 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-ModuleButtonSeftPowerRemote::ModuleButtonSeftPowerRemote(Device *device, uint32_t addr) : Module(device, addr, index)
+ModuleButtonSeftPowerRemote::ModuleButtonSeftPowerRemote(Device *device, uint32_t addr) : Module(device, addr)
 {
     bt = 0;
     key = KEY_ATTRIBUTE_BUTTON;

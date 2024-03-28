@@ -1,3 +1,5 @@
+#ifdef __ANDROID__
+
 #include "Db.h"
 #include "Log.h"
 #include "Util.h"
@@ -64,3 +66,4 @@ int Db::NotiDel(Noti *noti)
     string sql = "DELETE FROM " TABLE_NAME " WHERE id = '" + noti->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
+#endif
