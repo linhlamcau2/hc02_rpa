@@ -142,11 +142,11 @@ int Device::DoJsonArray(Json::Value &dataValue)
 
 void Device::SetPropertyJsonUpdate(Json::Value property)
 {
-	if (this->propertyJsonUpdate != property)
-	{
+	// if (this->propertyJsonUpdate != property)
+	// {
 		PushTelemetry(property);
 		this->propertyJsonUpdate = property;
-	}
+	// }
 }
 
 Json::Value Device::GetPropertyJsonUpdate()
@@ -255,7 +255,10 @@ void Device::InitDeviceModelList()
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_3_V2] = BLE_SWITCH_TOUCH_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_3_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_4_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_4_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_1] = BLE_SWITCH_TOUCH_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_2] = BLE_SWITCH_TOUCH_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_3] = BLE_SWITCH_TOUCH_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_4] = BLE_SWITCH_TOUCH_GROUP;
 
 	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_1] = BLE_SWITCH_ELECTRICAL_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_2] = BLE_SWITCH_ELECTRICAL_GROUP;
@@ -263,6 +266,9 @@ void Device::InitDeviceModelList()
 	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_1_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_2_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_3_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_ELECTRICAL_1] = BLE_SWITCH_ELECTRICAL_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_ELECTRICAL_2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	bleTypeToGroupIdList[BLE_WIFI_SWITCH_ELECTRICAL_3] = BLE_SWITCH_ELECTRICAL_GROUP;
 
 	bleTypeToGroupIdList[BLE_SWITCH_2_CEILING] = BLE_SWITCH_CEILING_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_3_CEILING] = BLE_SWITCH_CEILING_GROUP;

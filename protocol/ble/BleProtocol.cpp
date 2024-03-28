@@ -358,12 +358,9 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_SWITCH)
 			{
-				// for (int i = 0; i < deviceBle->GetNumElement(); i++)
-				// {
-				// 	deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr + i);
-				// }
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
+				LOGI("------>Data: %s", dataValues.toString().c_str());
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
@@ -1284,7 +1281,13 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_2:
 	case BLE_SWITCH_3:
 	case BLE_SWITCH_4:
-	case BLE_REPEATER:
+	case BLE_WIFI_SWITCH_1:
+	case BLE_WIFI_SWITCH_2:
+	case BLE_WIFI_SWITCH_3:
+	case BLE_WIFI_SWITCH_4:
+	case BLE_WIFI_SWITCH_ELECTRICAL_1:
+	case BLE_WIFI_SWITCH_ELECTRICAL_2:
+	case BLE_WIFI_SWITCH_ELECTRICAL_3:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		break;
 	default:
@@ -1773,7 +1776,7 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t group, uint16_t scene)
 	addDev2Room.ble_message_header.devAddr = devAddr;
 	addDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
 	addDev2Room.vendorId = RD_VENDOR_ID;
-	addDev2Room.opcodeRsp = RD_OPCODE_PROVISION_RSP;
+	addDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	addDev2Room.header = RD_OPCODE_CONFIG_ADD_ROOM;
 	addDev2Room.groupId = group;
 	addDev2Room.sceneId = scene;

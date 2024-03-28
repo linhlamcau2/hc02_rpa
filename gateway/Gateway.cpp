@@ -39,6 +39,8 @@
 #include "DeviceBleSwitchTouch.h"
 #include "DeviceBleSwitchCeiling.h"
 #include "DeviceBleSeftPowerRemote.h"
+#include "DeviceBleWifiSwitchTouch.h"
+#include "DeviceBleWifiSwitchElectrical.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -654,6 +656,15 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_ELECTRICAL_4:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 4);
 		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_1:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_2:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_3:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 3);
+		break;
 	case BLE_SWITCH_2_CEILING:
 		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 2);
 		break;
@@ -734,6 +745,19 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_REPEATER:
 		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
 		break;
+	case BLE_WIFI_SWITCH_1:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_SWITCH_2:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_SWITCH_3:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_WIFI_SWITCH_4:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+
 	case BLE_SEFTPOWER_REMOTE_1:
 	case BLE_SEFTPOWER_REMOTE_2:
 	case BLE_SEFTPOWER_REMOTE_3:
