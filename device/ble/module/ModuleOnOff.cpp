@@ -124,6 +124,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[key] = onoff;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleOnOff::Do(Json::Value &dataValue)

@@ -360,7 +360,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			{
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
-				LOGI("------>Data: %s", dataValues.toString().c_str());
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)

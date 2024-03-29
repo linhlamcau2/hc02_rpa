@@ -226,6 +226,7 @@ int Gateway::AddDevToSceneInRoom(Device *device, Json::Value &dataGroup, SceneBl
  */
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGD("CreateRoom");
 	respValue["cmd"] = "createRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 		reqValue.isMember("name") && reqValue["name"].isString() &&
@@ -315,6 +316,10 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 										}
 									}
 									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), tempSuccessList, roomId));
+								}
+								else
+								{
+									LOGW("createGroup error: id-%s, name-%s, type-%d", id.c_str(), name.c_str(),type);
 								}
 							}
 							else

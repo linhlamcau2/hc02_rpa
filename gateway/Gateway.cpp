@@ -1345,7 +1345,7 @@ void Gateway::printGroup()
 		LOGI("group: %s", id.c_str());
 		for (auto &dev : grp->deviceList)
 		{
-			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->epId);
 		}
 	}
 }

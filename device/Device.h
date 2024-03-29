@@ -315,6 +315,7 @@ public:
 
 	virtual void SetPropertyJsonUpdate(Json::Value property);
 	virtual Json::Value GetPropertyJsonUpdate();
+	virtual void UpdatePropertyJsonUpdate(Json::Value &property);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value &jsonValue);

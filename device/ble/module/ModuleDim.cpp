@@ -102,6 +102,8 @@ void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
 	if (dim > 0)
 		jsonValue[KEY_ATTRIBUTE_ONOFF] = 1;
+
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleDim::Do(Json::Value &dataValue)
