@@ -137,4 +137,5 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[key] = bt;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }

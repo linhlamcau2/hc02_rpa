@@ -245,9 +245,8 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 			{
 				devsInScene.push_back(devs->device);
 			}
-			vector<Device *> listDevicesAdd; // list new dev add scene
 			vector<Device *> listDevicesDel; // list old dev del scene
-			vector<Device *> devsEditScene;	 // list dev in msg edit scene
+			vector<Device *> devsEditScene;	 // list dev edit scene
 
 			Json::Value deviceList = reqValue["devices"];
 			map<Device *, Json::Value> listData;
@@ -277,18 +276,10 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 
-			// Find list deivce add scene
-			// for (auto &item : devsEditScene)
-			// {
-			// 	if (find(devsInScene.begin(), devsInScene.end(), item) == devsInScene.end())
-			// 	{
-			// 		listDevicesAdd.push_back(item);
-			// 	}
-			// }
-
-			for (auto &item : devsEditScene)
+			// Phai xoa list device delscene truoc
+			for (auto &item : listDevicesDel)
 			{
-				if (sceneBle->AddDevice(item, listData[item], true, true) == CODE_OK)
+				if (sceneBle->DelDevice(item, true, true) == CODE_OK)
 				{
 					successList.append(item->GetId());
 				}
@@ -298,9 +289,15 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 
-			for (auto &item : listDevicesDel)
+			for (auto &item : devsEditScene)
 			{
-				if (sceneBle->DelDevice(item, true, true) == CODE_OK)
+				// Neu la congtac xoa het scene cua cac nut, xong them lai
+				if ((item->GetType() / 1000) == 22 || (item->GetType() / 1000) == 24)
+				{
+					sceneBle->DelDevice(item, true, true);
+				}
+				
+				if (sceneBle->AddDevice(item, listData[item], true, true) == CODE_OK)
 				{
 					successList.append(item->GetId());
 				}

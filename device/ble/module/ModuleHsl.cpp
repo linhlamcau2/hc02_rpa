@@ -157,6 +157,7 @@ void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue[KEY_ATTRIBUTE_HUE] = h;
 	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
 	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleHsl::Do(Json::Value &dataValue)

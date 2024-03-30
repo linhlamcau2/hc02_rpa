@@ -99,6 +99,7 @@ bool ModuleCct::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleCct::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_CCT] = cct;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleCct::Do(Json::Value &dataValue)

@@ -311,7 +311,7 @@ public:
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 
 	int AddDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene);
-	int DelDev2Room(uint16_t devAddr, uint16_t room);
+	int DelDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene);
 
 	// Scene light
 	int SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
@@ -364,7 +364,7 @@ public:
 	int UpdateStatusCurtain(uint16_t devAddr);
 
 	// Optimize add device to Room
-	int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
+	// int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
 
 	// Backup
 	int GetInfogw();
