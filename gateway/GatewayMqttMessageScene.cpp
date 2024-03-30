@@ -296,7 +296,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					sceneBle->DelDevice(item, true, true);
 				}
-				
+
 				if (sceneBle->AddDevice(item, listData[item], true, true) == CODE_OK)
 				{
 					successList.append(item->GetId());
@@ -874,8 +874,10 @@ int Gateway::OnDelSceneController(Json::Value &reqValue, Json::Value &respValue)
 				{
 					Json::Value propertiesJson = dt["properties"];
 					Json::Value sceneJson = dt["scene"];
+					int typeDev = device->GetType() / 1000;
 					if (device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4 || device->GetType() == BLE_DC_SCENE_CONTACT ||
-						device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+						device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE ||
+						typeDev == 27)
 					{
 						result = ConfigSceneForRemote(device, propertiesJson, sceneJson, false);
 					}
