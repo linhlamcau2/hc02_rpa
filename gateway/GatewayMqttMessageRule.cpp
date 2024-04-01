@@ -100,6 +100,20 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 	{
 		string ruleId = reqValue["id"].asString();
 		Rule *rule = getRuleFromId(ruleId);
+		if (!rule)
+		{
+			SceneBle *sceneBle = getSceneBleFromId(ruleId);
+			if (sceneBle)
+			{
+				vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
+				for (auto &deviceInScene : devicesInSceneBle)
+				{
+					sceneBle->DelDevice(deviceInScene->device, true, true);
+					
+				}
+				delSceneBle(sceneBle);
+			}
+		}
 		if (rule)
 		{
 			delRule(rule);
@@ -155,6 +169,20 @@ int Gateway::OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue)
 	{
 		string ruleId = reqValue["id"].asString();
 		Rule *rule = getRuleFromId(ruleId);
+		if (!rule)
+		{
+			SceneBle *sceneBle = getSceneBleFromId(ruleId);
+			if (sceneBle)
+			{
+				vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
+				for (auto &deviceInScene : devicesInSceneBle)
+				{
+					sceneBle->DelDevice(deviceInScene->device, true, true);
+					
+				}
+				delSceneBle(sceneBle);
+			}
+		}
 		if (rule)
 		{
 			delRule(rule);

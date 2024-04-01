@@ -78,7 +78,7 @@ void Rule::Check()
 		if (Util::CheckDayInWeek(currentWeekDay, repeater) || isFirstRun)
 		{
 			LOGD("Check repeater day OK");
-			LOGD("currentday: %d", currentTimer);
+			LOGD("current: %d", currentTimer);
 			LOGD("start: %d", startTime);
 			LOGD("end: %d", endTime);
 			if ((startTime < 0) ||																																											// fullDay
@@ -86,7 +86,7 @@ void Rule::Check()
 															 (endTime < startTime && (startTime <= currentTimer || currentTimer <= endTime))))) // bắt đầu và kết thúc trong 2 ngày khác nhau
 			{
 				LOGD("Check time OK");
-				if (type == RULE_TYPE_OR || type == RULE_TYPE_TIME_OR)
+				if (type == RULE_TYPE_OR || type == RULE_TYPE_TIME_OR || type == RULE_TYPE_TIME)
 				{
 					checkRuleInputResult = false;
 					for (auto &ruleInput : ruleInputList)

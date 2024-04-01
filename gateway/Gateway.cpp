@@ -872,17 +872,25 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
 			Json::Value timer = inputValue["timer"];
-			string endAt = "";
-			string startAt = "";
-			if (timer.isMember("start") && timer["start"].isString())
-				startAt = timer["start"].asString();
-			if (timer.isMember("end") && timer["end"].isString())
-				endAt = timer["end"].asString();
 
-			repeat = 0;
-			if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+			if (timer.isMember("start") && timer["start"].isString() &&
+				timer.isMember("end") && timer["end"].isString() &&
+				inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+			{
+				string startAt = timer["start"].asString();
+				string endAt = timer["end"].asString();
 				repeat = inputValue["repeat"].asInt();
-			rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+				int startAtInt = Util::ConvertStrTimeToInt(startAt);
+				int endAtInt = Util::ConvertStrTimeToInt(endAt);
+				if (startAtInt == endAtInt)
+				{
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, Util::ConvertStrTimeToInt(startAt), repeat);
+					rule->AddRuleInput(ruleInputTimer);
+				}
+				else
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+			}
 		}
 		else
 		{

@@ -238,6 +238,17 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 		string sceneId = reqValue["id"].asString();
 		string sceneName = reqValue["name"].asString();
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
+		if (!sceneBle)
+		{
+			Rule * rule = getRuleFromId(sceneId);
+			if (rule)
+			{
+				delRule(rule);
+			}
+			int sceneAddr = getNextSceneBleAddr();
+			sceneBle = new SceneBle(sceneId, sceneAddr, sceneName);
+			sceneBle = AddNewSceneBle(sceneBle, true);
+		}
 		if (sceneBle)
 		{
 			vector<Device *> devsInScene; // list dev in scene
