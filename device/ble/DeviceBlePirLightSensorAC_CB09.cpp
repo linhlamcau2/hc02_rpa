@@ -13,7 +13,7 @@ DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string
 	moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
     moduleModeActionPir = new ModuleModeActionPir(this, addr);
 	moduleSensiPir = new ModuleSensiPir(this, addr);
-    moduleOnOff = new ModuleOnOff(this, addr);
+    moduleOnOff = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
 	modulePirLightSensorStartup = new ModulePirLightSensorStartup(this, addr);
 	modules.push_back(modulePirLight);
 	modules.push_back(modulePirSensor);

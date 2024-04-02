@@ -13,7 +13,7 @@ DeviceBleRadaSensorAc::DeviceBleRadaSensorAc(string id, string name, string mac,
     moduleTimeActionPir = new ModuleTimeActionPir(this, addr);
     moduleModeActionPir = new ModuleModeActionPir(this, addr);
     moduleSensiPir = new ModuleSensiPir(this, addr);
-    moduleOnOff = new ModuleOnOff(this, addr);
+    moduleOnOff = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
     moduleDistance = new ModuleDistance(this, addr);
     modulePirLightSensorStartup = new ModulePirLightSensorStartup(this, addr);
     modules.push_back(modulePirLight);

@@ -240,14 +240,15 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (!sceneBle)
 		{
-			Rule * rule = getRuleFromId(sceneId);
+			Rule *rule = getRuleFromId(sceneId);
 			if (rule)
 			{
 				delRule(rule);
 			}
 			int sceneAddr = getNextSceneBleAddr();
 			sceneBle = new SceneBle(sceneId, sceneAddr, sceneName);
-			sceneBle = AddNewSceneBle(sceneBle, true);
+			if (sceneBle)
+				AddNewSceneBle(sceneBle, true);
 		}
 		if (sceneBle)
 		{
@@ -580,43 +581,43 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 							if (isAddScene)
 							{
 								if (dt.isMember("bt") && dt["bt"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 1, dt["bt"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 1, dt["bt"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt2") && dt["bt2"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 2, dt["bt2"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 2, dt["bt2"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt3") && dt["bt3"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 3, dt["bt3"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 3, dt["bt3"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt4") && dt["bt4"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 4, dt["bt4"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 4, dt["bt4"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt5") && dt["bt5"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 5, dt["bt5"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 5, dt["bt5"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt6") && dt["bt6"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 6, dt["bt6"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 6, dt["bt6"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 							}
 							else
 							{
 								if (dt.isMember("bt") && dt["bt"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), 1, dt["bt"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 1, dt["bt"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt2") && dt["bt2"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), 2, dt["bt2"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 2, dt["bt2"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt3") && dt["bt3"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), 3, dt["bt3"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 3, dt["bt3"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt4") && dt["bt4"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), 4, dt["bt4"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 4, dt["bt4"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt5") && dt["bt5"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), 5, dt["bt5"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 5, dt["bt5"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt6") && dt["bt6"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneDC(device->GetAddr(), 6, dt["bt6"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneDC(device->GetAddr(), 6, dt["bt6"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 							}
 						}
@@ -626,43 +627,43 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 							if (isAddScene)
 							{
 								if (dt.isMember("bt") && dt["bt"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 1, dt["bt"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 1, dt["bt"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt2") && dt["bt2"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 2, dt["bt2"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 2, dt["bt2"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt3") && dt["bt3"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 3, dt["bt3"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 3, dt["bt3"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt4") && dt["bt4"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 4, dt["bt4"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 4, dt["bt4"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt5") && dt["bt5"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 5, dt["bt5"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 5, dt["bt5"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt6") && dt["bt6"].isInt())
-									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 6, dt["bt6"].isInt(), sceneBle->GetAddr(), 0) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 6, dt["bt6"].asInt(), sceneBle->GetAddr(), 0) != CODE_OK)
 										result = CODE_ERROR;
 							}
 							else
 							{
 								if (dt.isMember("bt") && dt["bt"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 1, dt["bt"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 1, dt["bt"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt2") && dt["bt2"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 2, dt["bt2"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 2, dt["bt2"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt3") && dt["bt3"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 3, dt["bt3"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 3, dt["bt3"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt4") && dt["bt4"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 4, dt["bt4"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 4, dt["bt4"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt5") && dt["bt5"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 5, dt["bt5"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 5, dt["bt5"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 								if (dt.isMember("bt6") && dt["bt6"].isInt())
-									if (bleProtocol->DelSceneSwitchSceneAC(device->GetAddr(), 6, dt["bt6"].isInt()) != CODE_OK)
+									if (bleProtocol->SetSceneSwitchSceneAC(device->GetAddr(), 6, dt["bt6"].asInt(), 0, 0) != CODE_OK)
 										result = CODE_ERROR;
 							}
 						}
@@ -770,8 +771,14 @@ int Gateway::ConfigSceneForPirSensor(Device *device, Json::Value &data, Json::Va
 				}
 				else
 				{
-					if (bleProtocol->DelScenePirLightSensor(device->GetAddr(), sceneBle->GetAddr()) != CODE_OK)
-						result = CODE_ERROR;
+					for (auto &dt : data)
+					{
+						if (dt.isMember("pir") && dt["pir"].isInt())
+						{
+							if (bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, dt["pir"].asInt(), 0, 0, 0, 0) != CODE_OK)
+								result = CODE_ERROR;
+						}
+					}
 				}
 			}
 		}
@@ -838,11 +845,11 @@ int Gateway::OnCreateSceneController(Json::Value &reqValue, Json::Value &respVal
 					int typeDev = device->GetType() / 1000;
 					if (device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4 || device->GetType() == BLE_DC_SCENE_CONTACT ||
 						device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE ||
-						typeDev == 27)
+						typeDev == 27) // seftpower remote
 					{
 						result = ConfigSceneForRemote(device, propertiesJson, sceneJson, true);
 					}
-					else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_DC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
+					else if ((device->GetType() / 1000) == 32)
 					{
 						result = ConfigSceneForPirSensor(device, propertiesJson, sceneJson, true);
 					}
@@ -888,11 +895,11 @@ int Gateway::OnDelSceneController(Json::Value &reqValue, Json::Value &respValue)
 					int typeDev = device->GetType() / 1000;
 					if (device->GetType() == BLE_REMOTE_M3 || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4 || device->GetType() == BLE_DC_SCENE_CONTACT ||
 						device->GetType() == BLE_AC_SCENE_CONTACT || device->GetType() == BLE_AC_SCENE_CONTACT_RGB || device->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE ||
-						typeDev == 27)
+						typeDev == 27) // seftpower remote
 					{
 						result = ConfigSceneForRemote(device, propertiesJson, sceneJson, false);
 					}
-					else if (device->GetType() == BLE_PIR_LIGHT_SENSOR_AC || device->GetType() == BLE_PIR_LIGHT_SENSOR_DC || device->GetType() == BLE_PIR_LIGHT_SENSOR_AC_AMTRAN)
+					else if ((device->GetType() / 1000) == 32)
 					{
 						result = ConfigSceneForPirSensor(device, propertiesJson, sceneJson, false);
 					}

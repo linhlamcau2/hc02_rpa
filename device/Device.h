@@ -21,7 +21,7 @@
 #define KEY_ATTRIBUTE_PIR "pir"
 #define KEY_ATTRIBUTE_BUTTON "bt"
 #define KEY_ATTRIBUTE_ACTIME "actime"
-#define KEY_ATTRIBUTE_ACMODE "acmode"
+#define KEY_ATTRIBUTE_ACMODE "mode"
 #define KEY_ATTRIBUTE_SENSI "sensi"
 #define KEY_ATTRIBUTE_PM2_5 "pm2.5"
 #define KEY_ATTRIBUTE_PM10 "pm10"
