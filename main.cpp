@@ -116,8 +116,6 @@ int main(int argc, char *argv[])
 	// mqttProtocol = new MqttProtocol();
 	// mqttProtocol->init();
 
-	Device::InitDeviceModelList();
-
 	androidBleProtocol = new AndroidBleProtocol();
 	androidBleProtocol->init();
 

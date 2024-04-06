@@ -319,7 +319,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								}
 								else
 								{
-									LOGW("createGroup error: id-%s, name-%s, type-%d", id.c_str(), name.c_str(),type);
+									LOGW("createGroup error: id-%s, name-%s, type-%d", id.c_str(), name.c_str(), type);
 								}
 							}
 							else

@@ -76,10 +76,9 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	// if (topics.size() == 7)
-	// {
-	// 	if (topics[5] == mac || topics[5] == "all")
-	// 	{
+#ifdef ESP_PLATFORM
+	SetLedInternet(false);
+#endif
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
@@ -126,11 +125,24 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 				sleep(2);
 				exit(1);
 			}
+			else if (rs == CODE_FACTORY)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+#ifdef ESP_PLATFORM
+				Wifi::WifiStartAP();
+#elif defined(__OPENWRT__)
+				Wifi::SetModeApWifi();
+#endif
+				exit(1);
+			}
 			else
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
-#ifdef ESP_PATFORM
+#ifdef ESP_PLATFORM
 			vTaskDelay(1);
 #endif
 		}
@@ -145,9 +157,11 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 		LOGW("OnLocalMessage topic: %s", topic.c_str());
 		LOGW("OnLocalMessage payload: %s", payload.c_str());
 	}
-	// 	}
-	// }
-
+// 	}
+// }
+#ifdef ESP_PLATFORM
+	SetLedInternet(true);
+#endif
 	Util::LedServiceUnlock();
 }
 
@@ -225,7 +239,7 @@ int LocalProtocol::LocalPublish(Json::Value &payloadJson)
 int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToLocalMessage: %s", reqValue.toString().c_str());
-	if (!connected)
+	if (!isConnected())
 		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	Json::Value sendValue;

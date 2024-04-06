@@ -72,6 +72,9 @@ static void AddDeviceThread(void *data)
 				}
 			}
 		}
+#ifdef ESP_PLATFORM
+		vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 		usleep(100000);
 	}
 }
@@ -88,6 +91,9 @@ static void HandleOpcodeBle(void *data)
 			free(message_rsp);
 		}
 		usleep(100000);
+#ifdef ESP_PLATFORM
+		vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 	}
 }
 
@@ -95,7 +101,7 @@ void BleProtocol::init()
 {
 	Uart::init();
 #ifdef ESP_PLATFORM
-	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 5120, this, 10, NULL) != pdPASS)
+	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 8192, this, 10, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
 		SetLedService(false);
@@ -422,11 +428,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedService = GetStatusLedService();
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(!statusLedService);
-	}
+	SetLedService(false);
 #endif
 	while (l >= 5)
 	{
@@ -479,8 +481,9 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 										if (messageResp->len)
 										{
 											*(messageResp->len) = message_rsp->len - 2;
-											if (messageResp->data)
-												memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+											if (*(messageResp->len) > 0)
+												if (messageResp->data && message_rsp->data)
+													memcpy(messageResp->data, message_rsp->data, *messageResp->len);
 										}
 									}
 								}
@@ -536,10 +539,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(statusLedService);
-	}
+	SetLedService(true);
 #endif
 	return l;
 }
@@ -1048,17 +1048,17 @@ static void genSecurityKey(uint8_t *mac, uint16_t devAddr, uint8_t *out)
 	AES aes(AESKeyLength::AES_128);
 	memcpy(plaintext + 8, mac, 6);
 	memcpy(plaintext + 14, (uint8_t *)&devAddr, 2);
-	for (int n = 0; n < 16; n++)
-	{
-		printf("%02x ", plaintext[n]);
-	}
-	printf("\n");
+	// for (int n = 0; n < 16; n++)
+	// {
+	// 	printf("%02x ", plaintext[n]);
+	// }
+	// printf("\n");
 	unsigned char *outAes = aes.EncryptECB(plaintext, 32, keyAes);
-	for (int j = 0; j < 32; j++)
-	{
-		printf("%02x ", outAes[j]);
-	}
-	printf("\n");
+	// for (int j = 0; j < 32; j++)
+	// {
+	// 	printf("%02x ", outAes[j]);
+	// }
+	// printf("\n");
 	for (int i = 0; i < 6; i++)
 	{
 		out[i] = outAes[i + 10];

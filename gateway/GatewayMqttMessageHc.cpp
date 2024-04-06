@@ -253,12 +253,12 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
 	ResetFactory();
-#ifdef __OPENWRT__
-	Wifi::SetModeApWifi();
-#endif
+// #ifdef __OPENWRT__
+// 	Wifi::SetModeApWifi();
+// #endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
-	return CODE_EXIT;
+	return CODE_FACTORY;
 }
 
 int Gateway::OnVersionHC(Json::Value &reqValue, Json::Value &respValue)
