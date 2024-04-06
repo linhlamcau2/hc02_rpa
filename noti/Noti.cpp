@@ -1,3 +1,4 @@
+#ifdef __ANDROID__
 #include "Noti.h"
 #include "Util.h"
 #include "Log.h"
@@ -42,3 +43,4 @@ bool Noti::GetIsRead()
     return this->isRead;
 }
 
+#endif

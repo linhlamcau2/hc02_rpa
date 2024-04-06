@@ -1,3 +1,4 @@
+#ifdef __ANDROID__
 #pragma once
 
 #include <string>
@@ -33,3 +34,5 @@ public:
     string GetContent();
     bool GetIsRead();
 };
+
+#endif

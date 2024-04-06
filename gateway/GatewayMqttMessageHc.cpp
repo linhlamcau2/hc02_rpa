@@ -43,9 +43,11 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+#ifdef __ANDROID__
 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
+#endif
 }
 
 int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
@@ -501,6 +503,7 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_ERROR;
 }
 
+#ifdef __ANDROID__
 int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
@@ -571,3 +574,4 @@ int Gateway::OnDelNotify(Json::Value &reqValue, Json::Value &respValue)
 	}
 	return CODE_OK;
 }
+#endif

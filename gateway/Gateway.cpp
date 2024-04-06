@@ -150,7 +150,9 @@ void Gateway::init()
 	database->DeviceInSceneBleRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
+#ifdef __ANDROID__
 	database->NotiRead();
+#endif
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -1556,6 +1558,7 @@ void Gateway::printRoom()
 	}
 }
 
+#ifdef __ANDROID__
 int Gateway::CreateNoti(Noti *noti, bool addDatabase, bool pushNoti)
 {
 	if (addDatabase)
@@ -1612,3 +1615,4 @@ Json::Value Gateway::BuildJsonDataNoti(Device *device, string id, string type, s
 	}
 	return notiData;
 }
+#endif

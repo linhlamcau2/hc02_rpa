@@ -61,6 +61,7 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		power = (data_message->power);
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
+#ifdef __ANDROID__
 		if (smoke == 1)
 		{
 			string id = Util::genRandRQI(16);
@@ -68,6 +69,7 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			Noti *temp = new Noti(id, "warning", tempJson.toString(), to_string(time(NULL)), to_string(time(NULL)));
 			gateway->CreateNoti(temp, true, true);
 		}
+#endif
 		return CODE_OK;
 	}
 	return CODE_ERROR;

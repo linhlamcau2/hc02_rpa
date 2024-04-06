@@ -29,6 +29,8 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#else
+#include "Sntp.h"
 #endif
 
 using namespace std;
