@@ -183,7 +183,7 @@ int ModuleCurtain::Do(Json::Value &dataValue)
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject())
 	{
-		uint8_t mode = CURTAIN_UNKNOWN;
+		int mode = CURTAIN_UNKNOWN;
 		int value = -1;
 		if (dataValue.isMember(KEY_ATTRIBUTE_CURTAIN_OPEN) && dataValue[KEY_ATTRIBUTE_CURTAIN_OPEN].isInt())
 		{
