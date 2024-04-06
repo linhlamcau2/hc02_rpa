@@ -21,7 +21,7 @@
 #define KEY_ATTRIBUTE_PIR "pir"
 #define KEY_ATTRIBUTE_BUTTON "bt"
 #define KEY_ATTRIBUTE_ACTIME "actime"
-#define KEY_ATTRIBUTE_ACMODE "acmode"
+#define KEY_ATTRIBUTE_ACMODE "mode"
 #define KEY_ATTRIBUTE_SENSI "sensi"
 #define KEY_ATTRIBUTE_PM2_5 "pm2.5"
 #define KEY_ATTRIBUTE_PM10 "pm10"
@@ -133,6 +133,11 @@ enum
 	BLE_SWITCH_3_CEILING = 22038,
 	BLE_SWITCH_5_CEILING = 22039,
 
+	BLE_WIFI_SWITCH_1 = 22040,
+	BLE_WIFI_SWITCH_2 = 22041,
+	BLE_WIFI_SWITCH_3 = 22042,
+	BLE_WIFI_SWITCH_4 = 22043,
+
 	BLE_SWITCH_CURTAIN = 22006,
 	BLE_SWITCH_RGB_CURTAIN = 22017,
 	BLE_SWITCH_RGB_CURTAIN_SQUARE = 22024,
@@ -161,6 +166,10 @@ enum
 	BLE_SWITCH_ELECTRICAL_1_V2 = 24006,
 	BLE_SWITCH_ELECTRICAL_2_V2 = 24007,
 	BLE_SWITCH_ELECTRICAL_3_V2 = 24008,
+
+	BLE_WIFI_SWITCH_ELECTRICAL_1 = 24009,
+	BLE_WIFI_SWITCH_ELECTRICAL_2 = 24010,
+	BLE_WIFI_SWITCH_ELECTRICAL_3 = 24011,
 
 	BLE_SWITCH_RGB_SOCKET_1 = 26003,
 
@@ -235,9 +244,9 @@ enum
 	BLE_LED_RLT03_12W_GROUP = 29,
 	BLE_SWITCH_ONOFF_V2_GROUP = 30,
 	BLE_SWITCH_TOUCH_GROUP = 31,
-	BLE_SWITCH_ELECTRICAL_GROUP = 32,
-	BLE_SWITCH_CEILING_GROUP = 33,
-	BLE_SWITCH_CURTAIN_GROUP = 34,
+	BLE_SWITCH_ELECTRICAL_GROUP = 31,
+	BLE_SWITCH_CEILING_GROUP = 31,
+	BLE_SWITCH_CURTAIN_GROUP = 32,
 };
 
 enum
@@ -306,6 +315,7 @@ public:
 
 	virtual void SetPropertyJsonUpdate(Json::Value property);
 	virtual Json::Value GetPropertyJsonUpdate();
+	virtual void UpdatePropertyJsonUpdate(Json::Value &property);
 
 	int PushTelemetry();
 	int PushTelemetry(Json::Value &jsonValue);
@@ -325,6 +335,6 @@ public:
 	virtual void InputData(Json::Value &dataValue) {}
 	virtual void InputData(uint8_t *data, int len, uint16_t addr = 0){};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
-
+	virtual int GetNumElement() { return 1; }
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
 };

@@ -7,6 +7,8 @@ void Gateway::InitMqttMessageRule()
 {
 	OnDeviceRpcCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("createRuleV2", bind(&Gateway::OnCreateRuleV2, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("editRuleV2", bind(&Gateway::OnEditRuleV2, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getRuleList", bind(&Gateway::OnGetRuleList, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
@@ -15,6 +17,8 @@ void Gateway::InitMqttMessageRule()
 
 	OnLocalCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("createRuleV2", bind(&Gateway::OnCreateRuleV2, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("editRuleV2", bind(&Gateway::OnEditRuleV2, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getRuleList", bind(&Gateway::OnGetRuleList, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
@@ -96,6 +100,20 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 	{
 		string ruleId = reqValue["id"].asString();
 		Rule *rule = getRuleFromId(ruleId);
+		if (!rule)
+		{
+			SceneBle *sceneBle = getSceneBleFromId(ruleId);
+			if (sceneBle)
+			{
+				vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
+				for (auto &deviceInScene : devicesInSceneBle)
+				{
+					sceneBle->DelDevice(deviceInScene->device, true, true);
+					
+				}
+				delSceneBle(sceneBle);
+			}
+		}
 		if (rule)
 		{
 			delRule(rule);
@@ -104,6 +122,75 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 		if (rule)
 		{
 			LOGI("Edit Rule %s", rule->GetId().c_str());
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("editRule", rule->GetId(), rule->GetName(), deviceList, "");
+			// rule->Check();
+			rs = CODE_OK;
+		}
+		else
+		{
+			rs = CODE_FORMAT_ERROR;
+		}
+		respValue["data"]["id"] = ruleId;
+	}
+	else
+	{
+		rs = CODE_FORMAT_ERROR;
+	}
+	respValue["data"]["code"] = rs;
+	respValue["cmd"] = "editRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	Rule *rule = AddRuleV2(reqValue, true);
+	if (rule)
+	{
+		LOGI("Add Rule v2 %s", rule->GetId().c_str());
+		Json::Value deviceList = Json::arrayValue;
+		pushMsgHcCoreToHcApp("createRule", rule->GetId(), rule->GetName(), deviceList, "");
+		// rule->Check();
+		respValue["data"]["code"] = CODE_OK;
+		respValue["data"]["id"] = rule->GetId();
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "createRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	int rs = CODE_ERROR;
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string ruleId = reqValue["id"].asString();
+		Rule *rule = getRuleFromId(ruleId);
+		if (!rule)
+		{
+			SceneBle *sceneBle = getSceneBleFromId(ruleId);
+			if (sceneBle)
+			{
+				vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
+				for (auto &deviceInScene : devicesInSceneBle)
+				{
+					sceneBle->DelDevice(deviceInScene->device, true, true);
+					
+				}
+				delSceneBle(sceneBle);
+			}
+		}
+		if (rule)
+		{
+			delRule(rule);
+		}
+		rule = AddRuleV2(reqValue, true);
+		if (rule)
+		{
+			LOGI("Edit Rule v2 %s", rule->GetId().c_str());
 			Json::Value deviceList = Json::arrayValue;
 			pushMsgHcCoreToHcApp("editRule", rule->GetId(), rule->GetName(), deviceList, "");
 			// rule->Check();

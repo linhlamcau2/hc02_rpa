@@ -121,6 +121,9 @@ private:
 	void InitMqttMessageRoom();
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
+	int CheckAddDevToRoom(Device * device, Room * room);
+	int AddDevToGroupInRoom(Device * device, Group * group, uint32_t type);
+	int AddDevToSceneInRoom(Device *device, Json::Value &dataGroup, SceneBle *sceneBle, int indexSceneBle);
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValue);
@@ -136,6 +139,8 @@ private:
 	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnEditRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue);
+	int OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActiveRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
@@ -279,6 +284,7 @@ public:
 	SceneBle *AddNewSceneBle(SceneBle *sceneBle, bool addDatabase);
 	Room *AddNewRoom(Room *room, bool addDatabase);
 	Rule *AddRule(Json::Value &ruleValue, bool addDatabase);
+	Rule *AddRuleV2(Json::Value &ruleValue, bool addDatabase);
 
 	int Do(Json::Value &dataValue);
 

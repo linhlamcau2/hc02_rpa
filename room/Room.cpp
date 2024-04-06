@@ -76,7 +76,7 @@ int Room::DelDeviceOneMessage(Device *device, bool sendBle, bool delDb)
 	if (delDb)
 		database->DeviceInRoomDel(this, device);
 	if (bleProtocol && sendBle)
-		bleProtocol->DelDev2Room(device->GetAddr(), addr + ID_START);
+		bleProtocol->DelDev2Room(device->GetAddr(), addr + ID_START, addr);
 	return Group::DelDevice(device, device->GetAddr(), false, false);
 }
 
@@ -86,7 +86,20 @@ int Room::AddDevice(Device *device, bool sendBle, bool addDb)
 		return CODE_ERROR;
 	if (addDb)
 		database->DeviceInRoomAdd(this, device);
-	return Group::AddDevice(device, device->GetAddr(), sendBle, false);
+
+	int indexTypeDev = device->GetType() / 1000;
+	bool isSuccess = true;
+	if (indexTypeDev == 22 || indexTypeDev == 24) // them du cac element cua cong tac vao phong
+	{
+		for (int i = 0; i < device->GetNumElement(); i++)
+		{
+			if (Group::AddDevice(device, device->GetAddr() + i, sendBle, false) != CODE_OK)
+				isSuccess = false;
+		}
+		return isSuccess ? CODE_OK : CODE_ERROR;
+	}
+
+	return Group::AddDevice(device, device->GetAddr(), sendBle, false); // them den vao phong
 }
 
 int Room::DelDevice(Device *device, bool sendBle, bool delDb)
@@ -95,7 +108,20 @@ int Room::DelDevice(Device *device, bool sendBle, bool delDb)
 		return CODE_ERROR;
 	if (delDb)
 		database->DeviceInRoomDel(this, device);
-	return Group::DelDevice(device, device->GetAddr(), sendBle, false);
+	
+	int indexTypeDev = device->GetType() / 1000;
+	bool isSuccess = true;
+	if (indexTypeDev == 22 || indexTypeDev == 24) // xoa du cac element cua cong tac ra khoi phong
+	{
+		for (int i = 0; i < device->GetNumElement(); i++)
+		{
+			if (Group::DelDevice(device, device->GetAddr() + i, sendBle, false) != CODE_OK)
+				isSuccess = false;
+		}
+		return isSuccess ? CODE_OK : CODE_ERROR;
+	}
+
+	return Group::DelDevice(device, device->GetAddr(), sendBle, false); // xoa den khoi phong
 }
 
 int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)

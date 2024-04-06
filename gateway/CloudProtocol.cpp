@@ -13,7 +13,7 @@
 #endif
 
 CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert)
-		: Mqtt(address, port, clientId, username, password, keepalive)
+	: Mqtt(address, port, clientId, username, password, keepalive)
 {
 	this->mac = mac;
 
@@ -91,10 +91,13 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 	Json::Value payloadJson;
 	Util::LedInternet(false);
 	Util::LedServiceLock();
+#ifdef ESP_PLATFORM
+	SetLedInternet(false);
+#endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-			payloadJson.isMember("data") && payloadJson["data"].isObject())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -138,7 +141,7 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
-#ifdef ESP_PATFORM
+#ifdef ESP_PLATFORM
 			vTaskDelay(1);
 #endif
 		}
@@ -155,6 +158,9 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 	}
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
+#ifdef ESP_PLATFORM
+	SetLedInternet(true);
+#endif
 }
 
 void CloudProtocol::OnServerResp(string &topic, string &payload)
@@ -164,8 +170,8 @@ void CloudProtocol::OnServerResp(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -229,9 +235,9 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 	Util::LedServiceLock();
 	vector<string> topics = Util::splitString(topic, '/');
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-			payloadJson.isMember("data") && payloadJson["data"].isObject())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -277,7 +283,7 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
-#ifdef ESP_PATFORM
+#ifdef ESP_PLATFORM
 			vTaskDelay(1);
 #endif
 		}
@@ -302,8 +308,8 @@ void CloudProtocol::OnMobileResp(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-			payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{
 		string cmd = payloadJson["cmd"].asString();
 		string rqi = payloadJson["rqi"].asString();
@@ -385,9 +391,9 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	sendValue["rqi"] = rqi;
 	sendValue["cmd"] = reqCmd;
 	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	if (request.pubTopic == "")
@@ -416,9 +422,9 @@ int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *p
 		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
+		.status = false,
+		.respCmd = respCmd,
+		.respValue = respValue,
 	};
 	string rqi = sessionId + to_string(index);
 	requestList[rqi] = &request;
@@ -443,9 +449,9 @@ int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &r
 		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	request_bin_t requestBin = {
-			.status = false,
-			.payload = payload,
-			.payloadLen = payloadLen,
+		.status = false,
+		.payload = payload,
+		.payloadLen = payloadLen,
 	};
 	requestBinList[rqi] = &requestBin;
 	Json::Value sendValue;

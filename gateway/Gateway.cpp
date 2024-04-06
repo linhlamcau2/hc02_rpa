@@ -39,6 +39,8 @@
 #include "DeviceBleSwitchTouch.h"
 #include "DeviceBleSwitchCeiling.h"
 #include "DeviceBleSeftPowerRemote.h"
+#include "DeviceBleWifiSwitchTouch.h"
+#include "DeviceBleWifiSwitchElectrical.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -65,10 +67,10 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert,
-								 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
-			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -76,7 +78,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->refresh_token = "";
 	this->ble_addr = 0;
 	this->ble_iv_index = 0;
-	this->ble_appkey = "";
+	this->ble_netkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	this->data = "";
@@ -118,12 +120,12 @@ void Gateway::init()
 
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
-	{
-		LOGE("Failed to create task");
-		SetLedService(false);
-	}
-	vTaskDelay(10);
+	// if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
+	// {
+	// 	LOGE("Failed to create task");
+	// 	SetLedService(false);
+	// }
+	// vTaskDelay(10);
 	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
@@ -277,7 +279,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -536,7 +538,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["mac"] = scanDevice->GetMac();
 	devValue["data"] = scanDevice->GetData();
 	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
-			scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
+		scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
 	{
 		devValue["type"] = BLE_SWITCH_ONOFF;
 	}
@@ -549,12 +551,12 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		devValue["type"] = BLE_SMOKE_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
 	{
 		devValue["type"] = BLE_DOOR_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
 	{
 		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
 	}
@@ -656,6 +658,15 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_ELECTRICAL_4:
 		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 4);
 		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_1:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_2:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_3:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 3);
+		break;
 	case BLE_SWITCH_2_CEILING:
 		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 2);
 		break;
@@ -736,6 +747,19 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_REPEATER:
 		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
 		break;
+	case BLE_WIFI_SWITCH_1:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_SWITCH_2:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_SWITCH_3:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_WIFI_SWITCH_4:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+
 	case BLE_SEFTPOWER_REMOTE_1:
 	case BLE_SEFTPOWER_REMOTE_2:
 	case BLE_SEFTPOWER_REMOTE_3:
@@ -827,13 +851,167 @@ Group *Gateway::AddNewGroup(Group *group, bool addDatabase)
 
 Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 {
-	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
+	{
+		string id = ruleValue["id"].asString();
+		int type = ruleValue["type"].asInt();
+		Json::Value inputValue = ruleValue["input"];
+		Json::Value outputValues = ruleValue["output"];
+		string name = ruleValue["name"].asString();
+		int repeat = 255;
+		uint16_t addr = 0;
+		Rule *rule = NULL;
+
+		bool isFirstRun = true;
+		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			isFirstRun = ruleValue["isFirstRun"].asBool();
+
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
+		{
+			Json::Value timer = inputValue["timer"];
+
+			if (timer.isMember("start") && timer["start"].isString() &&
+				timer.isMember("end") && timer["end"].isString() &&
+				inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+			{
+				string startAt = timer["start"].asString();
+				string endAt = timer["end"].asString();
+				repeat = inputValue["repeat"].asInt();
+				int startAtInt = Util::ConvertStrTimeToInt(startAt);
+				int endAtInt = Util::ConvertStrTimeToInt(endAt);
+				if (startAtInt == endAtInt)
+				{
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, Util::ConvertStrTimeToInt(startAt), repeat);
+					rule->AddRuleInput(ruleInputTimer);
+				}
+				else
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+			}
+		}
+		else
+		{
+			rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+		}
+
+		if (rule)
+		{
+			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
+				rule->SetStatus(ruleValue["enable"].asInt());
+			if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			{
+				rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
+			}
+
+			if (inputValue.isMember("device") && inputValue["device"].isArray())
+			{
+				Json::Value devicesJson = inputValue["device"];
+				for (auto &deviceJson : devicesJson)
+				{
+					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
+					{
+						string deviceId = deviceJson["id"].asString();
+						Device *deviceInRule = getDeviceFromId(deviceId);
+						if (deviceInRule)
+						{
+							Json::Value dataJson = deviceJson["data"];
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInRule, dataJson);
+							rule->AddRuleInput(ruleInputDevice);
+						}
+						else
+							LOGW("Device not found");
+					}
+				}
+			}
+
+			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
+			{
+				Json::Value outputValue = outputValues[i];
+				if (outputValue.isMember("delay"))
+				{
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["delay"].asInt());
+					rule->AddRuleOutput(ruleOutputDelay);
+				}
+				else if (outputValue.isMember("deviceId"))
+				{
+					if (outputValue["deviceId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					{
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["deviceId"].asString();
+						Device *device = gateway->getDeviceFromId(id);
+						if (device)
+						{
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
+						}
+						else
+							LOGW("Device not found");
+					}
+				}
+				else if (outputValue.isMember("groupId"))
+				{
+					if (outputValue["groupId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					{
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["groupId"].asString();
+						Group *group = gateway->getGroupFromId(id);
+						if (group)
+						{
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
+						}
+					}
+				}
+				else if (outputValue.isMember("sceneId"))
+				{
+					if (outputValue["sceneId"].isString())
+					{
+						string id = outputValue["sceneId"].asString();
+						SceneBle *sceneBle = gateway->getSceneBleFromId(id);
+						if (sceneBle)
+						{
+							RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+							rule->AddRuleOutput(ruleOutputSceneBle);
+						}
+					}
+				}
+			}
+			ruleListMtx.lock();
+			ruleList[id] = rule;
+			ruleListMtx.unlock();
+			if (addDatabase)
+			{
+				ruleValue["isFirstRun"] = true;
+				string ruleStr = ruleValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->RuleAdd(rule, ruleStr, 0);
+				rule->SetFirstRun(true);
+			}
+		}
+		else
+			LOGW("Rule null");
+		return rule;
+	}
+	else
+		LOGE("New rule error, out of memory");
+	return NULL;
+}
+
+Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
+{
+	// TODO: Check Rule id exist
+	LOGD("OnAddRuleV2");
+	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -858,8 +1036,8 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				else
 				{
 					if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
-							timeRule.isMember("start") && timeRule["start"].isString() &&
-							timeRule.isMember("end") && timeRule["end"].isString())
+						timeRule.isMember("start") && timeRule["start"].isString() &&
+						timeRule.isMember("end") && timeRule["end"].isString())
 					{
 						repeat = timeRule["repeat"].asInt();
 						string startRule = timeRule["start"].asString();
@@ -890,7 +1068,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				for (auto &timerJson : timersJson)
 				{
 					if (timerJson.isMember("time") && timerJson["time"].isString() &&
-							timerJson.isMember("repeat") && timerJson["repeat"].isInt())
+						timerJson.isMember("repeat") && timerJson["repeat"].isInt())
 					{
 						string timerTime = timerJson["time"].asString();
 						int timerRepeat = timerJson["repeat"].asInt();
@@ -906,7 +1084,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-							deviceJson.isMember("data") && deviceJson["data"].isObject())
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);
@@ -1352,7 +1530,7 @@ void Gateway::printGroup()
 		LOGI("group: %s", id.c_str());
 		for (auto &dev : grp->deviceList)
 		{
-			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->epId);
 		}
 	}
 }

@@ -54,7 +54,7 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcHcConnectCloud");
 	if (reqValue.isMember("latitude") && reqValue["latitude"].isDouble() &&
-			reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
+		reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
 	{
 		Json::Value dataJson;
 		dataJson["latitude"] = reqValue["latitude"].asDouble();
@@ -253,12 +253,12 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
 	ResetFactory();
-#ifdef __OPENWRT__
-	Wifi::SetModeApWifi();
-#endif
+// #ifdef __OPENWRT__
+// 	Wifi::SetModeApWifi();
+// #endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
-	return CODE_EXIT;
+	return CODE_FACTORY;
 }
 
 int Gateway::OnVersionHC(Json::Value &reqValue, Json::Value &respValue)
@@ -278,11 +278,11 @@ int Gateway::OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value params = reqValue["params"];
 		if (params.isMember("type") && params["type"].isString() &&
-				params.isMember("key") && params["key"].isString() &&
-				params.isMember("user") && params["user"].isString() &&
-				params.isMember("host") && params["host"].isString() &&
-				params.isMember("serverPort") && params["serverPort"].isInt() &&
-				params.isMember("forwardPort") && params["forwardPort"].isInt())
+			params.isMember("key") && params["key"].isString() &&
+			params.isMember("user") && params["user"].isString() &&
+			params.isMember("host") && params["host"].isString() &&
+			params.isMember("serverPort") && params["serverPort"].isInt() &&
+			params.isMember("forwardPort") && params["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = params["type"].asString();
@@ -449,11 +449,11 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 
 /*
 {
-	"cmd": "setPasswordMqtt",
-	"rqi": "abc-xyz-mnl",
-	"data": {
+  "cmd": "setPasswordMqtt",
+  "rqi": "abc-xyz-mnl",
+  "data": {
 	"password": "ABC123456"
-	}
+  }
 }
 */
 
@@ -508,8 +508,8 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
 	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
-			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
-			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+		reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+		reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
 	{
 		string groupType = reqValue["groupType"].asString();
 		int startIndex = reqValue["startIndex"].asInt();
@@ -543,7 +543,7 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);

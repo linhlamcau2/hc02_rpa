@@ -149,6 +149,23 @@ void Device::SetPropertyJsonUpdate(Json::Value property)
 	}
 }
 
+void Device::UpdatePropertyJsonUpdate(Json::Value &propertyUpdate)
+{
+	if (propertyUpdate.isObject() && this->propertyJsonUpdate.isObject())
+	{
+		for (auto const &key : propertyUpdate.getMemberNames())
+		{
+			if (this->propertyJsonUpdate.isMember(key))
+			{
+				if (propertyUpdate[key].type() == this->propertyJsonUpdate[key].type())
+				{
+					this->propertyJsonUpdate[key] = propertyUpdate[key];
+				}
+			}
+		}
+	}
+}
+
 Json::Value Device::GetPropertyJsonUpdate()
 {
 	return this->propertyJsonUpdate;
@@ -210,6 +227,8 @@ static map<uint32_t, uint32_t> bleTypeToGroupIdList;
 // TODO: Check list device to Name
 void Device::InitDeviceModelList()
 {
+	bleTypeToGroupIdList[1] = BLE_SWITCH_TOUCH_GROUP;
+
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_SMT] = BLE_DOWNLIGHT_SMT_GROUP;
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_GOC_RONG] = BLE_DOWNLIGHT_COB_GOC_RONG_GROUP;
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_GOC_HEP] = BLE_DOWNLIGHT_COB_GOC_HEP_GROUP;
@@ -240,33 +259,39 @@ void Device::InitDeviceModelList()
 	bleTypeToGroupIdList[BLE_LED_RLT03_12W] = BLE_LED_RLT03_12W_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_ONOFF_V2] = BLE_SWITCH_ONOFF_V2_GROUP;
 
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_1] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_3] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_4] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_1_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_2_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_3_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_4_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_1_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_1_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_2_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_2_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_3_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_3_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_4_V2] = BLE_SWITCH_TOUCH_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_RGB_4_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_1] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_3] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_4] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_1_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_2_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_3_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_4_SQUARE] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_1_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_1_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_2_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_2_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_3_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_3_SQUARE_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_RGB_4_V2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_1] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_2] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_3] = BLE_SWITCH_TOUCH_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_4] = BLE_SWITCH_TOUCH_GROUP;
 
-	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_1] = BLE_SWITCH_ELECTRICAL_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_2] = BLE_SWITCH_ELECTRICAL_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_3] = BLE_SWITCH_ELECTRICAL_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_1_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_2_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_3_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_1] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_3] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_1_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_2_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_ELECTRICAL_3_V2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_ELECTRICAL_1] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_ELECTRICAL_2] = BLE_SWITCH_ELECTRICAL_GROUP;
+	// bleTypeToGroupIdList[BLE_WIFI_SWITCH_ELECTRICAL_3] = BLE_SWITCH_ELECTRICAL_GROUP;
 
-	bleTypeToGroupIdList[BLE_SWITCH_2_CEILING] = BLE_SWITCH_CEILING_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_3_CEILING] = BLE_SWITCH_CEILING_GROUP;
-	bleTypeToGroupIdList[BLE_SWITCH_5_CEILING] = BLE_SWITCH_CEILING_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_2_CEILING] = BLE_SWITCH_CEILING_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_3_CEILING] = BLE_SWITCH_CEILING_GROUP;
+	// bleTypeToGroupIdList[BLE_SWITCH_5_CEILING] = BLE_SWITCH_CEILING_GROUP;
 
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_HCN] = BLE_SWITCH_CURTAIN_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_SQUARE_V2] = BLE_SWITCH_CURTAIN_GROUP;
@@ -300,6 +325,7 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_DOWNLIGHT_RGBCW, "", "Downlight màu");
 	RegisterDeviceModel(BLE_LED_OP_TRAN_LOA, "", "Ốp trần có loa");
 	RegisterDeviceModel(BLE_SWITCH_ONOFF, "", "Công tắc đèn");
+	RegisterDeviceModel(BLE_SWITCH_ONOFF_V2, "", "Công tắc đèn");
 	RegisterDeviceModel(BLE_SWITCH_1, "", "Công tắc 1 nút");
 	RegisterDeviceModel(BLE_SWITCH_2, "", "Công tắc 2 nút");
 	RegisterDeviceModel(BLE_SWITCH_3, "", "Công tắc 3 nút");

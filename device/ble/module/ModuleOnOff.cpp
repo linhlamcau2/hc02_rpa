@@ -68,27 +68,27 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			return CODE_OK;
 		}
 	}
-	// if (data[0] == RD_OPCODE_CONFIG_RSP)
-	// {
-	// 	typedef struct __attribute__((packed))
-	// 	{
-	// 		uint8_t opcodeVendor;
-	// 		uint16_t vendorId;
-	// 		uint16_t header;
-	// 		uint8_t data[100];
-	// 	} data_message_t;
-	// 	data_message_t *data_message = (data_message_t *)data;
-	// 	if (data_message->vendorId == RD_VENDOR_ID)
-	// 	{
-	// 		if (data_message->header == RD_OPCODE_REQUEST_STATUS_SWITCH)
-	// 		{
-	// 			onoff = data_message->data[index+1];
-	// 			BuildTelemetryValue(jsonValue);
-	// 			// CheckTrigger();
-	// 			return CODE_OK;
-	// 		}
-	// 	}
-	// }
+	if (data[0] == RD_OPCODE_CONFIG_RSP)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint8_t opcodeVendor;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t data[100];
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->vendorId == RD_VENDOR_ID)
+		{
+			if (data_message->header == RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4)
+			{
+				onoff = data_message->data[index+1];
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger();
+				return CODE_OK;
+			}
+		}
+	}
 	return CODE_ERROR;
 }
 
@@ -124,6 +124,7 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[key] = onoff;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleOnOff::Do(Json::Value &dataValue)

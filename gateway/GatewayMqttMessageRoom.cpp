@@ -94,8 +94,139 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::CheckAddDevToRoom(Device *device, Room *room)
+{
+	int rs = CODE_OK;
+	int devFast2Room = isDevFast2Room(device);
+	if (devFast2Room == 0)
+	{
+		if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
+			rs = CODE_ERROR;
+	}
+	else if (devFast2Room == 1)
+	{
+		if (room->AddDevice(device, true, true) != CODE_OK)
+			rs = CODE_ERROR;
+	}
+	else if (devFast2Room == 2)
+	{
+		rs = CODE_ERROR;
+		if (bleProtocol)
+			if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
+				if (room->AddDevice(device, false, true) == CODE_OK)
+					rs = CODE_OK;
+	}
+	else if (devFast2Room == -1)
+	{
+		if (room->AddDevice(device, false, true) != CODE_OK)
+			rs = CODE_ERROR;
+	}
+	return rs;
+}
+
+int Gateway::AddDevToGroupInRoom(Device *device, Group *group, uint32_t type)
+{
+	int rs = CODE_OK;
+	int indexTypeDevice = device->GetType() / 1000;
+	int devFast2Room = isDevFast2Room(device);
+	if (type == 1) // type nhóm công tắc
+	{
+		if (indexTypeDevice == 22 || indexTypeDevice == 24) // công tắc cảm ứng và công tắc cơ
+		{
+			if (devFast2Room == 0)
+			{
+				for (int i = 0; i < device->GetNumElement(); i++)
+				{
+					if (group->AddDevice(device, device->GetAddr() + i, false, true) != CODE_OK)
+					{
+						rs = CODE_ERROR;
+					}
+				}
+			}
+			else if (devFast2Room == 1)
+			{
+				for (int i = 0; i < device->GetNumElement(); i++)
+				{
+					if (group->AddDevice(device, device->GetAddr() + i, true, true) != CODE_OK)
+					{
+						rs = CODE_ERROR;
+					}
+				}
+			}
+		}
+	}
+	else if (device->GetType() == type)
+	{
+		if (devFast2Room == 0)
+		{
+			if (group->AddDevice(device, device->GetAddr(), false, true) != CODE_OK)
+			{
+				rs = CODE_ERROR;
+			}
+		}
+		else if (devFast2Room == 1)
+		{
+			if (group->AddDevice(device, device->GetAddr(), true, true) != CODE_OK)
+			{
+				rs = CODE_ERROR;
+			}
+		}
+	}
+
+	return rs;
+}
+
+int Gateway::AddDevToSceneInRoom(Device *device, Json::Value &dataGroup, SceneBle *sceneBle, int indexSceneBle)
+{
+	int rs = CODE_OK;
+	int indexTypeDevice = device->GetType() / 1000;
+	int devFast2Room = isDevFast2Room(device);
+
+	if (indexTypeDevice != 22 && indexTypeDevice != 24) // công tắc quét nhanh không có scene mặc định
+	{
+		if (devFast2Room == 0)
+		{
+			if (sceneBle->AddDevice(device, DataSceneBle::GetDataDeviceInScene(device->GetType(), indexSceneBle), false, true) != CODE_OK)
+			{
+				rs = CODE_ERROR;
+			}
+		}
+		else if (devFast2Room == 1)
+		{
+
+			if (dataGroup.isObject() && dataGroup.isMember("id") && dataGroup["id"].isString() &&
+				dataGroup.isMember("data") && dataGroup["data"].isObject())
+			{
+				string groupId = dataGroup["id"].asString();
+				Json::Value groupData = dataGroup["data"];
+				Group *group = getGroupFromId(groupId);
+				if (group)
+				{
+					if (group->GetPositionDevice(device, device->GetAddr()) >= 0)
+					{
+						group->Do(groupData, false);
+						if (sceneBle->AddDevice(device, groupData, true, true) != CODE_OK)
+						{
+							rs = CODE_ERROR;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return rs;
+}
+
+/**
+ * Thêm thiết bị vào phòng
+ * - Check type - version thiết bị để gửi thêm nhanh vào phòng
+ * - Check type - version thiết bị để thêm vào nhóm thiết bị: nhóm đèn, nhóm công tắc, nhóm công tắc đèn
+ * - Check type - version thiết bị để cấu hình scene
+ */
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGD("CreateRoom");
 	respValue["cmd"] = "createRoomRsp";
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 		reqValue.isMember("name") && reqValue["name"].isString() &&
@@ -136,31 +267,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						if (device)
 						{
 							devicesAddRoom.push_back(device);
-							int devFast2Room = isDevFast2Room(device);
-							if (devFast2Room == 0)
-							{
-								if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
-									devicesStatusConfig[deviceId] = false;
-							}
-							else if (devFast2Room == 1)
-							{
-								if (room->AddDevice(device, true, true) != CODE_OK)
-									devicesStatusConfig[deviceId] = false;
-							}
-							else if (devFast2Room == 2)
-							{
+							if (CheckAddDevToRoom(device, room) != CODE_OK)
 								devicesStatusConfig[deviceId] = false;
-								if (bleProtocol)
-									if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
-										if (room->AddDevice(device, false, true) == CODE_OK)
-											devicesStatusConfig[deviceId] = true;
-							}
-							else if (devFast2Room == -1)
-							{
-								devicesStatusConfig[deviceId] = false;
-								if (room->AddDevice(device, false, true) == CODE_OK)
-									devicesStatusConfig[deviceId] = true;
-							}
 						}
 						else
 						{
@@ -192,36 +300,26 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 										room->AddGroup(group, true, true);
 									for (auto &deviceInRoom : room->deviceList)
 									{
-										if (deviceInRoom->device->GetType() == type)
+										if (AddDevToGroupInRoom(deviceInRoom->device, group, type) != CODE_OK)
 										{
-											int devGroupFast2Room = isDevFast2Room(deviceInRoom->device);
-											if (devGroupFast2Room == 1)
+											if (devicesStatusConfig[deviceInRoom->device->GetId()])
 											{
-												if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), true, true) != CODE_OK)
-												{
-													if (devicesStatusConfig[deviceInRoom->device->GetId()])
-														devicesStatusConfig[deviceInRoom->device->GetId()] = false;
-												}
-												else
-												{
-													tempSuccessList.append(deviceInRoom->device->GetId());
-												}
+												devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 											}
-											else if (devGroupFast2Room == 0)
+										}
+										else
+										{
+											if (devicesStatusConfig[deviceInRoom->device->GetId()])
 											{
-												if (group->AddDevice(deviceInRoom->device, deviceInRoom->device->GetAddr(), false, true) != CODE_OK)
-												{
-													if (devicesStatusConfig[deviceInRoom->device->GetId()])
-														devicesStatusConfig[deviceInRoom->device->GetId()] = false;
-												}
-												else
-												{
-													tempSuccessList.append(deviceInRoom->device->GetId());
-												}
+												tempSuccessList.append(deviceInRoom->device->GetId());
 											}
 										}
 									}
 									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), tempSuccessList, roomId));
+								}
+								else
+								{
+									LOGW("createGroup error: id-%s, name-%s, type-%d", id.c_str(), name.c_str(),type);
 								}
 							}
 							else
@@ -253,51 +351,25 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								room->AddSceneBle(sceneBle, true, true);
 								for (auto &deviceAddScene : devicesAddRoom)
 								{
-									int devSceneFast2Room = isDevFast2Room(deviceAddScene);
-									if (devSceneFast2Room == 1)
+									if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 									{
-										if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+										Json::Value groupsAddScene = sceneValue["groups"];
+										for (auto &groupAddScene : groupsAddScene)
 										{
-											Json::Value groupsAddScene = sceneValue["groups"];
-											for (auto &groupAddScene : groupsAddScene)
+											if (AddDevToSceneInRoom(deviceAddScene, groupAddScene, sceneBle, i + 1) != CODE_OK)
 											{
-												if (groupAddScene.isObject() && groupAddScene.isMember("id") && groupAddScene["id"].isString() &&
-													groupAddScene.isMember("data") && groupAddScene["data"].isObject())
+												if (devicesStatusConfig[deviceAddScene->GetId()])
 												{
-													string groupId = groupAddScene["id"].asString();
-													Json::Value groupData = groupAddScene["data"];
-													Group *group = getGroupFromId(groupId);
-													if (group)
-													{
-														if (group->GetPositionDevice(deviceAddScene, deviceAddScene->GetAddr()) >= 0)
-														{
-															group->Do(groupData, false);
-															if (sceneBle->AddDevice(deviceAddScene, groupData, true, true) != CODE_OK)
-															{
-																if (devicesStatusConfig[deviceAddScene->GetId()])
-																	devicesStatusConfig[deviceAddScene->GetId()] = false;
-															}
-															else
-															{
-																tempSuccessList.append(deviceAddScene->GetId());
-															}
-														}
-													}
+													devicesStatusConfig[deviceAddScene->GetId()] = false;
 												}
 											}
-										}
-									}
-									else if (devSceneFast2Room == 0)
-									{
-										Json::Value dataScene = DataSceneBle::GetDataDeviceInScene(deviceAddScene->GetType(), i + 1);
-										if (sceneBle->AddDevice(deviceAddScene, dataScene, false, true) != CODE_OK)
-										{
-											if (devicesStatusConfig[deviceAddScene->GetId()])
-												devicesStatusConfig[deviceAddScene->GetId()] = false;
-										}
-										else
-										{
-											tempSuccessList.append(deviceAddScene->GetId());
+											else
+											{
+												if (devicesStatusConfig[deviceAddScene->GetId()])
+												{
+													tempSuccessList.append(deviceAddScene->GetId());
+												}
+											}
 										}
 									}
 								}
@@ -386,31 +458,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					if (device)
 					{
 						devicesAddRoom.push_back(device);
-						int devFast2Room = isDevFast2Room(device);
-						if (devFast2Room == 0)
-						{
-							if (room->AddDeviceOneMessage(device, true, true) != CODE_OK)
-								devicesStatusConfig[deviceId] = false;
-						}
-						else if (devFast2Room == 1)
-						{
-							if (room->AddDevice(device, true, true) != CODE_OK)
-								devicesStatusConfig[deviceId] = false;
-						}
-						else if (devFast2Room == 2)
-						{
+						if (CheckAddDevToRoom(device, room) != CODE_OK)
 							devicesStatusConfig[deviceId] = false;
-							if (bleProtocol)
-								if (bleProtocol->SetGroup(device->GetAddr(), room->GetAddr() + 49152) == CODE_OK)
-									if (room->AddDevice(device, false, true) == CODE_OK)
-										devicesStatusConfig[deviceId] = true;
-						}
-						else if (devFast2Room == -1)
-						{
-							devicesStatusConfig[deviceId] = false;
-							if (room->AddDevice(device, false, true) == CODE_OK)
-								devicesStatusConfig[deviceId] = true;
-						}
 					}
 					else
 					{
@@ -465,32 +514,18 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 							{
 								for (auto &dev : devicesAddRoom)
 								{
-									if (dev->GetType() == type)
+									if (AddDevToGroupInRoom(dev, group, type) != CODE_OK)
 									{
-										int devGroupFast2Room = isDevFast2Room(dev);
-										if (devGroupFast2Room == 1)
+										if (devicesStatusConfig[dev->GetId()])
 										{
-											if (group->AddDevice(dev, dev->GetAddr(), true, true) != CODE_OK)
-											{
-												if (devicesStatusConfig[dev->GetId()])
-													devicesStatusConfig[dev->GetId()] = false;
-											}
-											else
-											{
-												tempSuccessList.append(dev->GetId());
-											}
+											devicesStatusConfig[dev->GetId()] = false;
 										}
-										else if (devGroupFast2Room == 0)
+									}
+									else
+									{
+										if (devicesStatusConfig[dev->GetId()])
 										{
-											if (group->AddDevice(dev, dev->GetAddr(), false, true) != CODE_OK)
-											{
-												if (devicesStatusConfig[dev->GetId()])
-													devicesStatusConfig[dev->GetId()] = false;
-											}
-											else
-											{
-												tempSuccessList.append(dev->GetId());
-											}
+											tempSuccessList.append(dev->GetId());
 										}
 									}
 								}
@@ -548,50 +583,25 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 							{
 								for (auto &devInScene : devicesAddRoom)
 								{
-									int devSceneFast2Room = isDevFast2Room(devInScene);
-									if (devSceneFast2Room == 1)
+									if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 									{
-										if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+										Json::Value groupsAddScene = sceneValue["groups"];
+										for (auto &groupAddScene : groupsAddScene)
 										{
-											Json::Value groupsAddScene = sceneValue["groups"];
-											for (auto &groupAddScene : groupsAddScene)
+											if (AddDevToSceneInRoom(devInScene, groupAddScene, sceneBle, i + 1) != CODE_OK)
 											{
-												if (groupAddScene.isObject() && groupAddScene.isMember("id") && groupAddScene["id"].isString() &&
-													groupAddScene.isMember("data") && groupAddScene["data"].isObject())
+												if (devicesStatusConfig[devInScene->GetId()])
 												{
-													string groupId = groupAddScene["id"].asString();
-													Json::Value groupData = groupAddScene["data"];
-													Group *group = getGroupFromId(groupId);
-													if (group)
-													{
-														if (group->GetPositionDevice(devInScene, devInScene->GetAddr()) >= 0)
-														{
-															group->Do(groupData, false);
-															if (sceneBle->AddDevice(devInScene, groupData, true, true) != CODE_OK)
-															{
-																if (devicesStatusConfig[devInScene->GetId()])
-																	devicesStatusConfig[devInScene->GetId()] = false;
-															}
-															else
-															{
-																tempSuccessList.append(devInScene->GetId());
-															}
-														}
-													}
+													devicesStatusConfig[devInScene->GetId()] = false;
 												}
 											}
-										}
-									}
-									else if (devSceneFast2Room == 0)
-									{
-										if (sceneBle->AddDevice(devInScene, DataSceneBle::GetDataDeviceInScene(devInScene->GetType(), i + 1), false, true) != CODE_OK)
-										{
-											if (devicesStatusConfig[devInScene->GetId()])
-												devicesStatusConfig[devInScene->GetId()] = false;
-										}
-										else
-										{
-											tempSuccessList.append(devInScene->GetId());
+											else
+											{
+												if (devicesStatusConfig[devInScene->GetId()])
+												{
+													tempSuccessList.append(devInScene->GetId());
+												}
+											}
 										}
 									}
 								}
@@ -676,6 +686,11 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 						else if (devFast2Room == 1)
 						{
 							if (room->DelDevice(device, true, true) != CODE_OK)
+								devicesStatusConfig[deviceId] = false;
+						}
+						else if (devFast2Room == 2)
+						{
+							if (room->DelDevice(device, false, true) != CODE_OK)
 								devicesStatusConfig[deviceId] = false;
 						}
 
@@ -822,6 +837,12 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				else if (devFast2Room == 1)
 				{
 					if (room->DelDevice(deviceInRoom->device, true, true) != CODE_OK)
+						if (devicesStatusConfig[deviceInRoom->device->GetId()])
+							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+				}
+				else if (devFast2Room == 2)
+				{
+					if (room->DelDevice(deviceInRoom->device, false, true) != CODE_OK)
 						if (devicesStatusConfig[deviceInRoom->device->GetId()])
 							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 				}

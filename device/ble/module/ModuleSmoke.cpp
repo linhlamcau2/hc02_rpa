@@ -35,8 +35,8 @@ void ModuleSmoke::SaveAttribute()
 int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_SMOKE) && dataValue[KEY_ATTRIBUTE_SMOKE].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_SMOKE_PIN) && dataValue[KEY_ATTRIBUTE_SMOKE_PIN].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_SMOKE) && dataValue[KEY_ATTRIBUTE_SMOKE].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_SMOKE_PIN) && dataValue[KEY_ATTRIBUTE_SMOKE_PIN].isInt())
 	{
 		smoke = dataValue[KEY_ATTRIBUTE_SMOKE].asInt();
 		power = dataValue[KEY_ATTRIBUTE_SMOKE_PIN].asInt();
@@ -79,7 +79,7 @@ bool ModuleSmoke::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(KEY_ATTRIBUTE_SMOKE))
