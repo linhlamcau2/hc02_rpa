@@ -293,6 +293,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							if (!group)
 							{
 								Json::Value tempSuccessList = Json::arrayValue;
+								LOGE("Group addr: %d: %d: %d", roomAddr, type, Device::BleTypeToGroupId(type));
 								group = new Group(id, roomAddr + Device::BleTypeToGroupId(type), name);
 								if (group)
 								{
@@ -319,7 +320,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								}
 								else
 								{
-									LOGW("createGroup error: id-%s, name-%s, type-%d", id.c_str(), name.c_str(),type);
+									LOGW("createGroup error: id-%s, name-%s, type-%d", id.c_str(), name.c_str(), type);
 								}
 							}
 							else

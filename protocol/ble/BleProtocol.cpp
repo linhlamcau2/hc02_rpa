@@ -481,8 +481,9 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 										if (messageResp->len)
 										{
 											*(messageResp->len) = message_rsp->len - 2;
-											if (messageResp->data)
-												memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+											if (*(messageResp->len) > 0)
+												if (messageResp->data && message_rsp->data)
+													memcpy(messageResp->data, message_rsp->data, *messageResp->len);
 										}
 									}
 								}
@@ -1047,17 +1048,17 @@ static void genSecurityKey(uint8_t *mac, uint16_t devAddr, uint8_t *out)
 	AES aes(AESKeyLength::AES_128);
 	memcpy(plaintext + 8, mac, 6);
 	memcpy(plaintext + 14, (uint8_t *)&devAddr, 2);
-	for (int n = 0; n < 16; n++)
-	{
-		printf("%02x ", plaintext[n]);
-	}
-	printf("\n");
+	// for (int n = 0; n < 16; n++)
+	// {
+	// 	printf("%02x ", plaintext[n]);
+	// }
+	// printf("\n");
 	unsigned char *outAes = aes.EncryptECB(plaintext, 32, keyAes);
-	for (int j = 0; j < 32; j++)
-	{
-		printf("%02x ", outAes[j]);
-	}
-	printf("\n");
+	// for (int j = 0; j < 32; j++)
+	// {
+	// 	printf("%02x ", outAes[j]);
+	// }
+	// printf("\n");
 	for (int i = 0; i < 6; i++)
 	{
 		out[i] = outAes[i + 10];

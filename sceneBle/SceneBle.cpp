@@ -127,6 +127,9 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 {
 	if (!device)
 		return CODE_ERROR;
+
+	if (delDb)
+		database->DeviceInSceneBleDel(this, device);
 	if (sendBle)
 	{
 		int indexType = device->GetType() / 1000;
@@ -172,9 +175,6 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 		}
 		return CODE_OK;
 	}
-
-	if (delDb)
-		database->DeviceInSceneBleDel(this, device);
 	return CODE_ERROR;
 }
 

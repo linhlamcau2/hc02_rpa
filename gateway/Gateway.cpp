@@ -106,6 +106,7 @@ static void startUdpThread(void *data)
 
 void Gateway::init()
 {
+	Device::InitDeviceModelList();
 	LocalProtocol::init();
 	CloudProtocol::init();
 	Udp::init();
