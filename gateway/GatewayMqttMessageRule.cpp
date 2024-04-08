@@ -29,7 +29,7 @@ void Gateway::InitMqttMessageRule()
 int Gateway::OnGetRuleList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetRuleList");
-	Json::Value ruleData;
+	Json::Value ruleData = Json::arrayValue;
 	ruleListMtx.lock();
 	for (const auto &[id, rule] : ruleList)
 	{
@@ -51,7 +51,7 @@ int Gateway::OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("rules") && reqValue["rules"].isArray() && reqValue["rules"].size() > 0)
 	{
 		Json::Value rules = reqValue["rules"];
-		Json::Value ruleData;
+		Json::Value ruleData = Json::arrayValue;
 		for (auto &ruleValue : rules)
 		{
 			if (ruleValue.isString())

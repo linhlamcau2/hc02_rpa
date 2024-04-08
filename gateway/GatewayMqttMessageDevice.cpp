@@ -139,7 +139,7 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 					else
 					{
 						deviceValue["id"] = device->GetId();
-						Json::Value deviceAttbute;
+						Json::Value deviceAttbute = Json::objectValue;
 						device->BuildTelemetryValue(deviceAttbute);
 						deviceValue["data"] = deviceAttbute;
 						devicesValueRsp.append(deviceValue);
@@ -161,13 +161,13 @@ int Gateway::OnGetDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetAllDeviceStatus");
-	Json::Value devicesValueRsp;
+	Json::Value devicesValueRsp = Json::arrayValue;
 	deviceListMtx.lock();
 	for (const auto &[id, device] : deviceList)
 	{
 		Json::Value deviceValue;
 		deviceValue["id"] = device->GetId();
-		Json::Value deviceAttbute;
+		Json::Value deviceAttbute = Json::objectValue;
 		device->BuildTelemetryValue(deviceAttbute);
 		deviceValue["data"] = deviceAttbute;
 		devicesValueRsp.append(deviceValue);
@@ -182,7 +182,7 @@ int Gateway::OnGetAllDeviceStatus(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetDeviceList");
-	Json::Value devicesValueRsp;
+	Json::Value devicesValueRsp = Json::arrayValue;
 	for (const auto &[id, device] : deviceList)
 	{
 		Json::Value deviceValue;
@@ -202,14 +202,13 @@ int Gateway::OnGetDeviceList(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGE("OnGetCamList");
-	Json::Value roomData;
+	Json::Value roomData = Json::arrayValue;
 	for (const auto &[id, room] : roomList)
 	{
 		Json::Value temp_devicesList;
 		temp_devicesList["camList"] = Json::arrayValue;
 		for (unsigned int i = 0; i < room->deviceList.size(); i++)
 		{
-			Json::Value dvList;
 			DeviceInGroup *deviceInRoom = room->deviceList[i];
 			int type = deviceInRoom->device->GetType();
 			if (type / 10000 == 6)
@@ -234,7 +233,7 @@ int Gateway::OnGetCamList(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetAllCam(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGE("OnGetAllCam");
-	Json::Value camData;
+	Json::Value camData = Json::arrayValue;
 	for (const auto &[id, device] : deviceList)
 	{
 		int type = device->GetType();
@@ -285,8 +284,8 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("device") && reqValue["device"].isArray())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		Json::Value devicesValue = reqValue["device"];
 		for (auto &deviceValue : devicesValue)
 		{
@@ -399,7 +398,7 @@ int Gateway::OnDelFavoriteDev(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnGetFavoriteDev(Json::Value &reqValue, Json::Value &respValue)
 {
-	Json::Value list;
+	Json::Value list = Json::arrayValue;
 	for (const auto &[id, device] : deviceList)
 	{
 		if (device->GetIsFavorite())

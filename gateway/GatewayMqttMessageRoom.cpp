@@ -31,7 +31,7 @@ void Gateway::InitMqttMessageRoom()
 int Gateway::OnGetRoomList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetRoomList");
-	Json::Value roomData;
+	Json::Value roomData = Json::arrayValue;
 	roomListMtx.lock();
 	for (const auto &[id, room] : roomList)
 	{
@@ -52,7 +52,7 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnGetDeviceStatus");
 	if (reqValue.isMember("rooms") && reqValue["rooms"].isArray() && reqValue["rooms"].size() > 0)
 	{
-		Json::Value roomsData;
+		Json::Value roomsData = Json::arrayValue;
 		Json::Value rooms = reqValue["rooms"];
 		for (auto &roomValue : rooms)
 		{
@@ -705,7 +705,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 								{
 									if (devFast2Room == 1)
 									{
-										if (group->DelDevice(device, device->GetAddr(), true, true) != CODE_OK)
+										if (group->DelDevice(devInGr->device, devInGr->epId, true, true) != CODE_OK)
 										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
@@ -717,7 +717,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 									}
 									else if (devFast2Room == 0)
 									{
-										if (group->DelDevice(device, device->GetAddr(), false, true) != CODE_OK)
+										if (group->DelDevice(devInGr->device, devInGr->epId, false, true) != CODE_OK)
 										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
@@ -859,13 +859,13 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					int devGroupFast2Room = isDevFast2Room(deviceInGroup->device);
 					if (devGroupFast2Room == 1)
 					{
-						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) != CODE_OK)
+						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->epId, true, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
 								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 					}
 					else if (devGroupFast2Room == 0)
 					{
-						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), false, true) != CODE_OK)
+						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->epId, false, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
 								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 					}
@@ -939,7 +939,6 @@ int Gateway::OnGetGroupIntoRoom(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("rooms") && reqValue["rooms"].isArray())
 	{
 		Json::Value rooms = reqValue["rooms"];
-		Json::Value roomsRsp;
 		for (auto &room : rooms)
 		{
 			if (room.isString())
@@ -974,7 +973,6 @@ int Gateway::OnGetSceneIntoRoom(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("rooms") && reqValue["rooms"].isArray())
 	{
 		Json::Value rooms = reqValue["rooms"];
-		Json::Value roomsRsp;
 		for (auto &room : rooms)
 		{
 			if (room.isString())

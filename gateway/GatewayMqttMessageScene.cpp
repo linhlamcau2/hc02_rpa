@@ -114,11 +114,11 @@ int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnGetDevListInScene");
 	if (reqValue.isMember("scenes") && reqValue["scenes"].isArray() && reqValue["scenes"].size() > 0)
 	{
-		Json::Value scenesList;
+		Json::Value scenesList = Json::arrayValue;
 		Json::Value scenes = reqValue["scenes"];
 		for (auto &sceneValue : scenes)
 		{
-			Json::Value scenesData;
+			Json::Value scenesData = Json::objectValue;
 			if (sceneValue.isString())
 			{
 				string sceneId = sceneValue.asString();
@@ -126,7 +126,7 @@ int Gateway::OnGetDevListInScene(Json::Value &reqValue, Json::Value &respValue)
 				SceneBle *temp_scene = getSceneBleFromId(sceneId);
 				if (temp_scene)
 				{
-					Json::Value temp_devicesList;
+					Json::Value temp_devicesList = Json::arrayValue;
 					for (unsigned int i = 0; i < temp_scene->deviceList.size(); i++)
 					{
 						DeviceInSceneBle *deviceInSceneBle = temp_scene->deviceList[i];
@@ -982,7 +982,7 @@ int Gateway::OnDelFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnGetFavoriteScene(Json::Value &reqValue, Json::Value &respValue)
 {
-	Json::Value list;
+	Json::Value list = Json::arrayValue;
 	for (const auto &[id, scene] : sceneBleList)
 	{
 		if (scene->GetIsFavorite())

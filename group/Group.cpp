@@ -135,41 +135,48 @@ int Group::DelDevice(Device *device, int epId, bool sendBle, bool delDb)
 	if (!device)
 		return CODE_ERROR;
 
-	if (device->GetProtocol() == BLE_DEVICE)
+	if (delDb)
+		database->DeviceInGroupDel(this, device, epId);
+	if (GetPositionDevice(device, epId) != CODE_ERROR)
 	{
-		if (delDb)
-			database->DeviceInGroupDel(this, device, epId);
-
-		if (sendBle)
+		if (device->GetProtocol() == BLE_DEVICE)
 		{
-			if (bleProtocol)
+			if (sendBle)
 			{
-				if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
+				if (bleProtocol)
 				{
-					int deviceIndex = GetPositionDevice(device, epId);
-					if (deviceIndex > -1)
+					if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 					{
-						mtx.lock();
-						deviceList.erase(deviceList.begin() + deviceIndex);
-						mtx.unlock();
+						int deviceIndex = GetPositionDevice(device, epId);
+						if (deviceIndex > -1)
+						{
+							mtx.lock();
+							deviceList.erase(deviceList.begin() + deviceIndex);
+							mtx.unlock();
+						}
+						return CODE_OK;
 					}
-					return CODE_OK;
 				}
+				else
+					LOGW("BleProtocol null");
 			}
 			else
-				LOGW("BleProtocol null");
-		}
-		else
-		{
-			int deviceIndex = GetPositionDevice(device, epId);
-			if (deviceIndex > -1)
 			{
-				mtx.lock();
-				deviceList.erase(deviceList.begin() + deviceIndex);
-				mtx.unlock();
+				int deviceIndex = GetPositionDevice(device, epId);
+				if (deviceIndex > -1)
+				{
+					mtx.lock();
+					deviceList.erase(deviceList.begin() + deviceIndex);
+					mtx.unlock();
+				}
+				return CODE_OK;
 			}
-			return CODE_OK;
 		}
+	}
+	else
+	{
+		LOGW("Device %s is not exist in group", device->GetId().c_str());
+		return CODE_OK;
 	}
 
 #ifdef CONFIG_ENABLE_ZIGBEE

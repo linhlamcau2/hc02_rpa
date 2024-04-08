@@ -76,7 +76,7 @@ int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnGetGroupList(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetGroupList");
-	Json::Value groupData;
+	Json::Value groupData = Json::arrayValue;
 	groupListMtx.lock();
 	for (const auto &[id, group] : groupList)
 	{
@@ -97,7 +97,7 @@ int Gateway::OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnGetDevListInGroup");
 	if (reqValue.isMember("groups") && reqValue["groups"].isArray() && reqValue["groups"].size() > 0)
 	{
-		Json::Value groupList;
+		Json::Value groupList = Json::arrayValue;
 		Json::Value groups = reqValue["groups"];
 		for (auto &groupValue : groups)
 		{
@@ -109,7 +109,7 @@ int Gateway::OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue)
 				Group *temp = getGroupFromId(id);
 				if (temp)
 				{
-					Json::Value temp_devicesList;
+					Json::Value temp_devicesList = Json::arrayValue;
 					for (unsigned int i = 0; i < temp->deviceList.size(); i++)
 					{
 						DeviceInGroup *deviceInGroup = temp->deviceList[i];
@@ -394,8 +394,8 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
-		Json::Value successList;
-		Json::Value failedList;
+		Json::Value successList = Json::arrayValue;
+		Json::Value failedList = Json::arrayValue;
 		string groupId = reqValue["id"].asString();
 		Group *group = getGroupFromId(groupId);
 		if (group)

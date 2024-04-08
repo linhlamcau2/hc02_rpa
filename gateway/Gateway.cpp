@@ -1554,7 +1554,7 @@ void Gateway::printRoom()
 		LOGI("room: %s", id.c_str());
 		for (auto &dev : rm->deviceList)
 		{
-			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+			LOGI("\tdev:%s: %d: %d", dev->device->GetId().c_str(), dev->device->GetAddr(), dev->epId);
 		}
 	}
 }
