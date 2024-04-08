@@ -193,6 +193,10 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 #endif /* ANDROID */
 
 #ifndef ESP_PLATFORM
+bool compareDates(const std::pair<std::string, std::string>& a, const std::pair<std::string, std::string>& b) {
+    return a.first < b.first;
+}
+
 void checkLogFile()
 {
 
@@ -222,6 +226,8 @@ void checkLogFile()
 		std::cerr << "Error opening directory" << std::endl;
 		return;
 	}
+
+	std::sort(logFiles.begin(), logFiles.end(), compareDates);
 
 	int logCount = 0;
 	for (auto it = logFiles.rbegin(); it != logFiles.rend(); ++it)
