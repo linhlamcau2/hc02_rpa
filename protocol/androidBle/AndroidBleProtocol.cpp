@@ -274,7 +274,7 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 						dataJson.isMember("vid") && dataJson["vid"].isInt() &&
 						dataJson.isMember("pid") && dataJson["pid"].isInt())
 					{
-						devKey = dataJson["deviceKey"].asString();
+						devKey = dataJson["devicekey"].asString();
 						pid = dataJson["pid"].asInt();
 						vid = dataJson["vid"].asInt();
 
