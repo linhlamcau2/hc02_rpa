@@ -224,6 +224,21 @@ int Gateway::AddDevToSceneInRoom(Device *device, Json::Value &dataGroup, SceneBl
  * - Check type - version thiết bị để thêm vào nhóm thiết bị: nhóm đèn, nhóm công tắc, nhóm công tắc đèn
  * - Check type - version thiết bị để cấu hình scene
  */
+int Gateway::DelDeviceFromAllRoom(string deviceId)
+{
+	for (const auto &[id, room] : roomList)
+	{
+		for (unsigned int i = 0; i < room->deviceList.size(); i++)
+		{
+			if (deviceId == room->deviceList[i]->device->GetId())
+			{
+				room->DelDevice(room->deviceList[i]->device, true, true);
+			}
+		}
+	}
+	return CODE_OK;
+}
+
 int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("CreateRoom");
@@ -457,6 +472,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
+						DelDeviceFromAllRoom(deviceId);
 						devicesAddRoom.push_back(device);
 						if (CheckAddDevToRoom(device, room) != CODE_OK)
 							devicesStatusConfig[deviceId] = false;

@@ -119,6 +119,7 @@ private:
 
 	// Room
 	void InitMqttMessageRoom();
+	int DelDeviceFromAllRoom(string deviceId);
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
 	int CheckAddDevToRoom(Device * device, Room * room);
