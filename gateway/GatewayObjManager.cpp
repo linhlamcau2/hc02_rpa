@@ -1,4 +1,5 @@
 #include "Gateway.h"
+#include "Log.h"
 #include "Db.h"
 
 #define ELEMENT_MAX 4
@@ -309,20 +310,35 @@ void Gateway::delRoom(Room *room)
 }
 
 // Id Room bắt đầu từ 0xd000 -> index Room = 0xd000-0xc000 = 4096
-// 1 Hc có tối đa 45 phòng, mỗi phòng 256 group -> index Room max = 4096 + (256*40) = 15616
+// 1 Hc có tối đa 45 phòng, mỗi phòng 256 group -> index Room max = 4096 + (256*45) = 15616
 uint16_t Gateway::getNextRoomAddr()
 {
-	uint16_t roomAddr = 4096; // start add of room
-	groupListMtx.lock();
-	for (const auto &[id, group] : groupList)
+	uint16_t roomAddrStart = 4096; // start add of room
+	uint16_t numGroupInRoom = 256;
+	uint8_t numRoomMax = 5;
+	bool addrExist = false;
+
+	for (int i = 0; i < numRoomMax; i++)
 	{
-		if (group->GetAddr() >= roomAddr && group->GetAddr() < 15616)
+		addrExist = false;
+		groupListMtx.lock();
+		for (const auto &[id, group] : groupList)
 		{
-			roomAddr = (group->GetAddr() / 256 + 1) * 256; // every room has 200 group
+			if (group->GetAddr() == (roomAddrStart + (numGroupInRoom * i)))
+			{
+				addrExist = true;
+				break;
+			}
+		}
+		groupListMtx.unlock();
+		if (!addrExist)
+		{
+			return (roomAddrStart + (numGroupInRoom * i));
 		}
 	}
-	groupListMtx.unlock();
-	return roomAddr;
+
+	LOGW("group full");
+	return 0;
 }
 
 uint32_t Gateway::GetNextAndroidProvisionAddr()

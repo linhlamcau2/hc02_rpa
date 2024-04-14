@@ -252,7 +252,8 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 		if (!room)
 		{
 			uint16_t roomAddr = getNextRoomAddr();
-			room = new Room(roomId, roomAddr, roomName);
+			if (roomAddr > 0)
+				room = new Room(roomId, roomAddr, roomName);
 			if (room)
 			{
 				gateway->AddNewRoom(room, true);
