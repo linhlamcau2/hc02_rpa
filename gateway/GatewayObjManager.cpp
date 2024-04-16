@@ -315,7 +315,7 @@ uint16_t Gateway::getNextRoomAddr()
 {
 	uint16_t roomAddrStart = 4096; // start add of room
 	uint16_t numGroupInRoom = 256;
-	uint8_t numRoomMax = 5;
+	uint8_t numRoomMax = 45;
 	bool addrExist = false;
 
 	for (int i = 0; i < numRoomMax; i++)
