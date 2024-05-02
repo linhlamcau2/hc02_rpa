@@ -33,6 +33,9 @@ public:
 	bool IsHaveDb();
 	int createTableIfNotExists();
 
+	int Sqlite_BenginTransaction();
+	int Sqlite_EndTransaction();
+
 	int DeviceRead();
 	int DeviceAdd(Device *device);
 	int DeviceUpdate(Device *device);

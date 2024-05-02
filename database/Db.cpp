@@ -117,6 +117,22 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 	return CODE_OK;
 }
 
+int Db::Sqlite_BenginTransaction()
+{
+#ifdef ESP_PLATFORM
+	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+#endif
+	return CODE_OK;
+}
+
+int Db::Sqlite_EndTransaction()
+{
+#ifdef ESP_PLATFORM
+	sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+#endif
+	return CODE_OK;
+}
+
 int Db::Sqlite_Exec(string &sql)
 {
 	LOGD("Sqlite_Exec sql: %s", sql.c_str());

@@ -168,6 +168,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 			{
 				string roomId;
 				Json::Value deviceList = reqValue["devices"];
+				database->Sqlite_BenginTransaction();
 				for (auto &deviceValue : deviceList)
 				{
 					if (deviceValue.isObject() &&
@@ -189,8 +190,12 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 								failedList.append(device->GetId());
 							}
 						}
+#ifdef ESP_PLATFORM
+						vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 					}
 				}
+				database->Sqlite_EndTransaction();
 				if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 				{
 					roomId = reqValue["roomId"].asString();
@@ -252,6 +257,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 		}
 		if (sceneBle)
 		{
+			database->Sqlite_BenginTransaction();
 			vector<Device *> devsInScene; // list dev in scene
 			for (auto &devs : sceneBle->deviceList)
 			{
@@ -299,6 +305,9 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(item->GetId());
 				}
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 			}
 
 			for (auto &item : devsEditScene)
@@ -317,6 +326,9 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(item->GetId());
 				}
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 			}
 
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
@@ -328,6 +340,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 					room->AddSceneBle(sceneBle, true, true);
 				}
 			}
+			database->Sqlite_EndTransaction();
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
@@ -359,6 +372,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
+			database->Sqlite_BenginTransaction();
 			vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
 			for (auto &deviceInScene : devicesInSceneBle)
 			{
@@ -371,7 +385,11 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(deviceInScene->device->GetId());
 				}
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 			}
+			database->Sqlite_EndTransaction();
 			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList, "");
 
 			respValue["data"]["code"] = CODE_OK;
@@ -431,6 +449,7 @@ int Gateway::OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
+			database->Sqlite_BenginTransaction();
 			Json::Value deviceList = reqValue["devices"];
 			for (auto &deviceValue : deviceList)
 			{
@@ -453,7 +472,11 @@ int Gateway::OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue)
 						}
 					}
 				}
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 			}
+			database->Sqlite_EndTransaction();
 
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 			{
@@ -497,6 +520,7 @@ int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
+			database->Sqlite_BenginTransaction();
 			Json::Value deviceList = reqValue["devices"];
 			for (auto &deviceValue : deviceList)
 			{
@@ -518,8 +542,12 @@ int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
 							failedList.append(deviceId);
 						}
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 				}
 			}
+			database->Sqlite_EndTransaction();
 
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 			{

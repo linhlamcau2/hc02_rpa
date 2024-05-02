@@ -271,6 +271,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				room = new Room(roomId, roomAddr, roomName);
 			if (room)
 			{
+				database->Sqlite_BenginTransaction();
 				gateway->AddNewRoom(room, true);
 				for (auto &deviceValue : devicesValue)
 				{
@@ -291,6 +292,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							devicesStatusConfig[deviceId] = false;
 							LOGW("Device %s not found", deviceId.c_str());
 						}
+#ifdef ESP_PLATFORM
+						vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 					}
 				}
 				printRoom();
@@ -330,6 +334,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 												tempSuccessList.append(deviceInRoom->device->GetId());
 											}
 										}
+#ifdef ESP_PLATFORM
+										vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 									}
 									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), tempSuccessList, roomId));
 								}
@@ -387,6 +394,9 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 												}
 											}
 										}
+#ifdef ESP_PLATFORM
+										vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 									}
 								}
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
@@ -420,6 +430,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 				{
 					PublishToLocalMessage(groupSceneSendtoHcApp[i]);
 				}
+				database->Sqlite_EndTransaction();
 			}
 			else
 			{
@@ -464,6 +475,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
@@ -483,6 +495,9 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 						devicesStatusConfig[deviceId] = false;
 						LOGW("Device %s not found", deviceId.c_str());
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 				}
 			}
 			printRoom();
@@ -545,6 +560,9 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											tempSuccessList.append(dev->GetId());
 										}
 									}
+#ifdef ESP_PLATFORM
+									vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 								}
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, group->GetId(), group->GetName(), tempSuccessList, roomId));
 							}
@@ -620,6 +638,9 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 												}
 											}
 										}
+#ifdef ESP_PLATFORM
+										vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 									}
 								}
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
@@ -657,6 +678,8 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 				room->SetDataConfig(respValue.toString());
 				database->RoomAdd(room);
 			}
+
+			database->Sqlite_EndTransaction();
 		}
 		else
 		{
@@ -685,6 +708,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
@@ -744,6 +768,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(device->GetId());
 										}
 									}
+#ifdef ESP_PLATFORM
+									vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 								}
 							}
 							pushMsgHcCoreToHcApp("delDevFromGroup", group->GetId(), group->GetName(), tempSuccessList, "");
@@ -781,6 +808,9 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(deviceId);
 										}
 									}
+#ifdef ESP_PLATFORM
+									vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 								}
 							}
 							pushMsgHcCoreToHcApp("delDevToScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, "");
@@ -805,6 +835,8 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
 			pushMsgHcCoreToHcApp("delDevFromRoom", roomId, room->GetName(), successList, "");
+
+			database->Sqlite_EndTransaction();
 
 			if (room)
 			{
@@ -836,6 +868,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 		Room *room = getRoomFromId(roomId);
 		if (room)
 		{
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceInRoom : room->deviceList)
 			{
 				devicesStatusConfig[deviceInRoom->device->GetId()] = true;
@@ -863,6 +896,9 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 						if (devicesStatusConfig[deviceInRoom->device->GetId()])
 							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 				}
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 			}
 			devInRoom.clear();
 			printRoom();
@@ -886,6 +922,9 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
 								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 				}
 				delGroup(groupInRoom);
 				devInGroup.clear();
@@ -912,6 +951,9 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 							if (devicesStatusConfig[deviceInScene->device->GetId()])
 								devicesStatusConfig[deviceInScene->device->GetId()] = false;
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 				}
 				delSceneBle(sceneInRoom);
 				devInSceneBle.clear();
@@ -929,6 +971,8 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 
 			pushMsgHcCoreToHcApp("delRoom", roomId, room->GetName(), successList, "");
 			delRoom(room);
+
+			database->Sqlite_EndTransaction();
 
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;

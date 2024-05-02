@@ -182,6 +182,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 		{
 			if (AddNewGroup(group, true))
 			{
+				database->Sqlite_BenginTransaction();
 				if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 				{
 					roomId = reqValue["roomId"].asString();
@@ -215,8 +216,13 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 							LOGD("deviceId %s dose not exist", deviceId.c_str());
 							failedList.append(deviceId);
 						}
+#ifdef ESP_PLATFORM
+						vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 					}
 				}
+
+				database->Sqlite_EndTransaction();
 				respValue["data"]["code"] = CODE_OK;
 				respValue["data"]["addr"] = group->GetAddr();
 				respValue["data"]["id"] = groupId;
@@ -255,6 +261,7 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
@@ -279,8 +286,13 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 						LOGD("deviceId %s dose not exist", deviceId.c_str());
 						failedList.append(deviceId);
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 				}
 			}
+			database->Sqlite_EndTransaction();
+
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -302,6 +314,7 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSuccessList, Json::Value &respFailList, Group *group)
 {
+	database->Sqlite_BenginTransaction();
 	for (unsigned int i = 0; i < deviceList.size(); i++)
 	{
 		if (deviceList[i].isString())
@@ -327,8 +340,12 @@ int Gateway::OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSucce
 				LOGD("deviceId %s dose not exist", deviceId.c_str());
 				respFailList.append(deviceId);
 			}
+#ifdef ESP_PLATFORM
+			vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 		}
 	}
+	database->Sqlite_EndTransaction();
 	return CODE_OK;
 }
 
@@ -344,6 +361,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
@@ -369,8 +387,12 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 						LOGD("deviceId %s dose not exist", deviceId.c_str());
 						failedList.append(deviceId);
 					}
+#ifdef ESP_PLATFORM
+					vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 				}
 			}
+			database->Sqlite_EndTransaction();
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
@@ -401,6 +423,7 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 		if (group)
 		{
 			vector<DeviceInGroup *> devicesInGroup = group->deviceList;
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceInGroup : devicesInGroup)
 			{
 				if (group->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) == CODE_OK)
@@ -412,7 +435,11 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(deviceInGroup->device->GetId());
 				}
+#ifdef ESP_PLATFORM
+				vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 			}
+			database->Sqlite_EndTransaction();
 
 			pushMsgHcCoreToHcApp("delGroup", groupId, group->GetName(), successList, "");
 			delGroup(group);
