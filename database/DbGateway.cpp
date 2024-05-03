@@ -41,12 +41,6 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				gateway->setDormitory(dormitory);
 				gateway->setRefreshToken(refresh);
 				gateway->setData(data);
-
-				string versionCode = STR(VERSION);
-				if (version == "" && versionCode == "2.0.0")
-				{
-					version = versionCode;
-				}
 				gateway->setVersion(version);
 
 				LOGI("Gateway mac: %s, id: %s, name: %s, version: %s , ble_netkey: %s,ble_appkey: %s, ble_devicekey: %s, ble_addr: %d, ble_iv_index: %d, dormitory: %s, refresh_token: %s, data: %s",

@@ -119,18 +119,32 @@ static int sqlite_callback(void *NotUsed, int argc, char **argv, char **azColNam
 
 int Db::Sqlite_BenginTransaction()
 {
-#ifdef ESP_PLATFORM
-	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-#endif
-	return CODE_OK;
+	int rc = SQLITE_ERROR;
+	char *err_msg = 0;
+	mtx.lock();
+	rc = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &err_msg);
+	if (rc != SQLITE_OK)
+	{
+		LOGE("Error executing sql statement :%s", err_msg);
+		sqlite3_free(err_msg);
+	}
+	mtx.unlock();
+	return rc;
 }
 
 int Db::Sqlite_EndTransaction()
 {
-#ifdef ESP_PLATFORM
-	sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-#endif
-	return CODE_OK;
+	int rc = SQLITE_ERROR;
+	char *err_msg = 0;
+	mtx.lock();
+	rc = sqlite3_exec(db, "COMMIT", NULL, NULL, &err_msg);
+	if (rc != SQLITE_OK)
+	{
+		LOGE("Error executing sql statement :%s", err_msg);
+		sqlite3_free(err_msg);
+	}
+	mtx.unlock();
+	return rc;
 }
 
 int Db::Sqlite_Exec(string &sql)
