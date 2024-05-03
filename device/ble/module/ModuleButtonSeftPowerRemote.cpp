@@ -62,6 +62,7 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
                 key = KEY_ATTRIBUTE_BUTTON + to_string(3);
                 break;
             case 7:
+                return CODE_ERROR;
                 break;
             case 8:
                 key = KEY_ATTRIBUTE_BUTTON + to_string(4);
@@ -77,6 +78,7 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
                 key = KEY_ATTRIBUTE_BUTTON + to_string(4);
                 break;
             case 11:
+                return CODE_ERROR;
                 break;
             case 12:
                 key = KEY_ATTRIBUTE_BUTTON + to_string(3);

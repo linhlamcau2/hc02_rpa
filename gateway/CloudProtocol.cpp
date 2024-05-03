@@ -387,8 +387,11 @@ int CloudProtocol::CloudPublish(Json::Value payloadJson)
 int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToCloudMessage: %s", reqValue.toString().c_str());
-	if (!connected)
+	if (!isConnected())
+	{
+		LOGW("error connect to server");
 		return CODE_TIMEOUT;
+	}
 	int rs = CODE_OK;
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
@@ -423,7 +426,7 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishBinToCloudMessage");
-	if (!connected)
+	if (!isConnected())
 		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	request_t request = {
@@ -450,7 +453,7 @@ int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *p
 int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout)
 {
 	LOGD("PublishToCloudRecieveBinMessage");
-	if (!connected)
+	if (!isConnected())
 		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	request_bin_t requestBin = {
