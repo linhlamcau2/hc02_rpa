@@ -563,7 +563,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 	else
 	{
-		devValue["type"] = scanDevice->GetType();
+		devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
 	}
 	jsonValue["device"].append(devValue);
 	pushNewDeviceLocal(jsonValue);
