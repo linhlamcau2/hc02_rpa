@@ -25,7 +25,7 @@ static uint8_t plaintext[] = {0x24, 0x02, 0x28, 0x04, 0x28, 0x11, 0x20, 0x20, 0x
 static uint8_t appKeyDefault[] = {0x60, 0x96, 0x47, 0x71, 0x73, 0x4f, 0xbd, 0x76, 0xe3, 0xb4, 0x05, 0x19, 0xd1, 0xd9, 0x4a, 0x48};
 
 #ifdef ESP_PLATFORM
-BleProtocol::BleProtocol(uart_port_t num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
+BleProtocol::BleProtocol(int num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
 #else
 BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 #endif
@@ -482,7 +482,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 										{
 											*(messageResp->len) = message_rsp->len - 2;
 											if (*(messageResp->len) > 0)
-												if (messageResp->data)
+												if (messageResp->data && message_rsp->data)
 													memcpy(messageResp->data, message_rsp->data, *messageResp->len);
 										}
 									}

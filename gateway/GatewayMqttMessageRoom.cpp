@@ -73,7 +73,7 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 						Device *tempDev = getDeviceFromId(deviceId);
 						device["id"] = deviceId;
 						device["name"] = tempDev->GetName();
-						device["type"] = (Json::Value::UInt)tempDev->GetType();
+						device["type"] = tempDev->GetType();
 						temp_devicesList.append(device);
 					}
 					temp_roomsData["devices"] = temp_devicesList;
@@ -414,7 +414,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 						temp["id"] = id;
 						Device *tempdv = getDeviceFromId(id);
 						temp["name"] = tempdv->GetName();
-						temp["type"] = (Json::Value::UInt)tempdv->GetType();
+						temp["type"] = tempdv->GetType();
 						objSuccessList.append(temp);
 						successList.append(id);
 					}
@@ -658,7 +658,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 					temp["id"] = id;
 					Device *tempdv = getDeviceFromId(id);
 					temp["name"] = tempdv->GetName();
-					temp["type"] = (Json::Value::UInt)tempdv->GetType();
+					temp["type"] = tempdv->GetType();
 					objSuccessList.append(temp);
 					successList.append(id);
 				}
