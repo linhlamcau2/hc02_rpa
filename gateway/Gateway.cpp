@@ -563,7 +563,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 	else
 	{
-		devValue["type"] = scanDevice->GetType();
+		devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
 	}
 	jsonValue["device"].append(devValue);
 	pushNewDeviceLocal(jsonValue);
@@ -868,9 +868,9 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		uint16_t addr = 0;
 		Rule *rule = NULL;
 
-		bool isFirstRun = true;
-		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
-			isFirstRun = ruleValue["isFirstRun"].asBool();
+		// bool isFirstRun = true;
+		// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+		// 	isFirstRun = ruleValue["isFirstRun"].asBool();
 
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{

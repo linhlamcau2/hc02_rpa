@@ -250,7 +250,7 @@ public:
 	scan_device_pair_message_t scanDevicePairMessage;
 
 #ifdef ESP_PLATFORM
-	BleProtocol(int num, int txPin, int rxPin, int baudrate);
+	BleProtocol(uart_port_t num, int txPin, int rxPin, int baudrate);
 #else
 	BleProtocol(char *uartPort, int uartBaudrate);
 #endif
