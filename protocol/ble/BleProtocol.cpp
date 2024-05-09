@@ -15,7 +15,6 @@
 #include "AES.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
-#include "ButtonSignal.h"
 #endif
 
 BleProtocol *bleProtocol = NULL;
