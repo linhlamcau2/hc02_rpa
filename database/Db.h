@@ -126,6 +126,25 @@ public:
 	int SceneBleDelAll();
 	int SceneBleUpdateFavorite(SceneBle *scene);
 
+#ifdef ESP_PLATFORM
+	bool IsHaveDbV1();
+	int OpenDbV1();
+	int ConvertTableDevice();
+	int ConvertTableDeviceAttribute();
+	int ConvertTableDeviceBleChild();
+	int ConvertTableDeviceInGroup();
+	int ConvertTableDeviceInRoom();
+	int ConvertTableDeviceInSceneBle();
+	int ConvertTableGateway();
+	int ConvertTableGroup();
+	int ConvertTableRoom();
+	int ConvertTableSceneBle();
+	int ReadAll_V1(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
+	int ConvertTableRule();
+	int ConvertTableSceneDelay();
+
+#endif
+
 #ifdef __ANDROID__
 	int NotiRead();
 	int NotiAdd(Noti *noti);

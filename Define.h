@@ -49,7 +49,7 @@
 #elif defined(__ANDROID__)
 #define DB_NAME "/data/rd/smh.sqlite"
 #elif defined(ESP_PLATFORM)
-#define DB_NAME "/spiffs/smh.sqlite"
+#define DB_NAME "/spiffs/smh2.sqlite"
 #else
 #define DB_NAME "./smh.sqlite"
 #endif

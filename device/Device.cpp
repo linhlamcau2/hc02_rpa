@@ -223,6 +223,7 @@ int Device::PushAttributes(Json::Value &jsonValue)
 static map<uint32_t, string> typeToNameList;
 static map<string, uint32_t> modelToTypeList;
 static map<uint32_t, uint32_t> bleTypeToGroupIdList;
+static map<uint16_t, string> bleAttributeIdToAttributeString;
 
 // TODO: Check list device to Name
 void Device::InitDeviceModelList()
@@ -295,6 +296,60 @@ void Device::InitDeviceModelList()
 
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_HCN] = BLE_SWITCH_CURTAIN_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_SQUARE_V2] = BLE_SWITCH_CURTAIN_GROUP;
+
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ONOFF] = KEY_ATTRIBUTE_ONOFF;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM] = KEY_ATTRIBUTE_DIM;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CCT] = KEY_ATTRIBUTE_CCT;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_HUE] = KEY_ATTRIBUTE_HUE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SATURATION] = KEY_ATTRIBUTE_SATURATION;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_LUMINANCE] = KEY_ATTRIBUTE_LUMINANCE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SONG] = KEY_ATTRIBUTE_SONG;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BLINK_MODE] = KEY_ATTRIBUTE_BLINK_MODE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BATTERY] = KEY_ATTRIBUTE_BATTERY;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_LUX] = KEY_ATTRIBUTE_LUX;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PIR] = KEY_ATTRIBUTE_PIR;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_1] = KEY_ATTRIBUTE_BUTTON;
+	std::string bt2 = std::string(KEY_ATTRIBUTE_BUTTON) + "2";
+	std::string bt3 = std::string(KEY_ATTRIBUTE_BUTTON) + "3";
+	std::string bt4 = std::string(KEY_ATTRIBUTE_BUTTON) + "4";
+	std::string bt5 = std::string(KEY_ATTRIBUTE_BUTTON) + "5";
+	std::string bt6 = std::string(KEY_ATTRIBUTE_BUTTON) + "6";
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_2] = strdup(bt2.c_str());
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_3] = strdup(bt3.c_str());
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_4] = strdup(bt4.c_str());
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_5] = strdup(bt5.c_str());
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_6] = strdup(bt6.c_str());
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ACTIME] = KEY_ATTRIBUTE_ACTIME;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PM2_5] = KEY_ATTRIBUTE_PM2_5;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PM10] = KEY_ATTRIBUTE_PM10;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PM1_0] = KEY_ATTRIBUTE_PM1_0;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_TEMP] = KEY_ATTRIBUTE_TEMP;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_HUMIDITY] = KEY_ATTRIBUTE_HUMIDITY;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SCENE_RGB] = KEY_ATTRIBUTE_MODE_RGB;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_HANGON] = KEY_ATTRIBUTE_HANGON;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_COUNTDOWN] = KEY_ATTRIBUTE_COUNTDOWN;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_AIR_CONDITIONER_WIND] = KEY_ATTRIBUTE_AIR_CONDITIONER_WIND;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_AIR_CONDITIONER_MODE] = KEY_ATTRIBUTE_AIR_CONDITIONER_MODE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_AIR_CONDITIONER_TEMP] = KEY_ATTRIBUTE_AIR_CONDITIONER_TEMP;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_OPEN] = KEY_ATTRIBUTE_CURTAIN_OPEN;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_CLOSE] = KEY_ATTRIBUTE_CURTAIN_CLOSE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_PAUSE] = KEY_ATTRIBUTE_CURTAIN_PAUSE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_OPENED] = KEY_ATTRIBUTE_CURTAIN_OPENED;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SMOKE] = KEY_ATTRIBUTE_SMOKE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DOOR] = KEY_ATTRIBUTE_DOOR;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SMOKE_PIN] = KEY_ATTRIBUTE_SMOKE_PIN;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DKTX_SCENE] = KEY_ATTRIBUTE_DKTX_SCENE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ONLINE_OFFLINE] = KEY_ATTRIBUTE_ONLINE_OFFLINE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_MOTOR] = KEY_ATTRIBUTE_MOTOR;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_R] = KEY_ATTRIBUTE_R;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_G] = KEY_ATTRIBUTE_G;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_B] = KEY_ATTRIBUTE_B;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM_ON] = KEY_ATTRIBUTE_DIM_ON;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM_OFF] = KEY_ATTRIBUTE_DIM_OFF;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SENSI_SENSOR] = KEY_ATTRIBUTE_SENSI;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DISTANCE] = KEY_ATTRIBUTE_DISTANCE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_INPUT_MODE] = KEY_ATTRIBUTE_MODE_INPUT;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_STARTUP] = KEY_ATTRIBUTE_STATUS_STARTUP;
 
 	RegisterDeviceModel(BLE_DOWNLIGHT_SMT, "", "Downlight SMT");
 	RegisterDeviceModel(BLE_DOWNLIGHT_COB_GOC_RONG, "", "Downlight COB");
@@ -417,6 +472,11 @@ void Device::RegisterDeviceModel(uint32_t type, string model, string name)
 uint32_t Device::BleTypeToGroupId(uint32_t deviceType)
 {
 	return bleTypeToGroupIdList[deviceType];
+}
+
+string Device::BleAttributeIdToAttributeStr(uint16_t attributeId)
+{
+	return bleAttributeIdToAttributeString[attributeId];
 }
 
 uint32_t Device::ConvertModelToDeviceType(string model)
