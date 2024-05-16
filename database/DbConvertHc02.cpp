@@ -1,4 +1,4 @@
-
+#ifdef ESP_PLATFORM
 #include "Db.h"
 #include "Log.h"
 #include "Util.h"
@@ -273,7 +273,7 @@ int Db::ConvertTableSceneBle()
 
 static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
 {
-    sqlite3 *db = (sqlite3*)ptr; 
+    sqlite3 *db = (sqlite3 *)ptr;
     int s, index;
     if (stmt)
     {
@@ -514,7 +514,7 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
 
 static int TableSceneDelayConvert(sqlite3_stmt *stmt, void *ptr)
 {
-    sqlite3 *db = (sqlite3*)ptr; 
+    sqlite3 *db = (sqlite3 *)ptr;
     int s, index;
     if (stmt)
     {
@@ -649,7 +649,7 @@ int Db::ConvertTableRule()
 {
     if (OpenDbV1() == CODE_OK)
     {
-         ReadAll_V1("Rule", NULL, TableRuleConvert);
+        ReadAll_V1("Rule", NULL, TableRuleConvert);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -666,3 +666,5 @@ int Db::ConvertTableSceneDelay()
     LOGW("Failed to open");
     return CODE_ERROR;
 }
+
+#endif
