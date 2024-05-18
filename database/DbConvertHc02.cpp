@@ -39,7 +39,18 @@ int Db::OpenDbV1()
     return CODE_ERROR;
 }
 
-void copy_data_between_tables(sqlite3 *source_db, sqlite3 *dest_db, const char *source_table, const char *dest_table, const char **source_columns, const char **dest_columns, int num_columns)
+typedef void (*conversion_func)(sqlite3_stmt *stmt, int col_index, sqlite3_stmt *insert_stmt, int insert_index);
+
+static void ConvertTypeFrimVerTableDevice(sqlite3_stmt *stmt, int col_index, sqlite3_stmt *insert_stmt, int insert_index)
+{
+    const char *version_str = (const char *)sqlite3_column_text(stmt, col_index);
+    int major, minor;
+    sscanf(version_str, "%d.%d", &major, &minor);
+    int version_int = (major << 8) | minor;
+    sqlite3_bind_int(insert_stmt, insert_index, version_int);
+}
+
+void copy_data_between_tables(sqlite3 *source_db, sqlite3 *dest_db, const char *source_table, const char *dest_table, const char **source_columns, const char **dest_columns, int num_columns, conversion_func *conversions)
 {
     sqlite3_stmt *stmt;
     char sql_select[1024];
@@ -93,25 +104,32 @@ void copy_data_between_tables(sqlite3 *source_db, sqlite3 *dest_db, const char *
         // Gắn giá trị vào câu lệnh INSERT
         for (int i = 0; i < num_columns; i++)
         {
-            if (sqlite3_column_type(stmt, i) == SQLITE_TEXT)
+            if (conversions != NULL && conversions[i] != NULL)
             {
-                sqlite3_bind_text(insert_stmt, i + 1, (const char *)sqlite3_column_text(stmt, i), -1, SQLITE_STATIC);
-            }
-            else if (sqlite3_column_type(stmt, i) == SQLITE_INTEGER)
-            {
-                sqlite3_bind_int(insert_stmt, i + 1, sqlite3_column_int(stmt, i));
-            }
-            else if (sqlite3_column_type(stmt, i) == SQLITE_FLOAT)
-            {
-                sqlite3_bind_double(insert_stmt, i + 1, sqlite3_column_double(stmt, i));
-            }
-            else if (sqlite3_column_type(stmt, i) == SQLITE_BLOB)
-            {
-                sqlite3_bind_blob(insert_stmt, i + 1, sqlite3_column_blob(stmt, i), sqlite3_column_bytes(stmt, i), SQLITE_STATIC);
+                conversions[i](stmt, i, insert_stmt, i + 1);
             }
             else
             {
-                sqlite3_bind_null(insert_stmt, i + 1);
+                if (sqlite3_column_type(stmt, i) == SQLITE_TEXT)
+                {
+                    sqlite3_bind_text(insert_stmt, i + 1, (const char *)sqlite3_column_text(stmt, i), -1, SQLITE_STATIC);
+                }
+                else if (sqlite3_column_type(stmt, i) == SQLITE_INTEGER)
+                {
+                    sqlite3_bind_int(insert_stmt, i + 1, sqlite3_column_int(stmt, i));
+                }
+                else if (sqlite3_column_type(stmt, i) == SQLITE_FLOAT)
+                {
+                    sqlite3_bind_double(insert_stmt, i + 1, sqlite3_column_double(stmt, i));
+                }
+                else if (sqlite3_column_type(stmt, i) == SQLITE_BLOB)
+                {
+                    sqlite3_bind_blob(insert_stmt, i + 1, sqlite3_column_blob(stmt, i), sqlite3_column_bytes(stmt, i), SQLITE_STATIC);
+                }
+                else
+                {
+                    sqlite3_bind_null(insert_stmt, i + 1);
+                }
             }
         }
 
@@ -124,6 +142,7 @@ void copy_data_between_tables(sqlite3 *source_db, sqlite3 *dest_db, const char *
 
         // Đặt lại câu lệnh INSERT để sẵn sàng cho hàng tiếp theo
         sqlite3_reset(insert_stmt);
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 
     if (rc != SQLITE_DONE && rc != SQLITE_OK)
@@ -139,11 +158,13 @@ void copy_data_between_tables(sqlite3 *source_db, sqlite3 *dest_db, const char *
 int Db::ConvertTableDevice()
 {
     const char *table = "Device";
-    const char *columns[] = {"mac", "device_id", "name", "addr", "type", "firmware_version", "hardware_version", "active_time", "update_time", "data", "is_favorite"};
-    int num_columns = 11;
+    const char *columns[] = {"mac", "device_id", "name", "addr", "type", "firmware_version", "active_time", "update_time", "data"};
+    int num_columns = 9;
+
+    conversion_func conversions[] = {NULL, NULL, NULL, NULL, NULL, ConvertTypeFrimVerTableDevice, NULL, NULL, NULL};
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, conversions);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -157,7 +178,7 @@ int Db::ConvertTableDeviceAttribute()
     int num_columns = 3;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -177,7 +198,7 @@ int Db::ConvertTableDeviceInGroup()
     int num_columns = 3;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -191,27 +212,10 @@ int Db::ConvertTableDeviceInRoom()
     int num_columns = 2;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
-    return CODE_ERROR;
-}
-
-int Db::ConvertTableDeviceInSceneBle()
-{
-    const char *table = "DeviceInSceneBle";
-    const char *columns[] = {"scene_ble_id", "device_id"};
-    int num_columns = 2;
-    if (OpenDbV1() == CODE_OK)
-    {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
-        return CODE_OK;
-    }
-    LOGW("Failed to open");
-
-    // TODO:convert column data
-
     return CODE_ERROR;
 }
 
@@ -222,7 +226,7 @@ int Db::ConvertTableGateway()
     int num_columns = 12;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -236,7 +240,7 @@ int Db::ConvertTableGroup()
     int num_columns = 4;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -250,7 +254,7 @@ int Db::ConvertTableRoom()
     int num_columns = 3;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -264,7 +268,7 @@ int Db::ConvertTableSceneBle()
     int num_columns = 5;
     if (OpenDbV1() == CODE_OK)
     {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns);
+        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
         return CODE_OK;
     }
     LOGW("Failed to open");
@@ -382,14 +386,27 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                         {
                                             {
                                                 Json::Value dataJson = Json::objectValue;
-                                                dataJson[Device::BleAttributeIdToAttributeStr(attributies.isMember("ID"))] = attributies["VALUE"];
                                                 if (attributies["VALUE"].isInt())
                                                 {
                                                     dataJson["op"] = "==";
+                                                    dataJson[(Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())).c_str()] = attributies["VALUE"].asInt();
                                                 }
                                                 else if (attributies["VALUE"].isArray())
                                                 {
-                                                    dataJson["op"] = "<>";
+                                                    Json::Value attr = attributies["VALUE"];
+                                                    if (attr.size() == 2)
+                                                    {
+                                                        if (attr[0] == attr[1])
+                                                        {
+                                                            dataJson["op"] = "==";
+                                                            dataJson[(Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())).c_str()] = attr[0];
+                                                        }
+                                                    }
+                                                    else if (attr[0] != attr[1])
+                                                    {
+                                                        dataJson["op"] = "<>";
+                                                        dataJson[(Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())).c_str()] = attr;
+                                                    }
                                                 }
 
                                                 devInputJson["data"] = dataJson;
@@ -415,14 +432,14 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                         devOutput.isMember("PROPERTIES") && devOutput["PROPERTIES"].isArray())
                                     {
                                         Json::Value ruleDevOutput = Json::objectValue;
-                                        ruleDevOutput["deviceId"] = devOutput["DEVICE_ID"].isString();
+                                        ruleDevOutput["deviceId"] = devOutput["DEVICE_ID"].asString();
                                         Json::Value dataDevOutput = Json::objectValue;
                                         Json::Value properties = devOutput["PROPERTIES"];
                                         for (auto &property : properties)
                                         {
                                             if (property.isObject() && property.isMember("ID") && property.isMember("VALUE") && property["ID"].isInt() && property["VALUE"].isInt())
                                             {
-                                                dataDevOutput[Device::BleAttributeIdToAttributeStr(property["ID"].asInt())] = property["VALUE"].asInt();
+                                                dataDevOutput[(Device::BleAttributeIdToAttributeStr(property["ID"].asInt())).c_str()] = property["VALUE"].asInt();
                                             }
                                         }
                                         ruleDevOutput["data"] = dataDevOutput;
@@ -448,7 +465,7 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                         {
                                             if (property.isObject() && property.isMember("ID") && property.isMember("VALUE") && property["ID"].isInt() && property["VALUE"].isInt())
                                             {
-                                                dataGroupOutput[Device::BleAttributeIdToAttributeStr(property["ID"].asInt())] = property["VALUE"].asInt();
+                                                dataGroupOutput[(Device::BleAttributeIdToAttributeStr(property["ID"].asInt())).c_str()] = property["VALUE"].asInt();
                                             }
                                         }
                                         ruleGroupOutput["data"] = dataGroupOutput;
@@ -463,10 +480,10 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                 Json::Value listSceneOutput = ruleValue["OUTPUT_SCENES"];
                                 for (auto &sceneOutput : listSceneOutput)
                                 {
-                                    if (sceneOutput.isString())
+                                    if (sceneOutput.isObject() && sceneOutput.isMember("SCENE_ID") && sceneOutput["SCENE_ID"].isString())
                                     {
                                         Json::Value ruleSceneOutput = Json::objectValue;
-                                        ruleSceneOutput["sceneId"] = sceneOutput.asString();
+                                        ruleSceneOutput["sceneId"] = sceneOutput["SCENE_ID"].asString();
                                         ruleOutput.append(ruleSceneOutput);
                                     }
                                 }
@@ -562,7 +579,7 @@ static int TableSceneDelayConvert(sqlite3_stmt *stmt, void *ptr)
                                         outputJson.append(delayJson);
 
                                         Json::Value devJson = Json::objectValue;
-                                        devJson["deviceId"] = dev["DEVICE_ID"].asInt();
+                                        devJson["deviceId"] = dev["DEVICE_ID"].asString();
 
                                         Json::Value dataJson = Json::objectValue;
                                         Json::Value properties = dev["PROPERTIES"];
@@ -570,7 +587,7 @@ static int TableSceneDelayConvert(sqlite3_stmt *stmt, void *ptr)
                                         {
                                             if (property.isObject() && property.isMember("ID") && property.isMember("VALUE") && property["ID"].isInt() && property["VALUE"].isInt())
                                             {
-                                                dataJson[Device::BleAttributeIdToAttributeStr(property["ID"].asInt())] = property["VALUE"].asInt();
+                                                dataJson[(Device::BleAttributeIdToAttributeStr(property["ID"].asInt())).c_str()] = property["VALUE"].asInt();
                                             }
                                         }
                                         devJson["data"] = dataJson;
@@ -592,6 +609,10 @@ static int TableSceneDelayConvert(sqlite3_stmt *stmt, void *ptr)
                                 sqlite3_free(err_msg);
                             }
                         }
+                        else
+                        {
+                            LOGW("Data error");
+                        }
                     }
                     else
                     {
@@ -609,6 +630,116 @@ static int TableSceneDelayConvert(sqlite3_stmt *stmt, void *ptr)
             }
             else
             {
+                return CODE_ERROR;
+            }
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
+    return CODE_OK;
+}
+
+static int TableDeviceInSceneBleConvert(sqlite3_stmt *stmt, void *ptr)
+{
+    sqlite3 *db = (sqlite3 *)ptr;
+    int s, index;
+    if (stmt)
+    {
+        while (1)
+        {
+            s = sqlite3_step(stmt);
+            if (s == SQLITE_ROW)
+            {
+                index = 0;
+                string sceneBleId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+                string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+                string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
+                string devInSceneData;
+                string decode = macaron::Base64::Decode(data, devInSceneData);
+                if (decode == "")
+                {
+                    Json::Value devInSceneJson;
+                    if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
+                    {
+                        Json::Value dataSceneInsert = Json::objectValue;
+                        for (auto &dataJson : devInSceneJson)
+                        {
+                            if (dataJson.isObject() && dataJson.isMember("ID") && dataJson.isMember("VALUE") && dataJson["ID"].isInt() && dataJson["VALUE"].isInt())
+                            {
+                                dataSceneInsert[Device::BleAttributeIdToAttributeStr(dataJson["ID"].asInt())] = dataJson["VALUE"].asInt();
+                            }
+                        }
+                        string dataInsert = dataSceneInsert.toString();
+                        dataInsert.erase(remove_if(dataInsert.begin(), dataInsert.end(), ::isspace), dataInsert.end());
+                        string sql = "INSERT OR REPLACE INTO DeviceInSceneBle (scene_ble_id, device_id, data, create_at) VALUES ('" + sceneBleId + "','" + deviceId + "','" + macaron::Base64::Encode(dataInsert) + "', " + to_string(time(NULL)) + ");";
+                        char *err_msg = 0;
+                        int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+                        if (rc != SQLITE_OK)
+                        {
+                            LOGE("Error executing sql statement :%s", err_msg);
+                            sqlite3_free(err_msg);
+                        }
+                    }
+                    else
+                    {
+                        LOGE("data json is not object");
+                    }
+                    // TODO: Check cho du lieu V2
+                }
+                else
+                {
+                    LOGW("Decode data error");
+                }
+            }
+            else if (s == SQLITE_DONE)
+            {
+                return CODE_OK;
+            }
+            else
+            {
+                LOGE("DeviceInGroupParse");
+                return CODE_ERROR;
+            }
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
+    return CODE_OK;
+}
+
+static int TableDeviceInGroupEdit(sqlite3_stmt *stmt, void *ptr)
+{
+    sqlite3 *db = (sqlite3 *)ptr;
+    int s, index;
+    if (stmt)
+    {
+        while (1)
+        {
+            s = sqlite3_step(stmt);
+            if (s == SQLITE_ROW)
+            {
+                index = 0;
+                string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+                uint16_t addr = sqlite3_column_int(stmt, index++);
+                string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+                long create_at = sqlite3_column_int(stmt, index++);
+                string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
+                string sql = "DELETE FROM DeviceInGroup WHERE group_id= '" + roomId + "';";
+                char *err_msg = 0;
+                int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+                if (rc != SQLITE_OK)
+                {
+                    LOGE("Error executing sql statement :%s", err_msg);
+                    sqlite3_free(err_msg);
+                }
+            }
+            else if (s == SQLITE_DONE)
+            {
+                return CODE_OK;
+            }
+            else
+            {
+                LOGE("RoomParse");
                 return CODE_ERROR;
             }
             vTaskDelay(pdMS_TO_TICKS(100));
@@ -645,6 +776,17 @@ int Db::ReadAll_V1(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, voi
     return rc;
 }
 
+int Db::ConvertTableDeviceInSceneBle()
+{
+    if (OpenDbV1() == CODE_OK)
+    {
+        ReadAll_V1("DeviceInSceneBle", NULL, TableDeviceInSceneBleConvert);
+        return CODE_OK;
+    }
+    LOGW("Failed to open");
+    return CODE_ERROR;
+}
+
 int Db::ConvertTableRule()
 {
     if (OpenDbV1() == CODE_OK)
@@ -661,6 +803,17 @@ int Db::ConvertTableSceneDelay()
     if (OpenDbV1() == CODE_OK)
     {
         ReadAll_V1("SceneDelay", NULL, TableSceneDelayConvert);
+        return CODE_OK;
+    }
+    LOGW("Failed to open");
+    return CODE_ERROR;
+}
+
+int Db::EditTableDeviceInGroup()
+{
+    if (OpenDbV1() == CODE_OK)
+    {
+        ReadAll_V1("Room", NULL, TableDeviceInGroupEdit);
         return CODE_OK;
     }
     LOGW("Failed to open");

@@ -142,6 +142,7 @@ public:
 	int ReadAll_V1(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
 	int ConvertTableRule();
 	int ConvertTableSceneDelay();
+	int EditTableDeviceInGroup();
 
 #endif
 

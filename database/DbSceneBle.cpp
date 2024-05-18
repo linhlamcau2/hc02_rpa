@@ -23,6 +23,7 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
 				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %d, %s, %s", sceneId.c_str(), addr, name.c_str(), roomId.c_str());
 
 				SceneBle *sceneBle = new SceneBle(sceneId, addr, name);
 				if (sceneBle)

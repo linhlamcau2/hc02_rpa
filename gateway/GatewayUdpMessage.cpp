@@ -117,7 +117,22 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 	}
 	else
 	{
-		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+		// LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+		Json::Value fromRsp;
+		Json::Value toRsp;
+		Json::Value dataRsp;
+		StopUdpBroadcast();
+		respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
+		respValue["REQUEST_ID"] = rqi;
+		respValue["TIME"] = Util::GetCurrentTimeStr();
+		respValue["CONNECTION_TYPE"] = 0;
+		fromRsp["TYPE"] = 2;
+		respValue["FROM"] = fromRsp;
+		toRsp["TYPE"] = 0;
+		respValue["TO"] = toRsp;
+		Wifi::ScanWifi(dataRsp);
+		respValue["DATA"] = dataRsp;
+		return CODE_OK;
 	}
 
 	return CODE_ERROR;
