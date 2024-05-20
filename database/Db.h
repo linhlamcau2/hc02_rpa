@@ -13,8 +13,6 @@
 #include "Noti.h"
 #endif
 
-#define DB_NAME_V1 "/spiffs/smh.sqlite"
-
 using namespace std;
 
 class Db

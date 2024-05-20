@@ -362,10 +362,13 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                             {
                                 endAt = ruleValue["END_AT"].asString();
                             }
-                            Json::Value timerJson = Json::objectValue;
-                            timerJson["start"] = startAt;
-                            timerJson["end"] = endAt;
-                            ruleInput["timer"] = timerJson;
+                            if (startAt != "" || endAt != "")
+                            {
+                                Json::Value timerJson = Json::objectValue;
+                                timerJson["start"] = startAt;
+                                timerJson["end"] = endAt;
+                                ruleInput["timer"] = timerJson;
+                            }
 
                             // input: devices
                             Json::Value devInputArrayJson = Json::arrayValue;
