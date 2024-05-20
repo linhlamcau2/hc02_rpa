@@ -220,15 +220,15 @@ int Device::PushAttributes(Json::Value &jsonValue)
 }
 
 // TODO: remove
-static map<uint32_t, string> typeToNameList;
-static map<string, uint32_t> modelToTypeList;
+static map<uint32_t, const char *> typeToNameList;
+// static map<string, uint32_t> modelToTypeList;
 static map<uint32_t, uint32_t> bleTypeToGroupIdList;
-static map<uint16_t, string> bleAttributeIdToAttributeString;
+static map<uint16_t, const char *> bleAttributeIdToAttributeString;
 
 // TODO: Check list device to Name
 void Device::InitDeviceModelList()
 {
-	bleTypeToGroupIdList[1] = BLE_SWITCH_TOUCH_GROUP;
+	bleTypeToGroupIdList[TYPE_GROUP_SWITCH] = BLE_SWITCH_TOUCH_GROUP;
 
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_SMT] = BLE_DOWNLIGHT_SMT_GROUP;
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_GOC_RONG] = BLE_DOWNLIGHT_COB_GOC_RONG_GROUP;
@@ -408,10 +408,10 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_SWITCH_ELECTRICAL_4, "", "Công tắc cơ 4 nút");
 	RegisterDeviceModel(BLE_SWITCH_ELECTRICAL_WATER_HEATER, "", "Công tắc cơ BNL");
 
-	RegisterDeviceModel(26001, "", "Ổ cắm đơn");
-	RegisterDeviceModel(26002, "", "Ổ cắm kéo dài");
+	RegisterDeviceModel(BLE_SOCKET, "", "Ổ cắm đơn");
+	RegisterDeviceModel(BLE_SOCKET_EXTEN, "", "Ổ cắm kéo dài");
 	RegisterDeviceModel(BLE_SWITCH_RGB_SOCKET_1, "", "Ổ cắm công tắc chữ nhật");
-	RegisterDeviceModel(31001, "", "Cảm biến ánh sáng");
+	RegisterDeviceModel(BLE_LIGHT_SENSOR, "", "Cảm biến ánh sáng");
 
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC, "", "Cảm biến chuyển động");
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_AC, "", "Cảm biến chuyển động AC");
@@ -425,27 +425,27 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_PM_SENSOR, "", "Cảm biến bụi mịn");
 	RegisterDeviceModel(BLE_TEMP_HUM_SENSOR, "", "Cảm biến nhiệt/ẩm");
 
-	RegisterDeviceModel(41001, "", "Điều khiển hồng ngoại");
-	RegisterDeviceModel(41101, "", "Điều hoà");
-	RegisterDeviceModel(41201, "", "Quạt");
-	RegisterDeviceModel(41301, "", "TIVI");
-	RegisterDeviceModel(42001, "", "Ổ cắm đơn Wifi");
-	RegisterDeviceModel(42002, "", "Ổ cắm thông minh Rạng Đông 4 cổng");
-	RegisterDeviceModel(42003, "", "Ổ cắm thông minh Rạng Đông 6 cổng");
-	RegisterDeviceModel(43001, "", "Công tắc Wifi 1 nút");
-	RegisterDeviceModel(43002, "", "Công tắc Wifi 2 nút");
-	RegisterDeviceModel(43003, "", "Công tắc Wifi 3 nút");
-	RegisterDeviceModel(43004, "", "Công tắc Wifi 4 nút");
-	RegisterDeviceModel(61001, "", "Camera Wifi");
-	RegisterDeviceModel(61002, "", "Camera Dahua");
-	RegisterDeviceModel(61003, "", "Camera HikVision");
-	RegisterDeviceModel(71001, "", "Khoá cửa Wifi");
-	RegisterDeviceModel(81101, "", "Zone");
-	RegisterDeviceModel(81102, "", "Face");
+	RegisterDeviceModel(WIFI_IR, "", "Điều khiển hồng ngoại");
+	RegisterDeviceModel(WIFI_IR_AIRCONDITION, "", "Điều hoà");
+	RegisterDeviceModel(WIFI_IR_FAN, "", "Quạt");
+	RegisterDeviceModel(WIFI_IR_TV, "", "TIVI");
+	RegisterDeviceModel(WIFI_SOCKET, "", "Ổ cắm đơn Wifi");
+	RegisterDeviceModel(WIFI_SOCKET_4, "", "Ổ cắm thông minh Rạng Đông 4 cổng");
+	RegisterDeviceModel(WIFI_SOCKET_6, "", "Ổ cắm thông minh Rạng Đông 6 cổng");
+	RegisterDeviceModel(WIFI_SWITCH_1, "", "Công tắc Wifi 1 nút");
+	RegisterDeviceModel(WIFI_SWITCH_2, "", "Công tắc Wifi 2 nút");
+	RegisterDeviceModel(WIFI_SWITCH_3, "", "Công tắc Wifi 3 nút");
+	RegisterDeviceModel(WIFI_SWITCH_4, "", "Công tắc Wifi 4 nút");
+	RegisterDeviceModel(CAMERA_TUYA, "", "Camera Wifi");
+	RegisterDeviceModel(CAMERA_DAHUA, "", "Camera Dahua");
+	RegisterDeviceModel(CAMERA_HKVISION, "", "Camera HikVision");
+	RegisterDeviceModel(WIFI_DOOR_LOCK, "", "Khoá cửa Wifi");
+	RegisterDeviceModel(AI_ZONE, "", "Zone");
+	RegisterDeviceModel(AI_FACE, "", "Face");
 
 	RegisterDeviceModel(BLE_REPEATER, "", "Bộ lặp sóng");
 
-	RegisterDeviceModel(50331649, "", "AiHub");
+	RegisterDeviceModel(MQTT_AI_HUB, "", "AiHub");
 
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
@@ -457,11 +457,11 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225, "TS0225", "Cảm biến nhan dien nguoi Zigbee");
 }
 
-void Device::RegisterDeviceModel(uint32_t type, string model, string name)
+void Device::RegisterDeviceModel(uint32_t type, string model, const char *name)
 {
 	typeToNameList[type] = name;
-	if (model != "")
-		modelToTypeList[model] = type;
+	// if (model != "")
+	// 	modelToTypeList[model] = type;
 }
 
 uint32_t Device::BleTypeToGroupId(uint32_t deviceType)
@@ -469,17 +469,17 @@ uint32_t Device::BleTypeToGroupId(uint32_t deviceType)
 	return bleTypeToGroupIdList[deviceType];
 }
 
-string Device::BleAttributeIdToAttributeStr(uint16_t attributeId)
+const char *Device::BleAttributeIdToAttributeStr(uint16_t attributeId)
 {
 	return bleAttributeIdToAttributeString[attributeId];
 }
 
-uint32_t Device::ConvertModelToDeviceType(string model)
-{
-	return modelToTypeList[model];
-}
+// uint32_t Device::ConvertModelToDeviceType(string model)
+// {
+// 	return modelToTypeList[model];
+// }
 
-string Device::ConvertDeviceTypeToName(uint32_t type)
+const char *Device::ConvertDeviceTypeToName(uint32_t type)
 {
 	return typeToNameList[type];
 }

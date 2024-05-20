@@ -389,7 +389,7 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                                 if (attributies["VALUE"].isInt())
                                                 {
                                                     dataJson["op"] = "==";
-                                                    dataJson[(Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())).c_str()] = attributies["VALUE"].asInt();
+                                                    dataJson[Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())] = attributies["VALUE"].asInt();
                                                 }
                                                 else if (attributies["VALUE"].isArray())
                                                 {
@@ -399,13 +399,13 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                                         if (attr[0] == attr[1])
                                                         {
                                                             dataJson["op"] = "==";
-                                                            dataJson[(Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())).c_str()] = attr[0];
+                                                            dataJson[Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())] = attr[0];
                                                         }
                                                     }
                                                     else if (attr[0] != attr[1])
                                                     {
                                                         dataJson["op"] = "<>";
-                                                        dataJson[(Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())).c_str()] = attr;
+                                                        dataJson[Device::BleAttributeIdToAttributeStr(attributies["ID"].asInt())] = attr;
                                                     }
                                                 }
 
@@ -439,7 +439,7 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                         {
                                             if (property.isObject() && property.isMember("ID") && property.isMember("VALUE") && property["ID"].isInt() && property["VALUE"].isInt())
                                             {
-                                                dataDevOutput[(Device::BleAttributeIdToAttributeStr(property["ID"].asInt())).c_str()] = property["VALUE"].asInt();
+                                                dataDevOutput[Device::BleAttributeIdToAttributeStr(property["ID"].asInt())] = property["VALUE"].asInt();
                                             }
                                         }
                                         ruleDevOutput["data"] = dataDevOutput;
@@ -465,7 +465,7 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                         {
                                             if (property.isObject() && property.isMember("ID") && property.isMember("VALUE") && property["ID"].isInt() && property["VALUE"].isInt())
                                             {
-                                                dataGroupOutput[(Device::BleAttributeIdToAttributeStr(property["ID"].asInt())).c_str()] = property["VALUE"].asInt();
+                                                dataGroupOutput[Device::BleAttributeIdToAttributeStr(property["ID"].asInt())] = property["VALUE"].asInt();
                                             }
                                         }
                                         ruleGroupOutput["data"] = dataGroupOutput;
@@ -587,7 +587,7 @@ static int TableSceneDelayConvert(sqlite3_stmt *stmt, void *ptr)
                                         {
                                             if (property.isObject() && property.isMember("ID") && property.isMember("VALUE") && property["ID"].isInt() && property["VALUE"].isInt())
                                             {
-                                                dataJson[(Device::BleAttributeIdToAttributeStr(property["ID"].asInt())).c_str()] = property["VALUE"].asInt();
+                                                dataJson[Device::BleAttributeIdToAttributeStr(property["ID"].asInt())] = property["VALUE"].asInt();
                                             }
                                         }
                                         devJson["data"] = dataJson;
