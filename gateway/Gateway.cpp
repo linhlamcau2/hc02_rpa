@@ -216,6 +216,14 @@ void Gateway::DelDatabase()
 	{
 		LOGE("Failed to delete file\n");
 	}
+
+	if (database->IsHaveDbV1())
+	{
+		if (unlink(DB_NAME_V1) != 0)
+		{
+			LOGE("Failed to delete file db_v1\n");
+		}
+	}
 	// Unmount SPIFFS
 	esp_vfs_spiffs_unregister(NULL);
 #else

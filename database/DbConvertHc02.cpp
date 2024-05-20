@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include "json.h"
 
-#define DB_NAME_V1 "/spiffs/smh.sqlite"
 sqlite3 *db_v1 = NULL;
 
 bool Db::IsHaveDbV1()
