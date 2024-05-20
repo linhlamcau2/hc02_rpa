@@ -253,9 +253,9 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
 	ResetFactory();
-// #ifdef __OPENWRT__
-// 	Wifi::SetModeApWifi();
-// #endif
+	// #ifdef __OPENWRT__
+	// 	Wifi::SetModeApWifi();
+	// #endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
 	return CODE_FACTORY;
@@ -442,6 +442,16 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 				LOGW("Not found ota file");
 			}
 		}
+	}
+#else
+	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
+	{
+		string url = URL_PRO + reqValue["url"].asString();
+		string sha = reqValue["checksum"].asString();
+		LOGW("url: %s, checksum: %s", url.c_str(), sha.c_str());
+		config->SetUrlOta(url);
+		config->SetCheckSumOta(sha);
+		esp_restart();
 	}
 #endif
 	return CODE_ERROR;
