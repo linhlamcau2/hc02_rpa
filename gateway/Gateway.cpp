@@ -65,6 +65,8 @@
 #include "DeviceZigbeeTuyaSensorHumanPresence.h"
 #endif
 
+#define TIME_CHECK_OTA 10800
+
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert,
@@ -184,9 +186,7 @@ void Gateway::init()
 
 	if (timerSchedule) // Pre-instantiated timerSchedule for gateway
 	{
-		LOGW("register");
-		timerSchedule->RegisterTimer(37200, std::bind(&Gateway::CheckAutoOta, this));
-		LOGW("register 2");
+		timerSchedule->RegisterTimer(TIME_CHECK_OTA, std::bind(&Gateway::CheckAutoOta, this));
 	}
 }
 
