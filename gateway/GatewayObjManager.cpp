@@ -317,28 +317,44 @@ uint16_t Gateway::getNextRoomAddr()
 	uint16_t numGroupInRoom = 256;
 	uint8_t numRoomMax = 45;
 	bool addrExist = false;
-
-	for (int i = 0; i < numRoomMax; i++)
+	uint16_t indexMax = roomAddrStart + (numGroupInRoom * (numRoomMax-1));
+	// get max addr
+	uint16_t rs = roomAddrStart;
+	groupListMtx.lock();
+	for (const auto &[id, group] : groupList)
 	{
-		addrExist = false;
-		groupListMtx.lock();
-		for (const auto &[id, group] : groupList)
+		if (group->GetAddr() >= rs && group->GetAddr() < indexMax)
 		{
-			if (group->GetAddr() == (roomAddrStart + (numGroupInRoom * i)))
-			{
-				addrExist = true;
-				break;
-			}
-		}
-		groupListMtx.unlock();
-		if (!addrExist)
-		{
-			return (roomAddrStart + (numGroupInRoom * i));
+			rs = (roomAddrStart + numGroupInRoom) + ((group->GetAddr() - roomAddrStart) / numGroupInRoom) * numGroupInRoom;
 		}
 	}
+	groupListMtx.unlock();
 
-	LOGW("group full");
-	return 0;
+	//get index null
+	if (rs >= indexMax)
+	{
+
+		for (int i = 0; i < numRoomMax; i++)
+		{
+			addrExist = false;
+			groupListMtx.lock();
+			for (const auto &[id, group] : groupList)
+			{
+				if (group->GetAddr() == (roomAddrStart + (numGroupInRoom * i)))
+				{
+					addrExist = true;
+					break;
+				}
+			}
+			groupListMtx.unlock();
+			if (!addrExist)
+			{
+				return (roomAddrStart + (numGroupInRoom * i));
+			}
+		}
+		LOGW("group full");
+	}
+	return rs;
 }
 
 uint32_t Gateway::GetNextAndroidProvisionAddr()
