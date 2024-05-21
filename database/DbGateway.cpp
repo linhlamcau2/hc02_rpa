@@ -128,6 +128,12 @@ int Db::GatewayUpdateData(Gateway *gateway, string data)
 	return Sqlite_Exec(sql);
 }
 
+int Db::GatewayUpdateVersion(Gateway *gateway, string version)
+{
+	string sql = "UPDATE " TABLE_NAME " SET version='" + version + "' WHERE mac='" + gateway->getMac() + "';";
+	return Sqlite_Exec(sql);
+}
+
 int Db::GatewayDel(Gateway *gateway)
 {
 	return GatewayDel(gateway->getMac());

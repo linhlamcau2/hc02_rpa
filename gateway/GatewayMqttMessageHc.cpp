@@ -31,6 +31,7 @@ void Gateway::InitMqttMessageHc()
 	OnDeviceRpcCallbackRegister("CreateTunnel", bind(&Gateway::OnCreateTunnel, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("hcConnectToCloud", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
@@ -43,6 +44,7 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
 #ifdef __ANDROID__
 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
@@ -253,9 +255,9 @@ int Gateway::OnResetHC(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGW("OnResetFactory");
 	ResetFactory();
-// #ifdef __OPENWRT__
-// 	Wifi::SetModeApWifi();
-// #endif
+	// #ifdef __OPENWRT__
+	// 	Wifi::SetModeApWifi();
+	// #endif
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "resetHcRsp";
 	return CODE_FACTORY;
@@ -443,8 +445,58 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 	}
+#else
+	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
+	{
+		string url = URL_PRO + reqValue["url"].asString();
+		string sha = reqValue["checksum"].asString();
+		LOGW("url: %s, checksum: %s", url.c_str(), sha.c_str());
+		config->SetUrlOta(url);
+		config->SetCheckSumOta(sha);
+		esp_restart();
+	}
 #endif
 	return CODE_ERROR;
+}
+
+/*
+{
+	"cmd" : "setAutoOta",
+	"rqi" : "abc123",
+	"data" : {
+		"isAutoOta" : true/false
+	}
+}
+
+{
+	"cmd" : "setAutoOtaRsp",
+	"rqi" : "abc123",
+	"data" : {
+		"code" : 1
+	}
+}
+*/
+int Gateway::OnAutoOta(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnAutoOta");
+	respValue["cmd"] = "setAutoOtaRsp";
+	int rs = CODE_ERROR;
+	if (reqValue.isMember("isAutoOta") && reqValue["isAutoOta"].isBool())
+	{
+		bool otaStt = reqValue["isAutoOta"].asBool();
+		Json::Value dataJson;
+		dataJson.parse(this->data);
+		if (dataJson.isObject())
+		{
+			dataJson["isAutoOta"] = otaStt;
+			this->setAutoOta(otaStt);
+			this->setData(dataJson.toString());
+			database->GatewayUpdateData(this, dataJson.toString());
+			rs = CODE_OK;
+		}
+	}
+	respValue["data"]["code"] = rs;
+	return CODE_OK;
 }
 
 /*

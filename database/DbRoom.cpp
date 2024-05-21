@@ -21,7 +21,8 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-
+				LOGD("%s, %d, %s, %s", roomId.c_str(), addr, name.c_str(), data.c_str());
+				
 				Room *room = new Room(roomId, addr, name);
 				if (room)
 				{

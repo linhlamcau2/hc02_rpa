@@ -21,6 +21,7 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %s, %s", sceneBleId.c_str(), deviceId.c_str(), data.c_str());
 
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneBleId);
 				Device *device = gateway->getDeviceFromId(deviceId);

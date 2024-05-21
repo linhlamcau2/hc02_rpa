@@ -192,6 +192,10 @@ enum
 
 	BLE_REPEATER = 91001,
 
+	BLE_SOCKET = 26001,
+	BLE_SOCKET_EXTEN = 26002,
+	BLE_LIGHT_SENSOR = 31001,
+
 	ZIGBEE_LUMI_PLUG = 0x02000001,
 	ZIGBEE_LUMI_SENSOR_SWITCH = 0x02000002,
 	ZIGBEE_LUMI_SENSOR_TEMP_HUM = 0x02000003,
@@ -202,14 +206,28 @@ enum
 	ZIGBEE_TUYA_SENSOR_PIR_RH3040 = 0x02010102,
 	ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225 = 0x02010103,
 
+	WIFI_IR = 41001,
+	WIFI_IR_AIRCONDITION = 41101,
+	WIFI_IR_FAN = 41201,
+	WIFI_IR_TV = 41301,
+	WIFI_SOCKET = 42001,
+	WIFI_SOCKET_4 = 42002,
+	WIFI_SOCKET_6 = 42003,
+	WIFI_SWITCH_1 = 43001,
+	WIFI_SWITCH_2 = 43002,
+	WIFI_SWITCH_3 = 43003,
+	WIFI_SWITCH_4 = 43004,
+	WIFI_DOOR_LOCK = 71001,
+
+	AI_ZONE = 81101,
+	AI_FACE = 81102,
+
 	MQTT_AI_HUB = 0x03000001,
 
-	// CAMERA_TUYA = 0x04000001,
-	// CAMERA_DAHUA = 0x04000002,
-	// CAMERA_HKVISION = 0x04000003
 	CAMERA_TUYA = 61001,
 	CAMERA_DAHUA = 61002,
 	CAMERA_HKVISION = 61003
+
 };
 
 enum
@@ -254,6 +272,12 @@ enum
 	POWER_UNKNOWN = 0,
 	POWER_BATTERY,
 	POWER_AC,
+};
+
+enum
+{
+	TYPE_GROUP_ROOM = 0,
+	TYPE_GROUP_SWITCH = 1,
 };
 
 class Device : public Object
@@ -323,17 +347,18 @@ public:
 	int PushAttributes(Json::Value &jsonValue);
 
 	static void InitDeviceModelList();
-	static void RegisterDeviceModel(uint32_t type, string model, string name);
+	static void RegisterDeviceModel(uint32_t type, string model, const char *name);
 	static uint32_t BleTypeToGroupId(uint32_t deviceType);
-	static uint32_t ConvertModelToDeviceType(string model);
-	static string ConvertDeviceTypeToName(uint32_t type);
+	static const char *BleAttributeIdToAttributeStr(uint16_t attributeId);
+	// static uint32_t ConvertModelToDeviceType(string model);
+	static const char *ConvertDeviceTypeToName(uint32_t type);
 	static uint32_t ConverPidToDeviveType(uint16_t pid);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }
 	// virtual void Getstatus(Json::Value &jsonValue) {}
 
 	virtual void InputData(Json::Value &dataValue) {}
-	virtual void InputData(uint8_t *data, int len, uint16_t addr = 0){};
+	virtual void InputData(uint8_t *data, int len, uint16_t addr = 0) {};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 	virtual int GetNumElement() { return 1; }
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }

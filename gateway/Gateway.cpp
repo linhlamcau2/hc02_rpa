@@ -14,6 +14,7 @@
 #include "Ota.h"
 #include "Base64.h"
 #include "Config.h"
+#include "TimerSchedule.h"
 #include "DeviceBleAll.h"
 #include "DeviceBleSwitchOnoff.h"
 #include "DeviceBleLightOnoffCctDim.h"
@@ -64,6 +65,8 @@
 #include "DeviceZigbeeTuyaSensorHumanPresence.h"
 #endif
 
+#define TIME_CHECK_OTA 10800
+
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert,
@@ -82,6 +85,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	this->data = "";
+	this->isAutoOta = true;
 }
 
 Gateway::~Gateway()
@@ -161,8 +165,29 @@ void Gateway::init()
 		database->GatewayAdd(gateway);
 		database->GatewayRead();
 	}
+
+	string firmwareVer = STR(VERSION);
+	if (getVersion() != firmwareVer)
+	{
+		setVersion(firmwareVer);
+		database->GatewayUpdateVersion(this, firmwareVer);
+	}
+
 	LocalConnect();
 	CloudConnect();
+
+	// Get data isAutoOta
+	Json::Value dataJson;
+	dataJson.parse(gateway->getData());
+	if (dataJson.isObject() && dataJson.isMember("isAutoOta") && dataJson["isAutoOta"].isBool())
+	{
+		this->isAutoOta = dataJson["isAutoOta"].asBool();
+	}
+
+	if (timerSchedule) // Pre-instantiated timerSchedule for gateway
+	{
+		timerSchedule->RegisterTimer(TIME_CHECK_OTA, std::bind(&Gateway::CheckAutoOta, this));
+	}
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -216,6 +241,14 @@ void Gateway::DelDatabase()
 	{
 		LOGE("Failed to delete file\n");
 	}
+
+	if (database->IsHaveDbV1())
+	{
+		if (unlink(DB_NAME_V1) != 0)
+		{
+			LOGE("Failed to delete file db_v1\n");
+		}
+	}
 	// Unmount SPIFFS
 	esp_vfs_spiffs_unregister(NULL);
 #else
@@ -236,6 +269,26 @@ void Gateway::ResetFactory()
 		LOGW("BleProtocol null");
 
 	DelDatabase();
+}
+
+void Gateway::CheckAutoOta()
+{
+	if (this->getAutoOta())
+	{
+		Json::Value data;
+		data["cmd"] = "checkAutoOta";
+		data["rqi"] = Util::genRandRQI(16);
+		data["data"]["mac"] = this->getMac();
+		data["data"]["version"] = this->getVersion();
+#ifdef ESP_PLATFORM
+		data["data"]["type"] = 2;
+#elif defined(__OPENWRT__)
+		data["data"]["type"] = 1;
+#elif defined(__ANDROID__)
+		data["data"]["type"] = 3;
+#endif
+		CloudPublish(data);
+	}
 }
 
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
@@ -563,7 +616,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	}
 	else
 	{
-		devValue["type"] = scanDevice->GetType();
+		devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
 	}
 	jsonValue["device"].append(devValue);
 	pushNewDeviceLocal(jsonValue);
@@ -868,9 +921,9 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		uint16_t addr = 0;
 		Rule *rule = NULL;
 
-		bool isFirstRun = true;
-		if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
-			isFirstRun = ruleValue["isFirstRun"].asBool();
+		// bool isFirstRun = true;
+		// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+		// 	isFirstRun = ruleValue["isFirstRun"].asBool();
 
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
@@ -1269,6 +1322,11 @@ string Gateway::getMac()
 	return mac;
 }
 
+bool Gateway::getAutoOta()
+{
+	return this->isAutoOta;
+}
+
 void Gateway::setBleAddr(uint16_t addr)
 {
 	this->ble_addr = addr;
@@ -1325,6 +1383,11 @@ void Gateway::setVersion(string version)
 
 void Gateway::setName(string name)
 {
+}
+
+void Gateway::setAutoOta(bool isAutoOta)
+{
+	this->isAutoOta = isAutoOta;
 }
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)

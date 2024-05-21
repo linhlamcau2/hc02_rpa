@@ -76,6 +76,26 @@ void Db::init(void)
 	{
 		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
 		createTableIfNotExists();
+#ifdef ESP_PLATFORM
+		if (IsHaveDbV1())
+		{
+			Device::InitDeviceModelList();
+			ConvertTableDevice();
+			ConvertTableDeviceAttribute();
+			ConvertTableDeviceBleChild();
+			ConvertTableDeviceInGroup();
+			ConvertTableDeviceInRoom();
+			ConvertTableDeviceInSceneBle();
+			ConvertTableGateway();
+			ConvertTableGroup();
+			ConvertTableRoom();
+			ConvertTableSceneBle();
+			ConvertTableRule();
+			ConvertTableSceneDelay();
+			EditTableDeviceInGroup();
+			exit(1);
+		}
+#endif
 	}
 	else
 	{

@@ -52,6 +52,7 @@ private:
 	string data;
 	thread *udpBroadcastThread;
 	atomic<bool> isUdpBroadcasting;
+	atomic<bool> isAutoOta;
 
 	bool isInternet;
 
@@ -184,6 +185,7 @@ private:
 	int OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue);
 	int OnOtaHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue);
+	int OnAutoOta(Json::Value &reqValue, Json::Value &respValue);
 
 #ifdef __ANDROID__
 	// Noti
@@ -212,6 +214,7 @@ public:
 	void StopUdpBroadcast();
 	int UdpBroadcastThread();
 
+	void CheckAutoOta();
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
@@ -257,6 +260,7 @@ public:
 	string getRefreshToken();
 	string getData();
 	string getMac();
+	bool getAutoOta();
 
 	void setBleAddr(uint16_t addr);
 	void setBleIvIndex(uint32_t ivIndex);
@@ -270,6 +274,7 @@ public:
 	void setName(string name);
 	void setRefreshToken(string refresh_token);
 	void setData(string data);
+	void setAutoOta(bool isAutoOta);
 
 	void DelAllDevice();
 	void DelAllGroup();

@@ -22,6 +22,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				bool enable = sqlite3_column_int(stmt, index++) ? true : false;
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				long create_at = sqlite3_column_int(stmt, index++);
+				LOGD("%s, %s, %d, %s, %d", id.c_str(), data.c_str(), type, enable ? "true" : "flase", addr);
 
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);

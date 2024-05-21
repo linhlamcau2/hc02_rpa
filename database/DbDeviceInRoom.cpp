@@ -20,6 +20,7 @@ static int DeviceInRoomParse(sqlite3_stmt *stmt, void *ptr)
 				uint16_t element = sqlite3_column_int(stmt, index++);
 				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %s", roomId.c_str(), deviceId.c_str());
 				
 				Room *room = gateway->getRoomFromId(roomId);
 				Device *device = gateway->getDeviceFromId(deviceId);

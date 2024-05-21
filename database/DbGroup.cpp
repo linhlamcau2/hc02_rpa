@@ -21,6 +21,7 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %d, %s, %s", id.c_str(), addr, name.c_str(), roomId.c_str());
 				
 				Group *group = gateway->getGroupFromId(id);
 				if (!group)

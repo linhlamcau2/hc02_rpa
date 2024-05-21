@@ -26,6 +26,8 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				uint32_t activeTime = sqlite3_column_int(stmt, index++);
 				uint32_t updateTime = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %s, %s, %d, %d, %d, %d, %d, %d, %s", mac.c_str(), id.c_str(), name.c_str(), addr, type, firmwareVersion, hardwareVersion, activeTime, updateTime, data.c_str());
+
 				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
 				string devData;
 				string decode = macaron::Base64::Decode(data, devData);

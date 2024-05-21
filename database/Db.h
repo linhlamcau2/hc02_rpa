@@ -91,6 +91,7 @@ public:
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
 	int GatewayUpdateData(Gateway *gateway, string data);
+	int GatewayUpdateVersion(Gateway *gateway, string version);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
@@ -125,6 +126,26 @@ public:
 	int SceneBleDel(SceneBle *sceneBle);
 	int SceneBleDelAll();
 	int SceneBleUpdateFavorite(SceneBle *scene);
+
+#ifdef ESP_PLATFORM
+	bool IsHaveDbV1();
+	int OpenDbV1();
+	int ConvertTableDevice();
+	int ConvertTableDeviceAttribute();
+	int ConvertTableDeviceBleChild();
+	int ConvertTableDeviceInGroup();
+	int ConvertTableDeviceInRoom();
+	int ConvertTableDeviceInSceneBle();
+	int ConvertTableGateway();
+	int ConvertTableGroup();
+	int ConvertTableRoom();
+	int ConvertTableSceneBle();
+	int ReadAll_V1(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
+	int ConvertTableRule();
+	int ConvertTableSceneDelay();
+	int EditTableDeviceInGroup();
+
+#endif
 
 #ifdef __ANDROID__
 	int NotiRead();

@@ -7,6 +7,7 @@
 
 #ifdef ESP_PLATFORM
 #include "mongoose.h"
+#include "Led.h"
 #endif
 
 void Gateway::InitUdpMessage()
@@ -221,6 +222,9 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 									fromRsp["DORMITORY_ID"] = dormitoryId;
 									respValue["FROM"] = fromRsp;
 								}
+#ifdef ESP_PLATFORM
+								SetLedInternet(false);
+#endif
 								GatewayConnectToCloudNotice();
 								Json::Value jsonData;
 								jsonData["data"] = Json::objectValue;

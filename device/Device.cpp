@@ -220,14 +220,15 @@ int Device::PushAttributes(Json::Value &jsonValue)
 }
 
 // TODO: remove
-static map<uint32_t, string> typeToNameList;
-static map<string, uint32_t> modelToTypeList;
+static map<uint32_t, const char *> typeToNameList;
+// static map<string, uint32_t> modelToTypeList;
 static map<uint32_t, uint32_t> bleTypeToGroupIdList;
+static map<uint16_t, const char *> bleAttributeIdToAttributeString;
 
 // TODO: Check list device to Name
 void Device::InitDeviceModelList()
 {
-	bleTypeToGroupIdList[1] = BLE_SWITCH_TOUCH_GROUP;
+	bleTypeToGroupIdList[TYPE_GROUP_SWITCH] = BLE_SWITCH_TOUCH_GROUP;
 
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_SMT] = BLE_DOWNLIGHT_SMT_GROUP;
 	bleTypeToGroupIdList[BLE_DOWNLIGHT_COB_GOC_RONG] = BLE_DOWNLIGHT_COB_GOC_RONG_GROUP;
@@ -296,6 +297,55 @@ void Device::InitDeviceModelList()
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_HCN] = BLE_SWITCH_CURTAIN_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_SQUARE_V2] = BLE_SWITCH_CURTAIN_GROUP;
 
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ONOFF] = KEY_ATTRIBUTE_ONOFF;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM] = KEY_ATTRIBUTE_DIM;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CCT] = KEY_ATTRIBUTE_CCT;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_HUE] = KEY_ATTRIBUTE_HUE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SATURATION] = KEY_ATTRIBUTE_SATURATION;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_LUMINANCE] = KEY_ATTRIBUTE_LUMINANCE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SONG] = KEY_ATTRIBUTE_SONG;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BLINK_MODE] = KEY_ATTRIBUTE_BLINK_MODE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BATTERY] = KEY_ATTRIBUTE_BATTERY;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_LUX] = KEY_ATTRIBUTE_LUX;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PIR] = KEY_ATTRIBUTE_PIR;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_1] = KEY_ATTRIBUTE_BUTTON;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_2] = KEY_ATTRIBUTE_BUTTON "2";
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_3] = KEY_ATTRIBUTE_BUTTON "3";
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_4] = KEY_ATTRIBUTE_BUTTON "4";
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_5] = KEY_ATTRIBUTE_BUTTON "5";
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_BUTTON_6] = KEY_ATTRIBUTE_BUTTON "6";
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ACTIME] = KEY_ATTRIBUTE_ACTIME;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PM2_5] = KEY_ATTRIBUTE_PM2_5;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PM10] = KEY_ATTRIBUTE_PM10;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_PM1_0] = KEY_ATTRIBUTE_PM1_0;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_TEMP] = KEY_ATTRIBUTE_TEMP;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_HUMIDITY] = KEY_ATTRIBUTE_HUMIDITY;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SCENE_RGB] = KEY_ATTRIBUTE_MODE_RGB;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_HANGON] = KEY_ATTRIBUTE_HANGON;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_COUNTDOWN] = KEY_ATTRIBUTE_COUNTDOWN;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_AIR_CONDITIONER_WIND] = KEY_ATTRIBUTE_AIR_CONDITIONER_WIND;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_AIR_CONDITIONER_MODE] = KEY_ATTRIBUTE_AIR_CONDITIONER_MODE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_AIR_CONDITIONER_TEMP] = KEY_ATTRIBUTE_AIR_CONDITIONER_TEMP;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_OPEN] = KEY_ATTRIBUTE_CURTAIN_OPEN;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_CLOSE] = KEY_ATTRIBUTE_CURTAIN_CLOSE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_PAUSE] = KEY_ATTRIBUTE_CURTAIN_PAUSE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CURTAIN_OPENED] = KEY_ATTRIBUTE_CURTAIN_OPENED;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SMOKE] = KEY_ATTRIBUTE_SMOKE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DOOR] = KEY_ATTRIBUTE_DOOR;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SMOKE_PIN] = KEY_ATTRIBUTE_SMOKE_PIN;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DKTX_SCENE] = KEY_ATTRIBUTE_DKTX_SCENE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ONLINE_OFFLINE] = KEY_ATTRIBUTE_ONLINE_OFFLINE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_MOTOR] = KEY_ATTRIBUTE_MOTOR;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_R] = KEY_ATTRIBUTE_R;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_G] = KEY_ATTRIBUTE_G;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_B] = KEY_ATTRIBUTE_B;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM_ON] = KEY_ATTRIBUTE_DIM_ON;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM_OFF] = KEY_ATTRIBUTE_DIM_OFF;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_SENSI_SENSOR] = KEY_ATTRIBUTE_SENSI;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DISTANCE] = KEY_ATTRIBUTE_DISTANCE;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_INPUT_MODE] = KEY_ATTRIBUTE_MODE_INPUT;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_STARTUP] = KEY_ATTRIBUTE_STATUS_STARTUP;
+
 	RegisterDeviceModel(BLE_DOWNLIGHT_SMT, "", "Downlight SMT");
 	RegisterDeviceModel(BLE_DOWNLIGHT_COB_GOC_RONG, "", "Downlight COB");
 	RegisterDeviceModel(BLE_DOWNLIGHT_COB_GOC_HEP, "", "Downlight trang trí");
@@ -358,10 +408,10 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_SWITCH_ELECTRICAL_4, "", "Công tắc cơ 4 nút");
 	RegisterDeviceModel(BLE_SWITCH_ELECTRICAL_WATER_HEATER, "", "Công tắc cơ BNL");
 
-	RegisterDeviceModel(26001, "", "Ổ cắm đơn");
-	RegisterDeviceModel(26002, "", "Ổ cắm kéo dài");
+	RegisterDeviceModel(BLE_SOCKET, "", "Ổ cắm đơn");
+	RegisterDeviceModel(BLE_SOCKET_EXTEN, "", "Ổ cắm kéo dài");
 	RegisterDeviceModel(BLE_SWITCH_RGB_SOCKET_1, "", "Ổ cắm công tắc chữ nhật");
-	RegisterDeviceModel(31001, "", "Cảm biến ánh sáng");
+	RegisterDeviceModel(BLE_LIGHT_SENSOR, "", "Cảm biến ánh sáng");
 
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC, "", "Cảm biến chuyển động");
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_AC, "", "Cảm biến chuyển động AC");
@@ -375,27 +425,27 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_PM_SENSOR, "", "Cảm biến bụi mịn");
 	RegisterDeviceModel(BLE_TEMP_HUM_SENSOR, "", "Cảm biến nhiệt/ẩm");
 
-	RegisterDeviceModel(41001, "", "Điều khiển hồng ngoại");
-	RegisterDeviceModel(41101, "", "Điều hoà");
-	RegisterDeviceModel(41201, "", "Quạt");
-	RegisterDeviceModel(41301, "", "TIVI");
-	RegisterDeviceModel(42001, "", "Ổ cắm đơn Wifi");
-	RegisterDeviceModel(42002, "", "Ổ cắm thông minh Rạng Đông 4 cổng");
-	RegisterDeviceModel(42003, "", "Ổ cắm thông minh Rạng Đông 6 cổng");
-	RegisterDeviceModel(43001, "", "Công tắc Wifi 1 nút");
-	RegisterDeviceModel(43002, "", "Công tắc Wifi 2 nút");
-	RegisterDeviceModel(43003, "", "Công tắc Wifi 3 nút");
-	RegisterDeviceModel(43004, "", "Công tắc Wifi 4 nút");
-	RegisterDeviceModel(61001, "", "Camera Wifi");
-	RegisterDeviceModel(61002, "", "Camera Dahua");
-	RegisterDeviceModel(61003, "", "Camera HikVision");
-	RegisterDeviceModel(71001, "", "Khoá cửa Wifi");
-	RegisterDeviceModel(81101, "", "Zone");
-	RegisterDeviceModel(81102, "", "Face");
+	RegisterDeviceModel(WIFI_IR, "", "Điều khiển hồng ngoại");
+	RegisterDeviceModel(WIFI_IR_AIRCONDITION, "", "Điều hoà");
+	RegisterDeviceModel(WIFI_IR_FAN, "", "Quạt");
+	RegisterDeviceModel(WIFI_IR_TV, "", "TIVI");
+	RegisterDeviceModel(WIFI_SOCKET, "", "Ổ cắm đơn Wifi");
+	RegisterDeviceModel(WIFI_SOCKET_4, "", "Ổ cắm thông minh Rạng Đông 4 cổng");
+	RegisterDeviceModel(WIFI_SOCKET_6, "", "Ổ cắm thông minh Rạng Đông 6 cổng");
+	RegisterDeviceModel(WIFI_SWITCH_1, "", "Công tắc Wifi 1 nút");
+	RegisterDeviceModel(WIFI_SWITCH_2, "", "Công tắc Wifi 2 nút");
+	RegisterDeviceModel(WIFI_SWITCH_3, "", "Công tắc Wifi 3 nút");
+	RegisterDeviceModel(WIFI_SWITCH_4, "", "Công tắc Wifi 4 nút");
+	RegisterDeviceModel(CAMERA_TUYA, "", "Camera Wifi");
+	RegisterDeviceModel(CAMERA_DAHUA, "", "Camera Dahua");
+	RegisterDeviceModel(CAMERA_HKVISION, "", "Camera HikVision");
+	RegisterDeviceModel(WIFI_DOOR_LOCK, "", "Khoá cửa Wifi");
+	RegisterDeviceModel(AI_ZONE, "", "Zone");
+	RegisterDeviceModel(AI_FACE, "", "Face");
 
 	RegisterDeviceModel(BLE_REPEATER, "", "Bộ lặp sóng");
 
-	RegisterDeviceModel(50331649, "", "AiHub");
+	RegisterDeviceModel(MQTT_AI_HUB, "", "AiHub");
 
 	RegisterDeviceModel(ZIGBEE_LUMI_PLUG, "lumi.plug", "Ổ cắm đơn Zigbee");
 	RegisterDeviceModel(ZIGBEE_LUMI_SENSOR_SWITCH, "lumi.sensor_switch", "Chuông cửa Zigbee");
@@ -407,11 +457,11 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225, "TS0225", "Cảm biến nhan dien nguoi Zigbee");
 }
 
-void Device::RegisterDeviceModel(uint32_t type, string model, string name)
+void Device::RegisterDeviceModel(uint32_t type, string model, const char *name)
 {
 	typeToNameList[type] = name;
-	if (model != "")
-		modelToTypeList[model] = type;
+	// if (model != "")
+	// 	modelToTypeList[model] = type;
 }
 
 uint32_t Device::BleTypeToGroupId(uint32_t deviceType)
@@ -419,12 +469,17 @@ uint32_t Device::BleTypeToGroupId(uint32_t deviceType)
 	return bleTypeToGroupIdList[deviceType];
 }
 
-uint32_t Device::ConvertModelToDeviceType(string model)
+const char *Device::BleAttributeIdToAttributeStr(uint16_t attributeId)
 {
-	return modelToTypeList[model];
+	return bleAttributeIdToAttributeString[attributeId];
 }
 
-string Device::ConvertDeviceTypeToName(uint32_t type)
+// uint32_t Device::ConvertModelToDeviceType(string model)
+// {
+// 	return modelToTypeList[model];
+// }
+
+const char *Device::ConvertDeviceTypeToName(uint32_t type)
 {
 	return typeToNameList[type];
 }
