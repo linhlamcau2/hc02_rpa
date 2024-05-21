@@ -317,7 +317,7 @@ uint16_t Gateway::getNextRoomAddr()
 	uint16_t numGroupInRoom = 256;
 	uint8_t numRoomMax = 45;
 	bool addrExist = false;
-	uint16_t indexMax = roomAddrStart + (numGroupInRoom * (numRoomMax-1));
+	uint16_t indexMax = roomAddrStart + (numGroupInRoom * (numRoomMax - 1));
 	// get max addr
 	uint16_t rs = roomAddrStart;
 	groupListMtx.lock();
@@ -330,7 +330,7 @@ uint16_t Gateway::getNextRoomAddr()
 	}
 	groupListMtx.unlock();
 
-	//get index null
+	// get index null
 	if (rs >= indexMax)
 	{
 
