@@ -14,6 +14,7 @@
 #include "Ota.h"
 #include "Base64.h"
 #include "Config.h"
+#include "TimerSchedule.h"
 #include "DeviceBleAll.h"
 #include "DeviceBleSwitchOnoff.h"
 #include "DeviceBleLightOnoffCctDim.h"
@@ -82,6 +83,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
 	this->data = "";
+	this->isAutoOta = true;
 }
 
 Gateway::~Gateway()
@@ -161,8 +163,31 @@ void Gateway::init()
 		database->GatewayAdd(gateway);
 		database->GatewayRead();
 	}
+
+	string firmwareVer = STR(VERSION);
+	if (getVersion() != firmwareVer)
+	{
+		setVersion(firmwareVer);
+		database->GatewayUpdateVersion(this, firmwareVer);
+	}
+
 	LocalConnect();
 	CloudConnect();
+
+	// Get data isAutoOta
+	Json::Value dataJson;
+	dataJson.parse(gateway->getData());
+	if (dataJson.isObject() && dataJson.isMember("isAutoOta") && dataJson["isAutoOta"].isBool())
+	{
+		this->isAutoOta = dataJson["isAutoOta"].asBool();
+	}
+
+	if (timerSchedule) // Pre-instantiated timerSchedule for gateway
+	{
+		LOGW("register");
+		timerSchedule->RegisterTimer(37200, std::bind(&Gateway::CheckAutoOta, this));
+		LOGW("register 2");
+	}
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
@@ -244,6 +269,26 @@ void Gateway::ResetFactory()
 		LOGW("BleProtocol null");
 
 	DelDatabase();
+}
+
+void Gateway::CheckAutoOta()
+{
+	if (this->getAutoOta())
+	{
+		Json::Value data;
+		data["cmd"] = "checkAutoOta";
+		data["rqi"] = Util::genRandRQI(16);
+		data["data"]["mac"] = this->getMac();
+		data["data"]["version"] = this->getVersion();
+#ifdef ESP_PLATFORM
+		data["data"]["type"] = 2;
+#elif defined(__OPENWRT__)
+		data["data"]["type"] = 1;
+#elif defined(__ANDROID__)
+		data["data"]["type"] = 3;
+#endif
+		CloudPublish(data);
+	}
 }
 
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
@@ -1277,6 +1322,11 @@ string Gateway::getMac()
 	return mac;
 }
 
+bool Gateway::getAutoOta()
+{
+	return this->isAutoOta;
+}
+
 void Gateway::setBleAddr(uint16_t addr)
 {
 	this->ble_addr = addr;
@@ -1333,6 +1383,11 @@ void Gateway::setVersion(string version)
 
 void Gateway::setName(string name)
 {
+}
+
+void Gateway::setAutoOta(bool isAutoOta)
+{
+	this->isAutoOta = isAutoOta;
 }
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
