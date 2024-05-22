@@ -112,7 +112,6 @@ int ModuleDistance::Do(Json::Value &dataValue)
         int value = dataValue[KEY_ATTRIBUTE_DISTANCE].asInt();
         if (bleProtocol->SetDistanceSensor(addr, value) == CODE_OK)
         {
-            this->distance = value;
             return CODE_OK;
         }
     }

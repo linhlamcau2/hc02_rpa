@@ -200,9 +200,6 @@ int ModuleHsl::Do(Json::Value &dataValue)
 		int l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
 		if (bleProtocol->SetHSLLight(addr, h, s, l, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
-			this->h = h;
-			this->s = s;
-			this->l = l;
 			return CODE_OK;
 		}
 	}

@@ -101,6 +101,11 @@ void Db::init(void)
 	{
 		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
 	}
+
+#ifdef __ANDROID__
+	thread SqliteExecListThread(bind(&Db::Sqlite_ExecList, this));
+	SqliteExecListThread.detach();
+#endif
 }
 
 bool Db::IsHaveDb()
@@ -214,3 +219,32 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 #endif
 	return rc;
 }
+#ifdef __ANDROID__
+
+void Db::pushToListSql(string sql)
+{
+	listSqlMtx.lock();
+	listSql.push_back(sql);
+	listSqlMtx.unlock();
+}
+
+void Db::Sqlite_ExecList()
+{
+	while (1)
+	{
+		listSqlMtx.lock();
+		if (listSql.size() > 0)
+		{
+			Sqlite_BenginTransaction();
+			for (auto &sql : listSql)
+			{
+				Sqlite_Exec(sql);
+			}
+			Sqlite_EndTransaction();
+			listSql.clear();
+		}
+		listSqlMtx.unlock();
+		sleep(20);
+	}
+}
+#endif

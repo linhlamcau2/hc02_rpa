@@ -118,7 +118,6 @@ int ModuleModeRgb::Do(Json::Value &dataValue)
 		int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)
 		{
-			this->mode = mode;
 			return CODE_OK;
 		}
 	}

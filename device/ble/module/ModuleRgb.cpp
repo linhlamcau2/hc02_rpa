@@ -286,11 +286,6 @@ int ModuleRgb::Do(Json::Value &dataValue)
 		int dimOff = dataValue[keyDimOff].asInt();
 		if (bleProtocol->ControlRgbSwitch(addr, index + 1, b, g, r, dimOn, dimOff) == CODE_OK)
 		{
-			this->r = r;
-			this->g = g;
-			this->b = b;
-			this->dimOn = dimOn;
-			this->dimOff = dimOff;
 			return CODE_OK;
 		}
 	}

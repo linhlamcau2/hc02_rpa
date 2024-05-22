@@ -145,7 +145,6 @@ int ModuleRelaySwitch::Do(Json::Value &dataValue)
 		int bt = dataValue[key].asInt();
 		if (bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), index, bt) == CODE_OK)
 		{
-			this->bt = bt;
 			return CODE_OK;
 		}
 	}

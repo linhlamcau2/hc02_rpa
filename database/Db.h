@@ -24,6 +24,11 @@ private:
 
 	int Sqlite_Exec(string &sql);
 	int ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
+#ifdef __ANDROID__
+	mutex listSqlMtx;
+	vector<string> listSql;
+	void Sqlite_ExecList();
+#endif
 
 public:
 	Db();
@@ -151,6 +156,7 @@ public:
 	int NotiAdd(Noti *noti);
 	int NotiUpdate(Noti *noti);
 	int NotiDel(Noti *noti);
+	void pushToListSql(string sql); 
 #endif
 };
 

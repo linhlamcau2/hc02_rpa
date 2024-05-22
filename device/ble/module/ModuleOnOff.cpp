@@ -150,7 +150,6 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 		int onoff = dataValue[key].asInt();
 		if (bleProtocol->SetOnOffLight(addr, onoff, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
-			this->onoff = onoff;
 			return CODE_OK;
 		}
 	}

@@ -89,9 +89,10 @@ static void HandleOpcodeBle(void *data)
 			bleProtocol->CheckOpcodeException(message_rsp);
 			free(message_rsp);
 		}
-		usleep(100000);
 #ifdef ESP_PLATFORM
 		vTaskDelay(pdMS_TO_TICKS(100));
+#else
+		usleep(100000);
 #endif
 	}
 }
@@ -309,7 +310,6 @@ static void GetDataUpdateSwitch(uint8_t *data, int len, Json::Value &dataValues)
 	}
 }
 
-// dataValues[KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")] = ;
 int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 {
 	int rs = CODE_ERROR;
@@ -326,7 +326,6 @@ int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
-	// LOGD("CheckOpcodeException");
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
@@ -1210,7 +1209,7 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
 	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	#ifndef CONFIG_SAVE_ATTRIBUTE
+	// #ifndef CONFIG_SAVE_ATTRIBUTE
 	switch (typeDev)
 	{
 	case BLE_LED_CHIEU_TRANH:
@@ -1293,9 +1292,9 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 		BleProtocol::GetTTL(devAddr);
 		break;
 	}
-	#else
-	BleProtocol::GetTTL(devAddr);
-	#endif
+	// #else
+	// BleProtocol::GetTTL(devAddr);
+	// #endif
 	return CODE_OK;
 }
 

@@ -123,7 +123,6 @@ int ModuleDim::Do(Json::Value &dataValue)
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
 		if (bleProtocol->SetDimmingLight(addr, dim * 65535 / 100, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
-			this->dim = dim;
 			return CODE_OK;
 		}
 	}

@@ -119,7 +119,6 @@ int ModuleCct::Do(Json::Value &dataValue)
 		int cct = dataValue[KEY_ATTRIBUTE_CCT].asInt();
 		if (bleProtocol->SetCctLight(addr, (cct * 192) + 800, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
-			this->cct = cct;
 			return CODE_OK;
 		}
 	}
