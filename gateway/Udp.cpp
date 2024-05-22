@@ -179,6 +179,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	}
 	else
 	{
+#ifndef __ANDROID__
 		string messageBase64;
 		string decode = macaron::Base64::Decode(message, messageBase64);
 		if (decode == "")
@@ -215,6 +216,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 		{
 			LOGW("Base64 decode err: %s", decode.c_str());
 		}
+#endif
 	}
 }
 

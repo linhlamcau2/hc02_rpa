@@ -117,7 +117,9 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 	}
 	else
 	{
-		// LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+#ifdef __ANDROID__
+		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+#else
 		Json::Value fromRsp;
 		Json::Value toRsp;
 		Json::Value dataRsp;
@@ -133,6 +135,7 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 		Wifi::ScanWifi(dataRsp);
 		respValue["DATA"] = dataRsp;
 		return CODE_OK;
+#endif
 	}
 
 	return CODE_ERROR;
