@@ -279,7 +279,7 @@ int AndroidBleProtocol::OnNewDevice(Json::Value &reqValue, Json::Value &respValu
 						vid = dataJson["vid"].asInt();
 
 						uint32_t deviceType = Device::ConverPidToDeviveType(pid);
-						Device *device = gateway->AddNewDevice(uuid, Device::ConvertDeviceTypeToName(deviceType), mac, dataJson, addr, deviceType, vid, true);
+						Device *device = gateway->AddNewDevice(uuid, Util::setString(Device::ConvertDeviceTypeToName(deviceType)), mac, dataJson, addr, deviceType, vid, true);
 						if (device)
 						{
 							gateway->AddDeviceToScanList(device);
