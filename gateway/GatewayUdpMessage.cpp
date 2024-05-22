@@ -117,7 +117,25 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 	}
 	else
 	{
+#ifdef __ANDROID__
 		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+#else
+		Json::Value fromRsp;
+		Json::Value toRsp;
+		Json::Value dataRsp;
+		StopUdpBroadcast();
+		respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
+		respValue["REQUEST_ID"] = rqi;
+		respValue["TIME"] = Util::GetCurrentTimeStr();
+		respValue["CONNECTION_TYPE"] = 0;
+		fromRsp["TYPE"] = 2;
+		respValue["FROM"] = fromRsp;
+		toRsp["TYPE"] = 0;
+		respValue["TO"] = toRsp;
+		Wifi::ScanWifi(dataRsp);
+		respValue["DATA"] = dataRsp;
+		return CODE_OK;
+#endif
 	}
 
 	return CODE_ERROR;

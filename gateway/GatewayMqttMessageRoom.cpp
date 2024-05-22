@@ -204,7 +204,7 @@ int Gateway::AddDevToSceneInRoom(Device *device, Json::Value &dataGroup, SceneBl
 				{
 					if (group->GetPositionDevice(device, device->GetAddr()) >= 0)
 					{
-						group->Do(groupData, false);
+						// group->Do(groupData, false);
 						if (sceneBle->AddDevice(device, groupData, true, true) != CODE_OK)
 						{
 							rs = CODE_ERROR;
@@ -372,33 +372,47 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								Json::Value tempSuccessList = Json::arrayValue;
 								AddNewSceneBle(sceneBle, true);
 								room->AddSceneBle(sceneBle, true, true);
-								for (auto &deviceAddScene : devicesAddRoom)
+								// for (auto &deviceAddScene : devicesAddRoom)
+								// {
+								if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 								{
-									if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+									Json::Value groupsAddScene = sceneValue["groups"];
+									for (auto &groupAddScene : groupsAddScene)
 									{
-										Json::Value groupsAddScene = sceneValue["groups"];
-										for (auto &groupAddScene : groupsAddScene)
+										if (groupAddScene.isObject() &&
+											groupAddScene.isMember("id") && groupAddScene["id"].isString() &&
+											groupAddScene.isMember("data") && groupAddScene["data"].isObject())
 										{
-											if (AddDevToSceneInRoom(deviceAddScene, groupAddScene, sceneBle, i + 1) != CODE_OK)
+											string grpId = groupAddScene["id"].asString();
+											Group *grp = getGroupFromId(grpId);
+											if (grp)
 											{
-												if (devicesStatusConfig[deviceAddScene->GetId()])
+												grp->Do(groupAddScene["data"], false);
+												for (auto &deviceAddScene : devicesAddRoom)
 												{
-													devicesStatusConfig[deviceAddScene->GetId()] = false;
-												}
-											}
-											else
-											{
-												if (devicesStatusConfig[deviceAddScene->GetId()])
-												{
-													tempSuccessList.append(deviceAddScene->GetId());
+													if (AddDevToSceneInRoom(deviceAddScene, groupAddScene, sceneBle, i + 1) != CODE_OK)
+													{
+														if (devicesStatusConfig[deviceAddScene->GetId()])
+														{
+															devicesStatusConfig[deviceAddScene->GetId()] = false;
+														}
+													}
+													else
+													{
+														if (devicesStatusConfig[deviceAddScene->GetId()])
+														{
+															tempSuccessList.append(deviceAddScene->GetId());
+														}
+													}
 												}
 											}
 										}
-#ifdef ESP_PLATFORM
-										vTaskDelay(pdMS_TO_TICKS(100));
-#endif
 									}
+#ifdef ESP_PLATFORM
+									vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 								}
+								// }
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 							}
 						}
@@ -616,33 +630,47 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 							}
 							if (sceneBle)
 							{
-								for (auto &devInScene : devicesAddRoom)
+								// for (auto &devInScene : devicesAddRoom)
+								// {
+								if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
 								{
-									if (sceneValue.isMember("groups") && sceneValue["groups"].isArray())
+									Json::Value groupsAddScene = sceneValue["groups"];
+									for (auto &groupAddScene : groupsAddScene)
 									{
-										Json::Value groupsAddScene = sceneValue["groups"];
-										for (auto &groupAddScene : groupsAddScene)
+										if (groupAddScene.isObject() &&
+											groupAddScene.isMember("id") && groupAddScene["id"].isString() &&
+											groupAddScene.isMember("data") && groupAddScene["data"].isObject())
 										{
-											if (AddDevToSceneInRoom(devInScene, groupAddScene, sceneBle, i + 1) != CODE_OK)
+											string grpId = groupAddScene["id"].asString();
+											Group *grp = getGroupFromId(grpId);
+											if (grp)
 											{
-												if (devicesStatusConfig[devInScene->GetId()])
+												grp->Do(groupAddScene["data"], false);
+												for (auto &devInScene : devicesAddRoom)
 												{
-													devicesStatusConfig[devInScene->GetId()] = false;
-												}
-											}
-											else
-											{
-												if (devicesStatusConfig[devInScene->GetId()])
-												{
-													tempSuccessList.append(devInScene->GetId());
+													if (AddDevToSceneInRoom(devInScene, groupAddScene, sceneBle, i + 1) != CODE_OK)
+													{
+														if (devicesStatusConfig[devInScene->GetId()])
+														{
+															devicesStatusConfig[devInScene->GetId()] = false;
+														}
+													}
+													else
+													{
+														if (devicesStatusConfig[devInScene->GetId()])
+														{
+															tempSuccessList.append(devInScene->GetId());
+														}
+													}
 												}
 											}
 										}
-#ifdef ESP_PLATFORM
-										vTaskDelay(pdMS_TO_TICKS(100));
-#endif
 									}
+#ifdef ESP_PLATFORM
+									vTaskDelay(pdMS_TO_TICKS(100));
+#endif
 								}
+								// }
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
 							}
 						}
@@ -740,7 +768,8 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 						for (auto &group : room->groupList)
 						{
 							Json::Value tempSuccessList = Json::arrayValue;
-							for (auto &devInGr : group->deviceList)
+							vector<DeviceInGroup *> devInGrpTemp = group->deviceList;
+							for (auto &devInGr : devInGrpTemp)
 							{
 								if (devInGr->device->GetId() == device->GetId())
 								{
@@ -780,7 +809,8 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 						for (auto &sceneBle : room->sceneBleList)
 						{
 							Json::Value tempSuccessList = Json::arrayValue;
-							for (auto &devInScene : sceneBle->deviceList)
+							vector<DeviceInSceneBle *> devInSceneTemp = sceneBle->deviceList;
+							for (auto &devInScene : devInSceneTemp)
 							{
 								if (devInScene->device->GetId() == device->GetId())
 								{
