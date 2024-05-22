@@ -65,7 +65,7 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				{
 					bt = data_message->mode;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-					SaveAttribute()
+					SaveAttribute();
 #endif
 				}
 

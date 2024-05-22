@@ -15,19 +15,6 @@ ModuleTimeActionPir::~ModuleTimeActionPir()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleTimeActionPir::InitAttribute(string attribute, double value)
-{
-	if (attribute == KEY_ATTRIBUTE_ACTIME)
-		time = value;
-}
-
-void ModuleTimeActionPir::SaveAttribute()
-{
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_ACTIME, time);
-}
-#endif
-
 int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&

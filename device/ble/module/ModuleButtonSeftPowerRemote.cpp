@@ -6,6 +6,7 @@
 #include "BleProtocol.h"
 #include "Gateway.h"
 #include "SceneBle.h"
+#include "Db.h"
 
 ModuleButtonSeftPowerRemote::ModuleButtonSeftPowerRemote(Device *device, uint32_t addr) : Module(device, addr)
 {
