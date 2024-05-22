@@ -24,14 +24,14 @@ void ModuleModeRgb::InitAttribute(string attridute, double value)
 
 void ModuleModeRgb::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_MODE_RGB, mode);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_MODE_RGB, mode);
 }
 #endif
 
 int ModuleModeRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
 		mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		// CheckTrigger();
@@ -56,13 +56,16 @@ int ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (data_message->idScene == 0)
 		{
-			mode = data_message->mode;
-			// TODO: recheck
-			if (1 <= mode && mode <= 6)
+			uint8_t temp = data_message->mode;
+			if (1 <= temp && temp <= 6)
 			{
+				if (temp != mode)
+				{
+					mode = temp;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
+					SaveAttribute();
 #endif
+				}
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
 				return CODE_OK;
@@ -76,8 +79,8 @@ bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
@@ -110,7 +113,7 @@ int ModuleModeRgb::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
 		int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)

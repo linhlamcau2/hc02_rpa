@@ -16,6 +16,7 @@ ModuleSmoke::~ModuleSmoke()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleSmoke::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_SMOKE)
@@ -27,10 +28,11 @@ void ModuleSmoke::InitAttribute(string attribute, double value)
 void ModuleSmoke::SaveAttribute(string key)
 {
 	if (key == KEY_ATTRIBUTE_SMOKE)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_SMOKE, smoke);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_SMOKE, smoke);
 	else if (key == KEY_ATTRIBUTE_SMOKE_PIN)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_SMOKE_PIN, power);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_SMOKE_PIN, power);
 }
+#endif
 
 int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -62,16 +64,16 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (temp_smoke != smoke)
 		{
 			smoke = temp_smoke;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_SMOKE);
-			#endif	
+#endif
 		}
 		if (temp_power != power)
 		{
 			power = temp_power;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_SMOKE_PIN);
-			#endif	
+#endif
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);

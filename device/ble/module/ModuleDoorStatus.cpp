@@ -15,6 +15,7 @@ ModuleDoorStatus::~ModuleDoorStatus()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleDoorStatus::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_DOOR)
@@ -23,8 +24,9 @@ void ModuleDoorStatus::InitAttribute(string attribute, double value)
 
 void ModuleDoorStatus::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_DOOR, status);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_DOOR, status);
 }
+#endif
 
 int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -41,13 +43,13 @@ int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
-	{		
+	{
 		if (status != data[3])
 		{
 			status = data[3];
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
-			#endif
+#endif
 		}
 		CheckTrigger();
 #ifdef __ANDROID__
@@ -69,8 +71,8 @@ bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DOOR) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_DOOR) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_DOOR].isInt())

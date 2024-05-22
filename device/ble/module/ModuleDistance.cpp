@@ -15,6 +15,19 @@ ModuleDistance::~ModuleDistance()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModuleDistance::InitAttribute(string attribute, double value)
+{
+    if (attribute == KEY_ATTRIBUTE_DISTANCE)
+        distance = value;
+}
+
+void ModuleDistance::SaveAttribute()
+{
+    database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_DISTANCE, distance);
+}
+#endif
+
 int ModuleDistance::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
     if (dataValue.isObject() &&
@@ -42,7 +55,13 @@ int ModuleDistance::InputData(uint8_t *data, int len, Json::Value &jsonValue)
     {
         if (data_message->header == RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR)
         {
-            distance = data_message->distance;
+            if (distance != data_message->distance)
+            {
+                distance = data_message->distance;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+                SaveAttribute();
+#endif
+            }
             BuildTelemetryValue(jsonValue);
             CheckTrigger();
             return CODE_OK;

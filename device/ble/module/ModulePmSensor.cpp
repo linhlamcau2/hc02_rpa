@@ -17,6 +17,7 @@ ModulePmSensor::~ModulePmSensor()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModulePmSensor::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_PM2_5)
@@ -30,19 +31,20 @@ void ModulePmSensor::InitAttribute(string attribute, double value)
 void ModulePmSensor::SaveAttribute(string key)
 {
 	if (key == KEY_ATTRIBUTE_PM2_5)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PM2_5, pm25);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_PM2_5, pm25);
 	else if (key == KEY_ATTRIBUTE_PM10)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PM10, pm10);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_PM10, pm10);
 	else if (key == KEY_ATTRIBUTE_PM1_0)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PM1_0, pm1_0);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_PM1_0, pm1_0);
 }
+#endif
 
 int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_PM2_5) && dataValue[KEY_ATTRIBUTE_PM2_5].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_PM10) && dataValue[KEY_ATTRIBUTE_PM10].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_PM1_0) && dataValue[KEY_ATTRIBUTE_PM1_0].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_PM2_5) && dataValue[KEY_ATTRIBUTE_PM2_5].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_PM10) && dataValue[KEY_ATTRIBUTE_PM10].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_PM1_0) && dataValue[KEY_ATTRIBUTE_PM1_0].isInt())
 	{
 		pm25 = dataValue[KEY_ATTRIBUTE_PM2_5].asInt();
 		pm10 = dataValue[KEY_ATTRIBUTE_PM10].asInt();
@@ -71,23 +73,23 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (tepm_pm25 != pm25)
 		{
 			pm25 = tepm_pm25;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_PM2_5);
-			#endif		
+#endif
 		}
 		if (temp_pm10 != pm10)
 		{
 			pm10 = temp_pm10;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_PM10);
-			#endif			
+#endif
 		}
 		if (temp_pm1_0 != pm1_0)
 		{
 			pm1_0 = temp_pm1_0;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_PM1_0);
-			#endif	
+#endif
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
@@ -100,7 +102,7 @@ bool ModulePmSensor::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(KEY_ATTRIBUTE_PM2_5))

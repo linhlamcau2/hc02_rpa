@@ -18,6 +18,7 @@ ModulePirLight::~ModulePirLight()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModulePirLight::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_PIR)
@@ -29,16 +30,17 @@ void ModulePirLight::InitAttribute(string attribute, double value)
 void ModulePirLight::SaveAttribute(string key)
 {
 	if (key == KEY_ATTRIBUTE_PIR)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PIR, pir);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_PIR, pir);
 	else if (key == KEY_ATTRIBUTE_LUX)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_LUX, lux);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_LUX, lux);
 }
+#endif
 
 int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_PIR) && dataValue[KEY_ATTRIBUTE_PIR].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_PIR) && dataValue[KEY_ATTRIBUTE_PIR].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
 	{
 		pir = dataValue[KEY_ATTRIBUTE_PIR].asInt();
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
@@ -67,16 +69,16 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (temp_pir != pir)
 			{
 				pir = temp_pir;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_PIR);
-				#endif
+#endif
 			}
 			if (temp_lux != lux)
 			{
 				lux = temp_lux;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_LUX);
-				#endif
+#endif
 			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
@@ -126,7 +128,7 @@ bool ModulePirLight::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(KEY_ATTRIBUTE_PIR))

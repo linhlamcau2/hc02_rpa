@@ -16,6 +16,7 @@ ModuleRelaySwitch::~ModuleRelaySwitch()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleRelaySwitch::InitAttribute(string attribute, double value)
 {
 	if (attribute == key)
@@ -24,8 +25,9 @@ void ModuleRelaySwitch::InitAttribute(string attribute, double value)
 
 void ModuleRelaySwitch::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, key, bt);
+	database->DeviceAttributeAdd(device, key, bt);
 }
+#endif
 
 int ModuleRelaySwitch::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -55,9 +57,9 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (data_message->vendorId == RD_VENDOR_ID)
 		{
 			if (data_message->header == 0x000e ||
-					data_message->header == 0x000d ||
-					data_message->header == 0x000c ||
-					data_message->header == 0x000b)
+				data_message->header == 0x000d ||
+				data_message->header == 0x000c ||
+				data_message->header == 0x000b)
 			{
 				if (data_message->relayId == index)
 				{
@@ -65,9 +67,9 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 					if (temp_bt != bt)
 					{
 						bt = temp_bt;
-						#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 						SaveAttribute();
-						#endif
+#endif
 					}
 					BuildTelemetryValue(jsonValue);
 					CheckTrigger();
@@ -104,8 +106,8 @@ bool ModuleRelaySwitch::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(key) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(key) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[key].isInt())
@@ -138,7 +140,7 @@ int ModuleRelaySwitch::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		int bt = dataValue[key].asInt();
 		if (bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), index, bt) == CODE_OK)

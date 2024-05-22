@@ -13,6 +13,7 @@ public:
 	ModuleOnOff(Device *device, uint16_t addr, string onoffKey = "", uint32_t index = 0);
 	~ModuleOnOff();
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
@@ -26,6 +27,7 @@ public:
 	 *
 	 */
 	void SaveAttribute();
+#endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 

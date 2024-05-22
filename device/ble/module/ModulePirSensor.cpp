@@ -26,14 +26,14 @@ void ModulePirSensor::InitAttribute(string attribute, double value)
 
 void ModulePirSensor::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_PIR, pir);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_PIR, pir);
 }
 #endif
 
 int ModulePirSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_PIR) && dataValue[KEY_ATTRIBUTE_PIR].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_PIR) && dataValue[KEY_ATTRIBUTE_PIR].isInt())
 	{
 		pir = dataValue[KEY_ATTRIBUTE_PIR].asInt();
 		// CheckTrigger();
@@ -53,7 +53,13 @@ int ModulePirSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint16_t scene;
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)&data[3];
-		pir = (data_message->pir);
+		if (pir != data_message->pir)
+		{
+			pir = data_message->pir;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+#endif
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		uint16_t sceneId = data[5] | (data[6] << 8);
@@ -100,8 +106,8 @@ bool ModulePirSensor::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_PIR) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_PIR) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_PIR].isInt())

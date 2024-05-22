@@ -16,6 +16,7 @@ ModuleDim::~ModuleDim()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleDim::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_DIM)
@@ -24,8 +25,9 @@ void ModuleDim::InitAttribute(string attribute, double value)
 
 void ModuleDim::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_DIM, dim);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_DIM, dim);
 }
+#endif
 
 int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -59,14 +61,14 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		else
 		{
 			temp_dim = ceil(data_message->dim * 100 / 65535.0);
-		}		
+		}
 		if (temp_dim != dim)
 		{
 			dim = temp_dim;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
-			#endif
-		}		
+#endif
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

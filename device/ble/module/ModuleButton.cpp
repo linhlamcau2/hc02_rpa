@@ -17,6 +17,7 @@ ModuleButton::~ModuleButton()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleButton::InitAttribute(string attribute, double value)
 {
 	if (attribute == key)
@@ -25,8 +26,9 @@ void ModuleButton::InitAttribute(string attribute, double value)
 
 void ModuleButton::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, key, bt);
+	database->DeviceAttributeAdd(device, key, bt);
 }
+#endif
 
 int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -54,12 +56,19 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	if (data_message->opcode == 0x52)
 	{
 		if (data_message->header == REMOTE_MODULE_DC_TYPE ||
-				data_message->header == REMOTE_MODULE_AC_TYPE ||
-				data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
+			data_message->header == REMOTE_MODULE_AC_TYPE ||
+			data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
 		{
 			if (data_message->btId == index + 1)
 			{
-				bt = data_message->mode;
+				if (bt != data_message->mode)
+				{
+					bt = data_message->mode;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+					SaveAttribute()
+#endif
+				}
+
 				CheckTrigger();
 				BuildTelemetryValue(jsonValue);
 				if (data_message->scene > 0)
@@ -107,8 +116,8 @@ bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(key) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(key) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[key].isInt())

@@ -17,6 +17,19 @@ ModuleButtonSeftPowerRemote::~ModuleButtonSeftPowerRemote()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
+void ModuleButtonSeftPowerRemote::InitAttribute(string attribute, double value)
+{
+    if (attribute == key)
+        bt = value;
+}
+
+void ModuleButtonSeftPowerRemote::SaveAttribute()
+{
+    database->DeviceAttributeAdd(device, key, bt);
+}
+#endif
+
 int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
     typedef struct __attribute__((packed))
@@ -34,7 +47,13 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
     {
         if (data_message->header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
         {
-            bt = data_message->mode;
+            if (bt != data_message->mode)
+            {
+                bt = data_message->mode;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+                SaveAttribute();
+#endif
+            }
             switch (data_message->button)
             {
             case 1:
@@ -130,31 +149,31 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
 
 bool ModuleButtonSeftPowerRemote::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGV("CheckData data: %s", dataValue.toString().c_str());
-	if (dataValue.isObject() &&
-			dataValue.isMember(key) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
-	{
-		string op = dataValue["op"].asString();
-		if (dataValue[key].isInt())
-		{
-			int bt = dataValue[key].asInt();
-			rs = Util::CompareNumber(op, this->bt, bt);
-			return true;
-		}
-		else if (dataValue[key].isArray())
-		{
-			Json::Value listValue = dataValue[key];
-			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-			{
-				int bt1 = listValue[0].asInt();
-				int bt2 = listValue[1].asInt();
-				rs = Util::CompareNumber(op, this->bt, bt1, bt2);
-				return true;
-			}
-		}
-	}
-	return false;
+    LOGV("CheckData data: %s", dataValue.toString().c_str());
+    if (dataValue.isObject() &&
+        dataValue.isMember(key) &&
+        dataValue.isMember("op") && dataValue["op"].isString())
+    {
+        string op = dataValue["op"].asString();
+        if (dataValue[key].isInt())
+        {
+            int bt = dataValue[key].asInt();
+            rs = Util::CompareNumber(op, this->bt, bt);
+            return true;
+        }
+        else if (dataValue[key].isArray())
+        {
+            Json::Value listValue = dataValue[key];
+            if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+            {
+                int bt1 = listValue[0].asInt();
+                int bt2 = listValue[1].asInt();
+                rs = Util::CompareNumber(op, this->bt, bt1, bt2);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void ModuleButtonSeftPowerRemote::BuildTelemetryValue(Json::Value &jsonValue)

@@ -172,15 +172,15 @@ int Db::ConvertTableDevice()
 
 int Db::ConvertTableDeviceAttribute()
 {
-    const char *table = "DeviceAttribute";
-    const char *columns[] = {"device_id", "attribute_id", "value"};
-    int num_columns = 3;
-    if (OpenDbV1() == CODE_OK)
-    {
-        copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
-        return CODE_OK;
-    }
-    LOGW("Failed to open");
+    // const char *table = "DeviceAttribute";
+    // const char *columns[] = {"device_id", "attribute_id", "value"};
+    // int num_columns = 3;
+    // if (OpenDbV1() == CODE_OK)
+    // {
+    //     copy_data_between_tables(db_v1, db, table, table, columns, columns, num_columns, NULL);
+    //     return CODE_OK;
+    // }
+    // LOGW("Failed to open");
     return CODE_ERROR;
 }
 

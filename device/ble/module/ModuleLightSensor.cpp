@@ -15,6 +15,7 @@ ModuleLightSensor::~ModuleLightSensor()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleLightSensor::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_LUX)
@@ -23,13 +24,14 @@ void ModuleLightSensor::InitAttribute(string attribute, double value)
 
 void ModuleLightSensor::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_LUX, lux);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_LUX, lux);
 }
+#endif
 
 int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
 	{
 		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
 		BuildTelemetryValue(jsonValue);
@@ -72,9 +74,9 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (temp_lux != lux)
 			{
 				lux = temp_lux;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute();
-				#endif
+#endif
 			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
@@ -88,8 +90,8 @@ bool ModuleLightSensor::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_LUX) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_LUX) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_LUX].isInt())

@@ -12,6 +12,7 @@ public:
 	ModuleHsl(Device *device, uint16_t addr);
 	~ModuleHsl();
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
@@ -25,6 +26,7 @@ public:
 	 *
 	 */
 	void SaveAttribute(string key);
+#endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
@@ -64,7 +66,7 @@ public:
 	 * @return false
 	 */
 	int DoJsonArray(Json::Value &dataValue);
-	
+
 	/**
 	 * @brief Do an action use message format version 2
 	 *

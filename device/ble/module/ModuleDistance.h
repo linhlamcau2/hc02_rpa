@@ -12,6 +12,22 @@ public:
     ModuleDistance(Device *device, uint32_t addr);
     ~ModuleDistance();
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
+    /**
+     * @brief Init parameter value from database after system start
+     *
+     * @param attribute id of attribute
+     * @param value value of attribute
+     */
+    void InitAttribute(string attribute, double value);
+
+    /**
+     * @brief Save parameter value to database
+     *
+     */
+    void SaveAttribute();
+#endif
+
     int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
     /**

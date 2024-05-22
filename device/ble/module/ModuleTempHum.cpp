@@ -16,6 +16,7 @@ ModuleTempHum::~ModuleTempHum()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleTempHum::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_TEMP)
@@ -27,16 +28,17 @@ void ModuleTempHum::InitAttribute(string attribute, double value)
 void ModuleTempHum::SaveAttribute(string key)
 {
 	if (key == KEY_ATTRIBUTE_TEMP)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_TEMP, temp);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_TEMP, temp);
 	else if (key == KEY_ATTRIBUTE_HUMIDITY)
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_HUMIDITY, hum);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_HUMIDITY, hum);
 }
+#endif
 
 int ModuleTempHum::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_TEMP) && dataValue[KEY_ATTRIBUTE_TEMP].isInt() &&
-			dataValue.isMember(KEY_ATTRIBUTE_HUMIDITY) && dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_TEMP) && dataValue[KEY_ATTRIBUTE_TEMP].isInt() &&
+		dataValue.isMember(KEY_ATTRIBUTE_HUMIDITY) && dataValue[KEY_ATTRIBUTE_HUMIDITY].isInt())
 	{
 		temp = dataValue[KEY_ATTRIBUTE_TEMP].asInt();
 		hum = dataValue[KEY_ATTRIBUTE_HUMIDITY].asInt();
@@ -68,16 +70,16 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (temp_temp != temp)
 			{
 				temp = temp_temp;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_TEMP);
-				#endif	
+#endif
 			}
 			if (temp_hum != hum)
 			{
 				hum = temp_hum;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
-				#endif	
+#endif
 			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
@@ -94,16 +96,16 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (temp_temp != temp)
 			{
 				temp = temp_temp;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_TEMP);
-				#endif	
+#endif
 			}
 			if (temp_hum != hum)
 			{
 				hum = temp_hum;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
-				#endif	
+#endif
 			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
@@ -117,7 +119,7 @@ bool ModuleTempHum::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(KEY_ATTRIBUTE_TEMP))

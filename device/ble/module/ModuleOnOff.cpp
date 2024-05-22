@@ -16,6 +16,7 @@ ModuleOnOff::~ModuleOnOff()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleOnOff::InitAttribute(string attribute, double value)
 {
 	if (attribute == key)
@@ -24,13 +25,14 @@ void ModuleOnOff::InitAttribute(string attribute, double value)
 
 void ModuleOnOff::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, key, onoff);
+	database->DeviceAttributeAdd(device, key, onoff);
 }
+#endif
 
 int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		onoff = dataValue[key].asInt();
 		BuildTelemetryValue(jsonValue);
@@ -64,9 +66,9 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (temp_onoff != onoff)
 			{
 				onoff = temp_onoff;
-				#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute();
-				#endif
+#endif
 			}
 			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
@@ -87,13 +89,13 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		{
 			if (data_message->header == RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4)
 			{
-				temp_onoff = data_message->data[index+1];
+				temp_onoff = data_message->data[index + 1];
 				if (temp_onoff != onoff)
 				{
 					onoff = temp_onoff;
-					#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 					SaveAttribute();
-					#endif
+#endif
 				}
 				BuildTelemetryValue(jsonValue);
 				CheckTrigger();
@@ -108,8 +110,8 @@ bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(key) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(key) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[key].isInt())
@@ -143,7 +145,7 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		int onoff = dataValue[key].asInt();
 		if (bleProtocol->SetOnOffLight(addr, onoff, TRANSITION_DEFAULT, true) == CODE_OK)

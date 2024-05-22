@@ -7,13 +7,27 @@ class ModuleButtonSeftPowerRemote : public Module
 {
 protected:
 	uint8_t bt;
-    string key;
+	string key;
 
 public:
 	ModuleButtonSeftPowerRemote(Device *device, uint32_t addr);
 	~ModuleButtonSeftPowerRemote();
 
-	// int InputData(Json::Value &dataValue, Json::Value &jsonValue);
+#ifdef CONFIG_SAVE_ATTRIBUTE
+	/**
+	 * @brief Init parameter value from database after system start
+	 *
+	 * @param attribute id of attribute
+	 * @param value value of attribute
+	 */
+	void InitAttribute(string attribute, double value);
+
+	/**
+	 * @brief Save parameter value to database
+	 *
+	 */
+	void SaveAttribute();
+#endif
 
 	/**
 	 * @brief Parse raw data to element parameter value

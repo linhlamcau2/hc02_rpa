@@ -11,7 +11,8 @@ protected:
 public:
 	ModuleCct(Device *device, uint16_t addr);
 	~ModuleCct();
-	
+
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
@@ -25,6 +26,7 @@ public:
 	 *
 	 */
 	void SaveAttribute();
+#endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 

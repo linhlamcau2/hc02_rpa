@@ -10,14 +10,15 @@ ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint16_t addr, uint32_t ind
 {
 	dimOn = 0;
 	dimOff = 0;
-	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index+1) : "");
-	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index+1) : "");
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index + 1) : "");
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index + 1) : "");
 }
 
 ModuleDimonDimoff::~ModuleDimonDimoff()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleDimonDimoff::InitAttribute(string attribute, double value)
 {
 	if (attribute == keyDimOn)
@@ -30,17 +31,20 @@ void ModuleDimonDimoff::InitAttribute(string attribute, double value)
 	}
 }
 
-void ModuleDimonDimoff::SaveAttribute()
+void ModuleDimonDimoff::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, keyDimOn, dimOn);
-	database->DeviceAttributeAddOrReplace(device, keyDimOff, dimOff);
+	if (key == keyDimOn)
+		database->DeviceAttributeAdd(device, keyDimOn, dimOn);
+	else if (key == keyDimOff)
+		database->DeviceAttributeAdd(device, keyDimOff, dimOff);
 }
+#endif
 
 int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		dimOn = dataValue[keyDimOn].asInt();
 		dimOff = dataValue[keyDimOff].asInt();
@@ -71,16 +75,19 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		int temp_dimOn, temp_dimOff;
 		temp_dimOn = data_message->dimOn;
 		temp_dimOff = data_message->dimOff;
+		if (temp_dimOff != dimOff)
+		{
+			dimOff = temp_dimOff;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute(keyDimOff);
 #endif
-		if (temp_dimOff != dimOff || temp_dimOn != dimOn)
+		}
+		if (temp_dimOn != dimOn)
 		{
 			dimOn = temp_dimOn;
-			dimOff = temp_dimOff;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute();
-			#endif
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(keyDimOn);
+#endif
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
@@ -93,7 +100,7 @@ bool ModuleDimonDimoff::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue.isMember(keyDimOn))
@@ -150,8 +157,8 @@ int ModuleDimonDimoff::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();

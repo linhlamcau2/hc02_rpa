@@ -147,9 +147,9 @@ void Gateway::init()
 	database->GatewayRead();
 	database->DeviceRead();
 	database->DeviceBleChildRead();
-	#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	database->DeviceAttributeRead();
-	#endif
+#endif
 	database->RoomRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();

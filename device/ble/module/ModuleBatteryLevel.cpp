@@ -15,6 +15,7 @@ ModuleBatteryLevel::~ModuleBatteryLevel()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleBatteryLevel::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_BATTERY)
@@ -23,14 +24,14 @@ void ModuleBatteryLevel::InitAttribute(string attribute, double value)
 
 void ModuleBatteryLevel::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_BATTERY, bat);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_BATTERY, bat);
 }
-
+#endif
 
 int ModuleBatteryLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_BATTERY) && dataValue[KEY_ATTRIBUTE_BATTERY].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_BATTERY) && dataValue[KEY_ATTRIBUTE_BATTERY].isInt())
 	{
 		bat = dataValue[KEY_ATTRIBUTE_BATTERY].asInt();
 		// CheckTrigger();
@@ -44,13 +45,13 @@ int ModuleBatteryLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue
 {
 	if (data[0] == 0x52 && data[1] == 0x01 && data[2] == 0x00)
 	{
-		#ifdef CONFIG_SAVE_ATTRIBUTE
 		if (bat != data[4])
 		{
 			bat = data[4];
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
+#endif
 		}
-		#endif
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
@@ -62,8 +63,8 @@ bool ModuleBatteryLevel::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_BATTERY) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_BATTERY) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_BATTERY].isInt())

@@ -24,6 +24,7 @@ ModuleCurtain::~ModuleCurtain()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleCurtain::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_CURTAIN)
@@ -34,8 +35,9 @@ void ModuleCurtain::InitAttribute(string attribute, double value)
 
 void ModuleCurtain::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_CURTAIN, curtain);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN, curtain);
 }
+#endif
 
 int ModuleCurtain::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -78,8 +80,15 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
 		{
-			status = data_message->header & 0xFF;
-			switch (status)
+			uint8_t temp = data_message->header & 0xFF;
+			if (status != temp)
+			{
+				status = temp;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+#endif
+			}
+			switch (temp)
 			{
 			case CURTAIN_OPEN:
 				telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
@@ -107,8 +116,15 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (data_message->header == RD_OPCODE_REQUEST_STATUS_CURTAIN || data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE)
 		{
-			status = data_message->type;
-			switch (status)
+			uint8_t temp = data_message->type;
+			if (status != temp)
+			{
+				status = temp;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+#endif
+			}
+			switch (temp)
 			{
 			case CURTAIN_OPEN:
 				telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;

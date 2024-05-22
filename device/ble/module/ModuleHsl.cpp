@@ -17,6 +17,7 @@ ModuleHsl::~ModuleHsl()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleHsl::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_HUE)
@@ -37,18 +38,18 @@ void ModuleHsl::SaveAttribute(string key)
 {
 	if (key == KEY_ATTRIBUTE_HUE)
 	{
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_HUE, h);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_HUE, h);
 	}
 	else if (key == KEY_ATTRIBUTE_SATURATION)
 	{
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_SATURATION, s);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_SATURATION, s);
 	}
 	else if (key == KEY_ATTRIBUTE_LUMINANCE)
 	{
-		database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_LUMINANCE, l);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_LUMINANCE, l);
 	}
-	
 }
+#endif
 
 int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -82,23 +83,23 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (data_message->l != l)
 		{
 			l = data_message->l;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_LUMINANCE);
-			#endif		
+#endif
 		}
 		if (data_message->s != s)
 		{
 			s = data_message->s;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_SATURATION);
-			#endif			
+#endif
 		}
 		if (data_message->h != h)
 		{
 			h = data_message->h;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_HUE);
-			#endif	
+#endif
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);

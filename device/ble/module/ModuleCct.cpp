@@ -15,6 +15,7 @@ ModuleCct::~ModuleCct()
 {
 }
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 void ModuleCct::InitAttribute(string attribute, double value)
 {
 	if (attribute == KEY_ATTRIBUTE_CCT)
@@ -23,8 +24,9 @@ void ModuleCct::InitAttribute(string attribute, double value)
 
 void ModuleCct::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, KEY_ATTRIBUTE_CCT, cct);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CCT, cct);
 }
+#endif
 
 int ModuleCct::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
@@ -62,9 +64,9 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (temp_cct != cct)
 		{
 			cct = temp_cct;
-			#ifdef CONFIG_SAVE_ATTRIBUTE
+#ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
-			#endif
+#endif
 		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);

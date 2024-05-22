@@ -13,6 +13,7 @@ public:
 	ModuleTempHum(Device *device, uint16_t addr);
 	~ModuleTempHum();
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
@@ -26,6 +27,7 @@ public:
 	 *
 	 */
 	void SaveAttribute(string key);
+#endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 

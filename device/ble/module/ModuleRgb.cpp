@@ -49,13 +49,18 @@ void ModuleRgb::InitAttribute(string attribute, double value)
 	}
 }
 
-void ModuleRgb::SaveAttribute()
+void ModuleRgb::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, keyR, r);
-	database->DeviceAttributeAddOrReplace(device, keyG, g);
-	database->DeviceAttributeAddOrReplace(device, keyB, b);
-	database->DeviceAttributeAddOrReplace(device, keyDimOn, dimOn);
-	database->DeviceAttributeAddOrReplace(device, keyDimOff, dimOff);
+	if (key == keyR)
+		database->DeviceAttributeAdd(device, keyR, r);
+	else if (key == keyG)
+		database->DeviceAttributeAdd(device, keyG, g);
+	else if (key == keyB)
+		database->DeviceAttributeAdd(device, keyB, b);
+	else if (key == keyDimOn)
+		database->DeviceAttributeAdd(device, keyDimOn, dimOn);
+	else if (key == keyDimOff)
+		database->DeviceAttributeAdd(device, keyDimOff, dimOff);
 }
 #endif
 
@@ -97,14 +102,46 @@ int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == 0xE3 && data_message->header == 0x050b)
 	{
-		b = data_message->b;
-		g = data_message->g;
-		r = data_message->r;
-		dimOn = data_message->dimOn;
-		dimOff = data_message->dimOff;
+		uint8_t bTemp = data_message->b;
+		uint8_t gTemp = data_message->g;
+		uint8_t rTemp = data_message->r;
+		uint8_t dimOnTemp = data_message->dimOn;
+		uint8_t dimOffTemp = data_message->dimOff;
+		if (b != bTemp)
+		{
+			b = data_message->b;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute(keyB);
 #endif
+		}
+		if (g != gTemp)
+		{
+			g = data_message->g;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(keyG);
+#endif
+		}
+		if (r != rTemp)
+		{
+			r = data_message->r;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(keyR);
+#endif
+		}
+		if (dimOn != dimOnTemp)
+		{
+			dimOn = data_message->dimOn;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(keyDimOn);
+#endif
+		}
+		if (dimOff != dimOffTemp)
+		{
+			dimOff = data_message->dimOff;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(keyDimOff);
+#endif
+		}
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;

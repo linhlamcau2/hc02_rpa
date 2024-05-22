@@ -8,10 +8,12 @@ class ModuleCurtain : public Module
 protected:
 	uint8_t curtain;
 	uint8_t motor;
+
 public:
 	ModuleCurtain(Device *device, uint16_t addr);
 	~ModuleCurtain();
 
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
@@ -25,6 +27,7 @@ public:
 	 *
 	 */
 	void SaveAttribute();
+#endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
