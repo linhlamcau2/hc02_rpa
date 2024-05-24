@@ -292,9 +292,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 							devicesStatusConfig[deviceId] = false;
 							LOGW("Device %s not found", deviceId.c_str());
 						}
-#ifdef ESP_PLATFORM
-						vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+						SLEEP_MS(100);
 					}
 				}
 				printRoom();
@@ -334,9 +332,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 												tempSuccessList.append(deviceInRoom->device->GetId());
 											}
 										}
-#ifdef ESP_PLATFORM
-										vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+										SLEEP_MS(100);
 									}
 									groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createGroup", group->GetId(), group->GetName(), tempSuccessList, roomId));
 								}
@@ -408,9 +404,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 											}
 										}
 									}
-#ifdef ESP_PLATFORM
-									vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+									SLEEP_MS(100);
 								}
 								// }
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp("createScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
@@ -509,9 +503,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 						devicesStatusConfig[deviceId] = false;
 						LOGW("Device %s not found", deviceId.c_str());
 					}
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+					SLEEP_MS(100);
 				}
 			}
 			printRoom();
@@ -574,9 +566,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											tempSuccessList.append(dev->GetId());
 										}
 									}
-#ifdef ESP_PLATFORM
-									vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+									SLEEP_MS(100);
 								}
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, group->GetId(), group->GetName(), tempSuccessList, roomId));
 							}
@@ -666,9 +656,7 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 											}
 										}
 									}
-#ifdef ESP_PLATFORM
-									vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+									SLEEP_MS(100);
 								}
 								// }
 								groupSceneSendtoHcApp.push_back(CreateJsonGroupSceneSendHcCoreToHcApp(cmd, sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, roomId));
@@ -797,9 +785,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(device->GetId());
 										}
 									}
-#ifdef ESP_PLATFORM
-									vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+									SLEEP_MS(100);
 								}
 							}
 							pushMsgHcCoreToHcApp("delDevFromGroup", group->GetId(), group->GetName(), tempSuccessList, "");
@@ -838,9 +824,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 											tempSuccessList.append(deviceId);
 										}
 									}
-#ifdef ESP_PLATFORM
-									vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+									SLEEP_MS(100);
 								}
 							}
 							pushMsgHcCoreToHcApp("delDevToScene", sceneBle->GetId(), sceneBle->GetName(), tempSuccessList, "");
@@ -926,9 +910,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 						if (devicesStatusConfig[deviceInRoom->device->GetId()])
 							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 				}
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+				SLEEP_MS(100);
 			}
 			devInRoom.clear();
 			printRoom();
@@ -952,9 +934,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
 								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 					}
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+					SLEEP_MS(100);
 				}
 				delGroup(groupInRoom);
 				devInGroup.clear();
@@ -981,9 +961,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 							if (devicesStatusConfig[deviceInScene->device->GetId()])
 								devicesStatusConfig[deviceInScene->device->GetId()] = false;
 					}
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+					SLEEP_MS(100);
 				}
 				delSceneBle(sceneInRoom);
 				devInSceneBle.clear();

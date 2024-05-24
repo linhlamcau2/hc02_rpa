@@ -190,9 +190,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 								failedList.append(device->GetId());
 							}
 						}
-#ifdef ESP_PLATFORM
-						vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+						SLEEP_MS(100);
 					}
 				}
 				database->Sqlite_EndTransaction();
@@ -305,9 +303,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(item->GetId());
 				}
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+				SLEEP_MS(100);
 			}
 
 			for (auto &item : devsEditScene)
@@ -326,9 +322,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(item->GetId());
 				}
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+				SLEEP_MS(100);
 			}
 
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
@@ -385,9 +379,7 @@ int Gateway::OnDeleteScene(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(deviceInScene->device->GetId());
 				}
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+				SLEEP_MS(100);
 			}
 			database->Sqlite_EndTransaction();
 			pushMsgHcCoreToHcApp("delScene", sceneId, sceneBle->GetName(), successList, "");
@@ -472,9 +464,7 @@ int Gateway::OnAddDevToScene(Json::Value &reqValue, Json::Value &respValue)
 						}
 					}
 				}
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+				SLEEP_MS(100);
 			}
 			database->Sqlite_EndTransaction();
 
@@ -542,9 +532,7 @@ int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
 							failedList.append(deviceId);
 						}
 					}
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+					SLEEP_MS(100);
 				}
 			}
 			database->Sqlite_EndTransaction();

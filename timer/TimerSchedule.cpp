@@ -79,7 +79,7 @@ static void TimerThread(void *data)
 				timerSchedule->mtx.unlock();
 				oldTimer = currentTimer;
 			}
-			usleep(500000);
+			SLEEP_MS(500000);
 		}
 	}
 }

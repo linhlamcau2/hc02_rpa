@@ -191,7 +191,7 @@ string HTTPRequest::GetWeather(string latitude, string longitude)
 	CURL *curl;
 	CURLcode res;
 	curl = curl_easy_init();
-	url = "http://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&appid=ebd13e00acf60358e311499f1701ffc2&units=metric" ;
+	url = "http://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&appid=ebd13e00acf60358e311499f1701ffc2&units=metric";
 	string readBuffer = "";
 	if (curl)
 	{

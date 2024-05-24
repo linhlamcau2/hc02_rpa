@@ -35,14 +35,14 @@ void ZigbeeProtocol::HandleOpcodeBleThread()
 			CheckOpcodeException(message_rsp);
 			free(message_rsp);
 		}
-		usleep(100000);
+		SLEEP_MS(100);
 	}
 }
 
 void ZigbeeProtocol::init()
 {
 	Uart::init();
-	usleep(100000);
+	SLEEP_MS(100);
 
 	RegisterCmdCallback(ZBHCI_CMD_NODES_DEV_ANNCE_IND, bind(&ZigbeeProtocol::OnDeviceAnnounce, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_REPORT_MSG_RCV, bind(&ZigbeeProtocol::OnReportAttribute, this, placeholders::_1, placeholders::_2));
@@ -198,7 +198,7 @@ int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, ui
 
 		while (message_rsp_list.status == 0xFF && timeout--)
 		{
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
 	}

@@ -148,7 +148,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 						for (auto &respV : respValue)
 						{
 							send(respV.toString(), si_other, slen);
-							usleep(10000);
+							SLEEP_MS(10);
 						}
 					}
 				}

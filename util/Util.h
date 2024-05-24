@@ -6,6 +6,12 @@
 #include "json.h"
 #include "ErrorCode.h"
 
+#ifdef ESP_PLATFORM
+#define SLEEP_MS(ms) vTaskDelay(portTICK_PERIOD_MS(ms))
+#else
+#define SLEEP_MS(ms) usleep(ms * 1000)
+#endif
+
 using namespace std;
 
 namespace Util

@@ -22,6 +22,7 @@
 #include "RuleOutputGroup.h"
 #include "RuleOutputDelay.h"
 #include "Room.h"
+#include "Util.h"
 
 #ifdef __ANDROID__
 #include "Noti.h"
@@ -123,8 +124,8 @@ private:
 	int DelDeviceFromAllRoom(string deviceId);
 	int OnGetRoomList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue);
-	int CheckAddDevToRoom(Device * device, Room * room);
-	int AddDevToGroupInRoom(Device * device, Group * group, uint32_t type);
+	int CheckAddDevToRoom(Device *device, Room *room);
+	int AddDevToGroupInRoom(Device *device, Group *group, uint32_t type);
 	int AddDevToSceneInRoom(Device *device, Json::Value &dataGroup, SceneBle *sceneBle, int indexSceneBle);
 	int OnCreateRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue);
@@ -186,6 +187,8 @@ private:
 	int OnOtaHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue);
 	int OnAutoOta(Json::Value &reqValue, Json::Value &respValue);
+	int OnBackupData(Json::Value &reqValue, Json::Value &respValue);
+	int OnRestoreData(Json::Value &reqValue, Json::Value &respValue);
 
 #ifdef __ANDROID__
 	// Noti

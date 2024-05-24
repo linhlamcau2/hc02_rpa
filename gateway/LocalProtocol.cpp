@@ -142,9 +142,7 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
-#ifdef ESP_PLATFORM
-			vTaskDelay(1);
-#endif
+			SLEEP_MS(1);
 		}
 		else
 		{
@@ -256,7 +254,7 @@ int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, s
 	Publish(pubReqTopic, sendValue.toString());
 	while (!request.status && timeout--)
 	{
-		usleep(1000);
+		SLEEP_MS(1);
 	}
 	if (!request.status)
 	{

@@ -78,3 +78,7 @@
 #define ZIGBEE_UART_PORT "/dev/ttyUSB1"
 #endif
 #endif
+
+#define URL_PRO "https://rallismartv2.rangdong.com.vn"
+#define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
+#define URL_DEV "https://iot-dev.truesight.asia"

@@ -3,22 +3,18 @@
 #include "Wifi.h"
 #include "Base64.h"
 #include "Config.h"
+#include "Db.h"
+#include "Http.h"
 #include <fstream>
 #include <string.h>
-#include "Util.h"
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "Db.h"
 
 #ifdef __ANDROID__
 #include "AndroidBleProtocol.h"
 #endif
-
-#define URL_PRO "https://rallismartv2.rangdong.com.vn"
-#define URL_STAGING "https://rallismartv2-staging.rangdong.com.vn"
-#define URL_DEV "https://iot-dev.truesight.asia"
 
 void Gateway::InitMqttMessageHc()
 {
@@ -32,6 +28,8 @@ void Gateway::InitMqttMessageHc()
 	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("hcConnectToCloud", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
@@ -45,6 +43,8 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
 #ifdef __ANDROID__
 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
@@ -81,6 +81,17 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	{
 		respValue["data"]["code"] = CODE_ERROR;
 	}
+
+	if (reqValue.isMember("refreshToken") && reqValue["refreshToken"].isString())
+	{
+		string refreshToken = reqValue["refreshToken"].asString();
+		if (getRefreshToken() == "")
+		{
+			this->setRefreshToken(refreshToken);
+			database->GatewayUpdateRefreshToken(this, refreshToken);
+		}
+	}
+
 	respValue["cmd"] = "hcConnectToCloudRsp";
 	return CODE_OK;
 }
@@ -428,12 +439,9 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 				cmd = "su";
 				LOGW("Tp6: %s", cmd.c_str());
 				system(cmd.c_str());
-				cmd = "mount -o rw,remount /system";
-				LOGW("Tp7: %s", cmd.c_str());
-				system(cmd.c_str());
 #endif
 				string versionCurrent = STR(VERSION);
-				cmd = "." TMP_FOLDER "rd/ota.sh " + versionCurrent;
+				cmd = TMP_FOLDER "rd/ota.sh " + versionCurrent;
 				LOGW("Tp8: %s", cmd.c_str());
 				system(cmd.c_str());
 				LOGW("Tp9");
@@ -497,6 +505,170 @@ int Gateway::OnAutoOta(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = rs;
 	return CODE_OK;
+}
+
+/*
+{
+	"cmd" : "hcBackupData",
+	"data":
+	{
+		"id" :"hcid"
+	}
+}
+
+{
+	"cmd" : "hcBackupDataRsp",
+	"data":
+	{
+		"code" :0
+	}
+}
+*/
+int Gateway::OnBackupData(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnBackupData");
+	respValue["cmd"] = "hcBackupDataRsp";
+	int rs = CODE_ERROR;
+	string hcId;
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		hcId = reqValue["id"].asString();
+	}
+
+	HTTPRequest *httpRequest = new HTTPRequest();
+	httpRequest->setUrl(string(URL_PRO) + string(RENEW_TOKEN));
+	httpRequest->setMethod("POST");
+
+	if (gateway->getDormitory() == "" || gateway->getRefreshToken() == "")
+	{
+		LOGW("Gateway does not have info dormitory,refresh token");
+	}
+	string token = httpRequest->GetToken(gateway->getRefreshToken(), gateway->getDormitory());
+	if (token != "")
+	{
+		httpRequest->setToken(token);
+
+		httpRequest->setUrl(string(URL_PRO) + string(HC_BACKUP_FILE_URL));
+		httpRequest->setMethod("POST");
+		string resultUpload = httpRequest->UploadFile(gateway->getRefreshToken(), gateway->getDormitory(), DB_NAME);
+		LOGD("%s", resultUpload.c_str());
+		if (resultUpload != "")
+		{
+			Json::Value payloadJson;
+			if (payloadJson.parse(resultUpload) && payloadJson.isObject() && payloadJson.isMember("url"))
+			{
+				string urlUploadFile = payloadJson["url"].asString().c_str();
+				LOGD("url %s", urlUploadFile.c_str());
+				if (httpRequest->CreateBackup(gateway->getRefreshToken(), gateway->getDormitory(), gateway->getMac(), gateway->getVersion(), "", urlUploadFile, hcId))
+				{
+					rs = CODE_OK;
+				}
+				else
+				{
+					LOGW("CreateBackup error");
+				}
+			}
+			else
+			{
+				LOGW("url does not available");
+			}
+		}
+		else
+		{
+			LOGW("upload file failed");
+		}
+	}
+	else
+	{
+		LOGW("Get token failed");
+	}
+
+	delete httpRequest;
+
+	respValue["data"]["code"] = rs;
+
+	return rs;
+}
+
+/*
+{
+	"cmd" : "hcRestoreData",
+	"data":
+	{
+		"id" : "hcid",
+		"dormitoryId" : "dor",
+		"backupId" : "backupId",
+		"backupUrl" : "backupUrl"
+	}
+}
+
+{
+	"cmd" : "hcRestoreDataRsp",
+	"data":
+	{
+		"code" : 0
+	}
+}
+*/
+
+int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRestoreData");
+	int rs = CODE_OK;
+	if (reqValue.isMember("backupUrl") && reqValue["backupUrl"].isString())
+	{
+		string url = reqValue["backupUrl"].asString();
+		HTTPRequest *httpRequest = new HTTPRequest();
+		httpRequest->setUrl(string(URL_PRO) + string(RENEW_TOKEN));
+		httpRequest->setMethod("POST");
+
+		if (gateway->getDormitory() == "" || gateway->getRefreshToken() == "")
+		{
+			LOGW("Gateway does not have info dormitory,refresh token");
+		}
+
+		string token = httpRequest->GetToken(gateway->getRefreshToken(), gateway->getDormitory());
+		if (token != "")
+		{
+			httpRequest->setToken(token);
+
+			httpRequest->setUrl(string(URL_PRO) + string(url));
+			httpRequest->setMethod("POST");
+			string dataRestore = httpRequest->DownloadFile(gateway->getDormitory());
+			if (dataRestore != "")
+			{
+#ifdef __ANDROID__
+				system("su");
+#endif
+				string cmd = "rm " DB_NAME "1";
+				system(cmd.c_str());
+				std::ofstream outFile(DB_NAME "1");
+				if (!outFile)
+				{
+					return CODE_ERROR;
+				}
+
+				outFile << dataRestore;
+				outFile.close();
+				// Doi ten file db
+				cmd = "mv " DB_NAME " temp.sqlite";
+				system(cmd.c_str());
+				cmd = "mv " DB_NAME "1 " DB_NAME;
+				system(cmd.c_str());
+				cmd = "mv temp.sqlite " DB_NAME "1";
+				system(cmd.c_str());
+				rs = CODE_EXIT;
+			}
+			else
+				LOGW("Download error");
+		}
+		else
+			LOGW("get token failed");
+	}
+	else
+		LOGW("Data restore error %s", reqValue.toString().c_str());
+	respValue["data"]["code"] = rs;
+	return rs;
 }
 
 /*

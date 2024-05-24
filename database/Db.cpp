@@ -1,9 +1,10 @@
 #include "Db.h"
-#include <sys/stat.h>
 #include "Log.h"
+#include "Util.h"
 #ifdef ESP_PLATFORM
 #include "esp_littlefs.h"
 #endif
+#include <sys/stat.h>
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
@@ -214,9 +215,7 @@ int Db::ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *
 		LOGW("SQL error: %d - %s", rc, sqlite3_errmsg(db));
 	}
 	mtx.unlock();
-#ifdef ESP_PLATFORM
-	usleep(1000);
-#endif
+	SLEEP_MS(1);
 	return rc;
 }
 #ifdef __ANDROID__

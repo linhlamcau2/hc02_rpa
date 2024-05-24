@@ -373,7 +373,7 @@ int AndroidBleProtocol::PublishToAndroidBleMessage(string reqCmd, Json::Value &r
 	gateway->LocalPublish(request.pubTopic, sendValue.toString());
 	while (!request.status && timeout--)
 	{
-		usleep(1000);
+		SLEEP_MS(1);
 	}
 	if (!request.status)
 	{

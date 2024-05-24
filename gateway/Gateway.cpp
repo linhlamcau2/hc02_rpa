@@ -518,10 +518,10 @@ int Gateway::UdpBroadcastThread()
 		if (isUdpBroadcasting)
 		{
 			Util::LedInternet(false);
-			usleep(500000);
+			SLEEP_MS(500);
 			send(dataStr, &s, sizeof(s));
 			Util::LedInternet(true);
-			usleep(500000);
+			SLEEP_MS(500);
 		}
 		else
 		{

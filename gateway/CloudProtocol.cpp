@@ -146,9 +146,7 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
-#ifdef ESP_PLATFORM
-			vTaskDelay(1);
-#endif
+			SLEEP_MS(1);
 		}
 		else
 		{
@@ -288,9 +286,7 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 			{
 				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
-#ifdef ESP_PLATFORM
-			vTaskDelay(1);
-#endif
+			SLEEP_MS(1);
 		}
 		else
 		{
@@ -412,7 +408,7 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	Publish(request.pubTopic, sendValue.toString());
 	while (!request.status && timeout--)
 	{
-		usleep(1000);
+		SLEEP_MS(1);
 	}
 	if (!request.status)
 	{
@@ -439,7 +435,7 @@ int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *p
 	Publish(pubBinReqTopic + sessionId + "/" + to_string(index), payload, payloadLen);
 	while (!request.status && timeout--)
 	{
-		usleep(1000);
+		SLEEP_MS(1);
 	}
 	if (!request.status)
 	{
@@ -469,7 +465,7 @@ int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &r
 	Publish(pubServerReqTopic, sendValue.toString());
 	while (!requestBin.status && timeout--)
 	{
-		usleep(1000);
+		SLEEP_MS(1);
 	}
 	if (!requestBin.status)
 	{

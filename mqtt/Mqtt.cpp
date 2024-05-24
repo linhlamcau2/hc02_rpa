@@ -157,7 +157,7 @@ int Mqtt::Subscribe(string topic, int maxTime, int duration)
 				mtx.unlock();
 				return CODE_OK;
 			}
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		ret = subscribe(&mqttSubscribe.id, topic.c_str());
 		LOGI("Resubscribes topic: %s, ret: %d", topic.c_str(), ret);
@@ -199,7 +199,7 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 				mtx.unlock();
 				return CODE_OK;
 			}
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		ret = unsubscribe(&mqttUnsubscribe.id, topic.c_str());
 		LOGI("Unsubscribes topic: %s, ret: %d", topic.c_str(), ret);

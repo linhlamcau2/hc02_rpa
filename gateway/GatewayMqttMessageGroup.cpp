@@ -216,9 +216,7 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 							LOGD("deviceId %s dose not exist", deviceId.c_str());
 							failedList.append(deviceId);
 						}
-#ifdef ESP_PLATFORM
-						vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+						SLEEP_MS(100);
 					}
 				}
 
@@ -286,9 +284,7 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 						LOGD("deviceId %s dose not exist", deviceId.c_str());
 						failedList.append(deviceId);
 					}
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+					SLEEP_MS(100);
 				}
 			}
 			database->Sqlite_EndTransaction();
@@ -340,9 +336,7 @@ int Gateway::OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSucce
 				LOGD("deviceId %s dose not exist", deviceId.c_str());
 				respFailList.append(deviceId);
 			}
-#ifdef ESP_PLATFORM
-			vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+			SLEEP_MS(100);
 		}
 	}
 	database->Sqlite_EndTransaction();
@@ -387,9 +381,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 						LOGD("deviceId %s dose not exist", deviceId.c_str());
 						failedList.append(deviceId);
 					}
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+					SLEEP_MS(100);
 				}
 			}
 			database->Sqlite_EndTransaction();
@@ -435,9 +427,7 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					failedList.append(deviceInGroup->device->GetId());
 				}
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+				SLEEP_MS(100);
 			}
 			database->Sqlite_EndTransaction();
 

@@ -71,10 +71,7 @@ static void AddDeviceThread(void *data)
 				}
 			}
 		}
-#ifdef ESP_PLATFORM
-		vTaskDelay(pdMS_TO_TICKS(100));
-#endif
-		usleep(100000);
+		SLEEP_MS(100);
 	}
 }
 
@@ -89,11 +86,7 @@ static void HandleOpcodeBle(void *data)
 			bleProtocol->CheckOpcodeException(message_rsp);
 			free(message_rsp);
 		}
-#ifdef ESP_PLATFORM
-		vTaskDelay(pdMS_TO_TICKS(100));
-#else
-		usleep(100000);
-#endif
+		SLEEP_MS(100);
 	}
 }
 
@@ -118,7 +111,7 @@ void BleProtocol::init()
 	handleOpcodeBleThread.detach();
 #endif
 
-	usleep(100000); // wait for thread start
+	SLEEP_MS(100);; // wait for thread start
 }
 
 void BleProtocol::InitKey()
@@ -572,7 +565,7 @@ int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8
 	{
 		while (!message_rsp_list.status && timeout--)
 		{
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		if (!message_rsp_list.status)
 		{
