@@ -547,7 +547,6 @@ int Gateway::OnBackupData(Json::Value &reqValue, Json::Value &respValue)
 	if (token != "")
 	{
 		httpRequest->setToken(token);
-
 		httpRequest->setUrl(string(URL_PRO) + string(HC_BACKUP_FILE_URL));
 		httpRequest->setMethod("POST");
 		string resultUpload = httpRequest->UploadFile(gateway->getRefreshToken(), gateway->getDormitory(), DB_NAME);
@@ -557,7 +556,9 @@ int Gateway::OnBackupData(Json::Value &reqValue, Json::Value &respValue)
 			Json::Value payloadJson;
 			if (payloadJson.parse(resultUpload) && payloadJson.isObject() && payloadJson.isMember("url"))
 			{
-				string urlUploadFile = payloadJson["url"].asString().c_str();
+				httpRequest->setUrl(string(URL_PRO) + string(HC_CREATE_BACKUP));
+				httpRequest->setMethod("POST");
+				string urlUploadFile = payloadJson["url"].asString();
 				LOGD("url %s", urlUploadFile.c_str());
 				if (httpRequest->CreateBackup(gateway->getRefreshToken(), gateway->getDormitory(), gateway->getMac(), gateway->getVersion(), "", urlUploadFile, hcId))
 				{

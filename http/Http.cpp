@@ -135,8 +135,10 @@ bool HTTPRequest::CreateBackup(string refreshToken, string dormitory, string mac
 		dataJson["size"] = size;
 		dataJson["url"] = path;
 		dataJson["homeControllerId"] = hcId;
-		// const char *data = "{\n  \"name\": \"HC-C283\",\n  \"version\": \"1.2.9\",\n  \"size\": \"1.01 MB\",\n  \"url\": \"/home-controller/12038/133148503667486921/rd.Sqlite\",\n  \"homeControllerId\": \"5ab14c1b-6571-503f-a6d0-3157ec44e095\"\n}";
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataJson.toString().c_str());
+
+		std::string dataJsonStr = dataJson.toStyledString();
+
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataJsonStr.c_str());
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK)
 		{
