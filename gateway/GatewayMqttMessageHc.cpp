@@ -615,7 +615,6 @@ int Gateway::OnBackupData(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRestoreData");
-	int rs = CODE_OK;
 	if (reqValue.isMember("backupUrl") && reqValue["backupUrl"].isString())
 	{
 		string url = reqValue["backupUrl"].asString();
@@ -641,24 +640,32 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 #ifdef __ANDROID__
 				system("su");
 #endif
+				LOGD("dataRestore: %s", dataRestore.c_str());
 				string cmd = "rm " DB_NAME "1";
+				LOGD("cmd : %s", cmd.c_str());
 				system(cmd.c_str());
 				std::ofstream outFile(DB_NAME "1");
 				if (!outFile)
 				{
-					return CODE_ERROR;
+					respValue["data"]["code"] = CODE_ERROR;
+					return CODE_EXIT;
 				}
 
 				outFile << dataRestore;
 				outFile.close();
 				// Doi ten file db
-				cmd = "mv " DB_NAME " temp.sqlite";
+				cmd = "mv " DB_NAME " " TMP_FOLDER "temp.sqlite";
+				LOGD("cmd : %s", cmd.c_str());
 				system(cmd.c_str());
 				cmd = "mv " DB_NAME "1 " DB_NAME;
+				LOGD("cmd : %s", cmd.c_str());
 				system(cmd.c_str());
-				cmd = "mv temp.sqlite " DB_NAME "1";
+				cmd = "mv " TMP_FOLDER "temp.sqlite " DB_NAME "1";
+				LOGD("cmd : %s", cmd.c_str());
 				system(cmd.c_str());
-				rs = CODE_EXIT;
+
+				respValue["data"]["code"] = CODE_OK;
+				return CODE_EXIT;
 			}
 			else
 				LOGW("Download error");
@@ -668,8 +675,9 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 	}
 	else
 		LOGW("Data restore error %s", reqValue.toString().c_str());
-	respValue["data"]["code"] = rs;
-	return rs;
+
+	respValue["data"]["code"] = CODE_ERROR;
+	return CODE_EXIT;
 }
 
 /*

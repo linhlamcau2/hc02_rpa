@@ -1,7 +1,6 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "Wifi.h"
-#include "Util.h"
 #include "Db.h"
 #include <algorithm>
 

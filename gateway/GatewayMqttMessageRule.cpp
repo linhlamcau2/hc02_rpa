@@ -1,7 +1,6 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "Db.h"
-#include "Util.h"
 
 void Gateway::InitMqttMessageRule()
 {
