@@ -84,6 +84,7 @@ private:
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
+	int OnScanIpHc(Json::Value &reqValue, Json::Value &respValue);
 
 	// Device
 	void InitMqttMessageDevice();

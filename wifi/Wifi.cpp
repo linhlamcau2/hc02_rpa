@@ -39,14 +39,26 @@ string Wifi::GetMacAddress()
 	return string(uc_Mac);
 }
 
-string Wifi::GetIP()
+string Wifi::GetIP(string linkName)
 {
 	// LOGD("GetIP");
 	string string_ip_1;
 	string string_ip_2;
 	string string_ip_3;
-	string msg_rsp = Util::ExecuteCMD("ip -4 addr show ${link_name} | sed -Ene \'s/^.*inet ([0-9.]+)\\/.*$/\\1/p\'");
-	// LOGV("IP list: %s", msg_rsp.c_str());
+	string cmd;
+	if (linkName == "")
+	{
+		cmd = "ip -4 addr show ${link_name} | sed -Ene \'s/^.*inet ([0-9.]+)\\/.*$/\\1/p\'";
+	}
+	else if (linkName == "wlan0")
+	{
+		cmd = "ip -4 addr show wlan0 | sed -Ene \'s/^.*inet ([0-9.]+)\\/.*$/\\1/p\'";
+	}
+	else if (linkName == "eth0")
+	{
+		cmd = "ip -4 addr show eth0 | sed -Ene \'s/^.*inet ([0-9.]+)\\/.*$/\\1/p\'";
+	}
+	string msg_rsp = Util::ExecuteCMD(cmd.c_str());
 	vector<string> ipList = Util::splitString(msg_rsp, '\n');
 	for (size_t i = 0; i < ipList.size(); i++)
 	{

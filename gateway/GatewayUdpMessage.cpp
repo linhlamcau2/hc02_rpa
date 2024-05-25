@@ -17,6 +17,7 @@ void Gateway::InitUdpMessage()
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("aiHubBroadCast", bind(&Gateway::OnUdpHcInfo, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("scanIpHc", bind(&Gateway::OnScanIpHc, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
@@ -296,5 +297,31 @@ int Gateway::OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue)
 	dataValue["ver"] = STR(VERSION);
 	respValue["data"] = dataValue;
 	respValue["cmd"] = "getHcInfoRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnScanIpHc(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnScanIpHc");
+	Json::Value dataValue = Json::objectValue;
+	dataValue["mac"] = mac;
+#ifndef ESP_PLATFORM
+	string ipWlan = Wifi::GetIP("wlan0");
+	string ipEth = Wifi::GetIP("eth0");
+	if (ipWlan != "")
+	{
+		dataValue["ipWlan"] = ipWlan;
+	}
+
+	if (ipEth != "")
+	{
+		dataValue["ipEth"] = ipEth;
+	}
+	dataValue["name"] = "RD HC";
+	dataValue["type"] = MODEL;
+	dataValue["ver"] = STR(VERSION);
+#endif
+	respValue["data"] = dataValue;
+	respValue["cmd"] = "scanIpHcRsp";
 	return CODE_OK;
 }
