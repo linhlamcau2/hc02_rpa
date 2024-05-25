@@ -7,7 +7,8 @@
 #include "ErrorCode.h"
 
 #ifdef ESP_PLATFORM
-#define SLEEP_MS(ms) vTaskDelay(portTICK_PERIOD_MS(ms))
+#include "freertos/FreeRTOS.h"
+#define SLEEP_MS(ms) vTaskDelay(pdMS_TO_TICKS(ms))
 #else
 #define SLEEP_MS(ms) usleep(ms * 1000)
 #endif
