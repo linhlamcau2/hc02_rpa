@@ -923,24 +923,25 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		uint16_t addr = 0;
 		Rule *rule = NULL;
 
-		// bool isFirstRun = true;
-		// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
-		// 	isFirstRun = ruleValue["isFirstRun"].asBool();
-
 		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
 			Json::Value timer = inputValue["timer"];
-
-			if (timer.isMember("start") && timer["start"].isString() &&
-				timer.isMember("end") && timer["end"].isString() &&
-				inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+			if (timer.isMember("start") && timer["start"].isString())
 			{
+				repeat = 0;
+				if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+				{
+					repeat = inputValue["repeat"].asInt();
+				}
 				string startAt = timer["start"].asString();
-				string endAt = timer["end"].asString();
-				repeat = inputValue["repeat"].asInt();
+				string endAt = "";
+				if (timer.isMember("end") && timer["end"].isString())
+				{
+					endAt = timer["end"].asString();
+				}
 				int startAtInt = Util::ConvertStrTimeToInt(startAt);
 				int endAtInt = Util::ConvertStrTimeToInt(endAt);
-				if (startAtInt == endAtInt)
+				if ((startAtInt == endAtInt) || (startAtInt > 0 && endAtInt < 0))
 				{
 					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
 					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, startAtInt, repeat);
@@ -1043,11 +1044,16 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 			ruleListMtx.unlock();
 			if (addDatabase)
 			{
-				ruleValue["isFirstRun"] = true;
+				bool isFirstStt = false;
+				if (repeat == 0)
+				{
+					isFirstStt = true;
+				}
+				ruleValue["isFirstRun"] = isFirstStt;
+				rule->SetFirstRun(isFirstStt);
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
-				rule->SetFirstRun(true);
 			}
 		}
 		else

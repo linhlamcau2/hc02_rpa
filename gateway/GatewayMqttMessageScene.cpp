@@ -813,17 +813,20 @@ int Gateway::ConfigSceneForScreenTouch(Device *device, Json::Value &data, Json::
 	if (!device)
 		return CODE_ERROR;
 
-	if (scene.isObject() && scene.isMember("id") && scene["id"].isString() && scene.isMember("icon") && scene["icon"].isInt())
+	if (scene.isObject() && scene.isMember("id") && scene["id"].isString())
 	{
 		string sceneBleId = scene["id"].asString();
-		int iconId = scene["icon"].asInt();
 		SceneBle *sceneBle = getSceneBleFromId(sceneBleId);
 		if (sceneBle)
 		{
 			if (isAddScene)
 			{
-				if (bleProtocol->SceneForScreenTouch(device->GetAddr(), sceneBle->GetAddr(), iconId, 0) == CODE_OK)
-					return CODE_OK;
+				if (scene.isMember("icon") && scene["icon"].isInt())
+				{
+					int iconId = scene["icon"].asInt();
+					if (bleProtocol->SceneForScreenTouch(device->GetAddr(), sceneBle->GetAddr(), iconId, 0) == CODE_OK)
+						return CODE_OK;
+				}
 			}
 			else
 			{
