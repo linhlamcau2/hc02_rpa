@@ -7,6 +7,7 @@ DeviceBleWifiSwitchTouch::DeviceBleWifiSwitchTouch(string id, string name, strin
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
 	ModuleOnOff *moduleOnOff;
+	ModuleOnOff *moduleOnOffAll;
 	ModuleStatusStartup *moduleStatusStartup;
 	this->countElement = countElement;
 	for (int i = 0; i < countElement; i++)
@@ -14,6 +15,8 @@ DeviceBleWifiSwitchTouch::DeviceBleWifiSwitchTouch(string id, string name, strin
 		moduleOnOff = new ModuleOnOff(this, addr + i, KEY_ATTRIBUTE_BUTTON, i);
 		modules.push_back(moduleOnOff);
 	}
+	moduleOnOffAll = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
+	modules.push_back(moduleOnOffAll);
 	moduleStatusStartup = new ModuleStatusStartup(this, addr);
 	modules.push_back(moduleStatusStartup);
 	powerSource = POWER_AC;

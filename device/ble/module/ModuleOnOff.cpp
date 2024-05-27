@@ -148,7 +148,12 @@ int ModuleOnOff::Do(Json::Value &dataValue)
 		dataValue.isMember(key) && dataValue[key].isInt())
 	{
 		int onoff = dataValue[key].asInt();
-		if (bleProtocol->SetOnOffLight(addr, onoff, TRANSITION_DEFAULT, true) == CODE_OK)
+		if ((key == KEY_ATTRIBUTE_ONOFF) && ((device->GetType() / 1000) == 22 || (device->GetType() / 1000) == 24))
+		{
+			if (bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), 255, onoff) == CODE_OK)
+				return CODE_OK;
+		}
+		else if (bleProtocol->SetOnOffLight(addr, onoff, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
 			return CODE_OK;
 		}

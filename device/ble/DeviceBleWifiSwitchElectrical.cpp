@@ -6,9 +6,10 @@
 #include "Log.h"
 
 DeviceBleWifiSwitchElectrical::DeviceBleWifiSwitchElectrical(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, uint8_t countElement)
-		: DeviceBle(id, name, mac, dataJson, addr, type, version)
+	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
 	ModuleOnOff *moduleOnOff;
+	ModuleOnOff *moduleOnOffAll;
 	ModuleDimonDimoff *moduleDimonDimoff;
 	ModuleStatusStartup *moduleStatusStartup;
 	this->countElement = countElement;
@@ -19,6 +20,8 @@ DeviceBleWifiSwitchElectrical::DeviceBleWifiSwitchElectrical(string id, string n
 		moduleDimonDimoff = new ModuleDimonDimoff(this, addr + i, i);
 		modules.push_back(moduleDimonDimoff);
 	}
+	moduleOnOffAll = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
+	modules.push_back(moduleOnOffAll);
 	moduleStatusStartup = new ModuleStatusStartup(this, addr);
 	modules.push_back(moduleStatusStartup);
 	powerSource = POWER_AC;

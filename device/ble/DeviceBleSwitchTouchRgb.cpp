@@ -9,6 +9,7 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
 	ModuleOnOff *moduleOnOff;
+	ModuleOnOff *moduleOnOffAll;
 	ModuleRgb *moduleRgb;
 	ModuleCountDownSwitch *moduleCountDownSwitch;
 	ModuleStatusStartup *moduleStatusStartup;
@@ -20,6 +21,8 @@ DeviceBleSwitchTouchRgb::DeviceBleSwitchTouchRgb(string id, string name, string 
 		moduleRgb = new ModuleRgb(this, addr + i, i);
 		modules.push_back(moduleRgb);
 	}
+	moduleOnOffAll = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
+	modules.push_back(moduleOnOffAll);
 	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
 	modules.push_back(moduleCountDownSwitch);
 	moduleStatusStartup = new ModuleStatusStartup(this, addr);

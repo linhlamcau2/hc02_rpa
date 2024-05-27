@@ -425,6 +425,14 @@ int Gateway::isDevFast2Room(Device *device)
 		else // normal add device to room
 			rs = 1;
 	}
+	else if (device->GetType() == BLE_SWITCH_ELECTRICAL_1 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+	{
+		rs = 1;
+	}
 	else if (device->GetType() == BLE_SWITCH_RGB_1 ||
 			 device->GetType() == BLE_SWITCH_RGB_2 ||
 			 device->GetType() == BLE_SWITCH_RGB_3 ||
@@ -472,6 +480,10 @@ int Gateway::isDevFast2Room(Device *device)
 	else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_REMOTE_M3_V2 || device->GetType() == BLE_REMOTE_M4) // set group for remote
 	{
 		rs = 2;
+	}
+	else
+	{
+		rs = 1;
 	}
 	return rs;
 }

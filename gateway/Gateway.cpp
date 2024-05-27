@@ -943,11 +943,11 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				if (startAtInt == endAtInt)
 				{
 					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
-					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, Util::ConvertStrTimeToInt(startAt), repeat);
+					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, startAtInt, repeat);
 					rule->AddRuleInput(ruleInputTimer);
 				}
 				else
-					rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startAt), Util::ConvertStrTimeToInt(endAt), ruleValue);
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, startAtInt, endAtInt, ruleValue);
 			}
 		}
 		else
