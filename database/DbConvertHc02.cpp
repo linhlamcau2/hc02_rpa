@@ -9,15 +9,9 @@
 
 sqlite3 *db_v1 = NULL;
 
-bool Db::IsHaveDbV1()
-{
-    struct stat st;
-    return !stat(DB_NAME_V1, &st);
-}
-
 int Db::OpenDbV1()
 {
-    if (IsHaveDbV1())
+    if (IsHaveDb(DB_NAME_V1))
     {
         LOGD("open DB_NAME_V1");
         sqlite3_open_v2(DB_NAME_V1, &db_v1, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);

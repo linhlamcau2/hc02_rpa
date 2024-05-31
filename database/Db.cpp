@@ -73,12 +73,12 @@ void Db::init(void)
 // LOGI("LITTLEFS unmounted");
 #endif
 
-	if (!IsHaveDb())
+	if (!IsHaveDb(DB_NAME))
 	{
 		sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_JOURNAL, 0);
 		createTableIfNotExists();
 #ifdef ESP_PLATFORM
-		if (IsHaveDbV1())
+		if (IsHaveDb(DB_NAME_V1))
 		{
 			Device::InitDeviceModelList();
 			ConvertTableDevice();
@@ -109,10 +109,10 @@ void Db::init(void)
 #endif
 }
 
-bool Db::IsHaveDb()
+bool Db::IsHaveDb(const char * dbName)
 {
 	struct stat st;
-	return !stat(DB_NAME, &st);
+	return !stat(dbName, &st);
 }
 
 int Db::createTableIfNotExists()

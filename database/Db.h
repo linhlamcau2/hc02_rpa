@@ -35,7 +35,7 @@ public:
 	~Db();
 
 	void init(void);
-	bool IsHaveDb();
+	bool IsHaveDb(const char *dbName);
 	int createTableIfNotExists();
 
 	int Sqlite_BenginTransaction();
@@ -132,7 +132,6 @@ public:
 	int SceneBleUpdateFavorite(SceneBle *scene);
 
 #ifdef ESP_PLATFORM
-	bool IsHaveDbV1();
 	int OpenDbV1();
 	int ConvertTableDevice();
 	int ConvertTableDeviceAttribute();
@@ -156,7 +155,7 @@ public:
 	int NotiAdd(Noti *noti);
 	int NotiUpdate(Noti *noti);
 	int NotiDel(Noti *noti);
-	void pushToListSql(string sql); 
+	void pushToListSql(string sql);
 #endif
 };
 

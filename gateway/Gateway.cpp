@@ -244,11 +244,19 @@ void Gateway::DelDatabase()
 		LOGE("Failed to delete file\n");
 	}
 
-	if (database->IsHaveDbV1())
+	if (database->IsHaveDb(DB_NAME_V1))
 	{
 		if (unlink(DB_NAME_V1) != 0)
 		{
 			LOGE("Failed to delete file db_v1\n");
+		}
+	}
+
+	if (database->IsHaveDb(DB_NAME "1"))
+	{
+		if (unlink(DB_NAME "1") != 0)
+		{
+			LOGE("Failed to delete file db_restore\n");
 		}
 	}
 	// Unmount SPIFFS
