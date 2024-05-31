@@ -617,6 +617,7 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnRestoreData");
 	if (reqValue.isMember("backupUrl") && reqValue["backupUrl"].isString())
 	{
+		respValue["cmd"] = "hcRestoreDataRsp";
 		string url = reqValue["backupUrl"].asString();
 		HTTPRequest *httpRequest = new HTTPRequest();
 		httpRequest->setUrl(string(URL_PRO) + string(RENEW_TOKEN));
@@ -641,6 +642,7 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 				system("su");
 #endif
 				LOGD("dataRestore: %s", dataRestore.c_str());
+#ifndef ESP_PLATFORM
 				string cmd = "rm " DB_NAME "1";
 				LOGD("cmd : %s", cmd.c_str());
 				system(cmd.c_str());
@@ -648,7 +650,6 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 				if (!outFile)
 				{
 					respValue["data"]["code"] = CODE_ERROR;
-					return CODE_EXIT;
 				}
 
 				outFile << dataRestore;
@@ -665,6 +666,51 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 				system(cmd.c_str());
 
 				respValue["data"]["code"] = CODE_OK;
+#else
+				string newDb = DB_NAME "1";
+				string oldDb = DB_NAME;
+				string temp = "/spiffs/temp.sqlite";
+				LOGD("newDb : %s", newDb.c_str());
+				LOGD("oldDb : %s", oldDb.c_str());
+				LOGD("tempDb : %s", temp.c_str());
+
+				if (database)
+					delete database;
+
+				if (remove(newDb.c_str()) != 0)
+				{
+					LOGE("Failed to delete file");
+					respValue["data"]["code"] = CODE_ERROR;
+				}
+
+				std::ofstream outFile(DB_NAME "1");
+				if (!outFile)
+				{
+					respValue["data"]["code"] = CODE_ERROR;
+				}
+				outFile << dataRestore;
+				outFile.close();
+
+				if (rename(newDb.c_str(), temp.c_str()) != 0)
+				{
+					LOGE("Rename file failed");
+					respValue["data"]["code"] = CODE_ERROR;
+					return CODE_EXIT;
+				}
+				if (rename(oldDb.c_str(), newDb.c_str()) != 0)
+				{
+					LOGE("Rename file failed");
+					respValue["data"]["code"] = CODE_ERROR;
+					return CODE_EXIT;
+				}
+				if (rename(temp.c_str(), oldDb.c_str()) != 0)
+				{
+					respValue["data"]["code"] = CODE_ERROR;
+					return CODE_EXIT;
+					LOGE("Rename file failed");
+				}
+				respValue["data"]["code"] = CODE_OK;
+#endif
 				return CODE_EXIT;
 			}
 			else
