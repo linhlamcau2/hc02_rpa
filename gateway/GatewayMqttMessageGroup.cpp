@@ -200,15 +200,39 @@ int Gateway::OnCreateGroup(Json::Value &reqValue, Json::Value &respValue)
 						Device *device = getDeviceFromId(deviceId);
 						if (device)
 						{
-							int deviceAddr = device->GetAddr();
-							if (group->AddDevice(device, deviceAddr, true, true) == CODE_OK)
+							int indexType = device->GetType() / 1000;
+							if (indexType == 22 || indexType == 24)
 							{
-								successList.append(deviceId);
+								bool checkSuccess = true;
+								for (int i = 0; i < device->GetNumElement(); i++)
+								{
+									if (group->AddDevice(device, device->GetAddr() + i, true, true) != CODE_OK)
+									{
+										checkSuccess = false;
+									}
+								}
+
+								if (checkSuccess)
+								{
+									successList.append(deviceId);
+								}
+								else
+								{
+									LOGD("add group deviceId %s error", deviceId.c_str());
+									failedList.append(deviceId);
+								}
 							}
 							else
 							{
-								LOGD("add group deviceId %s error", deviceId.c_str());
-								failedList.append(deviceId);
+								if (group->AddDevice(device, device->GetAddr(), true, true) == CODE_OK)
+								{
+									successList.append(deviceId);
+								}
+								else
+								{
+									LOGD("add group deviceId %s error", deviceId.c_str());
+									failedList.append(deviceId);
+								}
 							}
 						}
 						else
@@ -268,15 +292,39 @@ int Gateway::OnAddDeviceToGroup(Json::Value &reqValue, Json::Value &respValue)
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						int deviceAddr = device->GetAddr();
-						if (group->AddDevice(device, deviceAddr, true, true) == CODE_OK)
+						int indexType = device->GetType() / 1000;
+						if (indexType == 22 || indexType == 24)
 						{
-							successList.append(deviceId);
+							bool checkSuccess = true;
+							for (int i = 0; i < device->GetNumElement(); i++)
+							{
+								if (group->AddDevice(device, device->GetAddr() + i, true, true) != CODE_OK)
+								{
+									checkSuccess = false;
+								}
+							}
+
+							if (checkSuccess)
+							{
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("add group deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
 						}
 						else
 						{
-							LOGD("add to group deviceId %s error", deviceId.c_str());
-							failedList.append(deviceId);
+							if (group->AddDevice(device, device->GetAddr(), true, true) == CODE_OK)
+							{
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("add to group deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
 						}
 					}
 					else
@@ -319,16 +367,39 @@ int Gateway::OnDelDeviceGroupBle(Json::Value &deviceList, Json::Value &respSucce
 			Device *device = getDeviceFromId(deviceId);
 			if (device)
 			{
-				int deviceAddr = device->GetAddr();
-				if (group->DelDevice(device, deviceAddr, true, true) == CODE_OK)
+				int indexType = device->GetType() / 1000;
+				if (indexType == 22 || indexType == 24)
 				{
-					// database->DeviceInGroupDel(group, device, deviceAddr);
-					respSuccessList.append(deviceId);
+					bool checkSuccess = true;
+					for (int i = 0; i < device->GetNumElement(); i++)
+					{
+						if (group->DelDevice(device, device->GetAddr() + i, true, true) != CODE_OK)
+						{
+							checkSuccess = false;
+						}
+					}
+
+					if (checkSuccess)
+					{
+						respSuccessList.append(deviceId);
+					}
+					else
+					{
+						LOGD("delete from group deviceId %s error", deviceId.c_str());
+						respFailList.append(deviceId);
+					}
 				}
 				else
 				{
-					LOGD("delete from group deviceId %s error", deviceId.c_str());
-					respFailList.append(deviceId);
+					if (group->DelDevice(device, device->GetAddr(), true, true) == CODE_OK)
+					{
+						respSuccessList.append(deviceId);
+					}
+					else
+					{
+						LOGD("delete from group deviceId %s error", deviceId.c_str());
+						respFailList.append(deviceId);
+					}
 				}
 			}
 			else
@@ -364,16 +435,39 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 					Device *device = getDeviceFromId(deviceId);
 					if (device)
 					{
-						int deviceAddr = device->GetAddr();
-						if (group->DelDevice(device, deviceAddr, true, true) == CODE_OK)
+						int indexType = device->GetType() / 1000;
+						if (indexType == 22 || indexType == 24)
 						{
-							// database->DeviceInGroupDel(group, device, deviceAddr);
-							successList.append(deviceId);
+							bool checkSuccess = true;
+							for (int i = 0; i < device->GetNumElement(); i++)
+							{
+								if (group->DelDevice(device, device->GetAddr() + i, true, true) != CODE_OK)
+								{
+									checkSuccess = false;
+								}
+							}
+
+							if (checkSuccess)
+							{
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("delete from group deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
 						}
 						else
 						{
-							LOGD("delete from group deviceId %s error", deviceId.c_str());
-							failedList.append(deviceId);
+							if (group->DelDevice(device, device->GetAddr(), true, true) == CODE_OK)
+							{
+								successList.append(deviceId);
+							}
+							else
+							{
+								LOGD("delete from group deviceId %s error", deviceId.c_str());
+								failedList.append(deviceId);
+							}
 						}
 					}
 					else
@@ -418,15 +512,16 @@ int Gateway::OnDeleteGroup(Json::Value &reqValue, Json::Value &respValue)
 			database->Sqlite_BenginTransaction();
 			for (auto &deviceInGroup : devicesInGroup)
 			{
-				if (group->DelDevice(deviceInGroup->device, deviceInGroup->device->GetAddr(), true, true) == CODE_OK)
+				if (group->DelDevice(deviceInGroup->device, deviceInGroup->epId, true, true) == CODE_OK)
 				{
-					// database->DeviceInGroupDel(group, deviceInGroup->device, deviceInGroup->device->GetAddr());
 					successList.append(deviceInGroup->device->GetId());
 				}
 				else
 				{
+					LOGD("delete from group deviceId %s error", deviceInGroup->device->GetId().c_str());
 					failedList.append(deviceInGroup->device->GetId());
 				}
+
 				SLEEP_MS(100);
 			}
 			database->Sqlite_EndTransaction();

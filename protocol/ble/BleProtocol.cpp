@@ -530,6 +530,7 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
 #ifdef ESP_PLATFORM
+	SLEEP_MS(70);
 	SetLedService(true);
 #endif
 	return l;
