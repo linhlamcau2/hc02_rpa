@@ -266,6 +266,18 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 				sleep(2);
 				exit(1);
 			}
+#ifdef __ANDROID__
+			else if (rs == CODE_REBOOT)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("cloud publish: %s: %s", (pubMobileRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
+				sleep(2);
+				system("su");
+				system("reboot");
+			}
+#endif
 			else if (rs == CODE_DATA_ARRAY)
 			{
 				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);

@@ -395,24 +395,25 @@ int Gateway::OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OTA HC");
-#ifndef ESP_PLATFORM
+	respValue["cmd"] = "otaHcRsp";
 	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
 	{
+#ifndef ESP_PLATFORM
 		string url = URL_PRO + reqValue["url"].asString();
 		string sha = reqValue["checksum"].asString();
 		LOGD("url: %s", url.c_str());
 		LOGD("sha: %s", sha.c_str());
 
 		string cmd = "rm " TMP_FOLDER "rd.tar.gz";
-		LOGW("Tp1: %s", cmd.c_str());
+		LOGD("%s", cmd.c_str());
 		system(cmd.c_str());
 
 		cmd = "rm -r " TMP_FOLDER "rd";
-		LOGW("Tp2: %s", cmd.c_str());
+		LOGD("%s", cmd.c_str());
 		system(cmd.c_str());
 
 		cmd = "wget -P " TMP_FOLDER " " + url;
-		LOGW("Tp3: %s", cmd.c_str());
+		LOGD("%s", cmd.c_str());
 		system(cmd.c_str());
 
 		string folderDownload = TMP_FOLDER "rd.tar.gz";
@@ -425,7 +426,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		else
 		{
 			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
-			LOGW("Tp4: %s", cmd.c_str());
+			LOGD("%s", cmd.c_str());
 			system(cmd.c_str());
 
 			string fileConfigOta = TMP_FOLDER "rd/ota.sh";
@@ -433,18 +434,22 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			if (stat(fileConfigOta.c_str(), &st) == 0)
 			{
 				cmd = "chmod +x " TMP_FOLDER "rd/ota.sh";
-				LOGW("Tp5: %s", cmd.c_str());
+				LOGD("%s", cmd.c_str());
 				system(cmd.c_str());
 #ifdef __ANDROID__
 				cmd = "su";
-				LOGW("Tp6: %s", cmd.c_str());
+				LOGD("%s", cmd.c_str());
 				system(cmd.c_str());
 #endif
 				string versionCurrent = STR(VERSION);
 				cmd = TMP_FOLDER "rd/ota.sh " + versionCurrent;
-				LOGW("Tp8: %s", cmd.c_str());
+				LOGD("%s", cmd.c_str());
 				system(cmd.c_str());
-				LOGW("Tp9");
+#ifdef __ANDROID__
+				respValue["data"]["code"] = CODE_REBOOT;
+				return CODE_REBOOT;
+#endif
+				respValue["data"]["code"] = CODE_EXIT;
 				return CODE_EXIT;
 			}
 			else
@@ -452,18 +457,22 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 				LOGW("Not found ota file");
 			}
 		}
-	}
 #else
-	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
-	{
 		string url = URL_PRO + reqValue["url"].asString();
 		string sha = reqValue["checksum"].asString();
-		LOGW("url: %s, checksum: %s", url.c_str(), sha.c_str());
+		LOGD("info ota url: %s, checksum: %s", url.c_str(), sha.c_str());
 		config->SetUrlOta(url);
 		config->SetCheckSumOta(sha);
-		esp_restart();
-	}
+		respValue["data"]["code"] = CODE_EXIT;
+		return CODE_EXIT;
 #endif
+	}
+	else
+	{
+		LOGW("Data ota error %s", reqValue.toString().c_str());
+	}
+
+	respValue["data"]["code"] = CODE_ERROR;
 	return CODE_ERROR;
 }
 
