@@ -445,11 +445,10 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 				cmd = TMP_FOLDER "rd/ota.sh " + versionCurrent;
 				LOGD("%s", cmd.c_str());
 				system(cmd.c_str());
+				respValue["data"]["code"] = CODE_OK;
 #ifdef __ANDROID__
-				respValue["data"]["code"] = CODE_REBOOT;
 				return CODE_REBOOT;
 #endif
-				respValue["data"]["code"] = CODE_EXIT;
 				return CODE_EXIT;
 			}
 			else
@@ -463,7 +462,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		LOGD("info ota url: %s, checksum: %s", url.c_str(), sha.c_str());
 		config->SetUrlOta(url);
 		config->SetCheckSumOta(sha);
-		respValue["data"]["code"] = CODE_EXIT;
+		respValue["data"]["code"] = CODE_OK;
 		return CODE_EXIT;
 #endif
 	}
