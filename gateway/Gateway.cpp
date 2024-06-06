@@ -1517,11 +1517,11 @@ int Gateway::Do(Json::Value &dataValue)
 			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
 			if (onoff)
 			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio107/value");
+				Util::ExecuteCMD("echo 1 > /sys/class/st_relay/relay1");
 			}
 			else
 			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio107/value");
+				Util::ExecuteCMD("echo 0 > /sys/class/st_relay/relay1");
 			}
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
@@ -1529,11 +1529,11 @@ int Gateway::Do(Json::Value &dataValue)
 			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
 			if (onoff)
 			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio108/value");
+				Util::ExecuteCMD("echo 1 > /sys/class/st_relay/relay2");
 			}
 			else
 			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio108/value");
+				Util::ExecuteCMD("echo 0 > /sys/class/st_relay/relay2");
 			}
 		}
 		return CODE_OK;
