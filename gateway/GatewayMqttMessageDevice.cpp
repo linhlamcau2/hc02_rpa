@@ -49,30 +49,32 @@ void Gateway::InitMqttMessageDevice()
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlDevice");
-	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("data") && reqValue["data"].isObject())
+	if (reqValue.isMember("arguments") && reqValue["arguments"].isObject())
 	{
-		string deviceId = reqValue["id"].asString();
-		Json::Value devData = reqValue["data"];
-		Device *device = getDeviceFromId(deviceId);
-		if (device)
+		Json::Value &argumentsValue = reqValue["arguments"];
+		if (argumentsValue.isMember("mac") && argumentsValue["mac"].isString() &&
+			argumentsValue.isMember("ep") && argumentsValue["ep"].isString() &&
+			argumentsValue.isMember("value") && argumentsValue["value"].isObject())
 		{
-			int rs = device->Do(devData);
-			respValue["data"]["code"] = rs;
-		}
-		else
-		{
-			LOGW("Device id %s not found", deviceId.c_str());
-			respValue["data"]["code"] = CODE_NOT_FOUND_DEVICE;
+			string mac = argumentsValue["mac"].asString();
+			string ep = argumentsValue["ep"].asString();
+			Json::Value &valueValue = argumentsValue["value"];
+			Device *device = getDeviceFromMac(mac);
+			if (device)
+			{
+				int rs = device->Do(valueValue);
+			}
+			else
+			{
+				LOGW("Device mac %s not found", mac.c_str());
+			}
 		}
 	}
 	else
 	{
-		respValue["data"]["code"] = CODE_FORMAT_ERROR;
 		LOGW("OnControlDevice %s format error", reqValue.toString().c_str());
 	}
-	respValue["cmd"] = "controlDevRsp";
-	return CODE_OK;
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnControlAllDevice(Json::Value &reqValue, Json::Value &respValue)
