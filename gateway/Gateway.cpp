@@ -625,6 +625,9 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		database->DelDevExist(temp_dev);
 	}
 
+	Json::Value epList = Json::arrayValue;
+	epList.append(10);
+
 	Json::Value devValue;
 	devValue["id"] = scanDevice->GetId();
 	devValue["addr"] = scanDevice->GetAddr();
@@ -634,6 +637,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	// devValue["type"] = "1213";
 	devValue["model"] = Device::ConvertDeviceTypeToModel(scanDevice->GetType());
 	devValue["ModelStr"] = Device::ConvertDeviceTypeToName(scanDevice->GetType());
+	devValue["epList"] = epList;
 
 	Json::Value dataValue;
 	dataValue["attribute"] = "mod.new_device_added";
