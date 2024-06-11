@@ -54,7 +54,7 @@ public:
 	virtual void OnCloudConnect(bool isConnected, bool isReconnect) {}
 
 	int OnDeviceRpcCallbackRegister(string type, OnRpcCallbackFunc onRpcCallbackFunc);
-	int OnDeviceRpcCallbackCmdRegister(string command, string attribute, OnRpcCallbackFunc onRpcCallbackFunc);
+	int OnDeviceRpcCmdCallbackRegister(string command, string attribute, OnRpcCallbackFunc onRpcCallbackFunc);
 
 	int OnlineHC(string deviceName);
 
@@ -63,6 +63,7 @@ public:
 	int CloudPublish(string payload);
 	int CloudPublish(Json::Value payloadJson);
 
+	int PublishToCloudMessage(string reqCmd, Json::Value &reqValue);
 	int PublishToCloudMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 0);
 	int PublishBinToCloudMessage(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout = 0);
 	int PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout = 0);

@@ -89,11 +89,11 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 			payloadJson.isMember("type") && payloadJson["type"].isString() &&
-			payloadJson.isMember("time") && payloadJson["time"].isInt() &&
+			// payloadJson.isMember("time") && payloadJson["time"].isInt() &&
 			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string type = payloadJson["type"].asString();
-		string rqi = payloadJson["time"].asString();
+		// string rqi = payloadJson["time"].asString();
 		if (onRpcCallbackFuncList.find(type) != onRpcCallbackFuncList.end())
 		{
 			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[type];
@@ -103,7 +103,7 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
-				respValue["rqi"] = rqi;
+				// respValue["rqi"] = rqi;
 				respValue["deviceCode"] = mac;
 				respValue["time"] = time(NULL);
 				respValue["mac"] = mac;
@@ -114,7 +114,7 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 			else if (rs == CODE_EXIT)
 			{
 				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
-				respValue["rqi"] = rqi;
+				// respValue["rqi"] = rqi;
 				Publish(pubServerReqTopic, respValue.toString());
 				sleep(2);
 				exit(1);
@@ -126,7 +126,7 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 				{
 					for (auto &respV : respValue)
 					{
-						respV["rqi"] = rqi;
+						// respV["rqi"] = rqi;
 						Publish(pubServerReqTopic, respV.toString());
 					}
 				}
@@ -217,9 +217,9 @@ int CloudProtocol::OnDeviceRpcCallbackRegister(string type, OnRpcCallbackFunc on
 	return CODE_OK;
 }
 
-int CloudProtocol::OnDeviceRpcCallbackCmdRegister(string command, string attribute, OnRpcCallbackFunc onRpcCallbackFunc)
+int CloudProtocol::OnDeviceRpcCmdCallbackRegister(string command, string attribute, OnRpcCallbackFunc onRpcCallbackFunc)
 {
-	LOGI("OnDeviceRpcCallbackCmdRegister command: %s, attribute: %s", command.c_str(), attribute.c_str());
+	LOGI("OnDeviceRpcCmdCallbackRegister command: %s, attribute: %s", command.c_str(), attribute.c_str());
 	if (onRpcCmdCallbackFuncList.count(command) == 0)
 	{
 		map<string, OnRpcCallbackFunc> onRpcCallbackAttributeList;
@@ -260,6 +260,26 @@ int CloudProtocol::CloudPublish(string payload)
 int CloudProtocol::CloudPublish(Json::Value payloadJson)
 {
 	return CloudPublish(payloadJson.toString());
+}
+
+int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue)
+{
+	LOGD("PublishToCloudMessage: %s", reqValue.toString().c_str());
+	if (!isConnected())
+	{
+		LOGW("error connect to server");
+		return CODE_TIMEOUT;
+	}
+	Json::Value sendValue;
+	sendValue["from"] = "GATEWAY";
+	sendValue["to"] = "CLOUD";
+	sendValue["deviceCode"] = mac;
+	sendValue["mac"] = mac;
+	sendValue["type"] = reqCmd;
+	sendValue["time"] = time(NULL);
+	sendValue["data"] = reqValue;
+	Publish(pubServerReqTopic, sendValue.toString());
+	return CODE_OK;
 }
 
 int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)

@@ -19,8 +19,7 @@
 void Gateway::InitMqttMessageHc()
 {
 	OnDeviceRpcCallbackRegister("registerResp", bind(&Gateway::OnRegisterHc, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackCmdRegister("setAttribute", "mod.add_device", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackCmdRegister("setAttribute", "device.onoff", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCmdCallbackRegister("setAttribute", "mod.add_device", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
 
 // 	OnDeviceRpcCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
 // 	OnDeviceRpcCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));

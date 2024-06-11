@@ -347,11 +347,12 @@ public:
 	int PushAttributes(Json::Value &jsonValue);
 
 	static void InitDeviceModelList();
-	static void RegisterDeviceModel(uint32_t type, string model, const char *name);
+	static void RegisterDeviceModel(uint32_t type, const char *model, const char *name);
 	static uint32_t BleTypeToGroupId(uint32_t deviceType);
 	static const char *BleAttributeIdToAttributeStr(uint16_t attributeId);
 	// static uint32_t ConvertModelToDeviceType(string model);
 	static const char *ConvertDeviceTypeToName(uint32_t type);
+	static const char *ConvertDeviceTypeToModel(uint32_t type);
 	static uint32_t ConverPidToDeviveType(uint16_t pid);
 
 	virtual int BuildTelemetryValue(Json::Value &pushDataValue) { return CODE_ERROR; }

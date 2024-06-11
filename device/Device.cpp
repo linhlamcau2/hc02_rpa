@@ -221,6 +221,7 @@ int Device::PushAttributes(Json::Value &jsonValue)
 
 // TODO: remove
 static map<uint32_t, const char *> typeToNameList;
+static map<uint32_t, const char *> typeToModelList;
 // static map<string, uint32_t> modelToTypeList;
 static map<uint32_t, uint32_t> bleTypeToGroupIdList;
 static map<uint16_t, const char *> bleAttributeIdToAttributeString;
@@ -457,9 +458,10 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225, "TS0225", "Cảm biến nhan dien nguoi Zigbee");
 }
 
-void Device::RegisterDeviceModel(uint32_t type, string model, const char *name)
+void Device::RegisterDeviceModel(uint32_t type, const char *model, const char *name)
 {
 	typeToNameList[type] = name;
+	typeToModelList[type] = model;
 	// if (model != "")
 	// 	modelToTypeList[model] = type;
 }
@@ -482,6 +484,11 @@ const char *Device::BleAttributeIdToAttributeStr(uint16_t attributeId)
 const char *Device::ConvertDeviceTypeToName(uint32_t type)
 {
 	return typeToNameList[type];
+}
+
+const char *Device::ConvertDeviceTypeToModel(uint32_t type)
+{
+	return typeToModelList[type];
 }
 
 uint32_t Device::ConverPidToDeviveType(uint16_t pid)

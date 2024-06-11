@@ -150,16 +150,16 @@ void Gateway::init()
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	database->DeviceAttributeRead();
 #endif
-// 	database->RoomRead();
-// 	database->GroupRead();
-// 	database->DeviceInGroupRead();
-// 	database->SceneBleRead();
-// 	database->DeviceInSceneBleRead();
-// 	database->DeviceInRoomRead();
-// 	database->RuleRead();
-// #ifdef __ANDROID__
-// 	database->NotiRead();
-// #endif
+	// 	database->RoomRead();
+	// 	database->GroupRead();
+	// 	database->DeviceInGroupRead();
+	// 	database->SceneBleRead();
+	// 	database->DeviceInSceneBleRead();
+	// 	database->DeviceInRoomRead();
+	// 	database->RuleRead();
+	// #ifdef __ANDROID__
+	// 	database->NotiRead();
+	// #endif
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -614,8 +614,6 @@ int Gateway::GatewayConnectToCloudNotice()
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)
 {
-	Json::Value jsonValue;
-	Json::Value dataValue;
 	if (!scanDevice)
 	{
 		LOGW("scanDevice null");
@@ -633,35 +631,15 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["ver"] = scanDevice->GetVersionStr();
 	devValue["mac"] = scanDevice->GetMac();
 	devValue["data"] = scanDevice->GetData();
-	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
-			scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
-	{
-		devValue["type"] = BLE_SWITCH_ONOFF;
-	}
-	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_TEMP_HUM)
-	{
-		devValue["type"] = BLE_TEMP_HUM_SENSOR;
-	}
-	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_WLEAK_AQ1)
-	{
-		devValue["type"] = BLE_SMOKE_SENSOR;
-	}
-	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
-	{
-		devValue["type"] = BLE_DOOR_SENSOR;
-	}
-	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
-					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
-	{
-		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
-	}
-	else
-	{
-		devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
-	}
-	jsonValue["device"].append(devValue);
-	pushNewDeviceLocal(jsonValue);
+	// devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
+	devValue["type"] = "1213";
+	devValue["ModelStr"] = Device::ConvertDeviceTypeToModel(scanDevice->GetType());
+
+	Json::Value dataValue;
+	dataValue["attribute"] = "mod.new_device_added";
+	dataValue["mac"] = scanDevice->GetMac();
+	dataValue["value"] = devValue;
+	PublishToCloudMessage("reportAttribute", dataValue);
 }
 
 Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, bool addDatabase)

@@ -5,6 +5,8 @@
 
 void Gateway::InitMqttMessageDevice()
 {
+	OnDeviceRpcCmdCallbackRegister("setAttribute", "device.onoff", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
+
 	// OnDeviceRpcCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
