@@ -630,10 +630,10 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["addr"] = scanDevice->GetAddr();
 	devValue["ver"] = scanDevice->GetVersionStr();
 	devValue["mac"] = scanDevice->GetMac();
-	devValue["data"] = scanDevice->GetData();
-	// devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
-	devValue["type"] = "1213";
-	devValue["ModelStr"] = Device::ConvertDeviceTypeToModel(scanDevice->GetType());
+	devValue["type"] = to_string(scanDevice->GetType());
+	// devValue["type"] = "1213";
+	devValue["model"] = Device::ConvertDeviceTypeToModel(scanDevice->GetType());
+	devValue["ModelStr"] = Device::ConvertDeviceTypeToName(scanDevice->GetType());
 
 	Json::Value dataValue;
 	dataValue["attribute"] = "mod.new_device_added";
