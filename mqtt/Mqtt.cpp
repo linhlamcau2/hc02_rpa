@@ -56,7 +56,7 @@ void Mqtt::SetWillset(string willset_topic, string willset_payload)
 
 int Mqtt::Connect()
 {
-	LOGI("Connect host %s, port %d, username: %s, pass: %s", host.c_str(), port, username.c_str(), password.c_str());
+	LOGI("Connect host %s, port %d, client_id: %s, username: %s, pass: %s", host.c_str(), port, client_id.c_str(), username.c_str(), password.c_str());
 	if (cert)
 	{
 		LOGI("Cert: %s", cert);
@@ -217,6 +217,7 @@ int Mqtt::Publish(string topic, string payload)
 
 int Mqtt::Publish(string topic, const char *payload, int payloadLen)
 {
+	LOGD("publish to %s, data: %s", topic.c_str(), payload);
 	int rs = publish(NULL, topic.c_str(), payloadLen, payload);
 	if (rs == MOSQ_ERR_SUCCESS)
 	{

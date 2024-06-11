@@ -155,14 +155,14 @@ void Config::Print()
 	LOGI("password: %s", password.c_str());
 	LOGI("keepAlive: %d", keepAlive);
 
-	if (localHost == "")
-		LOGE("Local Null");
-	LOGI("Local host: %s", localHost.c_str());
-	LOGI("Local port: %d", localPort);
-	LOGI("Local clientId: %s", localClientId.c_str());
-	LOGI("Local username: %s", localUsername.c_str());
-	LOGI("Local password: %s", localPassword.c_str());
-	LOGI("Local keepAlive: %d", localKeepAlive);
+	// if (localHost == "")
+	// 	LOGE("Local Null");
+	// LOGI("Local host: %s", localHost.c_str());
+	// LOGI("Local port: %d", localPort);
+	// LOGI("Local clientId: %s", localClientId.c_str());
+	// LOGI("Local username: %s", localUsername.c_str());
+	// LOGI("Local password: %s", localPassword.c_str());
+	// LOGI("Local keepAlive: %d", localKeepAlive);
 }
 
 // Get info server

@@ -5,37 +5,37 @@
 
 void Gateway::InitMqttMessageScene()
 {
-	OnDeviceRpcCallbackRegister("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("editScene", bind(&Gateway::OnEditScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("createSceneController", bind(&Gateway::OnCreateSceneController, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delSceneController", bind(&Gateway::OnDelSceneController, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("addFavoriteScene", bind(&Gateway::OnAddFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("addDevToScene", bind(&Gateway::OnAddDevToScene, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delDevToScene", bind(&Gateway::OnDelDevToScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("editScene", bind(&Gateway::OnEditScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("createSceneController", bind(&Gateway::OnCreateSceneController, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delSceneController", bind(&Gateway::OnDelSceneController, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("addFavoriteScene", bind(&Gateway::OnAddFavoriteScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("addDevToScene", bind(&Gateway::OnAddDevToScene, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delDevToScene", bind(&Gateway::OnDelDevToScene, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("editScene", bind(&Gateway::OnEditScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("createSceneController", bind(&Gateway::OnCreateSceneController, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delSceneController", bind(&Gateway::OnDelSceneController, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("addFavoriteScene", bind(&Gateway::OnAddFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("addDevToScene", bind(&Gateway::OnAddDevToScene, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delDevToScene", bind(&Gateway::OnDelDevToScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("controlScene", bind(&Gateway::OnControlScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("createScene", bind(&Gateway::OnCreateScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("editScene", bind(&Gateway::OnEditScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delScene", bind(&Gateway::OnDeleteScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("callScene", bind(&Gateway::OnCallScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("createSceneController", bind(&Gateway::OnCreateSceneController, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delSceneController", bind(&Gateway::OnDelSceneController, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getSceneList", bind(&Gateway::OnGetSceneList, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getDevListInScene", bind(&Gateway::OnGetDevListInScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("addFavoriteScene", bind(&Gateway::OnAddFavoriteScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delFavoriteScene", bind(&Gateway::OnDelFavoriteScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getFavoriteScene", bind(&Gateway::OnGetFavoriteScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("updateSceneName", bind(&Gateway::OnUpdateSceneName, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("addDevToScene", bind(&Gateway::OnAddDevToScene, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delDevToScene", bind(&Gateway::OnDelDevToScene, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlScene(Json::Value &reqValue, Json::Value &respValue)

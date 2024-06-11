@@ -174,6 +174,7 @@ private:
 	// Hc
 	void InitMqttMessageHc();
 	int OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue);
+	int OnRegisterHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnControlHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnStartScanBle(Json::Value &reqValue, Json::Value &respValue);
@@ -220,6 +221,7 @@ public:
 
 	void CheckAutoOta();
 	int CheckOnlineThread();
+	int RegisterGWThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
 

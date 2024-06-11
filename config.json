@@ -1,8 +1,8 @@
 {
-    "host": "mqtt.rangdong.com.vn",
-    "port": 8883,
+    "host": "103.124.95.246",
+    "port": 1884,
     "client_id": "",
-    "username": "",
-    "password": "",
+    "username": "yootek",
+    "password": "123qwe",
     "keep_alive": 10
   }

@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <dirent.h>
+#include <cstring>
 #include "Ota.h"
 #include "Util.h"
 #include "Log.h"

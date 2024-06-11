@@ -221,8 +221,8 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 
 int LocalProtocol::OnLocalCallbackRegister(string cmd, OnLocalCallbackFunc onLocalCallbackFunc)
 {
-	LOGI("OnLocalCallbackRegister cmd: %s", cmd.c_str());
-	onLocalCallbackFuncList[cmd] = onLocalCallbackFunc;
+	// LOGI("OnLocalCallbackRegister cmd: %s", cmd.c_str());
+	// onLocalCallbackFuncList[cmd] = onLocalCallbackFunc;
 	return CODE_OK;
 }
 

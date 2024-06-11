@@ -19,38 +19,22 @@ private:
 	} request_t;
 	map<string, request_t *> requestList;
 
-	typedef struct
-	{
-		bool status;
-		char *payload;
-		int *payloadLen;
-	} request_bin_t;
-	map<string, request_bin_t *> requestBinList;
-
 	string subServerReqTopic;
-	string subMobileReqTopic;
-	string subServerRespTopic;
-	string subMobileRespTopic;
 	string pubServerReqTopic;
-	string pubServerRespTopic;
-	string pubMobileReqTopic;
-	string pubMobileRespTopic;
-
-	string subBinRespTopic;
-	string pubBinReqTopic;
 
 	string mac;
 	atomic<bool> isBusy;
 
-
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
+	map<string, map<string, OnRpcCallbackFunc>> onRpcCmdCallbackFuncList;
 
 	void OnServerReq(string &topic, string &payload);
-	void OnServerResp(string &topic, string &payload);
-	void OnMobileReq(string &topic, string &payload);
-	void OnMobileResp(string &topic, string &payload);
-	void OnServerBinResp(string &topic, char *payload, int payloadLen);
+	int OnServerCmdReq(Json::Value &reqValue, Json::Value &respValue);
+	// void OnServerResp(string &topic, string &payload);
+	// void OnMobileReq(string &topic, string &payload);
+	// void OnMobileResp(string &topic, string &payload);
+	// void OnServerBinResp(string &topic, char *payload, int payloadLen);
 
 public:
 	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert);
@@ -69,7 +53,8 @@ public:
 	void OnConnect(bool isConnected, bool isReconnect);
 	virtual void OnCloudConnect(bool isConnected, bool isReconnect) {}
 
-	int OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc);
+	int OnDeviceRpcCallbackRegister(string type, OnRpcCallbackFunc onRpcCallbackFunc);
+	int OnDeviceRpcCallbackCmdRegister(string command, string attribute, OnRpcCallbackFunc onRpcCallbackFunc);
 
 	int OnlineHC(string deviceName);
 

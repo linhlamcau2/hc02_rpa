@@ -97,40 +97,40 @@ void log_write(const char *format, ...)
 	(*s_log_print_func)(format, list);
 	va_end(list);
 
-#ifndef ESP_PLATFORM
-	// Log to File
-	time_t rawtime;
-	struct tm *timeinfo;
-	char timeBuffer[80];
+	// #ifndef ESP_PLATFORM
+	// 	// Log to File
+	// 	time_t rawtime;
+	// 	struct tm *timeinfo;
+	// 	char timeBuffer[80];
 
-	time(&rawtime);
-	timeinfo = localtime(&rawtime);
+	// 	time(&rawtime);
+	// 	timeinfo = localtime(&rawtime);
 
-	strftime(timeBuffer, sizeof(timeBuffer), "[%Y-%m-%d %H:%M:%S]", timeinfo);
+	// 	strftime(timeBuffer, sizeof(timeBuffer), "[%Y-%m-%d %H:%M:%S]", timeinfo);
 
-	char dataBuffer[80];
-	strftime(dataBuffer, sizeof(dataBuffer), "%Y%m%d", timeinfo);
+	// 	char dataBuffer[80];
+	// 	strftime(dataBuffer, sizeof(dataBuffer), "%Y%m%d", timeinfo);
 
-	std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
+	// 	std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
 
-	std::fstream logFile(logFilename, std::ios::app);
+	// 	std::fstream logFile(logFilename, std::ios::app);
 
-	if (!checkLogFileSize(logFile))
-	{
-		return;
-	}
+	// 	if (!checkLogFileSize(logFile))
+	// 	{
+	// 		return;
+	// 	}
 
-	if (logFile.is_open())
-	{
-		char buffer[1024];
-		snprintf(buffer, sizeof(buffer), "%s ", timeBuffer);
-		vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, list);
-		logFile << buffer << std::endl;
-		logFile.close();
-	}
-	else
-		std::cout << "open file error" << std::endl;
-#endif
+	// 	if (logFile.is_open())
+	// 	{
+	// 		char buffer[1024];
+	// 		snprintf(buffer, sizeof(buffer), "%s ", timeBuffer);
+	// 		vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), format, list);
+	// 		logFile << buffer << std::endl;
+	// 		logFile.close();
+	// 	}
+	// 	else
+	// 		std::cout << "open file error" << std::endl;
+	// #endif
 }
 
 char *log_cut_str(char *full_path, uint8_t len)
@@ -193,8 +193,9 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 #endif /* ANDROID */
 
 #ifndef ESP_PLATFORM
-bool compareDates(const std::pair<std::string, std::string>& a, const std::pair<std::string, std::string>& b) {
-    return a.first < b.first;
+bool compareDates(const std::pair<std::string, std::string> &a, const std::pair<std::string, std::string> &b)
+{
+	return a.first < b.first;
 }
 
 void checkLogFile()

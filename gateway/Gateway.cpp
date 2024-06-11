@@ -70,10 +70,10 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert,
-				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-	  Udp(8181)
+								 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+		: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
+			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+			Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -111,11 +111,11 @@ static void startUdpThread(void *data)
 void Gateway::init()
 {
 	Device::InitDeviceModelList();
-	LocalProtocol::init();
+	// LocalProtocol::init();
 	CloudProtocol::init();
-	Udp::init();
+	// Udp::init();
 
-	InitUdpMessage();
+	// InitUdpMessage();
 	InitMqttMessageDevice();
 	InitMqttMessageGroup();
 	InitMqttMessageRoom();
@@ -138,8 +138,8 @@ void Gateway::init()
 	}
 	vTaskDelay(10);
 #else
-	thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
-	udpBroadcastThread.detach();
+	// thread udpBroadcastThread(bind(&Gateway::UdpBroadcastThread, this));
+	// udpBroadcastThread.detach();
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
 #endif
@@ -150,16 +150,16 @@ void Gateway::init()
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	database->DeviceAttributeRead();
 #endif
-	database->RoomRead();
-	database->GroupRead();
-	database->DeviceInGroupRead();
-	database->SceneBleRead();
-	database->DeviceInSceneBleRead();
-	database->DeviceInRoomRead();
-	database->RuleRead();
-#ifdef __ANDROID__
-	database->NotiRead();
-#endif
+// 	database->RoomRead();
+// 	database->GroupRead();
+// 	database->DeviceInGroupRead();
+// 	database->SceneBleRead();
+// 	database->DeviceInSceneBleRead();
+// 	database->DeviceInRoomRead();
+// 	database->RuleRead();
+// #ifdef __ANDROID__
+// 	database->NotiRead();
+// #endif
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -175,7 +175,7 @@ void Gateway::init()
 		database->GatewayUpdateVersion(this, firmwareVer);
 	}
 
-	LocalConnect();
+	// LocalConnect();
 	CloudConnect();
 
 	// Get data isAutoOta
@@ -192,42 +192,74 @@ void Gateway::init()
 	}
 }
 
+int Gateway::RegisterGWThread()
+{
+	LOGI("Start RegisterGWThread");
+
+	Json::Value dataValue;
+	dataValue["license"] = "RD";
+	dataValue["factory"] = "RD";
+	Json::Value objValue;
+	objValue["data"] = dataValue;
+	objValue["mac"] = mac;
+	objValue["time"] = time(NULL);
+	objValue["type"] = "registerReq";
+
+	while (1)
+	{
+		CloudPublish(objValue);
+		sleep(10);
+	}
+
+	return CODE_OK;
+}
+
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
 	LOGI("OnCloudConnect: %d", isConnected);
-	Json::Value jsonValue;
-	Json::Value dataValue;
-	dataValue["status"] = isConnected;
-	dataValue["version"] = STR(VERSION);
-	dataValue["ip"] = Wifi::GetIP();
-	jsonValue["cmd"] = "homeController";
-	jsonValue["data"] = dataValue;
-	LocalPublish(jsonValue);
-	if (isConnected)
-	{
-		Util::LedInternet(true);
-		OnlineHC(mac);
-		if (!isReconnect)
-		{
-			deviceListMtx.lock();
-			for (const auto &[id, device] : deviceList)
-			{
-				device->PushAttributes();
-			}
-			deviceListMtx.unlock();
-		}
-#ifdef ESP_PLATFORM
-		SetLedInternet(true);
-#endif
-	}
-	else
-	{
-		Util::LedInternet(false);
-#ifdef ESP_PLATFORM
-		if (GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
-			SetLedInternet(false);
-#endif
-	}
+
+	// if (1)
+	// {
+	// 	thread registerGWThread(bind(&Gateway::RegisterGWThread, this));
+	// 	registerGWThread.detach();
+	// }
+	// else
+	// {
+	// }
+
+	// 	Json::Value jsonValue;
+	// 	Json::Value dataValue;
+	// 	dataValue["status"] = isConnected;
+	// 	dataValue["version"] = STR(VERSION);
+	// 	dataValue["ip"] = Wifi::GetIP();
+	// 	jsonValue["cmd"] = "homeController";
+	// 	jsonValue["data"] = dataValue;
+	// 	LocalPublish(jsonValue);
+	// 	if (isConnected)
+	// 	{
+	// 		Util::LedInternet(true);
+	// 		OnlineHC(mac);
+	// 		if (!isReconnect)
+	// 		{
+	// 			deviceListMtx.lock();
+	// 			for (const auto &[id, device] : deviceList)
+	// 			{
+	// 				device->PushAttributes();
+	// 			}
+	// 			deviceListMtx.unlock();
+	// 		}
+	// #ifdef ESP_PLATFORM
+	// 		SetLedInternet(true);
+	// #endif
+	// 	}
+	// 	else
+	// 	{
+	// 		Util::LedInternet(false);
+	// #ifdef ESP_PLATFORM
+	// 		if (GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+	// 			SetLedInternet(false);
+	// #endif
+	// 	}
 }
 
 void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
@@ -343,7 +375,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -602,7 +634,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	devValue["mac"] = scanDevice->GetMac();
 	devValue["data"] = scanDevice->GetData();
 	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
-		scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
+			scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
 	{
 		devValue["type"] = BLE_SWITCH_ONOFF;
 	}
@@ -615,12 +647,12 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		devValue["type"] = BLE_SMOKE_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
-			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
+					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
 	{
 		devValue["type"] = BLE_DOOR_SENSOR;
 	}
 	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
-			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
+					 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
 	{
 		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
 	}
@@ -917,10 +949,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 {
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -979,7 +1011,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-						deviceJson.isMember("data") && deviceJson["data"].isObject())
+							deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);
@@ -1078,10 +1110,10 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-		ruleValue.isMember("name") && ruleValue["name"].isString() &&
-		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-		ruleValue.isMember("output") && ruleValue["output"].isArray())
+			ruleValue.isMember("name") && ruleValue["name"].isString() &&
+			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+			ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -1106,8 +1138,8 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				else
 				{
 					if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
-						timeRule.isMember("start") && timeRule["start"].isString() &&
-						timeRule.isMember("end") && timeRule["end"].isString())
+							timeRule.isMember("start") && timeRule["start"].isString() &&
+							timeRule.isMember("end") && timeRule["end"].isString())
 					{
 						repeat = timeRule["repeat"].asInt();
 						string startRule = timeRule["start"].asString();
@@ -1138,7 +1170,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				for (auto &timerJson : timersJson)
 				{
 					if (timerJson.isMember("time") && timerJson["time"].isString() &&
-						timerJson.isMember("repeat") && timerJson["repeat"].isInt())
+							timerJson.isMember("repeat") && timerJson["repeat"].isInt())
 					{
 						string timerTime = timerJson["time"].asString();
 						int timerRepeat = timerJson["repeat"].asInt();
@@ -1154,7 +1186,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-						deviceJson.isMember("data") && deviceJson["data"].isObject())
+							deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);

@@ -14,25 +14,16 @@
 
 CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert)
 #ifdef ESP_PLATFORM
-	: Mqtt(address, port, clientId, username, password, keepalive)
+		: Mqtt(address, port, clientId, username, password, keepalive)
 #else
-	: Mqtt(address, port, clientId, username, password, keepalive, cert)
+		: Mqtt(address, port, clientId, username, password, keepalive, cert)
 #endif
 
 {
 	this->mac = mac;
 
-	subServerReqTopic = "/v2/server/hc/" + mac + "/json_req";
-	subServerRespTopic = "/v2/server/hc/" + mac + "/json_resp";
-	subMobileReqTopic = "/v2/mobile/+/hc/" + mac + "/json_req";
-	subMobileRespTopic = "/v2/mobile/+/hc/" + mac + "/json_resp";
-	pubServerReqTopic = "/v2/hc/" + mac + "/server/json_req";
-	pubServerRespTopic = "/v2/hc/" + mac + "/server/json_resp";
-	pubMobileReqTopic = "/v2/hc/" + mac + "/mobile/all/json_req";
-	pubMobileRespTopic = "/v2/hc/" + mac + "/mobile/";
-
-	subBinRespTopic = "v2/bin/resp/server/" + mac + "/+/+";
-	pubBinReqTopic = "v2/bin/req/" + mac + "/server/";
+	subServerReqTopic = "/dsgw/" + mac + "/command";
+	pubServerReqTopic = "/dsgw/" + mac + "/data";
 
 	// willset
 	Json::Value jsonValue;
@@ -40,7 +31,7 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 	datanValue["status"] = 0;
 	datanValue["version"] = STR(VERSION);
 	datanValue["ip"] = Wifi::GetIP();
-	jsonValue["cmd"] = "homeController";
+	jsonValue["type"] = "homeController";
 	jsonValue["data"] = datanValue;
 	SetWillset(pubServerReqTopic, jsonValue.toString());
 }
@@ -54,10 +45,7 @@ void CloudProtocol::init()
 	Mqtt::init();
 	isBusy = false;
 	addActionCallback(bind(&CloudProtocol::OnServerReq, this, placeholders::_1, placeholders::_2), subServerReqTopic);
-	addActionCallback(bind(&CloudProtocol::OnMobileReq, this, placeholders::_1, placeholders::_2), subMobileReqTopic);
-	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subServerRespTopic);
-	addActionCallback(bind(&CloudProtocol::OnMobileResp, this, placeholders::_1, placeholders::_2), subMobileRespTopic);
-	addActionCallback(bind(&CloudProtocol::OnServerBinResp, this, placeholders::_1, placeholders::_2, placeholders::_3), subBinRespTopic);
+	OnDeviceRpcCallbackRegister("cmd", bind(&CloudProtocol::OnServerCmdReq, this, placeholders::_1, placeholders::_2));
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -100,57 +88,62 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 	SetLedInternet(false);
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-		payloadJson.isMember("data") && payloadJson["data"].isObject())
+			payloadJson.isMember("type") && payloadJson["type"].isString() &&
+			payloadJson.isMember("time") && payloadJson["time"].isInt() &&
+			payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
-		string cmd = payloadJson["cmd"].asString();
-		string rqi = payloadJson["rqi"].asString();
-		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
+		string type = payloadJson["type"].asString();
+		string rqi = payloadJson["time"].asString();
+		if (onRpcCallbackFuncList.find(type) != onRpcCallbackFuncList.end())
 		{
-			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
+			OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[type];
 			isBusy = true;
 			int rs = onRpcCallbackFunc(payloadJson["data"], respValue);
 			isBusy = false;
 			if (rs == CODE_OK)
 			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
 				respValue["rqi"] = rqi;
-				Publish(pubServerRespTopic, respValue.toString());
+				respValue["deviceCode"] = mac;
+				respValue["time"] = time(NULL);
+				respValue["mac"] = mac;
+				respValue["from"] = "GATEWAY";
+				respValue["to"] = "CLOUD";
+				Publish(pubServerReqTopic, respValue.toString());
 			}
 			else if (rs == CODE_EXIT)
 			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
 				respValue["rqi"] = rqi;
-				Publish(pubServerRespTopic, respValue.toString());
+				Publish(pubServerReqTopic, respValue.toString());
 				sleep(2);
 				exit(1);
 			}
 			else if (rs == CODE_DATA_ARRAY)
 			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
 				if (respValue.isArray())
 				{
 					for (auto &respV : respValue)
 					{
 						respV["rqi"] = rqi;
-						Publish(pubServerRespTopic, respV.toString());
+						Publish(pubServerReqTopic, respV.toString());
 					}
 				}
 			}
 			else if (rs == CODE_NOT_RESPONSE)
 			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
 			}
 			else
 			{
-				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
+				LOGW("Call %s ERR rs: %d, payload: %s", type.c_str(), rs, payload.c_str());
 			}
 			SLEEP_MS(1);
 		}
 		else
 		{
-			LOGW("Cmd %s not registed", cmd.c_str());
+			LOGW("Cmd %s not registed", type.c_str());
 			LOGW("OnDeviceRpc payload: %s", payload.c_str());
 		}
 	}
@@ -166,197 +159,74 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 #endif
 }
 
-void CloudProtocol::OnServerResp(string &topic, string &payload)
+int CloudProtocol::OnServerCmdReq(Json::Value &dataValue, Json::Value &respValue)
 {
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedInternet(false);
-	Util::LedServiceLock();
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+	int rs = CODE_ERROR;
+	if (dataValue.isMember("command") && dataValue["command"].isString())
 	{
-		string cmd = payloadJson["cmd"].asString();
-		string rqi = payloadJson["rqi"].asString();
-		if (requestList.find(rqi) != requestList.end())
+		string command = dataValue["command"].asString();
+		if (onRpcCmdCallbackFuncList.count(command))
 		{
-			request_t *request = requestList[rqi];
-			if (cmd == request->respCmd)
+			map<string, OnRpcCallbackFunc> &onRpcCallbackAttributeList = onRpcCmdCallbackFuncList[command];
+			if (dataValue.isMember("arguments") && dataValue["arguments"].isObject())
 			{
-				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
+				Json::Value &argumentsValue = dataValue["arguments"];
+				if (argumentsValue.isMember("attribute") && argumentsValue["attribute"].isString())
 				{
-					*request->respValue = payloadJson["data"];
-				}
-				request->status = true;
-			}
-		}
-		else
-		{
-			// LOGW("rqi %s not found", rqi.c_str());
-			// LOGW("OnServerResp payload: %s", payload.c_str());
-		}
-	}
-	else
-	{
-		LOGW("OnServerResp topic: %s", topic.c_str());
-		LOGW("OnServerResp payload: %s", payload.c_str());
-	}
-	Util::LedInternet(true);
-	Util::LedServiceUnlock();
-}
-
-void CloudProtocol::OnServerBinResp(string &topic, char *payload, int payloadLen)
-{
-	vector<string> topics = Util::splitString(topic, '/');
-	if (topics.size() != 7)
-		return;
-	string mac = topics[3];
-	string sessionId = topics[5];
-	string index = topics[6];
-	string rqi = sessionId + index;
-	if (requestBinList.find(rqi) != requestBinList.end())
-	{
-		request_bin_t *requestBin = requestBinList[rqi];
-		if (payloadLen <= *requestBin->payloadLen)
-		{
-			memcpy(requestBin->payload, payload, payloadLen);
-			*requestBin->payloadLen = payloadLen;
-		}
-		else
-		{
-			memcpy(requestBin->payload, payload, *requestBin->payloadLen);
-		}
-		requestBin->status = true;
-	}
-}
-
-void CloudProtocol::OnMobileReq(string &topic, string &payload)
-{
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedInternet(false);
-	Util::LedServiceLock();
-	vector<string> topics = Util::splitString(topic, '/');
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-		payloadJson.isMember("data") && payloadJson["data"].isObject())
-	{
-		string cmd = payloadJson["cmd"].asString();
-		string rqi = payloadJson["rqi"].asString();
-		if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
-		{
-			OnRpcCallbackFunc onRpmCallbackFunc = onRpcCallbackFuncList[cmd];
-			isBusy = true;
-			int rs = onRpmCallbackFunc(payloadJson["data"], respValue);
-			isBusy = false;
-			if (rs == CODE_OK)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				respValue["rqi"] = rqi;
-				LOGD("cloud publish: %s: %s", (pubMobileRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
-				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
-			}
-			else if (rs == CODE_EXIT)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				respValue["rqi"] = rqi;
-				LOGD("cloud publish: %s: %s", (pubMobileRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
-				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
-				sleep(2);
-				exit(1);
-			}
-#ifdef __ANDROID__
-			else if (rs == CODE_REBOOT)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				respValue["rqi"] = rqi;
-				LOGD("cloud publish: %s: %s", (pubMobileRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
-				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
-				sleep(2);
-				system("su");
-				system("reboot");
-			}
-#endif
-			else if (rs == CODE_DATA_ARRAY)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-				if (respValue.isArray())
-				{
-					for (auto &respV : respValue)
+					string attribute = argumentsValue["attribute"].asString();
+					if (onRpcCallbackAttributeList.count(attribute))
 					{
-						respV["rqi"] = rqi;
-						Publish(pubMobileRespTopic + topics[2] + "/json_resp", respV.toString());
+						OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackAttributeList[attribute];
+						rs = onRpcCallbackFunc(dataValue, respValue);
+						if (rs == CODE_OK)
+						{
+							LOGD("Call attribute %s OK, rs: %d", attribute.c_str(), rs);
+						}
+					}
+					else
+					{
+						LOGW("OnServerCmdReq command: %s attribute: %s not registed", command.c_str(), attribute.c_str());
 					}
 				}
-			}
-			else if (rs == CODE_NOT_RESPONSE)
-			{
-				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				else
+				{
+					LOGW("OnServerCmdReq arguments format error");
+				}
 			}
 			else
 			{
-				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-			}
-			SLEEP_MS(1);
-		}
-		else
-		{
-			LOGW("Cmd %s not registed", cmd.c_str());
-			LOGW("OnDeviceRpc payload: %s", payload.c_str());
-		}
-	}
-	else
-	{
-		LOGW("OnDeviceRpc topic: %s", topic.c_str());
-		LOGW("OnDeviceRpc payload: %s", payload.c_str());
-	}
-	Util::LedInternet(true);
-	Util::LedServiceUnlock();
-}
-void CloudProtocol::OnMobileResp(string &topic, string &payload)
-{
-	Json::Value respValue;
-	Json::Value payloadJson;
-	Util::LedInternet(false);
-	Util::LedServiceLock();
-	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
-	{
-		string cmd = payloadJson["cmd"].asString();
-		string rqi = payloadJson["rqi"].asString();
-		if (requestList.find(rqi) != requestList.end())
-		{
-			request_t *request = requestList[rqi];
-			if (cmd == request->respCmd)
-			{
-				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
-				{
-					*request->respValue = payloadJson["data"];
-				}
-				request->status = true;
+				LOGW("OnServerCmdReq data format error");
 			}
 		}
 		else
 		{
-			LOGW("rqi %s not found", rqi.c_str());
-			LOGW("OnServerResp payload: %s", payload.c_str());
+			LOGW("OnServerCmdReq command: %s not registed", command.c_str());
 		}
 	}
 	else
 	{
-		LOGW("OnServerResp topic: %s", topic.c_str());
-		LOGW("OnServerResp payload: %s", payload.c_str());
+		LOGW("OnServerCmdReq format error");
 	}
-	Util::LedInternet(true);
-	Util::LedServiceUnlock();
+	return rs;
 }
 
-int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
+int CloudProtocol::OnDeviceRpcCallbackRegister(string type, OnRpcCallbackFunc onRpcCallbackFunc)
 {
-	LOGI("OnDeviceRpcCallbackRegister cmd: %s", cmd.c_str());
-	onRpcCallbackFuncList[cmd] = onRpcCallbackFunc;
+	LOGI("OnDeviceRpcCallbackRegister type: %s", type.c_str());
+	onRpcCallbackFuncList[type] = onRpcCallbackFunc;
+	return CODE_OK;
+}
+
+int CloudProtocol::OnDeviceRpcCallbackCmdRegister(string command, string attribute, OnRpcCallbackFunc onRpcCallbackFunc)
+{
+	LOGI("OnDeviceRpcCallbackCmdRegister command: %s, attribute: %s", command.c_str(), attribute.c_str());
+	if (onRpcCmdCallbackFuncList.count(command) == 0)
+	{
+		map<string, OnRpcCallbackFunc> onRpcCallbackAttributeList;
+		onRpcCmdCallbackFuncList[command] = onRpcCallbackAttributeList;
+	}
+	map<string, OnRpcCallbackFunc> &onRpcCallbackAttributeList = onRpcCmdCallbackFuncList[command];
+	onRpcCallbackAttributeList[attribute] = onRpcCallbackFunc;
 	return CODE_OK;
 }
 
@@ -367,7 +237,7 @@ int CloudProtocol::OnlineHC(string deviceName)
 	datanValue["status"] = 1;
 	datanValue["version"] = STR(VERSION);
 	datanValue["ip"] = Wifi::GetIP();
-	jsonValue["cmd"] = "homeController";
+	jsonValue["type"] = "homeController";
 	jsonValue["data"] = datanValue;
 	return CloudPublish(jsonValue);
 }
@@ -405,11 +275,11 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	string rqi = Util::genRandRQI(16);
 	sendValue["data"] = reqValue;
 	sendValue["rqi"] = rqi;
-	sendValue["cmd"] = reqCmd;
+	sendValue["type"] = reqCmd;
 	request_t request = {
-		.status = false,
-		.respCmd = respCmd,
-		.respValue = respValue,
+			.status = false,
+			.respCmd = respCmd,
+			.respValue = respValue,
 	};
 	requestList[rqi] = &request;
 	if (request.pubTopic == "")
@@ -428,62 +298,5 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	}
 	requestList.erase(rqi);
 	LOGD("PublishToCloudMessage rs: %d", rs);
-	return rs;
-}
-
-int CloudProtocol::PublishBinToCloudMessage(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout)
-{
-	LOGD("PublishBinToCloudMessage");
-	if (!isConnected())
-		return CODE_TIMEOUT;
-	int rs = CODE_OK;
-	request_t request = {
-		.status = false,
-		.respCmd = respCmd,
-		.respValue = respValue,
-	};
-	string rqi = sessionId + to_string(index);
-	requestList[rqi] = &request;
-	Publish(pubBinReqTopic + sessionId + "/" + to_string(index), payload, payloadLen);
-	while (!request.status && timeout--)
-	{
-		SLEEP_MS(1);
-	}
-	if (!request.status)
-	{
-		rs = CODE_ERROR;
-	}
-	requestList.erase(rqi);
-	LOGD("PublishBinToCloudMessage rs: %d", rs);
-	return rs;
-}
-
-int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout)
-{
-	LOGD("PublishToCloudRecieveBinMessage");
-	if (!isConnected())
-		return CODE_TIMEOUT;
-	int rs = CODE_OK;
-	request_bin_t requestBin = {
-		.status = false,
-		.payload = payload,
-		.payloadLen = payloadLen,
-	};
-	requestBinList[rqi] = &requestBin;
-	Json::Value sendValue;
-	sendValue["data"] = reqValue;
-	sendValue["rqi"] = rqi;
-	sendValue["cmd"] = reqCmd;
-	Publish(pubServerReqTopic, sendValue.toString());
-	while (!requestBin.status && timeout--)
-	{
-		SLEEP_MS(1);
-	}
-	if (!requestBin.status)
-	{
-		rs = CODE_ERROR;
-	}
-	requestBinList.erase(rqi);
-	LOGD("PublishToCloudRecieveBinMessage rs: %d", rs);
 	return rs;
 }

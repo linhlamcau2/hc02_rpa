@@ -4,23 +4,23 @@
 
 void Gateway::InitMqttMessageGroup()
 {
-	OnDeviceRpcCallbackRegister("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getGroupList", bind(&Gateway::OnGetGroupList, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getDevListInGroup", bind(&Gateway::OnGetDevListInGroup, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("updateGroupName", bind(&Gateway::OnUpdateGroupName, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getGroupList", bind(&Gateway::OnGetGroupList, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getDevListInGroup", bind(&Gateway::OnGetDevListInGroup, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("updateGroupName", bind(&Gateway::OnUpdateGroupName, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getGroupList", bind(&Gateway::OnGetGroupList, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getDevListInGroup", bind(&Gateway::OnGetDevListInGroup, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("updateGroupName", bind(&Gateway::OnUpdateGroupName, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("controlGroup", bind(&Gateway::OnControlGroup, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("createGroup", bind(&Gateway::OnCreateGroup, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("addDevToGroup", bind(&Gateway::OnAddDeviceToGroup, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delDevFromGroup", bind(&Gateway::OnDeleteDeviceFromGroup, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delGroup", bind(&Gateway::OnDeleteGroup, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getGroupList", bind(&Gateway::OnGetGroupList, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getDevListInGroup", bind(&Gateway::OnGetDevListInGroup, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("updateGroupName", bind(&Gateway::OnUpdateGroupName, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlGroup(Json::Value &reqValue, Json::Value &respValue)

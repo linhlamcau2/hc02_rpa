@@ -18,45 +18,49 @@
 
 void Gateway::InitMqttMessageHc()
 {
-	OnDeviceRpcCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
-	// OnDeviceRpcCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("CreateTunnel", bind(&Gateway::OnCreateTunnel, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("registerResp", bind(&Gateway::OnRegisterHc, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackCmdRegister("setAttribute", "mod.add_device", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackCmdRegister("setAttribute", "device.onoff", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("hcConnectToCloud", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("startScanChildBle", bind(&Gateway::OnRpcBleStartScanPairDev, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("stopScanChildBle", bind(&Gateway::OnRpcBleStopScanPairDev, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
-#ifdef __ANDROID__
-	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
-#endif
+// 	OnDeviceRpcCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+// 	// OnDeviceRpcCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("CreateTunnel", bind(&Gateway::OnCreateTunnel, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
+// 	OnDeviceRpcCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
+
+// 	OnLocalCallbackRegister("hcConnectToCloud", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("startScanBle", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("stopScanBle", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("startScanChildBle", bind(&Gateway::OnRpcBleStartScanPairDev, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("stopScanChildBle", bind(&Gateway::OnRpcBleStopScanPairDev, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
+// #ifdef __ANDROID__
+// 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
+// 	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
+// #endif
 }
 
 int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcHcConnectCloud");
 	if (reqValue.isMember("latitude") && reqValue["latitude"].isDouble() &&
-		reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
+			reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
 	{
 		Json::Value dataJson;
 		dataJson["latitude"] = reqValue["latitude"].asDouble();
@@ -96,6 +100,25 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
+int Gateway::OnRegisterHc(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRegisterHc");
+	Json::Value valueValue;
+	valueValue["version"] = "v1";
+	valueValue["model"] = "HC02";
+	valueValue["factory"] = "RD";
+	valueValue["current_time"] = time(NULL);
+	valueValue["uptime"] = 2565;
+	valueValue["uplinkType"] = "uplinkType";
+	Json::Value dataValue;
+	dataValue["attribute"] = "gateway.status";
+	dataValue["value"] = valueValue;
+	dataValue["mac"] = mac;
+	respValue["data"] = dataValue;
+	respValue["type"] = "reportAttribute";
+	return CODE_OK;
+}
+
 int Gateway::OnControlHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnControlHc");
@@ -130,6 +153,7 @@ int Gateway::OnGetHcInfo(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGD("OnStartScanBle");
 	int rsCode = CODE_OK;
 
 #ifdef __ANDROID__
@@ -170,7 +194,7 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 	respValue["data"]["code"] = rsCode;
 	respValue["cmd"] = "startScanBle";
 
-	return CODE_OK;
+	return CODE_NOT_RESPONSE;
 }
 
 int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
@@ -291,11 +315,11 @@ int Gateway::OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value params = reqValue["params"];
 		if (params.isMember("type") && params["type"].isString() &&
-			params.isMember("key") && params["key"].isString() &&
-			params.isMember("user") && params["user"].isString() &&
-			params.isMember("host") && params["host"].isString() &&
-			params.isMember("serverPort") && params["serverPort"].isInt() &&
-			params.isMember("forwardPort") && params["forwardPort"].isInt())
+				params.isMember("key") && params["key"].isString() &&
+				params.isMember("user") && params["user"].isString() &&
+				params.isMember("host") && params["host"].isString() &&
+				params.isMember("serverPort") && params["serverPort"].isInt() &&
+				params.isMember("forwardPort") && params["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = params["type"].asString();
@@ -736,11 +760,11 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 
 /*
 {
-  "cmd": "setPasswordMqtt",
-  "rqi": "abc-xyz-mnl",
-  "data": {
+	"cmd": "setPasswordMqtt",
+	"rqi": "abc-xyz-mnl",
+	"data": {
 	"password": "ABC123456"
-  }
+	}
 }
 */
 
@@ -795,8 +819,8 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
 	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
-		reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
-		reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
 	{
 		string groupType = reqValue["groupType"].asString();
 		int startIndex = reqValue["startIndex"].asInt();
@@ -830,7 +854,7 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);

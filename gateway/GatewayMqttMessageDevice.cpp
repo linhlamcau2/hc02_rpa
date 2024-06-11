@@ -5,43 +5,43 @@
 
 void Gateway::InitMqttMessageDevice()
 {
-	OnDeviceRpcCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getCamListInRoom", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getAllCam", bind(&Gateway::OnGetAllCam, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("getFavoriteDev", bind(&Gateway::OnGetFavoriteDev, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getCamListInRoom", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getAllCam", bind(&Gateway::OnGetAllCam, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("getFavoriteDev", bind(&Gateway::OnGetFavoriteDev, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
 
-	OnDeviceRpcCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delBtFromSwitchLink", bind(&Gateway::OnDelBtFromSwitchLink, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("delSwitchLink", bind(&Gateway::OnDelSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delBtFromSwitchLink", bind(&Gateway::OnDelBtFromSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnDeviceRpcCallbackRegister("delSwitchLink", bind(&Gateway::OnDelSwitchLink, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getCamListInRoom", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getAllCam", bind(&Gateway::OnGetAllCam, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("getFavoriteDev", bind(&Gateway::OnGetFavoriteDev, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getAllDevStt", bind(&Gateway::OnGetAllDeviceStatus, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getDevList", bind(&Gateway::OnGetDeviceList, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getCamListInRoom", bind(&Gateway::OnGetCamList, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getAllCam", bind(&Gateway::OnGetAllCam, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("newDev", bind(&Gateway::OnNewDevice, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delDev", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("addFavoriteDev", bind(&Gateway::OnAddFavoriteDev, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delFavoriteDev", bind(&Gateway::OnDelFavoriteDev, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("getFavoriteDev", bind(&Gateway::OnGetFavoriteDev, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("updateDeviceName", bind(&Gateway::OnUpdateDeviceName, this, placeholders::_1, placeholders::_2));
 
-	OnLocalCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delBtFromSwitchLink", bind(&Gateway::OnDelBtFromSwitchLink, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("delSwitchLink", bind(&Gateway::OnDelSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("createSwitchLink", bind(&Gateway::OnCreateSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("addBtToSwitchLink", bind(&Gateway::OnAddBtToSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delBtFromSwitchLink", bind(&Gateway::OnDelBtFromSwitchLink, this, placeholders::_1, placeholders::_2));
+	// OnLocalCallbackRegister("delSwitchLink", bind(&Gateway::OnDelSwitchLink, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)

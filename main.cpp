@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 	}
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), CERT_FILE_NAME,
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, config->GetUsername(), config->GetPassword(), config->GetKeepAlive(), CERT_FILE_NAME,
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
@@ -116,8 +116,8 @@ int main(int argc, char *argv[])
 	// mqttProtocol = new MqttProtocol();
 	// mqttProtocol->init();
 
-	androidBleProtocol = new AndroidBleProtocol();
-	androidBleProtocol->init();
+	// androidBleProtocol = new AndroidBleProtocol();
+	// androidBleProtocol->init();
 
 	Util::LedService(true);
 	Util::LedZigbee(false);
