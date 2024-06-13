@@ -4,6 +4,7 @@
 #include "Util.h"
 #include "Log.h"
 #include "Define.h"
+#include <cstring>
 
 void Ota::init()
 {

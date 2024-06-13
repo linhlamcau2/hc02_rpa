@@ -95,9 +95,8 @@ void log_write(const char *format, ...)
 	va_list list;
 	va_start(list, format);
 	(*s_log_print_func)(format, list);
-	va_end(list);
 
-#ifndef ESP_PLATFORM
+#ifdef __OPENWRT__
 	// Log to File
 	time_t rawtime;
 	struct tm *timeinfo;
@@ -117,6 +116,7 @@ void log_write(const char *format, ...)
 
 	if (!checkLogFileSize(logFile))
 	{
+		va_end(list);
 		return;
 	}
 
@@ -131,6 +131,7 @@ void log_write(const char *format, ...)
 	else
 		std::cout << "open file error" << std::endl;
 #endif
+	va_end(list);
 }
 
 char *log_cut_str(char *full_path, uint8_t len)
@@ -167,7 +168,6 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 	va_list args;
 	va_start(args, format);
 	__android_log_vprint(priority, tag, format, args);
-	va_end(args);
 
 	std::string logFilename = std::string(LOG_FILE_PATH) + std::string(LOG_FILE_NAME) + std::string(dataBuffer) + ".log";
 
@@ -175,6 +175,7 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 
 	if (!checkLogFileSize(logFile))
 	{
+		va_end(args);
 		return;
 	}
 
@@ -188,13 +189,15 @@ void logPrint(int priority, const char *tag, const char *format, ...)
 	}
 	else
 		std::cout << "open file error" << std::endl;
+	va_end(args);
 }
 
 #endif /* ANDROID */
 
 #ifndef ESP_PLATFORM
-bool compareDates(const std::pair<std::string, std::string>& a, const std::pair<std::string, std::string>& b) {
-    return a.first < b.first;
+bool compareDates(const std::pair<std::string, std::string> &a, const std::pair<std::string, std::string> &b)
+{
+	return a.first < b.first;
 }
 
 void checkLogFile()

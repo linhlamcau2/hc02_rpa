@@ -196,6 +196,8 @@ private:
 	int OnGetNotify(Json::Value &reqValue, Json::Value &respValue);
 	int OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelNotify(Json::Value &reqValue, Json::Value &respValue);
+	int OnStartAppTest(Json::Value &reqValue, Json::Value &respValue);
+	int OnStopAppTest(Json::Value &reqValue, Json::Value &respValue);
 #endif
 
 public:

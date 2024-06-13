@@ -49,6 +49,8 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("startAppTest", bind(&Gateway::OnStartAppTest, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("stopAppTest", bind(&Gateway::OnStopAppTest, this, placeholders::_1, placeholders::_2));
 #endif
 }
 
@@ -101,7 +103,7 @@ int Gateway::OnControlHc(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnControlHc");
 	int rs = Do(reqValue);
 	respValue["data"]["code"] = rs;
-	respValue["cmd"] = "controlGwRsp";
+	respValue["cmd"] = "controlHcRsp";
 	return CODE_OK;
 }
 
@@ -747,6 +749,7 @@ int Gateway::OnRestoreData(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("Set password mqtt");
+	respValue["cmd"] = "setPasswordMqttRsp";
 	if (reqValue.isMember("password") && reqValue["password"].isString())
 	{
 		string password = reqValue["password"].asString();
@@ -754,6 +757,7 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 		string username = "hc-" + mac;
 
 #ifdef __ANDROID__
+		system("su");
 		string cmd = "mount -o rw,remount /system";
 		system(cmd.c_str());
 #endif
@@ -768,6 +772,7 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 					{
 						if (config->SetPassword(password))
 						{
+							respValue["data"]["code"] = CODE_OK;
 							return CODE_EXIT;
 						}
 						else
@@ -787,6 +792,7 @@ int Gateway::OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue)
 	}
 	else
 		LOGW("format error: %s", reqValue.toString().c_str());
+	respValue["data"]["code"] = CODE_ERROR;
 	return CODE_ERROR;
 }
 
@@ -859,6 +865,24 @@ int Gateway::OnDelNotify(Json::Value &reqValue, Json::Value &respValue)
 		}
 		respValue["cmd"] = "isDeleteRsp";
 	}
+	return CODE_OK;
+}
+
+int Gateway::OnStartAppTest(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnStartAppTest");
+	system ("am start -n vn.com.rd.testhardwareapp/vn.com.rd.testhardwareapp.MainActivity");
+	respValue["cmd"] = "startAppTestRsp";
+	respValue["data"]["code"] = CODE_OK;
+	return CODE_OK;
+}
+
+int Gateway::OnStopAppTest(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnStopAppTest");
+	system ("am force-stop vn.com.rd.testhardwareapp");
+	respValue["cmd"] = "stopAppTestRsp";
+	respValue["data"]["code"] = CODE_OK;
 	return CODE_OK;
 }
 #endif

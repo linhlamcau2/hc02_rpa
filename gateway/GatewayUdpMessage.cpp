@@ -289,10 +289,18 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcRspHcInfo");
+	string macGw = mac;
+	macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
+						  { return c == ':'; }),
+				macGw.end());
 	Json::Value dataValue;
 	dataValue["mac"] = mac;
 	dataValue["ip"] = Wifi::GetIP();
-	dataValue["name"] = "RD HC";
+#ifdef ESP_PLATFORM
+	dataValue["name"] = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
+#else
+	dataValue["name"] = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+#endif
 	dataValue["type"] = MODEL;
 	dataValue["ver"] = STR(VERSION);
 	respValue["data"] = dataValue;
@@ -303,21 +311,18 @@ int Gateway::OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnScanIpHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnScanIpHc");
+	string macGw = mac;
+	macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
+						  { return c == ':'; }),
+				macGw.end());
 	Json::Value dataValue = Json::objectValue;
 	dataValue["mac"] = mac;
 #ifndef ESP_PLATFORM
 	string ipWlan = Wifi::GetIP("wlan0");
 	string ipEth = Wifi::GetIP("eth0");
-	if (ipWlan != "")
-	{
-		dataValue["ipWlan"] = ipWlan;
-	}
-
-	if (ipEth != "")
-	{
-		dataValue["ipEth"] = ipEth;
-	}
-	dataValue["name"] = "RD HC";
+	dataValue["ipWlan"] = ipWlan;
+	dataValue["ipEth"] = ipEth;
+	dataValue["name"] = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
 	dataValue["type"] = MODEL;
 	dataValue["ver"] = STR(VERSION);
 #endif
