@@ -135,12 +135,12 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			case CURTAIN_PAUSE:
 				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
 				{
-					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
 				}
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
-				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
 				break;
 			}
 			CheckTrigger();

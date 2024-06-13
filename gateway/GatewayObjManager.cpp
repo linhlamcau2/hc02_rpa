@@ -429,7 +429,10 @@ int Gateway::isDevFast2Room(Device *device)
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
-			 device->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_1_V2 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_3_V2)
 	{
 		rs = 1;
 	}
@@ -483,7 +486,7 @@ int Gateway::isDevFast2Room(Device *device)
 	}
 	else
 	{
-		rs = 1;
+		rs = 2;
 	}
 	return rs;
 }
