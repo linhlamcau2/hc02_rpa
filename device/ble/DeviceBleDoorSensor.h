@@ -15,5 +15,5 @@ private:
 	ModuleBatteryLevel *moduleBatteryLevel;
 
 public:
-	DeviceBleDoorSensor(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint16_t version);
+	DeviceBleDoorSensor(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 };
