@@ -333,7 +333,7 @@ public:
 
 	void DeviceInputData(uint8_t *data, int len, uint16_t addr);
 
-	virtual void InitAttribute(string attribute, double value) {}
+	virtual int InitAttribute(string attribute, double value) { return CODE_ERROR; }
 	virtual void CheckTrigger();
 	virtual int DoJsonArray(Json::Value &dataValue);
 

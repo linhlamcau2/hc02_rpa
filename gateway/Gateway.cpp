@@ -830,6 +830,18 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = getDeviceFromId(id);
 		if (device)
 		{
+			DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+			if (deviceBleSeftPowerRemote)
+			{
+				Device *parent = deviceBleSeftPowerRemote->GetParent();
+				if (parent)
+				{
+					database->DeviceBleChildDel(deviceBleSeftPowerRemote, parent);
+					bleProtocol->ResetSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr());
+				}
+				else
+					LOGW("parent device null");
+			}
 			delDevice(device);
 		}
 		device = new DeviceBleSeftPowerRemote(id, name, mac, dataJson, addr, type, version, NULL);

@@ -23,6 +23,10 @@ static int DeviceAttributeParse(sqlite3_stmt *stmt, void *ptr)
 				{
 					device->InitAttribute(attribute, value);
 				}
+				else
+				{
+					LOGW("Not found device : %s", deviceId.c_str());
+				}
 			}
 			else if (s == SQLITE_DONE)
 			{

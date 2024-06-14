@@ -33,5 +33,5 @@ public:
 	int GetNumElement();
 
 	virtual int Do(Json::Value &dataValue);
-	virtual int InitAttribute(string attribute, int value);
+	virtual int InitAttribute(string attribute, double value);
 };
