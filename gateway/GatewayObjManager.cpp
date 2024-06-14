@@ -484,9 +484,5 @@ int Gateway::isDevFast2Room(Device *device)
 	{
 		rs = 2;
 	}
-	else
-	{
-		rs = 2;
-	}
 	return rs;
 }
