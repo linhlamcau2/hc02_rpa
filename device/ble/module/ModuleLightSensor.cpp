@@ -62,7 +62,7 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52)
 	{
-		if (data[1] == 0x04 && data[2] == 0x00)
+		if (data[1] == 0x04 && (data[2] == 0x00 || data[2] == 0x01))
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -70,7 +70,11 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				uint16_t scene;
 			} data_message_t;
 			data_message_t *data_message = (data_message_t *)&data[3];
-			int temp_lux = CalculateLux(bswap_16(data_message->lux));
+			int temp_lux;
+			if (data[2] == 0x00)
+				temp_lux = CalculateLux(bswap_16(data_message->lux));
+			else if (data[2] == 0x01)
+				temp_lux = data_message->lux;
 			if (temp_lux != lux)
 			{
 				lux = temp_lux;
