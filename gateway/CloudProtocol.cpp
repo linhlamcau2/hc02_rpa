@@ -14,9 +14,9 @@
 
 CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert)
 #ifdef ESP_PLATFORM
-		: Mqtt(address, port, clientId, username, password, keepalive)
+	: Mqtt(address, port, clientId, username, password, keepalive)
 #else
-		: Mqtt(address, port, clientId, username, password, keepalive, cert)
+	: Mqtt(address, port, clientId, username, password, keepalive, cert)
 #endif
 
 {
@@ -88,9 +88,9 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 	SetLedInternet(false);
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
-			payloadJson.isMember("type") && payloadJson["type"].isString() &&
-			// payloadJson.isMember("time") && payloadJson["time"].isInt() &&
-			payloadJson.isMember("data") && payloadJson["data"].isObject())
+		payloadJson.isMember("type") && payloadJson["type"].isString() &&
+		// payloadJson.isMember("time") && payloadJson["time"].isInt() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string type = payloadJson["type"].asString();
 		// string rqi = payloadJson["time"].asString();
@@ -103,12 +103,6 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 			if (rs == CODE_OK)
 			{
 				LOGD("Call %s OK, rs: %d", type.c_str(), rs);
-				// respValue["rqi"] = rqi;
-				respValue["deviceCode"] = mac;
-				respValue["time"] = time(NULL);
-				respValue["mac"] = mac;
-				respValue["from"] = "GATEWAY";
-				respValue["to"] = "CLOUD";
 				Publish(pubServerReqTopic, respValue.toString());
 			}
 			else if (rs == CODE_EXIT)
@@ -171,27 +165,33 @@ int CloudProtocol::OnServerCmdReq(Json::Value &dataValue, Json::Value &respValue
 			if (dataValue.isMember("arguments") && dataValue["arguments"].isObject())
 			{
 				Json::Value &argumentsValue = dataValue["arguments"];
+				// if (argumentsValue.isMember("attribute") && argumentsValue["attribute"].isString())
+				// {
+				string attribute = "";
 				if (argumentsValue.isMember("attribute") && argumentsValue["attribute"].isString())
 				{
-					string attribute = argumentsValue["attribute"].asString();
-					if (onRpcCallbackAttributeList.count(attribute))
+					attribute = argumentsValue["attribute"].asString();
+				}
+
+				if (onRpcCallbackAttributeList.count(attribute))
+				{
+					OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackAttributeList[attribute];
+					rs = onRpcCallbackFunc(dataValue, respValue);
+					if (rs == CODE_OK)
 					{
-						OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackAttributeList[attribute];
-						rs = onRpcCallbackFunc(dataValue, respValue);
-						if (rs == CODE_OK)
-						{
-							LOGD("Call attribute %s OK, rs: %d", attribute.c_str(), rs);
-						}
-					}
-					else
-					{
-						LOGW("OnServerCmdReq command: %s attribute: %s not registed", command.c_str(), attribute.c_str());
+						LOGD("Call attribute %s OK, rs: %d", attribute.c_str(), rs);
+						Publish(pubServerReqTopic, respValue.toString());
 					}
 				}
 				else
 				{
-					LOGW("OnServerCmdReq arguments format error");
+					LOGW("OnServerCmdReq command: %s attribute: %s not registed", command.c_str(), attribute.c_str());
 				}
+				// }
+				// else
+				// {
+				// 	LOGW("OnServerCmdReq arguments format error");
+				// }
 			}
 			else
 			{
@@ -271,9 +271,6 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue)
 		return CODE_TIMEOUT;
 	}
 	Json::Value sendValue;
-	sendValue["from"] = "GATEWAY";
-	sendValue["to"] = "CLOUD";
-	sendValue["deviceCode"] = mac;
 	sendValue["mac"] = mac;
 	sendValue["type"] = reqCmd;
 	sendValue["time"] = time(NULL);
@@ -294,29 +291,14 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
 	sendValue["data"] = reqValue;
-	sendValue["rqi"] = rqi;
-	sendValue["type"] = reqCmd;
-	request_t request = {
-			.status = false,
-			.respCmd = respCmd,
-			.respValue = respValue,
-	};
-	requestList[rqi] = &request;
-	if (request.pubTopic == "")
-	{
-		request.pubTopic = pubServerReqTopic;
-	}
-	LOGD("PublishToCloudMessage: Topic: %s: msg: %s", request.pubTopic.c_str(), (sendValue.toString()).c_str());
-	Publish(request.pubTopic, sendValue.toString());
-	while (!request.status && timeout--)
-	{
-		SLEEP_MS(1);
-	}
-	if (!request.status)
-	{
-		rs = CODE_ERROR;
-	}
-	requestList.erase(rqi);
+	sendValue["time"] = time(NULL);
+	sendValue["deviceCode"] = gateway->getDormitory();
+	sendValue["mac"] = mac;
+	sendValue["type"] = "reportAttribute";
+
+	LOGD("PublishToCloudMessage: Topic: %s: msg: %s", pubServerReqTopic.c_str(), (sendValue.toString()).c_str());
+	Publish(pubServerReqTopic, sendValue.toString());
 	LOGD("PublishToCloudMessage rs: %d", rs);
 	return rs;
 }
+

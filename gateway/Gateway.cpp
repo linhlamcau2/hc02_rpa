@@ -625,24 +625,15 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 		database->DelDevExist(temp_dev);
 	}
 
-	Json::Value epList = Json::arrayValue;
-	epList.append(10);
-
 	Json::Value devValue;
-	devValue["id"] = scanDevice->GetId();
-	devValue["addr"] = scanDevice->GetAddr();
-	devValue["ver"] = scanDevice->GetVersionStr();
+	devValue["version"] = scanDevice->GetVersionStr();
 	devValue["mac"] = scanDevice->GetMac();
-	devValue["type"] = to_string(scanDevice->GetType());
-	// devValue["type"] = "1213";
+	devValue["type"] = scanDevice->GetType();
 	devValue["model"] = Device::ConvertDeviceTypeToModel(scanDevice->GetType());
-	devValue["ModelStr"] = Device::ConvertDeviceTypeToName(scanDevice->GetType());
-	devValue["epList"] = epList;
 
 	Json::Value dataValue;
 	dataValue["attribute"] = "mod.new_device_added";
-	dataValue["mac"] = scanDevice->GetMac();
-	dataValue["value"] = devValue;
+	dataValue["listDevices"].append(devValue);
 	PublishToCloudMessage("reportAttribute", dataValue);
 }
 
@@ -1563,7 +1554,7 @@ int Gateway::pushDeviceUpdateLocal(Json::Value &dataValue)
 
 int Gateway::pushDeviceUpdateCloud(Json::Value &dataValue)
 {
-	return PublishToCloudMessage("deviceUpdate", dataValue, "deviceUpdateRsp", NULL);
+	return PublishToCloudMessage("", dataValue, "", NULL);
 }
 
 int Gateway::pushNewDeviceCloud(Json::Value &dataValue)

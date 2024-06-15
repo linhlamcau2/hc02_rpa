@@ -5,8 +5,8 @@
 
 void Gateway::InitMqttMessageDevice()
 {
-	OnDeviceRpcCmdCallbackRegister("setAttribute", "device.onoff", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
-
+	OnDeviceRpcCmdCallbackRegister("setAttribute", "", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCmdCallbackRegister("setAttribute", "mod.del_device", bind(&Gateway::OnDeleteDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("controlDev", bind(&Gateway::OnControlDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("controlAllDev", bind(&Gateway::OnControlAllDevice, this, placeholders::_1, placeholders::_2));
 	// OnDeviceRpcCallbackRegister("getDevStt", bind(&Gateway::OnGetDeviceStatus, this, placeholders::_1, placeholders::_2));
@@ -53,11 +53,9 @@ int Gateway::OnControlDevice(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value &argumentsValue = reqValue["arguments"];
 		if (argumentsValue.isMember("mac") && argumentsValue["mac"].isString() &&
-			argumentsValue.isMember("ep") && argumentsValue["ep"].isString() &&
 			argumentsValue.isMember("value") && argumentsValue["value"].isObject())
 		{
 			string mac = argumentsValue["mac"].asString();
-			string ep = argumentsValue["ep"].asString();
 			Json::Value &valueValue = argumentsValue["value"];
 			Device *device = getDeviceFromMac(mac);
 			if (device)
@@ -286,58 +284,55 @@ int Gateway::OnNewDevice(Json::Value &reqValue, Json::Value &respValue)
 // TODO: delete device from room, group, scene,...
 int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 {
-	if (reqValue.isMember("device") && reqValue["device"].isArray())
+	LOGD("Device Device");
+	if (reqValue.isMember("arguments") && reqValue["arguments"].isObject())
 	{
-		Json::Value successList = Json::arrayValue;
-		Json::Value failedList = Json::arrayValue;
-		Json::Value devicesValue = reqValue["device"];
-		for (auto &deviceValue : devicesValue)
+		Json::Value argument = reqValue["arguments"];
+		if (argument.isMember("mac") && argument["mac"].isString())
 		{
-			if (deviceValue.isString())
+			string devMac = argument["mac"].asString();
+			Device *device = getDeviceFromMac(devMac);
+			if (device)
 			{
-				string deviceId = deviceValue.asString();
-				Device *device = getDeviceFromId(deviceId);
-				if (device)
+				if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
 				{
-					if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+					DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+					if (deviceBleSeftPowerRemote)
 					{
-						DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
-						if (deviceBleSeftPowerRemote)
+						Device *parent = deviceBleSeftPowerRemote->GetParent();
+						if (parent)
 						{
-							Device *parent = deviceBleSeftPowerRemote->GetParent();
-							if (parent)
-							{
-								database->DeviceBleChildDel(deviceBleSeftPowerRemote, parent);
-								bleProtocol->ResetSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr());
-							}
-							else
-								LOGW("parent device null");
+							database->DeviceBleChildDel(deviceBleSeftPowerRemote, parent);
+							bleProtocol->ResetSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr());
 						}
+						else
+							LOGW("parent device null");
 					}
-					else if (bleProtocol)
-						bleProtocol->ResetDev(device->GetAddr());
+				}
+				else if (bleProtocol)
+					bleProtocol->ResetDev(device->GetAddr());
 
-					delDevice(device);
-					successList.append(deviceId);
-				}
-				else
-				{
-					LOGD("deviceId %s dose not exist", deviceId.c_str());
-					failedList.append(deviceId);
-				}
+				delDevice(device);
+
+				respValue["type"] = "reportAttribute";
+				respValue["time"] = time(NULL);
+				respValue["mac"] = mac;
+				Json::Value argument;
+				argument["attribute"] = "mod.del_device";
+				argument["mac"] = devMac;
+				Json::Value data;
+				data["command"] = "getAttribute";
+				data["arguments"] = argument;
+				respValue["data"] = data;
+				return CODE_OK;
+			}
+			else
+			{
+				LOGD("device mac %s dose not exist", devMac.c_str());
 			}
 		}
-		pushMsgHcCoreToHcApp("delDev", "", "", successList, "");
-		respValue["data"]["code"] = 0;
-		respValue["data"]["success"] = successList;
-		respValue["data"]["failed"] = failedList;
 	}
-	else
-	{
-		respValue["data"]["code"] = CODE_FORMAT_ERROR;
-	}
-	respValue["cmd"] = "delDevRsp";
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int Gateway::OnAddFavoriteDev(Json::Value &reqValue, Json::Value &respValue)

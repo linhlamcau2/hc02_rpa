@@ -20,6 +20,7 @@ void Gateway::InitMqttMessageHc()
 {
 	OnDeviceRpcCallbackRegister("registerResp", bind(&Gateway::OnRegisterHc, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCmdCallbackRegister("setAttribute", "mod.add_device", bind(&Gateway::OnStartScanBle, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCmdCallbackRegister("setAttribute", "mod.stop_add_device", bind(&Gateway::OnStopScanBle, this, placeholders::_1, placeholders::_2));
 
 	// 	OnDeviceRpcCallbackRegister("controlHc", bind(&Gateway::OnControlHc, this, placeholders::_1, placeholders::_2));
 	// 	OnDeviceRpcCallbackRegister("getHcInfo", bind(&Gateway::OnGetHcInfo, this, placeholders::_1, placeholders::_2));
@@ -59,7 +60,7 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRpcHcConnectCloud");
 	if (reqValue.isMember("latitude") && reqValue["latitude"].isDouble() &&
-			reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
+		reqValue.isMember("longitude") && reqValue["longitude"].isDouble())
 	{
 		Json::Value dataJson;
 		dataJson["latitude"] = reqValue["latitude"].asDouble();
@@ -102,20 +103,34 @@ int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnRegisterHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnRegisterHc");
-	Json::Value valueValue;
-	valueValue["version"] = "v1";
-	valueValue["model"] = "HC02";
-	valueValue["factory"] = "RD";
-	valueValue["current_time"] = time(NULL);
-	valueValue["uptime"] = 2565;
-	valueValue["uplinkType"] = "uplinkType";
-	Json::Value dataValue;
-	dataValue["attribute"] = "gateway.status";
-	dataValue["value"] = valueValue;
-	dataValue["mac"] = mac;
-	respValue["data"] = dataValue;
-	respValue["type"] = "reportAttribute";
-	return CODE_OK;
+	if (reqValue.isMember("deviceCode") && reqValue["deviceCode"].isString())
+	{
+		string deviceCode = reqValue["deviceCode"].asString();
+		database->GatewayUpdateDormitory(this, deviceCode);
+		gateway->setDormitory(deviceCode);
+
+		Json::Value valueValue;
+		valueValue["version"] = STR(VERSION);
+		valueValue["model"] = mac;
+		valueValue["factory"] = "RD";
+		valueValue["uplinkType"] = "wifi";
+
+		Json::Value dataValue;
+		dataValue["attribute"] = "gateway.status";
+		dataValue["value"] = valueValue;
+
+		respValue["data"] = dataValue;
+		respValue["mac"] = mac;
+		respValue["deviceCode"] = deviceCode;
+		respValue["time"] = time(NULL);
+		respValue["type"] = "reportAttribute";
+		return CODE_OK;
+	}
+	else
+	{
+		LOGW("Data error: %s", reqValue.toString().c_str());
+	}
+	return CODE_ERROR;
 }
 
 int Gateway::OnControlHc(Json::Value &reqValue, Json::Value &respValue)
@@ -243,8 +258,13 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 	}
 #endif
 
-	respValue["data"]["code"] = rsCode;
-	respValue["cmd"] = "stopScanBle";
+	Json::Value data;
+	data["attribute"] = "mod.stop_add_device";
+	respValue["type"] = "reportAttribute";
+	respValue["time"] = time(NULL);
+	respValue["data"] = data;
+	respValue["mac"] = mac;
+
 	return CODE_OK;
 }
 
@@ -323,11 +343,11 @@ int Gateway::OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue)
 	{
 		Json::Value params = reqValue["params"];
 		if (params.isMember("type") && params["type"].isString() &&
-				params.isMember("key") && params["key"].isString() &&
-				params.isMember("user") && params["user"].isString() &&
-				params.isMember("host") && params["host"].isString() &&
-				params.isMember("serverPort") && params["serverPort"].isInt() &&
-				params.isMember("forwardPort") && params["forwardPort"].isInt())
+			params.isMember("key") && params["key"].isString() &&
+			params.isMember("user") && params["user"].isString() &&
+			params.isMember("host") && params["host"].isString() &&
+			params.isMember("serverPort") && params["serverPort"].isInt() &&
+			params.isMember("forwardPort") && params["forwardPort"].isInt())
 		{
 			string key = "";
 			string type = params["type"].asString();
@@ -827,8 +847,8 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnGetNotify");
 	if (reqValue.isMember("groupType") && reqValue["groupType"].isString() &&
-			reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
-			reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
+		reqValue.isMember("startIndex") && reqValue["startIndex"].isInt() &&
+		reqValue.isMember("endIndex") && reqValue["endIndex"].isInt())
 	{
 		string groupType = reqValue["groupType"].asString();
 		int startIndex = reqValue["startIndex"].asInt();
@@ -862,7 +882,7 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-			reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);

@@ -186,15 +186,7 @@ int Device::PushTelemetry(Json::Value &jsonValue)
 {
 	if (!jsonValue.isNull())
 	{
-		Json::Value deviceData;
-		Json::Value devicesData;
-		Json::Value dataValue;
-		deviceData["id"] = id;
-		deviceData["data"] = jsonValue;
-		devicesData.append(deviceData);
-		dataValue["device"] = devicesData;
-		gateway->pushDeviceUpdateLocal(dataValue);
-		gateway->pushDeviceUpdateCloud(dataValue);
+		gateway->pushDeviceUpdateCloud(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
