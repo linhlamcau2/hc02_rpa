@@ -42,6 +42,7 @@
 #include "DeviceBleSeftPowerRemote.h"
 #include "DeviceBleWifiSwitchTouch.h"
 #include "DeviceBleWifiSwitchElectrical.h"
+#include "DeviceBleSocketSwitch.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -680,10 +681,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_SWITCH_ONOFF_V2:
 		device = new DeviceBleSwitchOnoff(id, name, mac, dataJson, addr, type, version);
 		break;
+
+	case BLE_SWITCH_RGB_SOCKET_1:
+		device = new DeviceBleSocketSwitch(id, name, mac, dataJson, addr, type, version, 1);
+		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
-	case BLE_SWITCH_RGB_SOCKET_1:
 	case BLE_SWITCH_RGB_1_V2:
 	case BLE_SWITCH_RGB_1_SQUARE_V2:
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 1);

@@ -111,7 +111,7 @@ void BleProtocol::init()
 	handleOpcodeBleThread.detach();
 #endif
 
-	SLEEP_MS(100);; // wait for thread start
+	SLEEP_MS(100); // wait for thread start
 }
 
 void BleProtocol::InitKey()
@@ -1169,6 +1169,7 @@ int BleProtocol::ResetDelAll()
 
 int BleProtocol::GetTTL(uint16_t devAddr)
 {
+	LOGD("GetTTL");
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct __attribute__((packed))
@@ -1197,6 +1198,7 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 			return CODE_OK;
 		}
 	}
+	LOGW("Get TTL error");
 	return CODE_ERROR;
 }
 
@@ -1281,6 +1283,16 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_WIFI_SWITCH_ELECTRICAL_2:
 	case BLE_WIFI_SWITCH_ELECTRICAL_3:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
+		break;
+	case BLE_SWITCH_CURTAIN:
+	case BLE_SWITCH_RGB_CURTAIN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
+	case BLE_SWITCH_RGB_CURTAIN_HCN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE_V2:
+	case BLE_SWITCH_ROOLING_DOOR:
+	case BLE_SWITCH_ROOLING_DOOR_V2:
+	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
+		BleProtocol::UpdateStatusCurtain(devAddr);
 		break;
 	default:
 		BleProtocol::GetTTL(devAddr);
