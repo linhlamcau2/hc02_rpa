@@ -102,7 +102,12 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 		{
 			for (int i = 0; i < device->GetNumElement(); i++)
 			{
-				if (data.isMember("bt" + ((i) ? to_string(i + 1) : "")))
+				if (data.isMember(KEY_ATTRIBUTE_ONOFF) && data[KEY_ATTRIBUTE_ONOFF].isInt())
+				{
+					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
+				}
+				
+				if (data.isMember(KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")))
 				{
 					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
 				}
@@ -155,7 +160,11 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 				{
 					for (int i = 0; i < devInSceneBle->device->GetNumElement(); i++)
 					{
-						if (devInSceneBle->data.isMember("bt" + ((i) ? to_string(i + 1) : "")))
+						if (devInSceneBle->data.isMember(KEY_ATTRIBUTE_ONOFF) && devInSceneBle->data[KEY_ATTRIBUTE_ONOFF].isInt())
+						{
+							bleProtocol->DelSceneBle(device->GetAddr() + i, addr);
+						}
+						if (devInSceneBle->data.isMember(KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")))
 						{
 							bleProtocol->DelSceneBle(device->GetAddr() + i, addr);
 						}
