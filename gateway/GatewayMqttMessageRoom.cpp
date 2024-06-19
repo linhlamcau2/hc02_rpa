@@ -172,6 +172,11 @@ int Gateway::AddDevToGroupInRoom(Device *device, Group *group, uint32_t type)
 			}
 		}
 	}
+	else
+	{
+		LOGW("Type not support");
+		rs = CODE_NOT_FOUND_DEVICE;
+	}
 
 	return rs;
 }
@@ -318,14 +323,15 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 										room->AddGroup(group, true, true);
 									for (auto &deviceInRoom : room->deviceList)
 									{
-										if (AddDevToGroupInRoom(deviceInRoom->device, group, type) != CODE_OK)
+										int resultAddDevToGroup = AddDevToGroupInRoom(deviceInRoom->device, group, type);
+										if  (resultAddDevToGroup == CODE_ERROR)
 										{
 											if (devicesStatusConfig[deviceInRoom->device->GetId()])
 											{
 												devicesStatusConfig[deviceInRoom->device->GetId()] = false;
 											}
 										}
-										else
+										else if (resultAddDevToGroup == CODE_OK)
 										{
 											if (devicesStatusConfig[deviceInRoom->device->GetId()])
 											{
@@ -552,14 +558,15 @@ int Gateway::OnAddDeviceToRoom(Json::Value &reqValue, Json::Value &respValue)
 							{
 								for (auto &dev : devicesAddRoom)
 								{
-									if (AddDevToGroupInRoom(dev, group, type) != CODE_OK)
+									int resultAddDevToGroup = AddDevToGroupInRoom(dev, group, type);
+									if (resultAddDevToGroup == CODE_ERROR)
 									{
 										if (devicesStatusConfig[dev->GetId()])
 										{
 											devicesStatusConfig[dev->GetId()] = false;
 										}
 									}
-									else
+									else if (resultAddDevToGroup == CODE_OK)
 									{
 										if (devicesStatusConfig[dev->GetId()])
 										{
