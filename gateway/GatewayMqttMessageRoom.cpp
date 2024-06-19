@@ -65,16 +65,33 @@ int Gateway::OnGetDevListInRoom(Json::Value &reqValue, Json::Value &respValue)
 				if (temp_room)
 				{
 					Json::Value temp_devicesList = Json::arrayValue;
+					vector<string> listDevId;
+					bool isExist;
 					for (unsigned int i = 0; i < temp_room->deviceList.size(); i++)
 					{
 						Json::Value device;
 						DeviceInGroup *deviceInRoom = temp_room->deviceList[i];
 						string deviceId = deviceInRoom->device->GetId();
-						Device *tempDev = getDeviceFromId(deviceId);
-						device["id"] = deviceId;
-						device["name"] = tempDev->GetName();
-						device["type"] = (Json::Value::UInt)tempDev->GetType();
-						temp_devicesList.append(device);
+
+						isExist = false;
+						for (auto &id : listDevId)
+						{
+							if (deviceId == id)
+							{
+								isExist = true;
+								break;
+							}
+						}
+
+						if (!isExist)
+						{
+							listDevId.push_back(deviceId);
+							Device *tempDev = getDeviceFromId(deviceId);
+							device["id"] = deviceId;
+							device["name"] = tempDev->GetName();
+							device["type"] = (Json::Value::UInt)tempDev->GetType();
+							temp_devicesList.append(device);
+						}
 					}
 					temp_roomsData["devices"] = temp_devicesList;
 					roomsData.append(temp_roomsData);
@@ -153,6 +170,10 @@ int Gateway::AddDevToGroupInRoom(Device *device, Group *group, uint32_t type)
 					}
 				}
 			}
+		}
+		else
+		{
+			rs = CODE_NOT_FOUND_DEVICE;
 		}
 	}
 	else if (device->GetType() == type)
@@ -324,7 +345,7 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 									for (auto &deviceInRoom : room->deviceList)
 									{
 										int resultAddDevToGroup = AddDevToGroupInRoom(deviceInRoom->device, group, type);
-										if  (resultAddDevToGroup == CODE_ERROR)
+										if (resultAddDevToGroup == CODE_ERROR)
 										{
 											if (devicesStatusConfig[deviceInRoom->device->GetId()])
 											{
