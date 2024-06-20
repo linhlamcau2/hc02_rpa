@@ -110,11 +110,27 @@ int Gateway::OnGetDevListInGroup(Json::Value &reqValue, Json::Value &respValue)
 				if (temp)
 				{
 					Json::Value temp_devicesList = Json::arrayValue;
+					vector<string> listDevId;
+					bool isExist;
 					for (unsigned int i = 0; i < temp->deviceList.size(); i++)
 					{
 						DeviceInGroup *deviceInGroup = temp->deviceList[i];
 						string deviceId = deviceInGroup->device->GetId();
-						temp_devicesList.append(deviceId);
+						isExist = false;
+						for (auto &id : listDevId)
+						{
+							if (deviceId == id)
+							{
+								isExist = true;
+								break;
+							}
+						}
+
+						if (!isExist)
+						{
+							listDevId.push_back(deviceId);
+							temp_devicesList.append(deviceId);
+						}
 					}
 					groupsData["devices"] = temp_devicesList;
 				}

@@ -342,21 +342,21 @@ int Gateway::OnCreateRoom(Json::Value &reqValue, Json::Value &respValue)
 								{
 									if (AddNewGroup(group, true))
 										room->AddGroup(group, true, true);
-									for (auto &deviceInRoom : room->deviceList)
+									for (auto &deviceInRoom : devicesAddRoom)
 									{
-										int resultAddDevToGroup = AddDevToGroupInRoom(deviceInRoom->device, group, type);
+										int resultAddDevToGroup = AddDevToGroupInRoom(deviceInRoom, group, type);
 										if (resultAddDevToGroup == CODE_ERROR)
 										{
-											if (devicesStatusConfig[deviceInRoom->device->GetId()])
+											if (devicesStatusConfig[deviceInRoom->GetId()])
 											{
-												devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+												devicesStatusConfig[deviceInRoom->GetId()] = false;
 											}
 										}
 										else if (resultAddDevToGroup == CODE_OK)
 										{
-											if (devicesStatusConfig[deviceInRoom->device->GetId()])
+											if (devicesStatusConfig[deviceInRoom->GetId()])
 											{
-												tempSuccessList.append(deviceInRoom->device->GetId());
+												tempSuccessList.append(deviceInRoom->GetId());
 											}
 										}
 										SLEEP_MS(100);
