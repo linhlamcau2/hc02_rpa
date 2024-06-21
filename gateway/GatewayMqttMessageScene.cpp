@@ -232,6 +232,7 @@ int Gateway::OnCreateScene(Json::Value &reqValue, Json::Value &respValue)
 
 int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 {
+	LOGD("EditScene");
 	if (reqValue.isMember("id") && reqValue["id"].isString() &&
 		reqValue.isMember("name") && reqValue["name"].isString() &&
 		reqValue.isMember("devices") && reqValue["devices"].isArray())
@@ -257,7 +258,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 		}
 		if (sceneBle)
 		{
-			database->Sqlite_BenginTransaction();
+			
 			vector<Device *> devsInScene; // list dev in scene
 			for (auto &devs : sceneBle->deviceList)
 			{
@@ -294,6 +295,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				}
 			}
 
+			// database->Sqlite_BenginTransaction();
 			// Phai xoa list device delscene truoc
 			for (auto &item : listDevicesDel)
 			{
@@ -336,7 +338,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 					room->AddSceneBle(sceneBle, true, true);
 				}
 			}
-			database->Sqlite_EndTransaction();
+			// database->Sqlite_EndTransaction();
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
@@ -512,7 +514,7 @@ int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
 		if (sceneBle)
 		{
-			database->Sqlite_BenginTransaction();
+			// database->Sqlite_BenginTransaction();
 			Json::Value deviceList = reqValue["devices"];
 			for (auto &deviceValue : deviceList)
 			{
@@ -537,7 +539,7 @@ int Gateway::OnDelDevToScene(Json::Value &reqValue, Json::Value &respValue)
 					SLEEP_MS(100);
 				}
 			}
-			database->Sqlite_EndTransaction();
+			// database->Sqlite_EndTransaction();
 
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 			{
