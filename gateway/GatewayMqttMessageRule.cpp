@@ -109,6 +109,8 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 				{
 					sceneBle->DelDevice(deviceInScene->device, true, true);
 				}
+				Json::Value temp = Json::arrayValue;
+				pushMsgHcCoreToHcApp("delScene", sceneBle->GetId(), sceneBle->GetName(), temp, "");
 				delSceneBle(sceneBle);
 			}
 		}

@@ -38,7 +38,7 @@
 #else
 #define CONFIG_FILE_NAME "config.json"
 #define TMP_FOLDER ""
-#define CERT_FILE_NAME ""
+#define CERT_FILE_NAME "./server.pem"
 #define LOG_FILE_PATH ""
 #define LOG_FILE_NAME "smh-"
 #endif

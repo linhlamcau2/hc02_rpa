@@ -442,7 +442,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 		Group *group = getGroupFromId(groupId);
 		if (group)
 		{
-			// database->Sqlite_BenginTransaction();
+			database->Sqlite_BenginTransaction();
 			for (auto &deviceValue : devicesValue)
 			{
 				if (deviceValue.isString())
@@ -494,7 +494,7 @@ int Gateway::OnDeleteDeviceFromGroup(Json::Value &reqValue, Json::Value &respVal
 					SLEEP_MS(100);
 				}
 			}
-			// database->Sqlite_EndTransaction();
+			database->Sqlite_EndTransaction();
 			respValue["data"]["code"] = CODE_OK;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;

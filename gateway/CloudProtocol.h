@@ -41,6 +41,7 @@ private:
 
 	string mac;
 	atomic<bool> isBusy;
+	mutex mtx;
 
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
