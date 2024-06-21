@@ -108,7 +108,6 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 				for (auto &deviceInScene : devicesInSceneBle)
 				{
 					sceneBle->DelDevice(deviceInScene->device, true, true);
-					
 				}
 				delSceneBle(sceneBle);
 			}
@@ -177,7 +176,6 @@ int Gateway::OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue)
 				for (auto &deviceInScene : devicesInSceneBle)
 				{
 					sceneBle->DelDevice(deviceInScene->device, true, true);
-					
 				}
 				delSceneBle(sceneBle);
 			}

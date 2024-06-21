@@ -10,6 +10,17 @@ Room::Room(string id, uint16_t addr, string name) : Group(id, addr, name)
 
 Room::~Room()
 {
+	mtxGroup.lock();
+	groupList.clear();
+	mtxGroup.unlock();
+
+	mtxScene.lock();
+	sceneBleList.clear();
+	mtxScene.unlock();
+
+	mtxRule.lock();
+	ruleList.clear();
+	mtxRule.unlock();
 }
 
 int Room::GetPositionGroup(Group *group)
@@ -41,6 +52,22 @@ int Room::GetPositionSceneBle(SceneBle *sceneBle)
 		}
 	}
 	mtxScene.unlock();
+	return CODE_ERROR;
+}
+
+int Room::GetPositionRule(Rule *rule)
+{
+	string id = rule->GetId();
+	mtxRule.lock();
+	for (int i = 0; i < ruleList.size(); i++)
+	{
+		if (id == ruleList[i]->GetId())
+		{
+			mtxRule.unlock();
+			return i;
+		}
+	}
+	mtxRule.unlock();
 	return CODE_ERROR;
 }
 
@@ -134,7 +161,7 @@ int Room::DelDevice(Device *device, bool sendBle, bool delDb)
 		return CODE_ERROR;
 	if (delDb)
 		database->DeviceInRoomDel(this, device);
-	
+
 	int indexTypeDev = device->GetType() / 1000;
 	bool isSuccess = true;
 	if (indexTypeDev == 22 || indexTypeDev == 24) // xoa du cac element cua cong tac ra khoi phong
@@ -220,6 +247,40 @@ int Room::DelSceneBle(SceneBle *sceneBle, bool delDb)
 		mtxScene.unlock();
 		if (delDb)
 			database->SceneBleUpdateRoom(sceneBle, "");
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Room::AddRule(Rule *rule, bool isAddGateway, bool isAddDatabase)
+{
+	if (GetPositionRule(rule) < 0)
+	{
+		if (isAddGateway)
+		{
+			mtxScene.lock();
+			ruleList.push_back(rule);
+			mtxScene.unlock();
+		}
+		if (isAddDatabase)
+		{
+		}
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Room::DelRule(Rule *rule, bool delDb)
+{
+	int position = GetPositionRule(rule);
+	if (position > -1)
+	{
+		mtxRule.lock();
+		ruleList.erase(ruleList.begin() + position);
+		mtxRule.unlock();
+		if (delDb)
+		{
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;

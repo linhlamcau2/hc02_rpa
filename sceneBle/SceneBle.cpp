@@ -106,7 +106,7 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 				{
 					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
 				}
-				
+
 				if (data.isMember(KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")))
 				{
 					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
@@ -154,7 +154,8 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 		}
 		else // del sceneble for switch touch, electrical
 		{
-			for (auto &devInSceneBle : deviceList)
+			vector<DeviceInSceneBle *> tempDeviceList = deviceList;
+			for (auto &devInSceneBle : tempDeviceList)
 			{
 				if (devInSceneBle->device->GetId() == device->GetId())
 				{
@@ -169,6 +170,14 @@ int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 							bleProtocol->DelSceneBle(device->GetAddr() + i, addr);
 						}
 					}
+					int deviceIndex = GetPositionDevice(devInSceneBle->device);
+					if (deviceIndex > -1)
+					{
+						mtx.lock();
+						deviceList.erase(deviceList.begin() + deviceIndex);
+						mtx.unlock();
+					}
+					return CODE_OK;
 				}
 			}
 		}

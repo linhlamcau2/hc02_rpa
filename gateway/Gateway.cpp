@@ -1079,6 +1079,16 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
 			}
+
+			if (ruleValue.isMember("roomId") && ruleValue["roomId"].isString())
+			{
+				string roomId = ruleValue["roomId"].asString();
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					room->AddRule(rule, true, true);
+				}
+			}
 		}
 		else
 			LOGW("Rule null");

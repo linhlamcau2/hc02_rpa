@@ -246,6 +246,8 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 			Rule *rule = getRuleFromId(sceneId);
 			if (rule)
 			{
+				Json::Value deviceList = Json::arrayValue;
+				pushMsgHcCoreToHcApp("delRule", rule->GetId(), rule->GetName(), deviceList, "");
 				delRule(rule);
 			}
 			int sceneAddr = getNextSceneBleAddr();

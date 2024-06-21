@@ -280,6 +280,19 @@ void Gateway::delRule(Rule *rule)
 	ruleList.erase(rule->GetId());
 	ruleListMtx.unlock();
 	database->RuleDel(rule);
+
+	roomListMtx.lock();
+	for (auto &[id, room] : roomList)
+	{
+		for (auto &rl : room->ruleList)
+		{
+			if (rl == rule)
+			{
+				room->ruleList.erase(remove(room->ruleList.begin(), room->ruleList.end(), rl), room->ruleList.end());
+			}
+		}
+	}
+	roomListMtx.unlock();
 	delete rule;
 }
 

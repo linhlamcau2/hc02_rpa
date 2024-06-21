@@ -997,6 +997,14 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 
 			printScene();
 
+			vector<Rule *> ruleInRooms = room->ruleList;
+			for (auto &ruleInRoom: ruleInRooms)
+			{
+				Json::Value temp = Json::arrayValue;
+				pushMsgHcCoreToHcApp("delRule", ruleInRoom->GetId(), ruleInRoom->GetName(), temp, "");
+				delRule(ruleInRoom);
+			}
+
 			for (auto &[id, status] : devicesStatusConfig)
 			{
 				if (status)

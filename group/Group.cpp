@@ -19,6 +19,9 @@ Group::Group(string id, uint16_t addr, string name) : Object(id, addr, name)
 
 Group::~Group()
 {
+	mtx.lock();
+	deviceList.clear();
+	mtx.unlock();
 }
 
 int Group::GetPositionDevice(Device *device, int epid)
