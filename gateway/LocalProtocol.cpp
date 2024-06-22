@@ -76,7 +76,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	mtx.lock();
 #ifdef ESP_PLATFORM
 	SetLedInternet(false);
 #endif
@@ -92,7 +91,9 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 		{
 			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
 			isBusy = true;
+			mtx.lock();
 			int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
+			mtx.unlock();
 			isBusy = false;
 			if (rs == CODE_OK)
 			{
@@ -124,7 +125,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
 				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
 				sleep(2);
-				mtx.unlock();
 				exit(1);
 			}
 #ifdef __ANDROID__
@@ -136,7 +136,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
 				sleep(2);
 				system("su");
-				mtx.unlock();
 				system("reboot");
 			}
 #endif
@@ -151,7 +150,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 #elif defined(__OPENWRT__)
 				Wifi::SetModeApWifi();
 #endif
-				mtx.unlock();
 				exit(1);
 			}
 			else
@@ -175,7 +173,6 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	SetLedInternet(true);
 #endif
 	Util::LedServiceUnlock();
-	mtx.unlock();
 }
 
 void LocalProtocol::OnLocalResp(string &topic, string &payload)

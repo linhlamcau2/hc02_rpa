@@ -236,7 +236,6 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 	Json::Value payloadJson;
 	Util::LedInternet(false);
 	Util::LedServiceLock();
-	mtx.lock();
 #ifdef ESP_PLATFORM
 	SetLedInternet(false);
 #endif
@@ -252,7 +251,9 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 		{
 			OnRpcCallbackFunc onRpmCallbackFunc = onRpcCallbackFuncList[cmd];
 			isBusy = true;
+			mtx.lock();
 			int rs = onRpmCallbackFunc(payloadJson["data"], respValue);
+			mtx.unlock();
 			isBusy = false;
 			if (rs == CODE_OK)
 			{
@@ -268,7 +269,6 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 				LOGD("cloud publish: %s: %s", (pubMobileRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
 				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
 				sleep(2);
-				mtx.unlock();
 				exit(1);
 			}
 #ifdef __ANDROID__
@@ -280,7 +280,6 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 				Publish(pubMobileRespTopic + topics[2] + "/json_resp", respValue.toString());
 				sleep(2);
 				system("su");
-				mtx.unlock();
 				system("reboot");
 			}
 #endif
@@ -322,7 +321,6 @@ void CloudProtocol::OnMobileReq(string &topic, string &payload)
 #ifdef ESP_PLATFORM
 	SetLedInternet(true);
 #endif
-	mtx.unlock();
 }
 void CloudProtocol::OnMobileResp(string &topic, string &payload)
 {
