@@ -4,6 +4,7 @@
 #include "json.h"
 #include <map>
 #include <atomic>
+#include <mutex>
 
 using namespace std;
 
@@ -42,7 +43,6 @@ private:
 	string mac;
 	atomic<bool> isBusy;
 	mutex mtx;
-
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;

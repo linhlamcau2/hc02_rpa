@@ -70,11 +70,16 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				uint16_t scene;
 			} data_message_t;
 			data_message_t *data_message = (data_message_t *)&data[3];
-			int temp_lux;
+			uint16_t temp_lux = 0;
 			if (data[2] == 0x00)
+			{
 				temp_lux = CalculateLux(bswap_16(data_message->lux));
+			}
 			else if (data[2] == 0x01)
+			{
 				temp_lux = data_message->lux;
+			}
+
 			if (temp_lux != lux)
 			{
 				lux = temp_lux;

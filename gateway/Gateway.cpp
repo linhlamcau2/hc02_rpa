@@ -1605,6 +1605,7 @@ int Gateway::pushNotify(Json::Value &dataValue)
 
 int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
 {
+#ifdef __ANDROID__
 	Json::Value msg;
 	msg["cmd"] = cmd;
 	msg["rqi"] = Util::genRandRQI(16);
@@ -1614,6 +1615,9 @@ int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Valu
 	if (roomId != "")
 		msg["data"]["roomId"] = roomId;
 	return PublishToLocalMessage(msg);
+#else
+	return CODE_OK;
+#endif
 }
 
 string Gateway::CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
