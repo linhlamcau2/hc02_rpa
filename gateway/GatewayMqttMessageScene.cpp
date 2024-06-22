@@ -242,6 +242,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 		string sceneId = reqValue["id"].asString();
 		string sceneName = reqValue["name"].asString();
 		SceneBle *sceneBle = getSceneBleFromId(sceneId);
+		string cmdToHcApp = "editScene";
 		if (!sceneBle)
 		{
 			Rule *rule = getRuleFromId(sceneId);
@@ -250,6 +251,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value deviceList = Json::arrayValue;
 				pushMsgHcCoreToHcApp("delRule", rule->GetId(), rule->GetName(), deviceList, "");
 				delRule(rule);
+				cmdToHcApp = "createScene";
 			}
 			int sceneAddr = getNextSceneBleAddr();
 			sceneBle = new SceneBle(sceneId, sceneAddr, sceneName);
@@ -258,7 +260,7 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 		}
 		if (sceneBle)
 		{
-			
+
 			vector<Device *> devsInScene; // list dev in scene
 			for (auto &devs : sceneBle->deviceList)
 			{
@@ -329,9 +331,10 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 				SLEEP_MS(100);
 			}
 
+			string roomId = "";
 			if (reqValue.isMember("roomId") && reqValue["roomId"].isString())
 			{
-				string roomId = reqValue["roomId"].asString();
+				roomId = reqValue["roomId"].asString();
 				Room *room = getRoomFromId(roomId);
 				if (room)
 				{
@@ -343,7 +346,8 @@ int Gateway::OnEditScene(Json::Value &reqValue, Json::Value &respValue)
 			respValue["data"]["id"] = sceneId;
 			respValue["data"]["success"] = successList;
 			respValue["data"]["failed"] = failedList;
-			pushMsgHcCoreToHcApp("editScene", sceneId, sceneBle->GetName(), successList, "");
+
+			pushMsgHcCoreToHcApp(cmdToHcApp, sceneId, sceneBle->GetName(), successList, roomId);
 
 			printScene();
 		}

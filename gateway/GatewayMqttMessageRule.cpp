@@ -99,6 +99,7 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 	{
 		string ruleId = reqValue["id"].asString();
 		Rule *rule = getRuleFromId(ruleId);
+		string cmdToHcapp = "editRule";
 		if (!rule)
 		{
 			SceneBle *sceneBle = getSceneBleFromId(ruleId);
@@ -112,6 +113,7 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value temp = Json::arrayValue;
 				pushMsgHcCoreToHcApp("delScene", sceneBle->GetId(), sceneBle->GetName(), temp, "");
 				delSceneBle(sceneBle);
+				cmdToHcapp = "createRule";
 			}
 		}
 		if (rule)
@@ -123,7 +125,7 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 		{
 			LOGI("Edit Rule %s", rule->GetId().c_str());
 			Json::Value deviceList = Json::arrayValue;
-			pushMsgHcCoreToHcApp("editRule", rule->GetId(), rule->GetName(), deviceList, "");
+			pushMsgHcCoreToHcApp(cmdToHcapp, rule->GetId(), rule->GetName(), deviceList, "");
 			// rule->Check();
 			rs = CODE_OK;
 		}
