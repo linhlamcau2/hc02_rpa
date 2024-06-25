@@ -275,6 +275,9 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue)
 	sendValue["type"] = reqCmd;
 	sendValue["time"] = time(NULL);
 	sendValue["data"] = reqValue;
+	sendValue["deviceCode"] = gateway->getDormitory();
+	sendValue["from"] = "RD_BLE_GW";
+	sendValue["to"] = "CLOUD";
 	Publish(pubServerReqTopic, sendValue.toString());
 	return CODE_OK;
 }
@@ -294,6 +297,8 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	sendValue["time"] = time(NULL);
 	sendValue["deviceCode"] = gateway->getDormitory();
 	sendValue["mac"] = mac;
+	sendValue["from"] = "RD_BLE_GW";
+	sendValue["to"] = "CLOUD";
 	sendValue["type"] = "reportAttribute";
 
 	LOGD("PublishToCloudMessage: Topic: %s: msg: %s", pubServerReqTopic.c_str(), (sendValue.toString()).c_str());
@@ -301,4 +306,3 @@ int CloudProtocol::PublishToCloudMessage(string reqCmd, Json::Value &reqValue, s
 	LOGD("PublishToCloudMessage rs: %d", rs);
 	return rs;
 }
-

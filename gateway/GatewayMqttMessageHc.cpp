@@ -124,6 +124,8 @@ int Gateway::OnRegisterHc(Json::Value &reqValue, Json::Value &respValue)
 		respValue["deviceCode"] = deviceCode;
 		respValue["time"] = time(NULL);
 		respValue["type"] = "reportAttribute";
+		respValue["from"] = "RD_BLE_GW";
+		respValue["to"] = "CLOUD";
 		return CODE_OK;
 	}
 	else
@@ -207,15 +209,6 @@ int Gateway::OnStartScanBle(Json::Value &reqValue, Json::Value &respValue)
 
 	respValue["data"]["code"] = rsCode;
 	respValue["cmd"] = "startScanBle";
-
-	uint32_t deviceType = BLE_SWITCH_1;
-	Json::Value dataJson;
-	Device *device = gateway->AddNewDevice("uuid", Util::setString(Device::ConvertDeviceTypeToName(deviceType)), "30:ae:7b:e5:fb:eb", dataJson, 10, deviceType, 1, true);
-	if (device)
-	{
-		LOGD("Add device OK");
-		gateway->AddDeviceToScanList(device);
-	}
 
 	return CODE_NOT_RESPONSE;
 }
