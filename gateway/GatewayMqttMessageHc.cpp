@@ -47,8 +47,8 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
 #ifdef __ANDROID__
 	OnLocalCallbackRegister("getNotify", bind(&Gateway::OnGetNotify, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("isRead", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
-	OnLocalCallbackRegister("isDelete", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("readNotify", bind(&Gateway::OnUpdateReadNotify, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("deleteNotify", bind(&Gateway::OnDelNotify, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("startAppTest", bind(&Gateway::OnStartAppTest, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("stopAppTest", bind(&Gateway::OnStopAppTest, this, placeholders::_1, placeholders::_2));
 #endif
@@ -835,18 +835,16 @@ int Gateway::OnGetNotify(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUpdateReadNotify");
-	if (reqValue.isMember("id") && reqValue["id"].isString() &&
-		reqValue.isMember("isRead") && reqValue["isRead"].isBool())
+	if (reqValue.isMember("id") && reqValue["id"].isString())
 	{
 		string id = reqValue["id"].asString();
 		Noti *noti = getNotifromId(id);
-		bool isRead = reqValue["isRead"].asBool();
 		if (noti)
 		{
-			noti->UpdateNoti(isRead);
-			respValue["data"]["id"] = id;
+			noti->UpdateNoti(true);
+			respValue["data"]["code"] = CODE_OK;
 		}
-		respValue["cmd"] = "isReadRsp";
+		respValue["cmd"] = "readNotifyRsp";
 	}
 	return CODE_OK;
 }
@@ -854,24 +852,39 @@ int Gateway::OnUpdateReadNotify(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnDelNotify(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnDelReadNotify");
-	if (reqValue.isMember("id") && reqValue["id"].isString())
+	if (reqValue.isMember("listNotify") && reqValue["listNotify"].isArray())
 	{
-		string id = reqValue["id"].asString();
-		Noti *noti = getNotifromId(id);
-		if (noti)
+		Json::Value listNotify = reqValue["listNotify"];
+		for (auto &noti : listNotify)
 		{
-			DelNoti(noti);
-			respValue["data"]["id"] = id;
+			if (noti.isObject() && noti.isMember("id") && noti["id"].isString())
+			{
+				string id = noti["id"].asString();
+				Noti *noti = getNotifromId(id);
+				if (noti)
+				{
+					DelNoti(noti);
+				}
+				else
+				{
+					LOGW("Noti %s not found", id.c_str());
+				}
+			}
 		}
-		respValue["cmd"] = "isDeleteRsp";
 	}
+	else
+	{
+		LOGW("Data error %s", reqValue.toString().c_str());
+	}
+	respValue["data"]["id"] = CODE_OK;
+	respValue["cmd"] = "deleteNotifyRsp";
 	return CODE_OK;
 }
 
 int Gateway::OnStartAppTest(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnStartAppTest");
-	system ("am start -n vn.com.rd.testhardwareapp/vn.com.rd.testhardwareapp.MainActivity");
+	system("am start -n vn.com.rd.testhardwareapp/vn.com.rd.testhardwareapp.MainActivity");
 	respValue["cmd"] = "startAppTestRsp";
 	respValue["data"]["code"] = CODE_OK;
 	return CODE_OK;
@@ -880,7 +893,7 @@ int Gateway::OnStartAppTest(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnStopAppTest(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnStopAppTest");
-	system ("am force-stop vn.com.rd.testhardwareapp");
+	system("am force-stop vn.com.rd.testhardwareapp");
 	respValue["cmd"] = "stopAppTestRsp";
 	respValue["data"]["code"] = CODE_OK;
 	return CODE_OK;

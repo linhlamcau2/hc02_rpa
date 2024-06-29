@@ -803,7 +803,10 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 									}
 									else if (devFast2Room == 0)
 									{
-										if (group->DelDevice(devInGr->device, devInGr->epId, false, true) != CODE_OK)
+										bool isSendBle = false;
+										if (group->GetAddr() < ROOM_ADDR_START)
+											isSendBle = true;
+										if (group->DelDevice(devInGr->device, devInGr->epId, isSendBle, true) != CODE_OK)
 										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
@@ -842,7 +845,10 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 									}
 									else if (devFast2Room == 0)
 									{
-										if (sceneBle->DelDevice(device, false, true) != CODE_OK)
+										bool isSendBle = false;
+										if (sceneBle->GetAddr() < ROOM_ADDR_START)
+											isSendBle = true;
+										if (sceneBle->DelDevice(device, isSendBle, true) != CODE_OK)
 										{
 											if (devicesStatusConfig[device->GetId()])
 												devicesStatusConfig[device->GetId()] = false;
@@ -958,7 +964,10 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					else if (devGroupFast2Room == 0)
 					{
-						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->epId, false, true) != CODE_OK)
+						bool isSendBle = false;
+						if (groupInRoom->GetAddr() < ROOM_ADDR_START)
+							isSendBle = true;
+						if (groupInRoom->DelDevice(deviceInGroup->device, deviceInGroup->epId, isSendBle, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInGroup->device->GetId()])
 								devicesStatusConfig[deviceInGroup->device->GetId()] = false;
 					}
@@ -985,7 +994,10 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 					}
 					else if (devSceneFast2Room == 0)
 					{
-						if (sceneInRoom->DelDevice(deviceInScene->device, false, true) != CODE_OK)
+						bool isSendBle = false;
+						if (sceneInRoom->GetAddr() < ROOM_ADDR_START)
+							isSendBle = true;
+						if (sceneInRoom->DelDevice(deviceInScene->device, isSendBle, true) != CODE_OK)
 							if (devicesStatusConfig[deviceInScene->device->GetId()])
 								devicesStatusConfig[deviceInScene->device->GetId()] = false;
 					}
@@ -998,7 +1010,7 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 			printScene();
 
 			vector<Rule *> ruleInRooms = room->ruleList;
-			for (auto &ruleInRoom: ruleInRooms)
+			for (auto &ruleInRoom : ruleInRooms)
 			{
 				Json::Value temp = Json::arrayValue;
 				pushMsgHcCoreToHcApp("delRule", ruleInRoom->GetId(), ruleInRoom->GetName(), temp, "");

@@ -37,6 +37,10 @@
 
 using namespace std;
 
+#define ROOM_ADDR_START 4096
+#define ROOM_NUM_GROUPS_MAX 256
+#define NUM_ROOMS_MAX 45
+
 class Gateway : public CloudProtocol, public LocalProtocol, public Udp
 {
 private:

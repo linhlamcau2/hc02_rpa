@@ -326,9 +326,9 @@ void Gateway::delRoom(Room *room)
 // 1 Hc có tối đa 45 phòng, mỗi phòng 256 group -> index Room max = 4096 + (256*45) = 15616
 uint16_t Gateway::getNextRoomAddr()
 {
-	uint16_t roomAddrStart = 4096; // start add of room
-	uint16_t numGroupInRoom = 256;
-	uint8_t numRoomMax = 45;
+	uint16_t roomAddrStart = ROOM_ADDR_START; // start add of room
+	uint16_t numGroupInRoom = ROOM_NUM_GROUPS_MAX;
+	uint8_t numRoomMax = NUM_ROOMS_MAX;
 	bool addrExist = false;
 	uint16_t indexMax = roomAddrStart + (numGroupInRoom * (numRoomMax - 1));
 	// get max addr
