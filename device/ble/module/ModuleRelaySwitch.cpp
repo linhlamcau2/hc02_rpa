@@ -72,7 +72,7 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 					}
 					BuildTelemetryValue(jsonValue);
-					CheckTrigger();
+					CheckTrigger(jsonValue);
 					return CODE_OK;
 				}
 			}
@@ -93,8 +93,9 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			if (data_message->relayId == index)
 			{
 				temp_bt = data_message->value;
-				CheckTrigger();
 				BuildTelemetryValue(jsonValue);
+				CheckTrigger(jsonValue);
+
 				return CODE_OK;
 			}
 		}

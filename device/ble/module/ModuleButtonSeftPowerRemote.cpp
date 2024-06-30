@@ -107,7 +107,7 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
                 break;
             }
             BuildTelemetryValue(jsonValue);
-            CheckTrigger();
+            CheckTrigger(jsonValue);
             if (data_message->scene > 0)
             {
                 SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);

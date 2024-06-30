@@ -250,6 +250,7 @@ int Gateway::OnActiveRule(Json::Value &reqValue, Json::Value &respValue)
 		if (rule)
 		{
 			rule->SetStatus(status);
+			database->RuleUpdateStatus(rule);
 		}
 	}
 	respValue["data"]["code"] = CODE_OK;

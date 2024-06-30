@@ -51,7 +51,6 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			SaveAttribute();
 #endif
 		}
-		CheckTrigger();
 #ifdef __ANDROID__
 		if (status == 1)
 		{
@@ -62,6 +61,7 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		}
 #endif
 		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

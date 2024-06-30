@@ -33,8 +33,9 @@ int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x03)
 	{
 		time = data[5] | (data[6] << 8);
-		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
+
 		return CODE_OK;
 	}
 	return CODE_ERROR;

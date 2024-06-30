@@ -63,7 +63,7 @@ int ModuleDistance::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
             }
             BuildTelemetryValue(jsonValue);
-            CheckTrigger();
+            CheckTrigger(jsonValue);
             return CODE_OK;
         }
     }

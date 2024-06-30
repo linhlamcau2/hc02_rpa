@@ -19,33 +19,73 @@ bool Module::CheckAddr(uint16_t addr)
 	return this->addr == addr;
 }
 
-static void CheckInputRuleDevice(void *data)
+static void CheckInputRuleDevice(void *data, void *jsonValue)
 {
 	Device *device = (Device *)data;
+	Json::Value *dataJsonPtr = (Json::Value *)jsonValue;
+	Json::Value &dataJson = *dataJsonPtr;
 	bool rs;
 	for (auto &ruleInputDevice : device->deviceRuleInputList)
 	{
-		rs = false;
-		if (device->CheckData(*ruleInputDevice->GetData(), rs))
-			ruleInputDevice->Trigger(rs);
+		Json::Value &ruleValue = *(ruleInputDevice->GetData());
+
+		if (dataJson.isObject() && ruleValue.isObject())
+		{
+			for (auto const &key : dataJson.getMemberNames())
+			{
+				if (ruleValue.isMember(key))
+				{
+					if (dataJson[key].type() == ruleValue[key].type())
+					{
+						rs = false;
+						if (device->CheckData(*ruleInputDevice->GetData(), rs))
+							ruleInputDevice->Trigger(rs);
+					}
+				}
+			}
+		}
+		else
+		{
+			LOGW("Is not object");
+		}
 	}
 }
 
-void Module::CheckTrigger()
+void Module::CheckTrigger(Json::Value &data)
 {
 	LOGV("CheckTrigger");
-#ifdef ESP_PLATFORM
-	bool rs;
-	for (auto &ruleInputDevice : device->deviceRuleInputList)
+	if (!data.isNull())
 	{
-		rs = false;
-		if (CheckData(*ruleInputDevice->GetData(), rs))
-			ruleInputDevice->Trigger(rs);
-	}
+#ifdef ESP_PLATFORM
+		bool rs;
+		for (auto &ruleInputDevice : device->deviceRuleInputList)
+		{
+			Json::Value &ruleValue = *(ruleInputDevice->GetData());
+			if (data.isObject() && data.isObject())
+			{
+				for (auto const &key : data.getMemberNames())
+				{
+					if (ruleValue.isMember(key))
+					{
+						if (data[key].type() == ruleValue[key].type())
+						{
+							rs = false;
+							if (CheckData(*ruleInputDevice->GetData(), rs))
+								ruleInputDevice->Trigger(rs);
+						}
+					}
+				}
+			}
+			else
+			{
+				LOGW("Is not object");
+			}
+		}
 #else
-	thread checkOnlineThread(CheckInputRuleDevice, this->device);
-	checkOnlineThread.detach();
+		thread CheckInputRuleDeviceThread(CheckInputRuleDevice, this->device, &data);
+		CheckInputRuleDeviceThread.detach();
 #endif
+	}
 }
 
 bool Module::CheckData(Json::Value &dataValue, bool &rs)

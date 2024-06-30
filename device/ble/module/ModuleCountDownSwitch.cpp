@@ -34,7 +34,7 @@ int ModuleCountDownSwitch::InputData(uint8_t *data, int len, Json::Value &jsonVa
 	{
 		time = data[6] | (data[7] << 8);
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

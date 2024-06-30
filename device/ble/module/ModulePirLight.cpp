@@ -80,8 +80,8 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				SaveAttribute(KEY_ATTRIBUTE_LUX);
 #endif
 			}
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
 
 			uint16_t sceneId = data[5] | (data[6] << 8);
 			if (sceneId > 0)

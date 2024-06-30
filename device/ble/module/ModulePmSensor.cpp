@@ -91,8 +91,9 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			SaveAttribute(KEY_ATTRIBUTE_PM1_0);
 #endif
 		}
-		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
+
 		return CODE_OK;
 	}
 	return CODE_ERROR;

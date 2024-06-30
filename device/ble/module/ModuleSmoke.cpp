@@ -75,8 +75,9 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			SaveAttribute(KEY_ATTRIBUTE_SMOKE_PIN);
 #endif
 		}
-		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
+
 #ifdef __ANDROID__
 		if (smoke == 1)
 		{

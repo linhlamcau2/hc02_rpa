@@ -87,8 +87,9 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				SaveAttribute();
 #endif
 			}
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
+
 			return false;
 		}
 	}

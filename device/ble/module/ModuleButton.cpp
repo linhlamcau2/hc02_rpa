@@ -68,9 +68,9 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 					SaveAttribute();
 #endif
 				}
-
-				CheckTrigger();
 				BuildTelemetryValue(jsonValue);
+				CheckTrigger(jsonValue);
+
 				if (data_message->scene > 0)
 				{
 					SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);

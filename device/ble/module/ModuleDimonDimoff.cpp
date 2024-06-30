@@ -89,8 +89,8 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			SaveAttribute(keyDimOn);
 #endif
 		}
-		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

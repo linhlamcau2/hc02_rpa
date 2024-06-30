@@ -41,7 +41,7 @@ int ModuleModeInput::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         {
             mode = data_message->mode;
             BuildTelemetryValue(jsonValue);
-            CheckTrigger();
+            CheckTrigger(jsonValue);
             return CODE_OK;
         }
     }

@@ -45,7 +45,7 @@ public:
 	 * @brief Check rules related with this element
 	 *
 	 */
-	virtual void CheckTrigger();
+	virtual void CheckTrigger(Json::Value &data);
 
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 

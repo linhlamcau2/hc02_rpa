@@ -107,8 +107,8 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
 				break;
 			}
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue, telemetry);
+			CheckTrigger(telemetry);
 			return CODE_OK;
 		}
 	}
@@ -143,8 +143,8 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
 				break;
 			}
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue, telemetry);
+			CheckTrigger(telemetry);
 			return CODE_OK;
 		}
 	}

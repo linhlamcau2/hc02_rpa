@@ -81,8 +81,9 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
 #endif
 			}
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
+
 			Util::SetTempOfScreenTouch(temp);
 			Util::SetHumOfScreenTouch(hum);
 			return CODE_OK;
@@ -107,8 +108,9 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
 #endif
 			}
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
+
 			return CODE_OK;
 		}
 	}

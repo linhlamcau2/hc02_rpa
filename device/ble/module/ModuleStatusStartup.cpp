@@ -42,7 +42,7 @@ int ModuleStatusStartup::InputData(uint8_t *data, int len, Json::Value &jsonValu
         {
             status = data_message->status;
             BuildTelemetryValue(jsonValue);
-            CheckTrigger();
+            CheckTrigger(jsonValue);
             return CODE_OK;
         }
     }

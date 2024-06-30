@@ -32,7 +32,7 @@ int ModuleModeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 	{
 		mode = data[5];
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;

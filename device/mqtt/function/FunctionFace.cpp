@@ -27,8 +27,9 @@ int FunctionFace::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		if (this->faceId == faceId)
 		{
 			this->faceValue = faceValue;
-			CheckTrigger();
 			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+
 		}
 	}
 	return CODE_ERROR;
