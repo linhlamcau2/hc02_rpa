@@ -284,7 +284,8 @@ void Gateway::delRule(Rule *rule)
 	roomListMtx.lock();
 	for (auto &[id, room] : roomList)
 	{
-		for (auto &rl : room->ruleList)
+		vector<Rule *> listRules = room->ruleList;
+		for (auto &rl : listRules)
 		{
 			if (rl == rule)
 			{

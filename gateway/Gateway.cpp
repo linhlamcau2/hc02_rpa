@@ -1683,8 +1683,9 @@ int Gateway::CreateNoti(Noti *noti, bool addDatabase, bool pushNoti)
 		notiValue["data"] = Json::arrayValue;
 		Json::Value payloadJson;
 		payloadJson.parse(noti->GetContent());
-		payloadJson["isRead"] = noti->GetContent();
+		payloadJson["isRead"] = false;
 		notiValue["data"].append(payloadJson);
+		PublishToLocalMessage(notiValue);
 	}
 	notiList[noti->GetId()] = noti;
 	return CODE_OK;
