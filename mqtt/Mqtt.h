@@ -62,12 +62,12 @@ public:
 class Mqtt : public mosqpp::mosquittopp
 {
 public:
-	Mqtt(string host, int port, string client_id, string username, string password, int keepalive, char *cert = NULL, string willset_topic = "", string willset_payload = "");
+	Mqtt(string host, int port, char* client_id, string username, string password, int keepalive, char *cert = NULL, string willset_topic = "", string willset_payload = "");
 	virtual ~Mqtt();
 
 	void init();
 
-	void SetServer(string host, int port, string client_id, string username, string password, int keepalive);
+	void SetServer(string host, int port, char* client_id, string username, string password, int keepalive);
 	void SetWillset(string willset_topic, string willset_payload);
 	int Connect();
 	int Reconnect();
@@ -91,7 +91,7 @@ public:
 protected:
 	string host;
 	int port;
-	string client_id;
+	char* client_id;
 	string username;
 	string password;
 	int keepalive;

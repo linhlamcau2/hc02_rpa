@@ -16,7 +16,7 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 #ifdef ESP_PLATFORM
 	: Mqtt(address, port, clientId, username, password, keepalive)
 #else
-	: Mqtt(address, port, clientId, username, password, keepalive, cert)
+	: Mqtt(address, port, (char*)clientId.c_str(), username, password, keepalive, cert)
 #endif
 
 {
