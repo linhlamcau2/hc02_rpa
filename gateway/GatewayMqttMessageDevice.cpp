@@ -512,7 +512,11 @@ int Gateway::OnCreateSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 								device->GetType() == BLE_WIFI_SWITCH_1 ||
 								device->GetType() == BLE_WIFI_SWITCH_2 ||
 								device->GetType() == BLE_WIFI_SWITCH_3 ||
-								device->GetType() == BLE_WIFI_SWITCH_4)
+								device->GetType() == BLE_WIFI_SWITCH_4 ||
+								device->GetType() == BLE_WIFI_SWITCH_1_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_2_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_3_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_4_SQUARE)
 							{
 								for (auto &bt : btn["bt"])
 								{
@@ -655,7 +659,11 @@ int Gateway::OnAddBtToSwitchLink(Json::Value &reqValue, Json::Value &respValue)
 								device->GetType() == BLE_WIFI_SWITCH_1 ||
 								device->GetType() == BLE_WIFI_SWITCH_2 ||
 								device->GetType() == BLE_WIFI_SWITCH_3 ||
-								device->GetType() == BLE_WIFI_SWITCH_4)
+								device->GetType() == BLE_WIFI_SWITCH_4 ||
+								device->GetType() == BLE_WIFI_SWITCH_1_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_2_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_3_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_4_SQUARE)
 							{
 								for (auto &bt : btn["bt"])
 								{
@@ -791,7 +799,11 @@ int Gateway::OnDelBtFromSwitchLink(Json::Value &reqValue, Json::Value &respValue
 								device->GetType() == BLE_WIFI_SWITCH_1 ||
 								device->GetType() == BLE_WIFI_SWITCH_2 ||
 								device->GetType() == BLE_WIFI_SWITCH_3 ||
-								device->GetType() == BLE_WIFI_SWITCH_4)
+								device->GetType() == BLE_WIFI_SWITCH_4 ||
+								device->GetType() == BLE_WIFI_SWITCH_1_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_2_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_3_SQUARE ||
+								device->GetType() == BLE_WIFI_SWITCH_4_SQUARE)
 							{
 								for (auto &bt : btn["bt"])
 								{

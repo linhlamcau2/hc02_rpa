@@ -67,6 +67,7 @@ int AndroidBleProtocol::StartScan()
 	element.append(BLE_SWITCH_ONOFF);
 	element.append(BLE_REPEATER);
 	element.append(BLE_WIFI_SWITCH_1);
+	element.append(BLE_WIFI_SWITCH_1_SQUARE);
 	element.append(BLE_WIFI_SWITCH_ELECTRICAL_1);
 
 	Json::Value secondElements = Json::arrayValue;
@@ -103,6 +104,7 @@ int AndroidBleProtocol::StartScan()
 	secondElements.append(BLE_SWITCH_ELECTRICAL_2);
 	secondElements.append(BLE_SWITCH_ELECTRICAL_2_V2);
 	secondElements.append(BLE_WIFI_SWITCH_2);
+	secondElements.append(BLE_WIFI_SWITCH_2_SQUARE);
 	secondElements.append(BLE_WIFI_SWITCH_ELECTRICAL_2);
 
 	Json::Value thirdElements = Json::arrayValue;
@@ -115,6 +117,7 @@ int AndroidBleProtocol::StartScan()
 	thirdElements.append(BLE_SWITCH_ELECTRICAL_3);
 	thirdElements.append(BLE_SWITCH_ELECTRICAL_3_V2);
 	thirdElements.append(BLE_WIFI_SWITCH_3);
+	thirdElements.append(BLE_WIFI_SWITCH_3_SQUARE);
 	thirdElements.append(BLE_WIFI_SWITCH_ELECTRICAL_3);
 
 	Json::Value fourthElements = Json::arrayValue;
@@ -127,6 +130,7 @@ int AndroidBleProtocol::StartScan()
 	fourthElements.append(BLE_SWITCH_RGB_4_V2);
 	fourthElements.append(BLE_SWITCH_RGB_4_SQUARE_V2);
 	fourthElements.append(BLE_WIFI_SWITCH_4);
+	fourthElements.append(BLE_WIFI_SWITCH_4_SQUARE);
 
 	Json::Value fiveElements = Json::arrayValue;
 	fiveElements.append(BLE_SWITCH_5_CEILING);

@@ -821,15 +821,19 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_WIFI_SWITCH_1:
+	case BLE_WIFI_SWITCH_1_SQUARE:
 		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_WIFI_SWITCH_2:
+	case BLE_WIFI_SWITCH_2_SQUARE:
 		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_WIFI_SWITCH_3:
+	case BLE_WIFI_SWITCH_3_SQUARE:
 		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_WIFI_SWITCH_4:
+	case BLE_WIFI_SWITCH_4_SQUARE:
 		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
 		break;
 

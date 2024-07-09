@@ -478,7 +478,11 @@ int Gateway::isDevFast2Room(Device *device)
 			 device->GetType() == BLE_WIFI_SWITCH_1 ||
 			 device->GetType() == BLE_WIFI_SWITCH_2 ||
 			 device->GetType() == BLE_WIFI_SWITCH_3 ||
-			 device->GetType() == BLE_WIFI_SWITCH_4)
+			 device->GetType() == BLE_WIFI_SWITCH_4 ||
+			 device->GetType() == BLE_WIFI_SWITCH_1_SQUARE ||
+			 device->GetType() == BLE_WIFI_SWITCH_2_SQUARE ||
+			 device->GetType() == BLE_WIFI_SWITCH_3_SQUARE ||
+			 device->GetType() == BLE_WIFI_SWITCH_4_SQUARE)
 	{
 		if (device->GetVersion() >= FAST2ROOM_VER_SWITCH_RGB_V2)
 			rs = 0;
