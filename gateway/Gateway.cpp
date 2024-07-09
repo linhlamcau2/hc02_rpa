@@ -636,7 +636,12 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
-	Device *device = NULL;
+	Device *device = getDeviceFromId(id);
+	if (device)
+	{
+		bleProtocol->ResetDev(device->GetAddr());
+	}
+	
 	switch (type)
 	{
 	case BLE_ALL:
