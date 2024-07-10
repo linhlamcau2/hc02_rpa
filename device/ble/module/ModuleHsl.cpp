@@ -101,9 +101,12 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			SaveAttribute(KEY_ATTRIBUTE_HUE);
 #endif
 		}
-		BuildTelemetryValue(jsonValue);
-		CheckTrigger(jsonValue);
-		return CODE_OK;
+		if (h != 0 && s!= 0 && l!= 0)
+		{
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }
