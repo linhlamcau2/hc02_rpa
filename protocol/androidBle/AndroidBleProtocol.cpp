@@ -69,6 +69,10 @@ int AndroidBleProtocol::StartScan()
 	element.append(BLE_WIFI_SWITCH_1);
 	element.append(BLE_WIFI_SWITCH_1_SQUARE);
 	element.append(BLE_WIFI_SWITCH_ELECTRICAL_1);
+	element.append(BLE_WIFI_SWITCH_ROOLING_DOOR);
+	element.append(BLE_WIFI_SWITCH_ROOLING_DOOR_SQUARE);
+	element.append(BLE_WIFI_SWITCH_CURTAIN);
+	element.append(BLE_WIFI_SWITCH_CURTAIN_SQUARE);
 
 	Json::Value secondElements = Json::arrayValue;
 	secondElements.append(BLE_DOWNLIGHT_SMT);

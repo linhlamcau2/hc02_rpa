@@ -1296,6 +1296,10 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_ROOLING_DOOR:
 	case BLE_SWITCH_ROOLING_DOOR_V2:
 	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
+	case BLE_WIFI_SWITCH_CURTAIN:
+	case BLE_WIFI_SWITCH_CURTAIN_SQUARE:
+	case BLE_WIFI_SWITCH_ROOLING_DOOR:
+	case BLE_WIFI_SWITCH_ROOLING_DOOR_SQUARE:
 		BleProtocol::UpdateStatusCurtain(devAddr);
 		break;
 	default:
@@ -3220,6 +3224,150 @@ int BleProtocol::CalibCurtain(uint16_t devAddr, uint8_t status)
 	return CODE_ERROR;
 }
 
+int BleProtocol::CalibAuto(uint16_t devAddr, uint16_t time)
+{
+	LOGD("CalibAuto 0x%04x, time %d", devAddr, time);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t calibHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t time;
+		uint8_t future[4];
+	} calib_message_t;
+	calib_message_t calib_message = {0};
+	memset(&calib_message, 0x00, sizeof(calib_message));
+	calib_message.ble_message_header.devAddr = devAddr;
+	calib_message.opcodeVendor = RD_OPCODE_CONFIG;
+	calib_message.vendorId = RD_VENDOR_ID;
+	calib_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	calib_message.header = RD_OPCODE_CALIBAUTO;
+	calib_message.time = time;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&calib_message, sizeof(calib_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, calibHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t time;
+		} calib_rsp_message_t;
+		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
+		if (calib_rsp_message->header == RD_OPCODE_CALIBAUTO && calib_rsp_message->time == time)
+		{
+			return CODE_OK;
+		}
+		LOGW("calib auto resp state not match with input control");
+	}
+	LOGW("calib auto err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::LockDevice(uint16_t devAddr, uint8_t locked)
+{
+	LOGD("LockDevice 0x%04x, locked %d", devAddr, locked);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t lockHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t lock;
+		uint8_t future[5];
+	} lock_message_t;
+	lock_message_t lock_message = {0};
+	memset(&lock_message, 0x00, sizeof(lock_message));
+	lock_message.ble_message_header.devAddr = devAddr;
+	lock_message.opcodeVendor = RD_OPCODE_CONFIG;
+	lock_message.vendorId = RD_VENDOR_ID;
+	lock_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	lock_message.header = RD_OPCODE_LOCK;
+	lock_message.lock = locked;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&lock_message, sizeof(lock_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, lockHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t lock;
+		} lock_rsp_message_t;
+		lock_rsp_message_t *lock_rsp_message = (lock_rsp_message_t *)dataRsp;
+		if (lock_rsp_message->header == RD_OPCODE_LOCK && lock_rsp_message->lock == locked)
+		{
+			return CODE_OK;
+		}
+		LOGW("lock device resp state not match with input control");
+	}
+	LOGW("lock device auto err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetModeWifi(uint16_t devAddr, uint8_t mode)
+{
+	LOGD("SetModeWifi 0x%04x, mode %d", devAddr, mode);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+		uint8_t future[5];
+	} mode_message_t;
+	mode_message_t mode_message = {0};
+	memset(&mode_message, 0x00, sizeof(mode_message));
+	mode_message.ble_message_header.devAddr = devAddr;
+	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_message.vendorId = RD_VENDOR_ID;
+	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_message.header = RD_OPCODE_SETMODE_WIFI;
+	mode_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+		} mode_rsp_message_t;
+		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
+		if (mode_rsp_message->header == RD_OPCODE_SETMODE_WIFI && mode_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode resp state not match with input control");
+	}
+	LOGW("mode device auto err");
+	return CODE_ERROR;
+}
+
 int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
 {
 	LOGD("UpdateStatusCurtain 0x%04x", devAddr);
@@ -3592,7 +3740,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 			uint8_t button;
 		} controlrgb_switch_rsp_message_t;
 		controlrgb_switch_rsp_message_t *controlrgb_switch_rsp_message = (controlrgb_switch_rsp_message_t *)dataRsp;
-		if (controlrgb_switch_rsp_message->header == 0x050b && controlrgb_switch_rsp_message->button == button)
+		if (controlrgb_switch_rsp_message->header == RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH && controlrgb_switch_rsp_message->button == button)
 		{
 			return CODE_OK;
 		}

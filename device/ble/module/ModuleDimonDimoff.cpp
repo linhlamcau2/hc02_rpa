@@ -70,7 +70,7 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint8_t dimOff;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == 0xE3 && data_message->header == 0x050b)
+	if (data_message->opcode == 0xE3 && data_message->header == RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH)
 	{
 		int temp_dimOn, temp_dimOff;
 		temp_dimOn = data_message->dimOn;

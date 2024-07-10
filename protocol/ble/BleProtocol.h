@@ -69,6 +69,9 @@
 #define RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE 0x0011
 #define RD_OPCODE_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED 0x0311
 #define RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING 0x0611
+#define RD_OPCODE_CALIBAUTO 0x0711
+#define RD_OPCODE_LOCK 0x0811
+#define RD_OPCODE_SETMODE_WIFI 0x0911
 #define RD_OPCODE_CONFIG_MOTOR 0x0511
 #define RD_OPCODE_CALIB 0x0411
 #define RD_OPCODE_REQUEST_STATUS_CURTAIN 0x0311
@@ -362,6 +365,9 @@ public:
 	int ConfigMotor(uint16_t devAddr, uint8_t typeMotor);
 	int CalibCurtain(uint16_t devAddr, uint8_t status);
 	int UpdateStatusCurtain(uint16_t devAddr);
+	int CalibAuto(uint16_t devAddr, uint16_t time);
+	int LockDevice(uint16_t devAddr, uint8_t locked);
+	int SetModeWifi(uint16_t devAddr, uint8_t mode);
 
 	// Optimize add device to Room
 	// int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
