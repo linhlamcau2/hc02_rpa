@@ -126,7 +126,7 @@ int Db::createTableIfNotExists()
 				 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey VARCHAR, create_at INTEGER, data TEXT, PRIMARY KEY (mac)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, room_id TEXT, create_at INTEGER, data TEXT, PRIMARY KEY (group_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, create_at INTEGER, data TEXT, PRIMARY KEY (room_id)) WITHOUT ROWID;"
-				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, create_at INTEGER, is_favorite BOOLEAN, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, create_at INTEGER, is_favorite BOOLEAN, is_first_run BOOLEAN, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, is_favorite BOOLEAN, create_at INTEGER, data TEXT, PRIMARY KEY (scene_ble_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS Noti (id TEXT NOT NULL, type TEXT, is_read BOOLEAN, content TEXT, update_time INTEGER, create_time INTEGER, PRIMARY KEY (id)) WITHOUT ROWID;";
 	return Sqlite_Exec(sql);

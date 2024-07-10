@@ -65,9 +65,7 @@ RuleType Rule::GetType()
 void Rule::UpdateFirstRun()
 {
 	isFirstRun = false;
-	Json::Value ruleDataUpdate = GetRuleData();
-	ruleDataUpdate["isFirstRun"] = false;
-	database->RuleUpdateData(this, ruleDataUpdate.toString());
+	database->RuleUpdateFirstRun(this, isFirstRun);
 }
 
 void Rule::Check()

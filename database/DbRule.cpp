@@ -23,7 +23,8 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				long create_at = sqlite3_column_int(stmt, index++);
 				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
-				LOGD("%s, %s, %d, %s, %d", id.c_str(), data.c_str(), type, enable ? "true" : "flase", addr);
+				bool isFirstRun = sqlite3_column_int(stmt, index++) ? true : false;
+				LOGD("%s, %s, %d, %s, %d, %s, %s", id.c_str(), data.c_str(), type, enable ? "true" : "flase", addr, isFavorite ? "true" : "false", isFirstRun ? "true" : "false");
 
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);
@@ -37,6 +38,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 						{
 							rule->SetStatus(enable);
 							rule->SetIsFavorite(isFavorite);
+							rule->SetFirstRun(isFirstRun);
 							// rule->Check();
 						}
 					}
@@ -102,6 +104,12 @@ int Db::RuleUpdateAddr(Rule *rule)
 int Db::RuleUpdateFavorite(Rule *rule, bool isFavorite)
 {
 	string sql = "UPDATE " TABLE_NAME " SET is_favorite =" + to_string(isFavorite) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleUpdateFirstRun(Rule *rule, bool isFirstRun)
+{
+	string sql = "UPDATE " TABLE_NAME " SET is_first_run =" + to_string(isFirstRun) + " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

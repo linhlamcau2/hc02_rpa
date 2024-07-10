@@ -993,10 +993,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 		{
 			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
 				rule->SetStatus(ruleValue["enable"].asInt());
-			if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
-			{
-				rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
-			}
+			// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			// {
+			// 	rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
+			// }
 
 			if (inputValue.isMember("device") && inputValue["device"].isArray())
 			{
@@ -1077,16 +1077,16 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 			ruleListMtx.unlock();
 			if (addDatabase)
 			{
+				string ruleStr = ruleValue.toString();
+				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->RuleAdd(rule, ruleStr, 0);
 				bool isFirstStt = false;
 				if (repeat == 0)
 				{
 					isFirstStt = true;
 				}
-				ruleValue["isFirstRun"] = isFirstStt;
 				rule->SetFirstRun(isFirstStt);
-				string ruleStr = ruleValue.toString();
-				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
-				database->RuleAdd(rule, ruleStr, 0);
+				database->RuleUpdateFirstRun(rule, isFirstStt);
 			}
 
 			if (ruleValue.isMember("roomId") && ruleValue["roomId"].isString())
@@ -1163,8 +1163,8 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
 				rule->SetStatus(ruleValue["enable"].asInt());
 
-			if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
-				rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
+			// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			// 	rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
 
 			// parse input
 			if (inputValue.isMember("timer") && inputValue["timer"].isArray())
@@ -1267,7 +1267,14 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				string ruleStr = ruleValue.toString();
 				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
-				rule->SetFirstRun(true);
+
+				bool isFirstStt = false;
+				if (repeat == 0)
+				{
+					isFirstStt = true;
+				}
+				rule->SetFirstRun(isFirstStt);
+				database->RuleUpdateFirstRun(rule, isFirstStt);
 			}
 		}
 		else

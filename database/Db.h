@@ -121,6 +121,7 @@ public:
 	int RuleUpdateAddr(Rule *rule);
 	int RuleUpdateType(Rule *rule, int type);
 	int RuleUpdateFavorite(Rule *rule, bool isFavorite);
+	int RuleUpdateFirstRun(Rule *rule, bool isFirstRun);
 	int RuleDel(Rule *rule);
 	int RuleDelAll();
 
