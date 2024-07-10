@@ -120,6 +120,7 @@ public:
 	int RuleUpdateStatus(Rule *rule);
 	int RuleUpdateAddr(Rule *rule);
 	int RuleUpdateType(Rule *rule, int type);
+	int RuleUpdateFavorite(Rule *rule, bool isFavorite);
 	int RuleDel(Rule *rule);
 	int RuleDelAll();
 

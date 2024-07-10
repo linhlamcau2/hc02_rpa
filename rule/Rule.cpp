@@ -15,6 +15,7 @@ Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
+	this->isFavorite = false;
 	isEnable = true;
 	timerRegisterIndex = 0;
 }
@@ -26,6 +27,7 @@ Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16
 	this->startTime = startTime;
 	this->endTime = endTime;
 	this->ruleData = ruleData;
+	this->isFavorite = false;
 	isEnable = true;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
 }
@@ -179,4 +181,14 @@ bool Rule::GetFirstRun()
 void Rule::SetFirstRun(bool isFirstRun)
 {
 	this->isFirstRun = isFirstRun;
+}
+
+bool Rule::GetIsFavorite()
+{
+	return this->isFavorite;
+}
+
+void Rule::SetIsFavorite(bool isFavorite)
+{
+	this->isFavorite = isFavorite;
 }

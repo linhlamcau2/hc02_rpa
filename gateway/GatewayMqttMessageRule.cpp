@@ -13,6 +13,9 @@ void Gateway::InitMqttMessageRule()
 	OnDeviceRpcCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("activeRule", bind(&Gateway::OnActiveRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("addFavoriteRule", bind(&Gateway::OnAddFavoriteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delFavoriteRule", bind(&Gateway::OnDelFavoriteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getFavoriteRule", bind(&Gateway::OnGetFavoriteRule, this, placeholders::_1, placeholders::_2));
 
 	OnLocalCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));
@@ -23,6 +26,9 @@ void Gateway::InitMqttMessageRule()
 	OnLocalCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("activeRule", bind(&Gateway::OnActiveRule, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("addFavoriteRule", bind(&Gateway::OnAddFavoriteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delFavoriteRule", bind(&Gateway::OnDelFavoriteRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("getFavoriteRule", bind(&Gateway::OnGetFavoriteRule, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnGetRuleList(Json::Value &reqValue, Json::Value &respValue)
@@ -274,5 +280,103 @@ int Gateway::OnActionRule(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "actionRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnAddFavoriteRule(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnAddFavoriteRule");
+	int rs = CODE_OK;
+	if (reqValue.isMember("rulelist") && reqValue["rulelist"].isArray())
+	{
+		Json::Value rules = reqValue["rulelist"];
+		for (auto &item : rules)
+		{
+			if (item.isString())
+			{
+				string id = item.asString();
+				Rule *rule = getRuleFromId(id);
+				if (rule)
+				{
+					rule->SetIsFavorite(true);
+					database->RuleUpdateFavorite(rule, true);
+				}
+				else
+				{
+					LOGW("Rule %s not found", id.c_str());
+					rs = CODE_ERROR;
+				}
+			}
+			else
+			{
+				LOGW("Is not string");
+				rs = CODE_ERROR;
+			}
+		}
+	}
+	else
+	{
+		LOGW("Data error %s", reqValue.toString().c_str());
+		rs = CODE_ERROR;
+	}
+	respValue["data"]["code"] = rs;
+	respValue["cmd"] = "addFavoriteRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDelFavoriteRule(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnDelFavoriteRule");
+	int rs = CODE_OK;
+	if (reqValue.isMember("rulelist") && reqValue["rulelist"].isArray())
+	{
+		Json::Value scenes = reqValue["rulelist"];
+		for (auto &temp : scenes)
+		{
+			if (temp.isString())
+			{
+				string id = temp.asString();
+				Rule *rule = getRuleFromId(id);
+				if (rule)
+				{
+					rule->SetIsFavorite(false);
+					database->RuleUpdateFavorite(rule, false);
+				}
+				else
+				{
+					LOGW("Rule %s not found", id.c_str());
+				}
+			}
+			else
+			{
+				LOGW("Is not string");
+				rs = CODE_ERROR;
+			}
+		}
+	}
+	else
+	{
+		LOGW("Data error %s", reqValue.toString().c_str());
+		rs = CODE_ERROR;
+	}
+	respValue["data"]["code"] = rs;
+	respValue["cmd"] = "delFavoriteRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnGetFavoriteRule(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnGetFavoriteRule");
+	Json::Value list = Json::arrayValue;
+	for (const auto &[id, rule] : ruleList)
+	{
+		if (rule->GetIsFavorite())
+		{
+			list.append(id);
+		}
+	}
+	respValue["data"]["rules"] = list;
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "getFavoriteRuleRsp";
 	return CODE_OK;
 }

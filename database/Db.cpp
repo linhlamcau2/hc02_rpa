@@ -117,7 +117,7 @@ bool Db::IsHaveDb(const char * dbName)
 
 int Db::createTableIfNotExists()
 {
-	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version INTEGER, hardware_version INTEGER, active_time INTEGER, update_time INTEGER, data TEXT,is_favorite BOOLEAN, PRIMARY KEY (device_id)) WITHOUT ROWID;"
+	string sql = "CREATE TABLE IF NOT EXISTS Device (mac VARCHAR, device_id VARCHAR NOT NULL, name VARCHAR, addr INTEGER, type INTEGER, firmware_version INTEGER, hardware_version INTEGER, active_time INTEGER, update_time INTEGER, data TEXT, is_favorite BOOLEAN, PRIMARY KEY (device_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceAttribute (device_id VARCHAR NOT NULL, attribute TEXT, value DOUBLE, PRIMARY KEY (device_id, attribute)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceBleChild (device_id VARCHAR NOT NULL, parent_id VARCHAR NOT NULL, data TEXT, PRIMARY KEY (device_id, parent_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS DeviceInGroup (group_id VARCHAR NOT NULL, device_id VARCHAR NOT NULL, element INTEGER, create_at INTEGER, data TEXT, PRIMARY KEY (group_id, device_id, element)) WITHOUT ROWID;"
@@ -126,7 +126,7 @@ int Db::createTableIfNotExists()
 				 "CREATE TABLE IF NOT EXISTS Gateway (mac VARCHAR NOT NULL ,gateway_id VARCHAR, name VARCHAR, version VARCHAR, ble_netkey VARCHAR, ble_appkey VARCHAR, ble_devicekey VARCHAR, ble_addr INTEGER, ble_iv_index INTEGER, dormitory TEXT, refresh_token TEXT, zigbee_netkey VARCHAR, create_at INTEGER, data TEXT, PRIMARY KEY (mac)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS [Group] (group_id VARCHAR NOT NULL, group_addr INTEGER, name VARCHAR, room_id TEXT, create_at INTEGER, data TEXT, PRIMARY KEY (group_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS Room (room_id VARCHAR NOT NULL, room_addr INTEGER, name VARCHAR, create_at INTEGER, data TEXT, PRIMARY KEY (room_id)) WITHOUT ROWID;"
-				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, create_at INTEGER, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
+				 "CREATE TABLE IF NOT EXISTS Rule (rule_id VARCHAR NOT NULL, data TEXT NOT NULL, type INTEGER, enable BOOLEAN, rule_addr INTEGER, create_at INTEGER, is_favorite BOOLEAN, PRIMARY KEY (rule_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS SceneBle (scene_ble_id VARCHAR NOT NULL, scene_ble_addr INTEGER, name VARCHAR, room_id TEXT, is_favorite BOOLEAN, create_at INTEGER, data TEXT, PRIMARY KEY (scene_ble_id)) WITHOUT ROWID;"
 				 "CREATE TABLE IF NOT EXISTS Noti (id TEXT NOT NULL, type TEXT, is_read BOOLEAN, content TEXT, update_time INTEGER, create_time INTEGER, PRIMARY KEY (id)) WITHOUT ROWID;";
 	return Sqlite_Exec(sql);

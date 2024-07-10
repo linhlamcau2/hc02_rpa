@@ -22,6 +22,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				bool enable = sqlite3_column_int(stmt, index++) ? true : false;
 				uint16_t addr = sqlite3_column_int(stmt, index++);
 				long create_at = sqlite3_column_int(stmt, index++);
+				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
 				LOGD("%s, %s, %d, %s, %d", id.c_str(), data.c_str(), type, enable ? "true" : "flase", addr);
 
 				string ruledata;
@@ -35,6 +36,7 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 						if (rule)
 						{
 							rule->SetStatus(enable);
+							rule->SetIsFavorite(isFavorite);
 							// rule->Check();
 						}
 					}
@@ -94,6 +96,12 @@ int Db::RuleUpdateType(Rule *rule, int type)
 int Db::RuleUpdateAddr(Rule *rule)
 {
 	string sql = "UPDATE " TABLE_NAME " SET rule_addr=" + to_string(rule->GetAddr()) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleUpdateFavorite(Rule *rule, bool isFavorite)
+{
+	string sql = "UPDATE " TABLE_NAME " SET is_favorite =" + to_string(isFavorite) + " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

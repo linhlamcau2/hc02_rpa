@@ -42,6 +42,7 @@ private:
 
 	bool isAvailable;
 	bool isEnable;
+	bool isFavorite;
 	int timerRegisterIndex;
 
 	vector<RuleInput *> ruleInputList;
@@ -68,4 +69,6 @@ public:
 	void SetStatus(bool enable);
 	bool GetFirstRun();
 	void SetFirstRun(bool isFirstRun);
+	bool GetIsFavorite();
+	void SetIsFavorite(bool isFavorite);
 };

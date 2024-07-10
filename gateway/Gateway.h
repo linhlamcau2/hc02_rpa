@@ -152,6 +152,9 @@ private:
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActiveRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnAddFavoriteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnDelFavoriteRule(Json::Value &reqValue, Json::Value &respValue);
+	int OnGetFavoriteRule(Json::Value &reqValue, Json::Value &respValue);
 
 	// Scene
 	void InitMqttMessageScene();
