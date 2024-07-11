@@ -347,7 +347,8 @@ void Device::InitDeviceModelList()
 	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_INPUT_MODE] = KEY_ATTRIBUTE_MODE_INPUT;
 	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_STARTUP] = KEY_ATTRIBUTE_STATUS_STARTUP;
 	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_LOCKED] = KEY_ATTRIBUTE_LOCK;
-	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CALIBAUTO] = KEY_ATTRIBUTE_CALIB_AUTO;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_CALIB_AUTO] = KEY_ATTRIBUTE_CALIB_AUTO;
+	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_MODE_WIFI] = KEY_ATTRIBUTE_MODE_WIFI;
 
 	RegisterDeviceModel(BLE_DOWNLIGHT_SMT, "", "Downlight SMT");
 	RegisterDeviceModel(BLE_DOWNLIGHT_COB_GOC_RONG, "", "Downlight COB");

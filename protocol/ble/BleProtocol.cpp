@@ -872,6 +872,9 @@ int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
 			case 3:
 				deviceType = BLE_SEFTPOWER_REMOTE_3;
 				break;
+			case 6:
+				deviceType = BLE_SEFTPOWER_REMOTE_6;
+				break;
 			}
 			Device *device = gateway->AddNewDevice(uuid, "", mac, dataJson, childAddr, deviceType, 257, true);
 			if (device)
@@ -3343,7 +3346,7 @@ int BleProtocol::SetModeWifi(uint16_t devAddr, uint8_t mode)
 	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
 	mode_message.vendorId = RD_VENDOR_ID;
 	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	mode_message.header = RD_OPCODE_SETMODE_WIFI;
+	mode_message.header = RD_OPCODE_MODE_WIFI;
 	mode_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3358,7 +3361,7 @@ int BleProtocol::SetModeWifi(uint16_t devAddr, uint8_t mode)
 			uint8_t mode;
 		} mode_rsp_message_t;
 		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
-		if (mode_rsp_message->header == RD_OPCODE_SETMODE_WIFI && mode_rsp_message->mode == mode)
+		if (mode_rsp_message->header == RD_OPCODE_MODE_WIFI && mode_rsp_message->mode == mode)
 		{
 			return CODE_OK;
 		}

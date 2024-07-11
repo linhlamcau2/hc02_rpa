@@ -43,6 +43,8 @@
 #include "DeviceBleWifiSwitchTouch.h"
 #include "DeviceBleWifiSwitchElectrical.h"
 #include "DeviceBleSocketSwitch.h"
+#include "DeviceBleWifiCurtain.h"
+#include "DeviceBleWifiSwitchRoolDoor.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -641,7 +643,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	{
 		bleProtocol->ResetDev(device->GetAddr());
 	}
-	
+
 	switch (type)
 	{
 	case BLE_ALL:
@@ -836,10 +838,19 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_WIFI_SWITCH_4_SQUARE:
 		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
 		break;
+	case BLE_WIFI_SWITCH_ROOLING_DOOR:
+	case BLE_WIFI_SWITCH_ROOLING_DOOR_SQUARE:
+		device = new DeviceBleWifiSwitchRoolDoor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_WIFI_SWITCH_CURTAIN:
+	case BLE_WIFI_SWITCH_CURTAIN_SQUARE:
+		device = new DeviceBleWifiCurtain(id, name, mac, dataJson, addr, type, version);
+		break;
 
 	case BLE_SEFTPOWER_REMOTE_1:
 	case BLE_SEFTPOWER_REMOTE_2:
 	case BLE_SEFTPOWER_REMOTE_3:
+	case BLE_SEFTPOWER_REMOTE_6:
 		device = getDeviceFromId(id);
 		if (device)
 		{

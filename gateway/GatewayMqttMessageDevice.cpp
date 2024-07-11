@@ -295,7 +295,7 @@ int Gateway::OnDeleteDevice(Json::Value &reqValue, Json::Value &respValue)
 				Device *device = getDeviceFromId(deviceId);
 				if (device)
 				{
-					if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+					if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3 || device->GetType() == BLE_SEFTPOWER_REMOTE_6)
 					{
 						DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
 						if (deviceBleSeftPowerRemote)

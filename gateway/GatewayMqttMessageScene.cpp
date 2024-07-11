@@ -596,6 +596,8 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 				uint8_t bt2 = 0;
 				uint8_t bt3 = 0;
 				uint8_t bt4 = 0;
+				uint8_t bt5 = 0;
+				uint8_t bt6 = 0;
 				int sizeData = data.size();
 				for (auto &dt : data)
 				{
@@ -692,7 +694,7 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 										result = CODE_ERROR;
 							}
 						}
-						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3)
+						if (device->GetType() == BLE_SEFTPOWER_REMOTE_1 || device->GetType() == BLE_SEFTPOWER_REMOTE_2 || device->GetType() == BLE_SEFTPOWER_REMOTE_3 || device->GetType() == BLE_SEFTPOWER_REMOTE_6)
 						{
 							if (dt.isMember("bt") && dt["bt"].isInt())
 								bt1 = 1;
@@ -702,9 +704,13 @@ int Gateway::ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value
 								bt3 = 1;
 							else if (dt.isMember("bt4") && dt["bt4"].isInt())
 								bt4 = 1;
+							else if (dt.isMember("bt5") && dt["bt5"].isInt())
+								bt5 = 1;
+							else if (dt.isMember("bt6") && dt["bt6"].isInt())
+								bt6 = 1;
 							if (sizeData == 1)
 							{
-								convertButton = bt1 + bt2 * 2 + bt3 * 4 + bt4 * 8;
+								convertButton = bt1 + bt2 * 2 + bt3 * 4 + bt4 * 8 + bt5 * 16 + bt6 * 32;
 								DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
 								if (deviceBleSeftPowerRemote)
 								{
