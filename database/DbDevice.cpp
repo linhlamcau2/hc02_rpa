@@ -70,24 +70,24 @@ int Db::DeviceAdd(Device *device)
 
 int Db::DeviceUpdate(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET name='" + device->GetName() + "' WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + device->GetName() + "' WHERE device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdateData(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData().toString()) + "' WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData().toString()) + "' WHERE device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceDel(Device *device)
 {
-	return DeviceDel(device->GetMac());
+	return DeviceDel(device->GetId());
 }
 
-int Db::DeviceDel(string mac)
+int Db::DeviceDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE mac='" + mac + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + id + "';";
 	return Sqlite_Exec(sql);
 }
 
@@ -114,6 +114,6 @@ int Db::DelDevExist(Device *device)
 
 int Db::DeviceUpdateFavorite(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(device->GetIsFavorite()) + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(device->GetIsFavorite()) + " WHERE device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
