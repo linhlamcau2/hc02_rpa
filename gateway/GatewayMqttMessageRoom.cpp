@@ -928,9 +928,10 @@ int Gateway::OnDeleteRoom(Json::Value &reqValue, Json::Value &respValue)
 				int devFast2Room = isDevFast2Room(deviceInRoom->device);
 				if (devFast2Room == 0)
 				{
-					if (room->DelDeviceOneMessage(deviceInRoom->device, true, true) != CODE_OK)
-						if (devicesStatusConfig[deviceInRoom->device->GetId()])
+					if (devicesStatusConfig[deviceInRoom->device->GetId()])
 							devicesStatusConfig[deviceInRoom->device->GetId()] = false;
+					if (room->DelDeviceOneMessage(deviceInRoom->device, true, true) == CODE_OK)
+						devicesStatusConfig[deviceInRoom->device->GetId()] = true;
 				}
 				else if (devFast2Room == 1)
 				{

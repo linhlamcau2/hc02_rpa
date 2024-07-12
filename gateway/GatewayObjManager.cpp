@@ -423,9 +423,9 @@ map<string, Device *> Gateway::GetListDevices()
 }
 
 #define FAST2ROOM_VER_LIGHT 0x0300
-#define FAST2ROOM_VER_SWITCH_RGB_V1 0x0112
+#define FAST2ROOM_VER_SWITCH_RGB_V1 0x010C
 #define FAST2ROOM_VER_SWITCH_RGB_V2 0x0100
-#define FAST2ROOM_VER_SWITCH_ELECTRICAL_V2 0x112
+#define FAST2ROOM_VER_SWITCH_ELECTRICAL_V2 0x0101
 #define FAST2ROOM_VER_SWITCH_CURTAIN_V2 0x0100
 #define FAST2ROOM_VER_SWITCH_CELING 0x0100
 
@@ -443,12 +443,18 @@ int Gateway::isDevFast2Room(Device *device)
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
-			 device->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER ||
-			 device->GetType() == BLE_SWITCH_ELECTRICAL_1_V2 ||
+			 device->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER)
+	{
+		rs = 1;
+	}
+	else if (device->GetType() == BLE_SWITCH_ELECTRICAL_1_V2 ||
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 ||
 			 device->GetType() == BLE_SWITCH_ELECTRICAL_3_V2)
 	{
-		rs = 1;
+		if (device->GetVersion() >= FAST2ROOM_VER_SWITCH_ELECTRICAL_V2)
+			rs = 0;
+		else
+			rs = 1;
 	}
 	else if (device->GetType() == BLE_SWITCH_RGB_1 ||
 			 device->GetType() == BLE_SWITCH_RGB_2 ||
