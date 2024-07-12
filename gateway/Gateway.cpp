@@ -304,6 +304,23 @@ void Gateway::CheckAutoOta()
 	}
 }
 
+int Gateway::RestartBleGw()
+{
+	LOGD("Restart Gateway Ble");
+	#ifdef __ANDROID__
+	// Util::ExecuteCMD("echo 0 > /sys/class/gpio/reset");
+	// sleep(1);
+	// Util::ExecuteCMD("echo 1 > /sys/class/gpio/reset");	
+	#elif defined(__OPENWRT__)
+	// Util::ExecuteCMD("echo 0 > /sys/class/gpio/reset");
+	// sleep(1);
+	// Util::ExecuteCMD("echo 1 > /sys/class/gpio/reset");	
+	#elif defined(ESP_PLATFORM)
+	//gpio reset
+	#endif
+
+}
+
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
 
 int Gateway::CheckOnlineThread()
@@ -467,6 +484,16 @@ int Gateway::CheckOnlineThread()
 				gateway->pushDeviceUpdateLocal(dataValue);
 				gateway->pushDeviceUpdateCloud(dataValue);
 			}
+
+			if (allTimeCheck > 0)
+			{
+				currentTime = time(NULL);
+				if (currentTime - getLastTimePingGwBle() > allTimeCheck)
+				{
+					setLastTimePingGwBle(time(NULL));
+					RestartBleGw();
+				}
+			}
 		}
 		sleep(1);
 	}
@@ -580,7 +607,7 @@ int Gateway::GatewayConnectToCloudNotice()
 
 	// respValue["DATA"] = data;
 
-	return CloudPublish("HC.CONTROL.RESPONSE", respValue.toString());
+	return CloudPublish(respValue.toString());
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)
@@ -1670,6 +1697,17 @@ void Gateway::printGroup()
 			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->epId);
 		}
 	}
+}
+
+
+time_t Gateway::getLastTimePingGwBle()
+{
+	return this->lastTimePingGwBle;
+}
+
+void Gateway::setLastTimePingGwBle(time_t timeUpdate)
+{
+	this->lastTimePingGwBle = timeUpdate;
 }
 
 void Gateway::printScene()

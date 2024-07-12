@@ -76,6 +76,8 @@ private:
 	mutex roomListMtx;
 	mutex sceneBleListMtx;
 
+	time_t lastTimePingGwBle;
+
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
 
@@ -228,6 +230,7 @@ public:
 	int UdpBroadcastThread();
 
 	void CheckAutoOta();
+	int RestartBleGw();
 	int CheckOnlineThread();
 
 	void AddDeviceToScanList(Device *scanDevice);
@@ -318,6 +321,9 @@ public:
 	string CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId);
 
 	int isDevFast2Room(Device *device);
+
+	time_t getLastTimePingGwBle();
+	void setLastTimePingGwBle(time_t timeUpdate);
 
 	// debug
 	void printGroup();
