@@ -89,6 +89,7 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->ble_devicekey = "";
 	this->data = "";
 	this->isAutoOta = true;
+	this->lastTimePingGwBle = time(NULL);
 }
 
 Gateway::~Gateway()
@@ -210,6 +211,7 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	{
 		Util::LedInternet(true);
 		OnlineHC(mac);
+		GatewayConnectToCloudNotice();
 		if (!isReconnect)
 		{
 			deviceListMtx.lock();
@@ -306,19 +308,21 @@ void Gateway::CheckAutoOta()
 
 int Gateway::RestartBleGw()
 {
-	LOGD("Restart Gateway Ble");
+	LOGW("Restart Gateway Ble");
 	#ifdef __ANDROID__
 	// Util::ExecuteCMD("echo 0 > /sys/class/gpio/reset");
 	// sleep(1);
 	// Util::ExecuteCMD("echo 1 > /sys/class/gpio/reset");	
 	#elif defined(__OPENWRT__)
-	// Util::ExecuteCMD("echo 0 > /sys/class/gpio/reset");
-	// sleep(1);
-	// Util::ExecuteCMD("echo 1 > /sys/class/gpio/reset");	
+	Util::ExecuteCMD("echo '0' > /sys/class/gpio/gpio1/value");
+	sleep(1);
+	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");	
 	#elif defined(ESP_PLATFORM)
-	//gpio reset
+	SetGpioResetGwBle(false);
+	sleep(1);
+	SetGpioResetGwBle(true);
 	#endif
-
+	return CODE_OK;
 }
 
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
@@ -347,7 +351,6 @@ int Gateway::CheckOnlineThread()
 
 	while (1)
 	{
-
 		if ((time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);
@@ -484,7 +487,7 @@ int Gateway::CheckOnlineThread()
 				gateway->pushDeviceUpdateLocal(dataValue);
 				gateway->pushDeviceUpdateCloud(dataValue);
 			}
-
+			
 			if (allTimeCheck > 0)
 			{
 				currentTime = time(NULL);
