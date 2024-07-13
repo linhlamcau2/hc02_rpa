@@ -318,9 +318,7 @@ int Gateway::RestartBleGw()
 	sleep(1);
 	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");	
 	#elif defined(ESP_PLATFORM)
-	SetGpioResetGwBle(false);
-	sleep(1);
-	SetGpioResetGwBle(true);
+	SetGpioResetGwBle();
 	#endif
 	return CODE_OK;
 }
