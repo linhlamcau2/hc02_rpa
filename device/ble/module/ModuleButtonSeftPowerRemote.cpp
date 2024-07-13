@@ -61,49 +61,65 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
                 key = KEY_ATTRIBUTE_BUTTON;
                 break;
             case 2:
-                key = KEY_ATTRIBUTE_BUTTON + to_string(data_message->button);
+                key = KEY_ATTRIBUTE_BUTTON "2";
                 break;
             case 3:
                 key = KEY_ATTRIBUTE_BUTTON;
                 BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON + to_string(2);
+                key = KEY_ATTRIBUTE_BUTTON "2";
                 break;
             case 4:
-                key = KEY_ATTRIBUTE_BUTTON + to_string(3);
+                key = KEY_ATTRIBUTE_BUTTON "3";
                 break;
             case 5:
                 key = KEY_ATTRIBUTE_BUTTON;
                 BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON + to_string(3);
+                key = KEY_ATTRIBUTE_BUTTON "3";
                 break;
             case 6:
-                key = KEY_ATTRIBUTE_BUTTON + to_string(2);
+                key = KEY_ATTRIBUTE_BUTTON "2";
                 BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON + to_string(3);
+                key = KEY_ATTRIBUTE_BUTTON "3";
                 break;
             case 7:
                 return CODE_ERROR;
                 break;
             case 8:
-                key = KEY_ATTRIBUTE_BUTTON + to_string(4);
+                key = KEY_ATTRIBUTE_BUTTON "4";
                 break;
             case 9:
                 key = KEY_ATTRIBUTE_BUTTON;
                 BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON + to_string(4);
+                key = KEY_ATTRIBUTE_BUTTON "4";
                 break;
             case 10:
-                key = KEY_ATTRIBUTE_BUTTON + to_string(2);
+                key = KEY_ATTRIBUTE_BUTTON "2";
                 BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON + to_string(4);
+                key = KEY_ATTRIBUTE_BUTTON "4";
                 break;
             case 11:
                 return CODE_ERROR;
                 break;
             case 12:
-                key = KEY_ATTRIBUTE_BUTTON + to_string(3);
+                key = KEY_ATTRIBUTE_BUTTON "3";
                 BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON + to_string(4);
+                key = KEY_ATTRIBUTE_BUTTON "4";
+                break;
+            case 16:
+                key = KEY_ATTRIBUTE_BUTTON "5";
+                break;
+            case 32:
+                key = KEY_ATTRIBUTE_BUTTON "6";
+                break;
+            case 24:
+                key = KEY_ATTRIBUTE_BUTTON "4";
+                BuildTelemetryValue(jsonValue);
+                key = KEY_ATTRIBUTE_BUTTON "5";
+                break;
+            case 48:
+                key = KEY_ATTRIBUTE_BUTTON "5";
+                BuildTelemetryValue(jsonValue);
+                key = KEY_ATTRIBUTE_BUTTON "6";
                 break;
             }
             BuildTelemetryValue(jsonValue);
