@@ -310,9 +310,13 @@ int Gateway::RestartBleGw()
 {
 	LOGW("Restart Gateway Ble");
 	#ifdef __ANDROID__
-	// Util::ExecuteCMD("echo 0 > /sys/class/gpio/reset");
-	// sleep(1);
-	// Util::ExecuteCMD("echo 1 > /sys/class/gpio/reset");	
+	Util::ExecuteCMD("su");
+	Util::ExecuteCMD("echo 100 > /sys/class/gpio/export");
+	Util::ExecuteCMD("echo out > /sys/class/gpio/gpio100/direction");
+	Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio100/value");
+	sleep(1);
+	Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio100/value");	
+	Util::ExecuteCMD("echo 100 > /sys/class/gpio/unexport");
 	#elif defined(__OPENWRT__)
 	Util::ExecuteCMD("echo '0' > /sys/class/gpio/gpio1/value");
 	sleep(1);

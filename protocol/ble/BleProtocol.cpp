@@ -319,6 +319,7 @@ int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
+	gateway->setLastTimePingGwBle(time(NULL));
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
@@ -332,7 +333,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 
 	case HCI_GATEWAY_RSP_OP_CODE:
 	{
-		gateway->setLastTimePingGwBle(time(NULL));
 		typedef struct __attribute__((packed))
 		{
 			uint16_t dev_addr;
