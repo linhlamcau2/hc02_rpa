@@ -115,6 +115,7 @@ static void startUdpThread(void *data)
 void Gateway::init()
 {
 	Device::InitDeviceModelList();
+	database->GatewayRead();
 	LocalProtocol::init();
 	CloudProtocol::init();
 	Udp::init();
@@ -148,7 +149,6 @@ void Gateway::init()
 	checkOnlineThread.detach();
 #endif
 
-	database->GatewayRead();
 	database->DeviceRead();
 	database->DeviceBleChildRead();
 #ifdef CONFIG_SAVE_ATTRIBUTE
