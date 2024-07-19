@@ -274,9 +274,12 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataValues)
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
-			dataValues[KEY_ATTRIBUTE_HUE] = data_message->value2;
-			dataValues[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
-			dataValues[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
+			if (data_message->value2 > 0 && data_message->value1 > 0 && data_message->value3 > 0)
+			{
+				dataValues[KEY_ATTRIBUTE_HUE] = data_message->value2;
+				dataValues[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
+				dataValues[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
+			}
 		}
 	}
 }

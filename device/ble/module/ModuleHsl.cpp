@@ -61,8 +61,8 @@ int ModuleHsl::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 		h = dataValue[KEY_ATTRIBUTE_HUE].asInt();
 		s = dataValue[KEY_ATTRIBUTE_SATURATION].asInt();
 		l = dataValue[KEY_ATTRIBUTE_LUMINANCE].asInt();
-		// CheckTrigger();
 		BuildTelemetryValue(jsonValue);
+		// CheckTrigger();
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -83,26 +83,25 @@ int ModuleHsl::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (data_message->l != l)
 		{
 			l = data_message->l;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(KEY_ATTRIBUTE_LUMINANCE);
-#endif
 		}
+
 		if (data_message->s != s)
 		{
 			s = data_message->s;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(KEY_ATTRIBUTE_SATURATION);
-#endif
 		}
+
 		if (data_message->h != h)
 		{
 			h = data_message->h;
+		}
+
+		if (h > 0 && s > 0 && l > 0)
+		{
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute(KEY_ATTRIBUTE_HUE);
+			SaveAttribute(KEY_ATTRIBUTE_SATURATION);
+			SaveAttribute(KEY_ATTRIBUTE_LUMINANCE);
 #endif
-		}
-		if (h != 0 && s!= 0 && l!= 0)
-		{
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger(jsonValue);
 			return CODE_OK;
@@ -184,10 +183,13 @@ bool ModuleHsl::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleHsl::BuildTelemetryValue(Json::Value &jsonValue)
 {
-	jsonValue[KEY_ATTRIBUTE_HUE] = h;
-	jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
-	jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
-	device->UpdatePropertyJsonUpdate(jsonValue);
+	if (h > 0 && s > 0 && l > 0)
+	{
+		jsonValue[KEY_ATTRIBUTE_HUE] = h;
+		jsonValue[KEY_ATTRIBUTE_SATURATION] = s;
+		jsonValue[KEY_ATTRIBUTE_LUMINANCE] = l;
+		device->UpdatePropertyJsonUpdate(jsonValue);
+	}
 }
 
 int ModuleHsl::Do(Json::Value &dataValue)

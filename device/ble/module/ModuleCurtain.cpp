@@ -76,6 +76,10 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	telemetry[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
 	telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
 	telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+
+	Json::Value telemetryPrecent;
+	telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = 0;
+
 	if (data_message->opcode == 0x52)
 	{
 		if (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
@@ -104,7 +108,10 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
-				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				BuildTelemetryValue(jsonValue, telemetryPrecent);
+				CheckTrigger(telemetryPrecent);
+				return CODE_OK;
 				break;
 			}
 			BuildTelemetryValue(jsonValue, telemetry);
@@ -140,7 +147,10 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
-				telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
+				telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				BuildTelemetryValue(jsonValue, telemetryPrecent);
+				CheckTrigger(telemetryPrecent);
+				return CODE_OK;
 				break;
 			}
 			BuildTelemetryValue(jsonValue, telemetry);

@@ -52,10 +52,16 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 		}
 #ifdef __ANDROID__
-		if (status == 1)
+		if (status == 1 || status == 0)
 		{
+			string content = "cảnh báo cửa mở";
+			if (status == 1)
+			{
+				content = "cảnh báo cửa đóng";
+			}
+
 			string id = Util::genRandRQI(16);
-			Json::Value tempJson = gateway->BuildJsonDataNoti(device, id, "warning", "cảnh báo cửa mở");
+			Json::Value tempJson = gateway->BuildJsonDataNoti(device, id, "warning", content);
 			Noti *temp = new Noti(id, "warning", tempJson.toString(), to_string(time(NULL)), to_string(time(NULL)));
 			gateway->CreateNoti(temp, true, true);
 		}
