@@ -35,12 +35,9 @@ static void CheckInputRuleDevice(void *data, void *jsonValue)
 			{
 				if (ruleValue.isMember(key))
 				{
-					if (dataJson[key].type() == ruleValue[key].type())
-					{
 						rs = false;
 						if (device->CheckData(*ruleInputDevice->GetData(), rs))
 							ruleInputDevice->Trigger(rs);
-					}
 				}
 			}
 		}
@@ -53,7 +50,7 @@ static void CheckInputRuleDevice(void *data, void *jsonValue)
 
 void Module::CheckTrigger(Json::Value &data)
 {
-	LOGV("CheckTrigger");
+	LOGV("CheckTrigger %s", data.toString().c_str());
 	if (!data.isNull())
 	{
 #ifdef ESP_PLATFORM
