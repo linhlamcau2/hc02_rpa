@@ -257,6 +257,8 @@ int Gateway::OnStopScanBle(Json::Value &reqValue, Json::Value &respValue)
 	respValue["time"] = time(NULL);
 	respValue["data"] = data;
 	respValue["mac"] = mac;
+	respValue["from"] = "RD_BLE_GW";
+	respValue["to"] = "CLOUD";
 
 	return CODE_OK;
 }

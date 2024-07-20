@@ -89,7 +89,7 @@ void CloudProtocol::OnServerReq(string &topic, string &payload)
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 		payloadJson.isMember("type") && payloadJson["type"].isString() &&
-		// payloadJson.isMember("time") && payloadJson["time"].isInt() &&
+		payloadJson.isMember("time") && payloadJson["time"].isInt() &&
 		payloadJson.isMember("data") && payloadJson["data"].isObject())
 	{
 		string type = payloadJson["type"].asString();
