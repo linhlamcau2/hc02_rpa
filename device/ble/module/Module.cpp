@@ -35,9 +35,9 @@ static void CheckInputRuleDevice(void *data, void *jsonValue)
 			{
 				if (ruleValue.isMember(key))
 				{
-						rs = false;
-						if (device->CheckData(*ruleInputDevice->GetData(), rs))
-							ruleInputDevice->Trigger(rs);
+					rs = false;
+					if (device->CheckData(*ruleInputDevice->GetData(), rs))
+						ruleInputDevice->Trigger(rs);
 				}
 			}
 		}
@@ -64,12 +64,9 @@ void Module::CheckTrigger(Json::Value &data)
 				{
 					if (ruleValue.isMember(key))
 					{
-						if (data[key].type() == ruleValue[key].type())
-						{
-							rs = false;
-							if (CheckData(*ruleInputDevice->GetData(), rs))
-								ruleInputDevice->Trigger(rs);
-						}
+						rs = false;
+						if (CheckData(*ruleInputDevice->GetData(), rs))
+							ruleInputDevice->Trigger(rs);
 					}
 				}
 			}
