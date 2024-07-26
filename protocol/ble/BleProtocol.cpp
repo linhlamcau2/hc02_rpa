@@ -1186,7 +1186,7 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 	} ttl_message_t;
 	ttl_message_t ttl_message = {0};
 	memset(&ttl_message, 0x00, sizeof(ttl_message));
-	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x04};
+	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x80, 0x0e};
 	ttl_message.ble_message_header.devAddr = devAddr;
 	ttl_message.opcode = CFG_DEFAULT_TTL_GET;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&ttl_message, sizeof(ttl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);

@@ -7,6 +7,8 @@
 #include "Db.h"
 #include "Gateway.h"
 #include "SceneBle.h"
+#include "Rule.h"
+#include "RuleInputDevice.h"
 
 ModulePirLight::ModulePirLight(Device *device, uint16_t addr) : Module(device, addr)
 {
@@ -81,6 +83,29 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #endif
 			}
 			BuildTelemetryValue(jsonValue);
+
+			for (auto &ruleInputDevice : device->deviceRuleInputList)
+			{
+				Json::Value &ruleValue = *(ruleInputDevice->GetData());
+
+				if (jsonValue.isObject() && ruleValue.isObject())
+				{
+					for (auto const &key : jsonValue.getMemberNames())
+					{
+						if (ruleValue.isMember(key))
+						{
+							bool rs = false;
+							if (device->CheckData(*ruleInputDevice->GetData(), rs))
+								ruleInputDevice->UpdateStatus(rs);
+						}
+					}
+				}
+				else
+				{
+					LOGW("Is not object");
+				}
+			}
+
 			CheckTrigger(jsonValue);
 
 			uint16_t sceneId = data[5] | (data[6] << 8);

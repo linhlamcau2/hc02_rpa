@@ -21,4 +21,5 @@ public:
 	~RuleInputDevice();
 	Json::Value *GetData();
 	void Trigger(bool value);
+	void UpdateStatus(bool status);
 };

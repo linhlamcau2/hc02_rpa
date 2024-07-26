@@ -37,3 +37,8 @@ void RuleInputDevice::Trigger(bool value)
 		rule->Check();
 	}
 }
+
+void RuleInputDevice::UpdateStatus(bool status)
+{
+	this->isAvailable = status;
+}

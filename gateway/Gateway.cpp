@@ -180,7 +180,33 @@ void Gateway::init()
 	}
 
 	LocalConnect();
-	CloudConnect();
+	int cloudConnected = CloudConnect();
+
+#ifdef __ANDROID__
+	if (cloudConnected != MQTT_ERR_SUCCESS)
+	{
+		Json::Value hcInfo;
+		Json::Value dataJson;
+		dataJson["mac"] = mac;
+		dataJson["ip"] = Wifi::GetIP();
+		dataJson["isConnectCloud"] = false;
+		dataJson["name"] = "RD HC";
+		dataJson["type"] = MODEL;
+		dataJson["ver"] = STR(VERSION);
+		if (this->dormitoryId == "")
+		{
+			dataJson["isInHome"] = false;
+		}
+		else
+		{
+			dataJson["isInHome"] = true;
+		}
+		hcInfo["data"] = dataJson;
+		hcInfo["cmd"] = "getHcInfoRsp";
+		hcInfo["rqi"] = Util::genRandRQI(16);
+		LocalPublish(hcInfo);
+	}
+#endif
 
 	// Get data isAutoOta
 	Json::Value dataJson;
@@ -207,6 +233,30 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	jsonValue["cmd"] = "homeController";
 	jsonValue["data"] = dataValue;
 	LocalPublish(jsonValue);
+
+#ifdef __ANDROID__
+	Json::Value hcInfo;
+	Json::Value dataJson;
+	dataJson["mac"] = mac;
+	dataJson["ip"] = Wifi::GetIP();
+	dataJson["isConnectCloud"] = isConnected;
+	dataJson["name"] = "RD HC";
+	dataJson["type"] = MODEL;
+	dataJson["ver"] = STR(VERSION);
+	if (this->dormitoryId == "")
+	{
+		dataJson["isInHome"] = false;
+	}
+	else
+	{
+		dataJson["isInHome"] = true;
+	}
+	hcInfo["data"] = dataJson;
+	hcInfo["cmd"] = "getHcInfoRsp";
+	hcInfo["rqi"] = Util::genRandRQI(16);
+	LocalPublish(hcInfo);
+#endif
+
 	if (isConnected)
 	{
 		Util::LedInternet(true);
@@ -309,21 +359,21 @@ void Gateway::CheckAutoOta()
 int Gateway::RestartBleGw()
 {
 	LOGW("Restart Gateway Ble");
-	#ifdef __ANDROID__
+#ifdef __ANDROID__
 	Util::ExecuteCMD("su");
 	Util::ExecuteCMD("echo 100 > /sys/class/gpio/export");
 	Util::ExecuteCMD("echo out > /sys/class/gpio/gpio100/direction");
 	Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio100/value");
 	sleep(1);
-	Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio100/value");	
+	Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio100/value");
 	Util::ExecuteCMD("echo 100 > /sys/class/gpio/unexport");
-	#elif defined(__OPENWRT__)
+#elif defined(__OPENWRT__)
 	Util::ExecuteCMD("echo '0' > /sys/class/gpio/gpio1/value");
 	sleep(1);
-	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");	
-	#elif defined(ESP_PLATFORM)
+	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");
+#elif defined(ESP_PLATFORM)
 	SetGpioResetGwBle();
-	#endif
+#endif
 	return CODE_OK;
 }
 
@@ -489,7 +539,7 @@ int Gateway::CheckOnlineThread()
 				gateway->pushDeviceUpdateLocal(dataValue);
 				gateway->pushDeviceUpdateCloud(dataValue);
 			}
-			
+
 			if (allTimeCheck > 0)
 			{
 				currentTime = time(NULL);
@@ -1703,7 +1753,6 @@ void Gateway::printGroup()
 		}
 	}
 }
-
 
 time_t Gateway::getLastTimePingGwBle()
 {
