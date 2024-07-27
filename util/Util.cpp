@@ -183,10 +183,11 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 	char buff[100];
 	if (len > 50)
 		len = 50;
-	for (int i = 0; i < len; i++)
+	for (int i = 0; i < (len-1); i++)
 	{
-		sprintf(buff + i * 2, "%02x", data[i]);
+		sprintf(buff + i * 3, "%02x:", data[i]);
 	}
+	sprintf(buff + (len-1) * 3, "%02x", data[len-1]);
 	return string(buff);
 }
 
