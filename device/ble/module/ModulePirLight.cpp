@@ -66,7 +66,17 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)&data[3];
 		int temp_pir = data_message->pir;
 		int temp_lux = data_message->lux;
-		if (len > 7)
+		if (len == 7)
+		{
+			if (pir != temp_pir)
+			{
+				pir = temp_pir;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_PIR);
+#endif
+			}
+		}
+		else if (len > 7)
 		{
 			if (temp_pir != pir)
 			{
