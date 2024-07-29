@@ -1,8 +1,6 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "module/ModuleOnOff.h"
-#include "module/ModuleDimonDimoff.h"
 
 using namespace std;
 

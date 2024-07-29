@@ -3,8 +3,6 @@
 #include "module/ModuleCurtain.h"
 #include "module/ModuleModeWifi.h"
 
-#include "Log.h"
-
 DeviceBleWifiCurtain::DeviceBleWifiCurtain(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version)
     : DeviceBle(id, name, mac, dataJson, addr, type, version)
 {

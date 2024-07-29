@@ -1,8 +1,5 @@
 
 #include "DeviceBlePirLightSensorAC_CB09.h"
-#include "BleProtocol.h"
-#include "Log.h"
-#include "Util.h"
 
 DeviceBlePirLightSensorAC_CB09::DeviceBlePirLightSensorAC_CB09(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version)
 		: DeviceBle(id, name, mac, dataJson, addr, type, version)

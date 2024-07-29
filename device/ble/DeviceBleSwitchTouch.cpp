@@ -1,6 +1,5 @@
 #include "DeviceBleSwitchTouch.h"
 #include "module/ModuleRelaySwitch.h"
-#include "Log.h"
 
 DeviceBleSwitchTouch::DeviceBleSwitchTouch(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, uint8_t numRelay)
 		: DeviceBle(id, name, mac, dataJson, addr, type, version)

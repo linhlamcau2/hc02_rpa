@@ -1,5 +1,4 @@
 #include "DeviceBleSwitchCeiling.h"
-#include "Log.h"
 
 DeviceBleSwitchCeiling::DeviceBleSwitchCeiling(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, uint8_t element)
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
@@ -7,6 +6,7 @@ DeviceBleSwitchCeiling::DeviceBleSwitchCeiling(string id, string name, string ma
     ModuleCountDownSwitch *moduleCountDownSwitch;
     ModuleStatusStartup *moduleStatusStartup;
 	ModuleOnOff *moduleOnOff;
+	ModuleCallScene *moduleCallScene;
 
     this->countElement = countElement;
 	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
@@ -18,5 +18,7 @@ DeviceBleSwitchCeiling::DeviceBleSwitchCeiling(string id, string name, string ma
 		moduleOnOff = new ModuleOnOff(this, addr + i, KEY_ATTRIBUTE_BUTTON, i);
 		modules.push_back(moduleOnOff);
 	}
+	moduleCallScene = new ModuleCallScene(this, addr);
+	modules.push_back(moduleCallScene);
 	powerSource = POWER_AC;
 }

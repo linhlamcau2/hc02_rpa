@@ -5,6 +5,7 @@
 #include "module/ModuleOnOff.h"
 #include "module/ModuleCountDownSwitch.h"
 #include "module/ModuleStatusStartup.h"
+#include "module/ModuleCallScene.h"
 
 using namespace std;
 

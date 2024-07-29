@@ -1,7 +1,4 @@
 #include "DeviceBleSwitchScene6ACRgb.h"
-#include "Log.h"
-#include "Util.h"
-#include "Gateway.h"
 
 DeviceBleSwitchScene6ACRgb::DeviceBleSwitchScene6ACRgb(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version)
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
