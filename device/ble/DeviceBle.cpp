@@ -55,7 +55,13 @@ void DeviceBle::InputData(Json::Value &dataValue, bool isPushTelemety)
 		module->InputData(dataValue, values);
 	}
 	if (!values.isNull() && isPushTelemety)
-		PushTelemetry(values);
+	{
+		Json::Value dataJson;
+		dataJson["attribute"] = "device.status";
+		dataJson["mac"] = mac,
+		dataJson["value"] = values;
+		PushTelemetry(dataJson);
+	}
 }
 
 void DeviceBle::InputData(uint8_t *data, int len, uint16_t addr)
@@ -69,7 +75,14 @@ void DeviceBle::InputData(uint8_t *data, int len, uint16_t addr)
 				break;
 		}
 	}
-	PushTelemetry(values);
+	if (!values.isNull())
+	{
+		Json::Value dataJson;
+		dataJson["attribute"] = "device.status";
+		dataJson["mac"] = mac,
+		dataJson["value"] = values;
+		PushTelemetry(dataJson);
+	}
 }
 
 bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)

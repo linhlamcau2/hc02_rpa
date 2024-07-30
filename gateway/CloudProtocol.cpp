@@ -80,6 +80,7 @@ void CloudProtocol::OnConnect(bool isConnected, bool isReconnect)
 
 void CloudProtocol::OnServerReq(string &topic, string &payload)
 {
+	LOGD("Cloud message: %s", payload.c_str());
 	Json::Value respValue;
 	Json::Value payloadJson;
 	Util::LedInternet(false);

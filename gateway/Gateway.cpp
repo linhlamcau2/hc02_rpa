@@ -70,10 +70,10 @@
 Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert,
-								 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
-			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, cert),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -113,9 +113,9 @@ void Gateway::init()
 	Device::InitDeviceModelList();
 	// LocalProtocol::init();
 	CloudProtocol::init();
-	// Udp::init();
+	Udp::init();
 
-	// InitUdpMessage();
+	InitUdpMessage();
 	InitMqttMessageDevice();
 	InitMqttMessageGroup();
 	InitMqttMessageRoom();
@@ -227,39 +227,37 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	// {
 	// }
 
-	// 	Json::Value jsonValue;
-	// 	Json::Value dataValue;
-	// 	dataValue["status"] = isConnected;
-	// 	dataValue["version"] = STR(VERSION);
-	// 	dataValue["ip"] = Wifi::GetIP();
-	// 	jsonValue["cmd"] = "homeController";
-	// 	jsonValue["data"] = dataValue;
-	// 	LocalPublish(jsonValue);
-	// 	if (isConnected)
-	// 	{
-	// 		Util::LedInternet(true);
-	// 		OnlineHC(mac);
-	// 		if (!isReconnect)
-	// 		{
-	// 			deviceListMtx.lock();
-	// 			for (const auto &[id, device] : deviceList)
-	// 			{
-	// 				device->PushAttributes();
-	// 			}
-	// 			deviceListMtx.unlock();
-	// 		}
-	// #ifdef ESP_PLATFORM
-	// 		SetLedInternet(true);
-	// #endif
-	// 	}
-	// 	else
-	// 	{
-	// 		Util::LedInternet(false);
-	// #ifdef ESP_PLATFORM
-	// 		if (GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
-	// 			SetLedInternet(false);
-	// #endif
-	// 	}
+	// Json::Value jsonValue;
+	// Json::Value dataValue;
+	// dataValue["status"] = isConnected;
+	// dataValue["version"] = STR(VERSION);
+	// dataValue["ip"] = Wifi::GetIP();
+	// jsonValue["cmd"] = "homeController";
+	// jsonValue["data"] = dataValue;
+	// LocalPublish(jsonValue);
+	if (isConnected)
+	{
+		// OnlineHC(mac);
+		if (!isReconnect)
+		{
+			deviceListMtx.lock();
+			for (const auto &[id, device] : deviceList)
+			{
+				device->PushAttributes();
+			}
+			deviceListMtx.unlock();
+		}
+#ifdef ESP_PLATFORM
+		SetLedInternet(true);
+#endif
+	}
+	else
+	{
+#ifdef ESP_PLATFORM
+		if (GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+			SetLedInternet(false);
+#endif
+	}
 }
 
 void Gateway::OnLocalConnect(bool isConnected, bool isReconnect)
@@ -375,7 +373,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -922,10 +920,10 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 {
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -984,7 +982,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-							deviceJson.isMember("data") && deviceJson["data"].isObject())
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);
@@ -1083,10 +1081,10 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 	// TODO: Check Rule id exist
 	LOGD("OnAddRuleV2");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
 		int type = ruleValue["type"].asInt();
@@ -1111,8 +1109,8 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				else
 				{
 					if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
-							timeRule.isMember("start") && timeRule["start"].isString() &&
-							timeRule.isMember("end") && timeRule["end"].isString())
+						timeRule.isMember("start") && timeRule["start"].isString() &&
+						timeRule.isMember("end") && timeRule["end"].isString())
 					{
 						repeat = timeRule["repeat"].asInt();
 						string startRule = timeRule["start"].asString();
@@ -1143,7 +1141,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				for (auto &timerJson : timersJson)
 				{
 					if (timerJson.isMember("time") && timerJson["time"].isString() &&
-							timerJson.isMember("repeat") && timerJson["repeat"].isInt())
+						timerJson.isMember("repeat") && timerJson["repeat"].isInt())
 					{
 						string timerTime = timerJson["time"].asString();
 						int timerRepeat = timerJson["repeat"].asInt();
@@ -1159,7 +1157,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				for (auto &deviceJson : devicesJson)
 				{
 					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
-							deviceJson.isMember("data") && deviceJson["data"].isObject())
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
 						string deviceId = deviceJson["id"].asString();
 						Device *deviceInRule = getDeviceFromId(deviceId);
@@ -1464,6 +1462,85 @@ int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
 			return CODE_EXIT;
 		}
 	}
+	return CODE_ERROR;
+}
+
+int Gateway::OnRpcConfigServer(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRpcConfigServer: %s", reqValue.toString().c_str());
+	if (reqValue.isMember("mac") && reqValue["mac"].isString() && reqValue.isMember("serverInfo") && reqValue["serverInfo"].isObject())
+	{
+		string macGw = reqValue["mac"].asString();
+		if (macGw != mac)
+		{
+			return CODE_ERROR;
+		}
+
+		Json::Value serverInfo = reqValue["serverInfo"];
+		if (serverInfo.isMember("typeConnect") && serverInfo["typeConnect"].isString() &&
+			serverInfo.isMember("hostname") && serverInfo["hostname"].isString() &&
+			serverInfo.isMember("port") && serverInfo["port"].isInt() &&
+			serverInfo.isMember("username") && serverInfo["username"].isString() &&
+			serverInfo.isMember("password") && serverInfo["password"].isString())
+		{
+			string type = serverInfo["typeConnect"].asString();
+			string hostname = serverInfo["hostname"].asString();
+			int port = serverInfo["port"].asInt();
+			string username = serverInfo["username"].asString();
+			string password = serverInfo["password"].asString();
+			string user = "";
+#ifdef ESP_PLATFORM
+			user = "minihub-" + mac;
+#else
+			user = "hc-" + mac;
+#endif
+			int status = 0;
+			if (type == "mqtt")
+			{
+				if (config->SetHost(hostname))
+				{
+					if (config->SetPort(port))
+					{
+						if (config->SetUsername(username))
+						{
+							if (config->SetPassword(password))
+							{
+								if (config->SetClientId(user))
+								{
+									status = 1;
+								}
+								else
+								{
+									LOGE("1");
+								}
+							}
+							else
+							{
+								LOGE("2");
+							}
+						}
+						else
+						{
+							LOGE("3");
+						}
+					}
+					else
+					{
+						LOGE("4");
+					}
+				}
+				else
+				{
+					LOGE("5");
+				}
+			}
+			respValue["cmd"] = "ConfigServerRsp";
+			respValue["mac"] = mac;
+			respValue["status"] = status;
+			return CODE_EXIT;
+		}
+	}
+	LOGW("Data error %s", reqValue.toString().c_str());
 	return CODE_ERROR;
 }
 

@@ -14,6 +14,7 @@ void Gateway::InitUdpMessage()
 	UdpCmdCallbackRegister("GatewayScan", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("GatewayScanWifi", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("GatewaySetupWifi", bind(&Gateway::OnUdpHcSetupWifi, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("ConfigServer", bind(&Gateway::OnRpcConfigServer, this, placeholders::_1, placeholders::_2));
 	// UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
 	// UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	// UdpCmdCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
@@ -99,9 +100,9 @@ int Gateway::OnUdpHcSetupWifi(Json::Value &reqValue, Json::Value &respValue)
 				wifiInfoJson.isMember("password") && wifiInfoJson["password"].isString() &&
 				wifiInfoJson.isMember("encryption") && wifiInfoJson["encryption"].isString())
 			{
-				string ssid = wifi["ssid"].asString();
-				string password = wifi["password"].asString();
-				string encryption = wifi["encryption"].asString();
+				string ssid = wifiInfoJson["ssid"].asString();
+				string password = wifiInfoJson["password"].asString();
+				string encryption = wifiInfoJson["encryption"].asString();
 				LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
 				if (Wifi::ConnectToWifi(ssid, password, encryption) == CODE_OK)
 				{
