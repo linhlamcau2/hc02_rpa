@@ -633,7 +633,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 
 	Json::Value dataValue;
 	dataValue["attribute"] = "mod.new_devices_added";
-	dataValue["data"]["listDevices"].append(devValue);
+	dataValue["value"]["listDevices"].append(devValue);
 	PublishToCloudMessage("reportAttribute", dataValue);
 }
 

@@ -22,8 +22,8 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 {
 	this->mac = mac;
 
-	subServerReqTopic = "/dsgw/" + mac + "/command";
-	pubServerReqTopic = "/dsgw/" + mac + "/data";
+	subServerReqTopic = "/ral/" + mac + "/command";
+	pubServerReqTopic = "/ral/" + mac + "/data";
 
 	// willset
 	Json::Value jsonValue;
