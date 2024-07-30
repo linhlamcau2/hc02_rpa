@@ -81,6 +81,7 @@ private:
 	void InitUdpMessage();
 	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
+	int OnUdpHcSetupWifi(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
 	int OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);

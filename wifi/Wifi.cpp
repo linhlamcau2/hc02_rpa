@@ -140,10 +140,10 @@ void Wifi::ScanWifi(Json::Value &data)
 			if (quality >= 50)
 			{
 				Json::Value wifiValue;
-				wifiValue["SSID"] = ssidStr;
-				wifiValue["QUALITY"] = quality;
-				wifiValue["MAC"] = lineList[0];
-				wifiValue["ENCRYPTION"] = encryptionStr;
+				wifiValue["ssid"] = ssidStr;
+				wifiValue["quality"] = quality;
+				wifiValue["mac"] = lineList[0];
+				wifiValue["encryption"] = encryptionStr;
 				data.append(wifiValue);
 			}
 		}

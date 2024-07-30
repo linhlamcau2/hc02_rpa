@@ -11,8 +11,9 @@
 
 void Gateway::InitUdpMessage()
 {
-	// UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
-	// UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("GatewayScan", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("GatewayScanWifi", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("GatewaySetupWifi", bind(&Gateway::OnUdpHcSetupWifi, this, placeholders::_1, placeholders::_2));
 	// UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
 	// UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	// UdpCmdCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
@@ -23,9 +24,9 @@ void Gateway::InitUdpMessage()
 int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpScanHc");
-	if (reqValue.isMember("DORMITORY_ID") && reqValue["DORMITORY_ID"].isString())
+	if (reqValue.isMember("deviceCode") && reqValue["deviceCode"].isString())
 	{
-		string dormitoryId = reqValue["DORMITORY_ID"].asString();
+		string dormitoryId = reqValue["deviceCode"].asString();
 		if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
 		{
 			return CODE_ERROR;
@@ -35,33 +36,18 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
 							  { return c == ':'; }),
 					macGw.end());
-		respValue["CMD"] = "HC_RESPONSE";
-		respValue["IP"] = Wifi::GetIP();
+		respValue["cmd"] = "GatewayScanResponse";
+		respValue["ip"] = Wifi::GetIP();
 #ifdef ESP_PLATFORM
 		hostName = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
-		respValue["TYPE"] = 2;
-#if MG_ENABLE_MBEDTLS
-		respValue["TLS"] = true;
-		respValue["MQTT_PORT"] = 8883;
-#else
-		respValue["TLS"] = false;
-		respValue["MQTT_PORT"] = 1883;
-#endif
 #else
 		hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
-#ifdef __OPENWRT__
-		respValue["TYPE"] = 1;
-#elif defined(__ANDROID__)
-		respValue["TYPE"] = 3;
-#endif
-		respValue["TLS"] = false;
-		respValue["MQTT_PORT"] = 1883;
 #endif
 		for (auto &c : hostName)
 			c = toupper(c);
-		respValue["HOSTNAME"] = hostName;
-		respValue["MAC"] = mac;
-		respValue["VERSION"] = STR(VERSION);
+		respValue["hostName"] = hostName;
+		respValue["mac"] = mac;
+		respValue["version"] = STR(VERSION);
 		return CODE_OK;
 	}
 	else
@@ -74,70 +60,60 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 {
 	LOGD("OnUdpHcScanWifi");
-	string rqi = "";
-	if (reqValue.isMember("REQUEST_ID") && reqValue["REQUEST_ID"].isString())
+
+	if (reqValue.isMember("mac") && reqValue["mac"].isString())
 	{
-		rqi = reqValue["REQUEST_ID"].asString();
-	}
-	if (reqValue.isMember("FROM") && reqValue.isMember("TO"))
-	{
-		Json::Value from;
-		Json::Value to;
-		from = reqValue["FROM"];
-		to = reqValue["TO"];
-		if (from.isMember("TYPE") && from["TYPE"].isInt() && to.isMember("TYPE") && to["TYPE"].isInt())
+		string macGateway = reqValue["mac"].asString();
+		if (macGateway != mac)
 		{
-			if (from["TYPE"].asInt() == 0 && to["TYPE"].asInt() == 2)
-			{
-				Json::Value fromRsp;
-				Json::Value toRsp;
-				Json::Value dataRsp;
-				StopUdpBroadcast();
-				respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
-				respValue["REQUEST_ID"] = rqi;
-				respValue["TIME"] = Util::GetCurrentTimeStr();
-				respValue["CONNECTION_TYPE"] = 0;
-				fromRsp["TYPE"] = 2;
-				respValue["FROM"] = fromRsp;
-				toRsp["TYPE"] = 0;
-				respValue["TO"] = toRsp;
-				Wifi::ScanWifi(dataRsp);
-				respValue["DATA"] = dataRsp;
-				return CODE_OK;
-			}
-			else
-			{
-				LOGW("OnUdpHcScanWifi payload: %s error direction", reqValue.toString().c_str());
-			}
+			return CODE_ERROR;
 		}
-		else
-		{
-			LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
-		}
-	}
-	else
-	{
-#ifdef __ANDROID__
-		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
-#else
 		Json::Value fromRsp;
 		Json::Value toRsp;
 		Json::Value dataRsp;
 		StopUdpBroadcast();
-		respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
-		respValue["REQUEST_ID"] = rqi;
-		respValue["TIME"] = Util::GetCurrentTimeStr();
-		respValue["CONNECTION_TYPE"] = 0;
-		fromRsp["TYPE"] = 2;
-		respValue["FROM"] = fromRsp;
-		toRsp["TYPE"] = 0;
-		respValue["TO"] = toRsp;
+		respValue["cmd"] = "GatewayScanWifiResponse";
+		respValue["mac"] = mac;
 		Wifi::ScanWifi(dataRsp);
-		respValue["DATA"] = dataRsp;
+		respValue["wifiList"] = dataRsp;
 		return CODE_OK;
-#endif
 	}
+	LOGW("Data error %s", reqValue.toString().c_str());
+	return CODE_ERROR;
+}
 
+int Gateway::OnUdpHcSetupWifi(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnUdpHcSetup");
+	if (reqValue.isMember("mac") && reqValue["mac"].isString())
+	{
+		string macGw = reqValue["mac"].asString();
+		if (macGw != mac)
+		{
+			return CODE_ERROR;
+		}
+		if (reqValue.isMember("wifiInfo") && reqValue["wifiInfo"].isObject())
+		{
+			Json::Value wifiInfoJson = reqValue["wifiInfo"];
+			if (wifiInfoJson.isMember("ssid") && wifiInfoJson["ssid"].isString() &&
+				wifiInfoJson.isMember("password") && wifiInfoJson["password"].isString() &&
+				wifiInfoJson.isMember("encryption") && wifiInfoJson["encryption"].isString())
+			{
+				string ssid = wifi["ssid"].asString();
+				string password = wifi["password"].asString();
+				string encryption = wifi["encryption"].asString();
+				LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
+				if (Wifi::ConnectToWifi(ssid, password, encryption) == CODE_OK)
+				{
+					LOGD("Connect wifi successful");
+				}
+#ifdef ESP_PLATFORM
+				SetLedInternet(false);
+#endif
+			}
+		}
+	}
+	LOGW("Data error: %s", reqValue.toString().c_str());
 	return CODE_ERROR;
 }
 
