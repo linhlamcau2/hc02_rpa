@@ -185,26 +185,14 @@ void Gateway::init()
 #ifdef __ANDROID__
 	if (cloudConnected != MQTT_ERR_SUCCESS)
 	{
-		Json::Value hcInfo;
-		Json::Value dataJson;
-		dataJson["mac"] = mac;
-		dataJson["ip"] = Wifi::GetIP();
-		dataJson["isConnectCloud"] = false;
-		dataJson["name"] = "RD HC";
-		dataJson["type"] = MODEL;
-		dataJson["ver"] = STR(VERSION);
-		if (this->dormitoryId == "")
-		{
-			dataJson["isInHome"] = false;
-		}
-		else
-		{
-			dataJson["isInHome"] = true;
-		}
-		hcInfo["data"] = dataJson;
-		hcInfo["cmd"] = "getHcInfoRsp";
-		hcInfo["rqi"] = Util::genRandRQI(16);
-		LocalPublish(hcInfo);
+		Json::Value jsonValue;
+		Json::Value dataValue;
+		dataValue["status"] = 0;
+		dataValue["version"] = STR(VERSION);
+		dataValue["ip"] = Wifi::GetIP();
+		jsonValue["cmd"] = "homeController";
+		jsonValue["data"] = dataValue;
+		LocalPublish(jsonValue);
 	}
 #endif
 
@@ -233,29 +221,6 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	jsonValue["cmd"] = "homeController";
 	jsonValue["data"] = dataValue;
 	LocalPublish(jsonValue);
-
-#ifdef __ANDROID__
-	Json::Value hcInfo;
-	Json::Value dataJson;
-	dataJson["mac"] = mac;
-	dataJson["ip"] = Wifi::GetIP();
-	dataJson["isConnectCloud"] = isConnected;
-	dataJson["name"] = "RD HC";
-	dataJson["type"] = MODEL;
-	dataJson["ver"] = STR(VERSION);
-	if (this->dormitoryId == "")
-	{
-		dataJson["isInHome"] = false;
-	}
-	else
-	{
-		dataJson["isInHome"] = true;
-	}
-	hcInfo["data"] = dataJson;
-	hcInfo["cmd"] = "getHcInfoRsp";
-	hcInfo["rqi"] = Util::genRandRQI(16);
-	LocalPublish(hcInfo);
-#endif
 
 	if (isConnected)
 	{

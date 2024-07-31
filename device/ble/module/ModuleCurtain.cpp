@@ -33,9 +33,30 @@ void ModuleCurtain::InitAttribute(string attribute, double value)
 	}
 }
 
-void ModuleCurtain::SaveAttribute()
+void ModuleCurtain::SaveAttribute(int status)
 {
-	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN, curtain);
+	if (status == CURTAIN_OPEN)
+	{
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_OPEN, 1);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_CLOSE, 0);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_PAUSE, 0);
+	}
+	else if (status == CURTAIN_CLOSE)
+	{
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_OPEN, 0);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_CLOSE, 1);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_PAUSE, 0);
+	}
+	else if (status == CURTAIN_PAUSE)
+	{
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_OPEN, 0);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_CLOSE, 0);
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_PAUSE, 1);
+	}
+	else if (status == CURTAIN_PERCENT)
+	{
+		database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_CURTAIN_OPENED, curtain);
+	}
 }
 #endif
 
@@ -85,13 +106,6 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
 		{
 			uint8_t temp = data_message->header & 0xFF;
-			if (status != temp)
-			{
-				status = temp;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
-#endif
-			}
 			switch (temp)
 			{
 			case CURTAIN_OPEN:
@@ -103,16 +117,25 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			case CURTAIN_PAUSE:
 				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
 				{
+					curtain = (data_message->header >> 8) & 0xFF;
 					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
 				}
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
+				curtain = (data_message->header >> 8) & 0xFF;
 				telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
 				BuildTelemetryValue(jsonValue, telemetryPrecent);
 				CheckTrigger(telemetryPrecent);
 				return CODE_OK;
 				break;
+			}
+			if (status != temp)
+			{
+				status = temp;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(status);
+#endif
 			}
 			BuildTelemetryValue(jsonValue, telemetry);
 			CheckTrigger(telemetry);
@@ -124,13 +147,6 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		if (data_message->header == RD_OPCODE_REQUEST_STATUS_CURTAIN || data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE)
 		{
 			uint8_t temp = data_message->type;
-			if (status != temp)
-			{
-				status = temp;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
-#endif
-			}
 			switch (temp)
 			{
 			case CURTAIN_OPEN:
@@ -142,16 +158,25 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			case CURTAIN_PAUSE:
 				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
 				{
+					curtain = data_message->curtain;
 					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
 				}
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
-				telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
+				curtain = data_message->curtain;
+				telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
 				BuildTelemetryValue(jsonValue, telemetryPrecent);
 				CheckTrigger(telemetryPrecent);
 				return CODE_OK;
 				break;
+			}
+			if (status != temp)
+			{
+				status = temp;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(status);
+#endif
 			}
 			BuildTelemetryValue(jsonValue, telemetry);
 			CheckTrigger(telemetry);
@@ -235,10 +260,10 @@ int ModuleCurtain::Do(Json::Value &dataValue)
 		{
 			if (bleProtocol->ControlOpenClosePausePercent(addr, mode, (uint8_t)value) == CODE_OK)
 			{
-				if (mode == CURTAIN_PERCENT)
-				{
-					this->curtain = value;
-				}
+				// if (mode == CURTAIN_PERCENT)
+				// {
+				// 	this->curtain = value;
+				// }
 				return CODE_OK;
 			}
 		}

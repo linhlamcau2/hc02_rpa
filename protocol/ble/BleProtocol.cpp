@@ -299,10 +299,49 @@ static void GetDataUpdateSwitch(uint8_t *data, int len, Json::Value &dataValues)
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 
-	int u;
 	for (int i = 0; i < data_message->element; i++)
 	{
 		dataValues[KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")] = ((uint8_t *)data_message)[i + offsetof(data_message_t, bt)];
+	}
+}
+
+static void GetDataUpdateCurtain(uint8_t *data, int len, Json::Value &dataValues)
+{
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t type;
+		uint8_t curtain;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+
+	uint8_t temp = data_message->type;
+	switch (temp)
+	{
+	case 1:
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+		break;
+	case 0:
+		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+		break;
+	case 2:
+		if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+		{
+			dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
+		}
+		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
+		break;
+	case 3:
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
+		break;
 	}
 }
 
@@ -361,6 +400,12 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			{
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
+				deviceBle->SetPropertyJsonUpdate(dataValues);
+			}
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+			{
+				Json::Value dataValues = Json::objectValue;
+				GetDataUpdateCurtain(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
@@ -1313,9 +1358,6 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 		BleProtocol::GetTTL(devAddr);
 		break;
 	}
-	// #else
-	// BleProtocol::GetTTL(devAddr);
-	// #endif
 	return CODE_OK;
 }
 
