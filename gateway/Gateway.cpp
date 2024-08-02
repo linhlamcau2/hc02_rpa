@@ -237,7 +237,7 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	// LocalPublish(jsonValue);
 	if (isConnected)
 	{
-		// OnlineHC(mac);
+		OnlineHC(mac);
 		if (!isReconnect)
 		{
 			deviceListMtx.lock();
@@ -1494,7 +1494,7 @@ int Gateway::OnRpcConfigServer(Json::Value &reqValue, Json::Value &respValue)
 #else
 			user = "hc-" + mac;
 #endif
-			int status = 0;
+			int status = -1;
 			if (type == "mqtt")
 			{
 				if (config->SetHost(hostname))
@@ -1507,7 +1507,7 @@ int Gateway::OnRpcConfigServer(Json::Value &reqValue, Json::Value &respValue)
 							{
 								if (config->SetClientId(user))
 								{
-									status = 1;
+									status = 0;
 								}
 								else
 								{

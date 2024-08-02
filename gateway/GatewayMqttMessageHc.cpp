@@ -30,7 +30,7 @@ void Gateway::InitMqttMessageHc()
 	// 	OnDeviceRpcCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	// 	OnDeviceRpcCallbackRegister("CreateTunnel", bind(&Gateway::OnCreateTunnel, this, placeholders::_1, placeholders::_2));
 	// 	OnDeviceRpcCallbackRegister("DeleteAllTunnel", bind(&Gateway::OnDeleteAllTunnel, this, placeholders::_1, placeholders::_2));
-	// 	OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
+		OnDeviceRpcCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
 	// 	OnDeviceRpcCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
 	// 	OnDeviceRpcCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
 	// 	OnDeviceRpcCallbackRegister("hcRestoreData", bind(&Gateway::OnRestoreData, this, placeholders::_1, placeholders::_2));
@@ -504,7 +504,7 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 			}
 		}
 #else
-		string url = URL_PRO + reqValue["url"].asString();
+		string url = reqValue["url"].asString();
 		string sha = reqValue["checksum"].asString();
 		LOGD("info ota url: %s, checksum: %s", url.c_str(), sha.c_str());
 		config->SetUrlOta(url);
