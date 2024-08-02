@@ -1136,7 +1136,7 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 			if (addDatabase)
 			{
 				string ruleStr = ruleValue.toString();
-				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				// ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
 				bool isFirstStt = false;
 				if (repeat == 0)
@@ -1323,7 +1323,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 			{
 				ruleValue["isFirstRun"] = true;
 				string ruleStr = ruleValue.toString();
-				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				// ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
 
 				bool isFirstStt = false;
