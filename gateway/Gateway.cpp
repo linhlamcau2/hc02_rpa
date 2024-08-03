@@ -45,6 +45,7 @@
 #include "DeviceBleSocketSwitch.h"
 #include "DeviceBleWifiCurtain.h"
 #include "DeviceBleWifiSwitchRoolDoor.h"
+#include "DeviceBleSwitchKnob.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -893,7 +894,6 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_WIFI_SWITCH_CURTAIN_SQUARE:
 		device = new DeviceBleWifiCurtain(id, name, mac, dataJson, addr, type, version);
 		break;
-
 	case BLE_SEFTPOWER_REMOTE_1:
 	case BLE_SEFTPOWER_REMOTE_2:
 	case BLE_SEFTPOWER_REMOTE_3:
@@ -916,6 +916,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 			delDevice(device);
 		}
 		device = new DeviceBleSeftPowerRemote(id, name, mac, dataJson, addr, type, version, NULL);
+		break;
+	case BLE_SWITCH_KNOB:
+		device = new DeviceBleSwitchKnob(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 
 #ifndef ESP_PLATFORM
