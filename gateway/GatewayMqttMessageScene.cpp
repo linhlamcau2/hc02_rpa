@@ -887,7 +887,7 @@ int Gateway::OnCreateSceneController(Json::Value &reqValue, Json::Value &respVal
 					{
 						result = ConfigSceneForPirSensor(device, propertiesJson, sceneJson, true);
 					}
-					else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+					else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_SWITCH_KNOB)
 					{
 						result = ConfigSceneForScreenTouch(device, propertiesJson, sceneJson, true);
 					}
@@ -937,7 +937,7 @@ int Gateway::OnDelSceneController(Json::Value &reqValue, Json::Value &respValue)
 					{
 						result = ConfigSceneForPirSensor(device, propertiesJson, sceneJson, false);
 					}
-					else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+					else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_SWITCH_KNOB)
 					{
 						result = ConfigSceneForScreenTouch(device, propertiesJson, sceneJson, false);
 					}

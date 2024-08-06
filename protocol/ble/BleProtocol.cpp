@@ -421,7 +421,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
 
-			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || deviceBle->GetType() == BLE_SWITCH_KNOB)
 			{
 				if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME)
 				{
@@ -1338,6 +1338,7 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_WIFI_SWITCH_ELECTRICAL_1:
 	case BLE_WIFI_SWITCH_ELECTRICAL_2:
 	case BLE_WIFI_SWITCH_ELECTRICAL_3:
+	case BLE_SWITCH_KNOB:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		break;
 	case BLE_SWITCH_CURTAIN:
@@ -2023,7 +2024,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 		callscene_message.scene = scene;
 		callscene_message.offset = 0;
 		callscene_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 0, dataRsp, &lenRsp, 400);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;

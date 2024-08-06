@@ -401,6 +401,7 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_DC_SCENE_CONTACT, "", "DKTX M2");
 	RegisterDeviceModel(BLE_AC_SCENE_CONTACT, "", "DKTX âm tường");
 	RegisterDeviceModel(BLE_AC_SCENE_SCREEN_TOUCH, "", "Màn hình DKTX");
+	RegisterDeviceModel(BLE_SWITCH_KNOB, "", "Công tắc núm xoay");
 	RegisterDeviceModel(BLE_REMOTE_M3, "", "DKTX M3");
 	RegisterDeviceModel(BLE_REMOTE_M3_V2, "", "DKTX M3 V2");
 	RegisterDeviceModel(BLE_REMOTE_M4, "", "DKTX M4");

@@ -13,6 +13,7 @@ void Gateway::InitMqttMessageRule()
 	OnDeviceRpcCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("activeRule", bind(&Gateway::OnActiveRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("actionRuleCloud", bind(&Gateway::OnActionRuleCloud, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("addFavoriteRule", bind(&Gateway::OnAddFavoriteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("delFavoriteRule", bind(&Gateway::OnDelFavoriteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getFavoriteRule", bind(&Gateway::OnGetFavoriteRule, this, placeholders::_1, placeholders::_2));
@@ -280,6 +281,59 @@ int Gateway::OnActionRule(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "actionRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnActionRuleCloud(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnActionRuleCloud");
+	if (reqValue.isMember("output") && reqValue["output"].isArray())
+	{
+		Json::Value outputList = reqValue["output"];
+		for (auto &item : outputList)
+		{
+			if (item.isMember("deviceOutput") && item["deviceOutput"].isArray())
+			{
+				Json::Value deviceOutputList = item["deviceOutput"];
+				for (auto &dev : deviceOutputList)
+				{
+					if (dev.isObject() && dev.isMember("id") && dev["id"].isString())
+					{
+						string idDev = dev["id"].asString();
+						Device *device = getDeviceFromId(idDev);
+						if (device)
+						{
+							device->DoJsonArray(dev);
+						}
+					}
+				}
+			}
+
+			if (item.isMember("sceneOutput") && item["sceneOutput"].isArray())
+			{
+				Json::Value sceneOutputList = item["sceneOutput"];
+				for (auto &sceneOutput : sceneOutputList)
+				{
+					if (sceneOutput.isObject() && sceneOutput.isMember("id") && sceneOutput["id"].isString())
+					{
+						string idScene = sceneOutput["id"].asString();
+						SceneBle *sceneBle = getSceneBleFromId(idScene);
+						if (sceneBle)
+						{
+							if (sceneOutput.isMember("delay") && sceneOutput["delay"].isInt())
+							{
+								int delay = sceneOutput["delay"].asInt();
+								sleep(delay);
+							}
+							sceneBle->Do(false);
+						}
+					}
+				}
+			}
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "actionRuleCloudRsp";
 	return CODE_OK;
 }
 
