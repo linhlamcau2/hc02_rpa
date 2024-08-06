@@ -62,6 +62,7 @@ int Mqtt::Connect()
 		LOGI("Cert: %s", cert);
 		tls_set(cert);
 		tls_insecure_set(true);
+		tls_opts_set(0, NULL, NULL);
 	}
 
 	if (!username.empty() || !password.empty())
