@@ -289,46 +289,44 @@ int Gateway::OnActionRuleCloud(Json::Value &reqValue, Json::Value &respValue)
 	LOGD("OnActionRuleCloud");
 	if (reqValue.isMember("output") && reqValue["output"].isArray())
 	{
-		LOGD("OnActionRuleCloud TP1");
 		Json::Value outputList = reqValue["output"];
 		for (auto &item : outputList)
 		{
-			if (item.isMember("deviceOutput") && item["deviceOutput"].isArray() && item.isMember("sceneOutput") && item["sceneOutput"].isArray())
+			if (item.isMember("deviceOutput") && item["deviceOutput"].isArray())
 			{
-				LOGD("OnActionRuleCloud TP2");
 				Json::Value deviceOutputList = item["deviceOutput"];
-				for (auto &item1 : deviceOutputList)
+				for (auto &dev : deviceOutputList)
 				{
-					if (item1.isObject() && item1.isMember("id") && item1["id"].isString())
+					if (dev.isObject() && dev.isMember("id") && dev["id"].isString())
 					{
-						LOGD("OnActionRuleCloud TP3");
-						string id = item1["id"].asString();
-						Device *device = getDeviceFromId(id);
-						LOGD("DeviceId: %s", id.c_str());
+						string idDev = dev["id"].asString();
+						Device *device = getDeviceFromId(idDev);
 						if (device)
 						{
-							device->DoJsonArray(item1);
+							device->DoJsonArray(dev);
 						}
 					}
 				}
+			}
+
+			if (item.isMember("sceneOutput") && item["sceneOutput"].isArray())
+			{
 				Json::Value sceneOutputList = item["sceneOutput"];
-				for (auto &item1 : sceneOutputList)
+				for (auto &sceneOutput : sceneOutputList)
 				{
-					if (item1.isObject() && item1.isMember("id") && item1["id"].isString())
+					if (sceneOutput.isObject() && sceneOutput.isMember("id") && sceneOutput["id"].isString())
 					{
-						LOGD("OnActionRuleCloud TP4");
-						string id = item1["id"].asString();
-						SceneBle *scene = getSceneBleFromId(id);
-						LOGD("SceneId: %s", id.c_str());
-						if (scene)
+						string idScene = sceneOutput["id"].asString();
+						SceneBle *sceneBle = getSceneBleFromId(idScene);
+						if (sceneBle)
 						{
-							scene->Do(false);
+							if (sceneOutput.isMember("delay") && sceneOutput["delay"].isInt())
+							{
+								int delay = sceneOutput["delay"].asInt();
+								sleep(delay);
+							}
+							sceneBle->Do(false);
 						}
-					}
-					if (item1.isObject() && item1.isMember("delay") && item1["delay"].isInt())
-					{
-						int delay = item1["delay"].asInt();
-						sleep (delay);
 					}
 				}
 			}
