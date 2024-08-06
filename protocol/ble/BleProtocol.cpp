@@ -2024,7 +2024,7 @@ int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition
 		callscene_message.scene = scene;
 		callscene_message.offset = 0;
 		callscene_message.transition = transition;
-		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 0, dataRsp, &lenRsp, 1000);
+		int rs = SendMessage(APP_REQ, (uint8_t *)&callscene_message, sizeof(callscene_message_t), 1000, dataRsp, &lenRsp, 1000);
 		if (rs == CODE_OK)
 		{
 			return CODE_OK;
