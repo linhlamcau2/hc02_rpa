@@ -1,182 +1,102 @@
 #include <string>
 #include <iostream>
 #include <endian.h>
-
-#ifndef __ANDROID__
-#include <uci.h>
-#endif
-
+#include <fstream>
 #include "Config.h"
 #include "Log.h"
+#include "json.h"
+#include "Define.h"
 
 #define TAG "Config"
 
 Config *config = NULL;
 
-/****************************************
- *                  API                 *
- ***************************************/
-static bool get_str_config_entry(const char *name, char *value)
+static bool get_str_config_entry(Json::Value &jsonData, string key, string &value)
 {
-#ifndef __ANDROID__
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isString())
 	{
-		//		uci_perror (ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
+		string temp = jsonData[key].asString();
+		value = temp;
+		return true;
+	}
+	else
+	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
-	snprintf(value, STRING_VALUE_MAX_SIZE, "%s", ptr.o->v.string);
-	uci_free_context(ctx);
-	return true;
-#else
-	return false;
-#endif
 }
 
-static bool get_int_config_entry(const char *name, int *value)
+static bool get_int_config_entry(Json::Value &jsonData, string key, int &value)
 {
-#ifndef __ANDROID__
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK) || !ptr.o || !ptr.o->v.string)
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isInt())
 	{
-		//		uci_perror (ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
+		int temp = jsonData[key].asInt();
+		value = temp;
+		return true;
+	}
+	else
+	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
-	*value = atoi(ptr.o->v.string);
-	uci_free_context(ctx);
-	return true;
-#else
-	return false;
-#endif
 }
 
-static bool set_str_config_entry(const char *name, const char *section_name, const char *value)
+static bool set_str_config_entry(Json::Value &jsonData, string key, string &value)
 {
-#ifndef __ANDROID__
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char path[STRING_VALUE_MAX_SIZE];
-	ctx = uci_alloc_context();
-	snprintf(path, STRING_VALUE_MAX_SIZE, "%s", name);
-	if ((uci_lookup_ptr(ctx, &ptr, path, true) != UCI_OK))
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isString())
 	{
-		uci_perror(ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
+		jsonData[key] = value;
+		return true;
+	}
+	else
+	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
-	if (ptr.s == NULL)
-	{
-		if (uci_add_section(ctx, ptr.p, section_name, &ptr.s) != UCI_OK)
-		{
-			uci_perror(ctx, "UCI Error to add new section");
-			uci_free_context(ctx);
-			return false;
-		}
-	}
-	ptr.option = section_name;
-	ptr.value = value;
-	if (uci_set(ctx, &ptr) != UCI_OK)
-	{
-		uci_perror(ctx, "UCI Error to set new option");
-		uci_free_context(ctx);
-		return false;
-	}
-	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-	{
-		uci_perror(ctx, "UCI Error to commit changes");
-		uci_free_context(ctx);
-		return false;
-	}
-	uci_free_context(ctx);
-	return true;
-#else
-	return false;
-#endif
 }
 
-static bool set_int_config_entry(const char *section, const char *name, int value)
+static bool set_int_config_entry(Json::Value jsonData, string key, int &value)
 {
-#ifndef __ANDROID__
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char strValue[20];
-	ctx = uci_alloc_context();
-	if ((uci_lookup_ptr(ctx, &ptr, (char *)section, true) != UCI_OK))
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isInt())
 	{
-		uci_perror(ctx, "uci_lookup_ptr Error");
-		uci_free_context(ctx);
+		jsonData[key] = value;
+		return true;
+	}
+	else
+	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
 		return false;
 	}
-	if (ptr.s == NULL)
-	{
-		if (uci_add_section(ctx, ptr.p, "device", &ptr.s) != UCI_OK)
-		{
-			uci_perror(ctx, "UCI Error to add new section");
-			uci_free_context(ctx);
-			return false;
-		}
-	}
-	snprintf(strValue, 20, "%d", value);
-	ptr.option = name;
-	ptr.value = strValue;
-	if (uci_set(ctx, &ptr) != UCI_OK)
-	{
-		uci_perror(ctx, "UCI Error to set new option");
-		uci_free_context(ctx);
-		return false;
-	}
-	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-	{
-		uci_perror(ctx, "UCI Error to commit changes");
-		uci_free_context(ctx);
-		return false;
-	}
-	uci_free_context(ctx);
-	return true;
-#else
-	return false;
-#endif
 }
 
-// static bool delete_section(char *section)
-// {
-// 	struct uci_context *ctx;
-// 	struct uci_ptr ptr;
-// 	ctx = uci_alloc_context();
-// 	if ((uci_lookup_ptr(ctx, &ptr, section, true) != UCI_OK))
-// 	{
-// 		uci_perror(ctx, "uci_lookup_ptr Error");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	if (ptr.s != NULL)
-// 	{
-// 		if (uci_delete(ctx, &ptr) != UCI_OK)
-// 		{
-// 			uci_perror(ctx, "UCI Error to delete section");
-// 			uci_free_context(ctx);
-// 			return false;
-// 		}
-// 	}
-// 	if (uci_commit(ctx, &ptr.p, false) != UCI_OK)
-// 	{
-// 		uci_perror(ctx, "UCI Error to commit changes");
-// 		uci_free_context(ctx);
-// 		return false;
-// 	}
-// 	uci_free_context(ctx);
-// 	return true;
-// }
+static bool OpenFile(string file, Json::Value &jsonData)
+{
+	std::ifstream input(file.c_str());
+	if (!input.is_open())
+	{
+		std::cerr << "Không thể mở tệp JSON." << std::endl;
+		return false;
+	}
+
+	input >> jsonData;
+	input.close();
+	return true;
+}
+
+static bool Write2File(string file, Json::Value &jsonData)
+{
+	std::ofstream output(file.c_str());
+	if (!output.is_open())
+	{
+		std::cerr << "Không thể mở tệp JSON." << std::endl;
+		return false;
+	}
+
+	output << jsonData;
+	output.close();
+	return true;
+}
+
 
 Config::Config()
 {
@@ -186,69 +106,40 @@ void Config::ReadConfig()
 {
 	char str_temp[STRING_VALUE_MAX_SIZE];
 	int int_temp = 0;
+	string value_temp;
 
-	// server
-	if (get_str_config_entry((char *)CONFIG_ENV HOST_KEY, str_temp))
-		host = string(str_temp);
+	Json::Value jsonData;
+	OpenFile(CONFIG_FILE_NAME, jsonData);
+
+	if (get_str_config_entry(jsonData, HOST_KEY, value_temp))
+		host = value_temp;
 	else
 		host = HOST_DEFAULT;
 
-	if (get_int_config_entry((char *)CONFIG_ENV PORT_KEY, &int_temp))
+	if (get_int_config_entry(jsonData, PORT_KEY, int_temp))
 		port = int_temp;
 	else
 		port = PORT_DEFAULT;
 
-	if (get_str_config_entry((char *)CONFIG_ENV CLIENT_ID_KEY, str_temp))
-		clientId = string(str_temp);
+	if (get_str_config_entry(jsonData, CLIENT_ID_KEY, value_temp))
+		clientId = value_temp;
 	else
 		clientId = CLIENT_ID_DEFAULT;
 
-	if (get_str_config_entry((char *)CONFIG_ENV USERNAME_KEY, str_temp))
-		username = string(str_temp);
+	if (get_str_config_entry(jsonData, USERNAME_KEY, value_temp))
+		username = value_temp;
 	else
 		username = USERNAME_DEFAULT;
 
-	if (get_str_config_entry((char *)CONFIG_ENV PASSWORD_KEY, str_temp))
-		password = string(str_temp);
+	if (get_str_config_entry(jsonData, PASSWORD_KEY, value_temp))
+		password = value_temp;
 	else
 		password = PASSWORD_DEFAULT;
 
-	if (get_int_config_entry((char *)CONFIG_ENV KEEP_ALIVE_KEY, &int_temp))
+	if (get_int_config_entry(jsonData, KEEP_ALIVE_KEY, int_temp))
 		keepAlive = int_temp;
 	else
 		keepAlive = KEEP_ALIVE_DEFAULT;
-
-	// local
-
-	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL HOST_KEY, str_temp))
-		localHost = string(str_temp);
-	else
-		localHost = "localhost";
-
-	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL PORT_KEY, &int_temp))
-		localPort = int_temp;
-	else
-		localPort = 1883;
-
-	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL CLIENT_ID_KEY, str_temp))
-		localClientId = string(str_temp);
-	else
-		localClientId = "";
-
-	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL USERNAME_KEY, str_temp))
-		localUsername = string(str_temp);
-	else
-		localUsername = "";
-
-	if (get_str_config_entry((char *)CONFIG_ENV_LOCAL PASSWORD_KEY, str_temp))
-		localPassword = string(str_temp);
-	else
-		localPassword = "";
-
-	if (get_int_config_entry((char *)CONFIG_ENV_LOCAL KEEP_ALIVE_KEY, &int_temp))
-		localKeepAlive = int_temp;
-	else
-		localKeepAlive = 10;
 
 	Print();
 }
@@ -338,46 +229,81 @@ int Config::GetLocalKeepAlive()
 
 bool Config::SetHost(string host)
 {
-	if (set_str_config_entry((char *)CONFIG_ENV HOST_KEY, HOST_KEY, host.c_str()))
+	Json::Value jsonData;
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		return true;
+		if (set_str_config_entry(jsonData, HOST_KEY, host))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 	return false;
 }
 
 bool Config::SetPort(int port)
 {
-	if (set_int_config_entry((char *)CONFIG_ENV PORT_KEY, PORT_KEY, port))
+	Json::Value jsonData;
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		return true;
+		if (set_int_config_entry(jsonData, PORT_KEY, port))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 	return false;
 }
 
 bool Config::SetClientId(string clientId)
 {
-	if (set_str_config_entry((char *)CONFIG_ENV CLIENT_ID_KEY, CLIENT_ID_KEY, clientId.c_str()))
+	Json::Value jsonData;
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		return true;
+		if (set_str_config_entry(jsonData, CLIENT_ID_KEY, clientId))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 	return false;
 }
 
 bool Config::SetUsername(string username)
 {
-	if (set_str_config_entry((char *)CONFIG_ENV USERNAME_KEY, USERNAME_KEY, username.c_str()))
+	Json::Value jsonData;
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		return true;
+		if (set_str_config_entry(jsonData, USERNAME_KEY, username))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 	return false;
 }
 
 bool Config::SetPassword(string password)
 {
-	if (set_str_config_entry((char *)CONFIG_ENV PASSWORD_KEY, PASSWORD_KEY, password.c_str()))
+	Json::Value jsonData;
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
 	{
-		return true;
+		if (set_str_config_entry(jsonData, PASSWORD_KEY, password))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
 	}
+	else
+		LOGW("OpenFile failed");
 	return false;
 }
 

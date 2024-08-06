@@ -27,11 +27,12 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				string dormitory = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string refresh = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string zigbee_netkey = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 
-				gateway->setMac(mac);
+				// gateway->setMac(mac);
 				gateway->setId(id);
 				gateway->setName(name);
-				gateway->setVersion(version);
 				gateway->setBleNetkey(ble_netkey);
 				gateway->setBleAppkey(ble_appkey);
 				gateway->setBleDevicekey(ble_devicekey);
@@ -39,10 +40,12 @@ static int GatewayParse(sqlite3_stmt *stmt, void *ptr)
 				gateway->setBleIvIndex(ble_iv_index);
 				gateway->setDormitory(dormitory);
 				gateway->setRefreshToken(refresh);
+				gateway->setData(data);
+				gateway->setVersion(version);
 
-				LOGI("Gateway mac: %s, id: %s, name: %s, version: %s , ble_netkey: %s,ble_appkey: %s, ble_devicekey: %s, ble_addr: %d, ble_iv_index: %d, dormitory: %s, refresh_token: %s",
+				LOGI("Gateway mac: %s, id: %s, name: %s, version: %s , ble_netkey: %s,ble_appkey: %s, ble_devicekey: %s, ble_addr: %d, ble_iv_index: %d, dormitory: %s, refresh_token: %s, data: %s",
 					 gateway->getMac().c_str(), gateway->getId().c_str(), gateway->getName().c_str(), gateway->getVersion().c_str(), gateway->getBleNetKey().c_str(), gateway->getBleAppKey().c_str(),
-					 gateway->getBleDeviceKey().c_str(), gateway->getBleAddr(), gateway->getBleIvIndex(), gateway->getDormitory().c_str(), gateway->getRefreshToken().c_str());
+					 gateway->getBleDeviceKey().c_str(), gateway->getBleAddr(), gateway->getBleIvIndex(), gateway->getDormitory().c_str(), gateway->getRefreshToken().c_str(), gateway->getData().c_str());
 
 				return CODE_OK;
 			}
@@ -67,13 +70,13 @@ int Db::GatewayRead()
 
 int Db::GatewayAdd(Gateway *gateway)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, gateway_id, name, version, ble_netkey, ble_appkey, ble_devicekey, ble_addr, ble_iv_index, dormitory,refresh_token) VALUES ('" + gateway->getMac() + "','" + gateway->getId() + "','" + gateway->getName() + "','" + gateway->getVersion() + "','" + gateway->getBleNetKey() + "','" + gateway->getBleAppKey() + "','" + gateway->getBleDeviceKey() + "'," + to_string(gateway->getBleAddr()) + "," + to_string(gateway->getBleIvIndex()) + ",'" + gateway->getDormitory() + "','" + gateway->getRefreshToken() + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (mac, gateway_id, name, version, ble_netkey, ble_appkey, ble_devicekey, ble_addr, ble_iv_index, dormitory,refresh_token) VALUES ('" + gateway->getMac() + "','" + gateway->getId() + "','" + gateway->getName() + "','" + gateway->getVersion() + "','" + gateway->getBleNetKey() + "','" + gateway->getBleAppKey() + "','" + gateway->getBleDeviceKey() + "'," + to_string(gateway->getBleAddr()) + "," + to_string(gateway->getBleIvIndex()) + ",'" + gateway->getDormitory() + "','" + gateway->getRefreshToken() + "');";
 	return Sqlite_Exec(sql);
 }
 
 int Db::GatewayUpdateId(Gateway *gateway, string id)
 {
-	string sql = "UPDATE " TABLE_NAME " SET gateway_id = '" + id + "' WHERE mac = '" + gateway->getMac() + "'";
+	string sql = "UPDATE " TABLE_NAME " SET gateway_id = '" + id + "' WHERE mac = '" + gateway->getMac() + "';";
 	return Sqlite_Exec(sql);
 }
 
@@ -116,6 +119,18 @@ int Db::GatewayUpdateDormitory(Gateway *gateway, string dormitory)
 int Db::GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken)
 {
 	string sql = "UPDATE " TABLE_NAME " SET refresh_token='" + refreshToken + "' WHERE mac='" + gateway->getMac() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::GatewayUpdateData(Gateway *gateway, string data)
+{
+	string sql = "UPDATE " TABLE_NAME " SET data='" + data + "' WHERE mac='" + gateway->getMac() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::GatewayUpdateVersion(Gateway *gateway, string version)
+{
+	string sql = "UPDATE " TABLE_NAME " SET version='" + version + "' WHERE mac='" + gateway->getMac() + "';";
 	return Sqlite_Exec(sql);
 }
 

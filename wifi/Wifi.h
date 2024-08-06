@@ -25,5 +25,5 @@ namespace Wifi
 	bool WifiIsStaMode(void);
 
 	string GetMacAddress();
-	string GetIP();
+	string GetIP(string linkName = "");
 }

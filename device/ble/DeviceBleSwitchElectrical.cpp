@@ -1,18 +1,35 @@
 #include "DeviceBleSwitchElectrical.h"
-#include "Log.h"
+#include "module/ModuleOnOff.h"
+#include "module/ModuleDimonDimoff.h"
+#include "module/ModuleStatusStartup.h"
+#include "module/ModuleCountDownSwitch.h"
+#include "module/ModuleCallScene.h"
 
-DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element)
-	: DeviceBle(id, name, mac, data, addr, type, version)
+DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, uint8_t countElement)
+	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
-	this->element = element;
-	for (int i = 0; i < this->element; i++)
+	ModuleOnOff *moduleOnOff;
+	ModuleOnOff *moduleOnOffAll;
+	ModuleDimonDimoff *moduleDimonDimoff;
+	ModuleStatusStartup *moduleStatusStartup;
+	ModuleCountDownSwitch *moduleCountDownSwitch;
+	ModuleCallScene * moduleCallScene;
+
+	this->countElement = countElement;
+	for (int i = 0; i < countElement; i++)
 	{
-		moduleButton = new ModuleButton(this, addr + i);
-		modules.push_back(moduleButton);
+		moduleOnOff = new ModuleOnOff(this, addr + i, KEY_ATTRIBUTE_BUTTON, i);
+		modules.push_back(moduleOnOff);
+		moduleDimonDimoff = new ModuleDimonDimoff(this, addr + i, i);
+		modules.push_back(moduleDimonDimoff);
 	}
-	moduleOnOff = new ModuleOnOff(this, addr);
-	modules.push_back(moduleOnOff);
-	moduleDimonDimoff = new ModuleDimonDimoff(this, addr, 0);
-	modules.push_back(moduleDimonDimoff);
+	moduleOnOffAll = new ModuleOnOff(this, addr, KEY_ATTRIBUTE_ONOFF);
+	modules.push_back(moduleOnOffAll);
+	moduleStatusStartup = new ModuleStatusStartup(this, addr);
+	modules.push_back(moduleStatusStartup);
+	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
+	modules.push_back(moduleCountDownSwitch);
+	moduleCallScene = new ModuleCallScene(this, addr);
+	modules.push_back(moduleCallScene);
 	powerSource = POWER_AC;
 }

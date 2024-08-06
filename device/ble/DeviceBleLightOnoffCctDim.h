@@ -4,7 +4,7 @@
 #include "module/ModuleOnOff.h"
 #include "module/ModuleDim.h"
 #include "module/ModuleCallScene.h"
-#include "element/ElementCct.h"
+#include "module/ModuleCct.h"
 
 using namespace std;
 
@@ -14,8 +14,8 @@ private:
 	ModuleOnOff *moduleOnOff;
 	ModuleDim *moduleDim;
 	ModuleCallScene *moduleCallScene;
-	ElementCct *elementCct;
+	ModuleCct *moduleCct;
 
 public:
-	DeviceBleLightOnoffCctDim(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBleLightOnoffCctDim(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 };

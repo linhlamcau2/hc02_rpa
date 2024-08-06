@@ -6,10 +6,9 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleLightSensor::ModuleLightSensor(Device *device, uint32_t addr) : Module(device, addr)
+ModuleLightSensor::ModuleLightSensor(Device *device, uint16_t addr) : Module(device, addr)
 {
 	lux = 0;
-	id = BLE_ATTRIBUTE_LUX;
 }
 
 ModuleLightSensor::~ModuleLightSensor()
@@ -17,37 +16,27 @@ ModuleLightSensor::~ModuleLightSensor()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleLightSensor::InitAttribute(int id, double value)
+void ModuleLightSensor::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_LUX)
 		lux = value;
 }
 
 void ModuleLightSensor::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, lux);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_LUX, lux);
 }
 #endif
 
 int ModuleLightSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+		dataValue.isMember(KEY_ATTRIBUTE_LUX) && dataValue[KEY_ATTRIBUTE_LUX].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				lux = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-		}
+		lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -73,7 +62,7 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52)
 	{
-		if (data[1] == 0x04 && data[2] == 0x00)
+		if (data[1] == 0x04 && (data[2] == 0x00 || data[2] == 0x01))
 		{
 			typedef struct __attribute__((packed))
 			{
@@ -81,9 +70,26 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				uint16_t scene;
 			} data_message_t;
 			data_message_t *data_message = (data_message_t *)&data[3];
-			lux = CalculateLux(bswap_16(data_message->lux));
+			uint16_t temp_lux = 0;
+			if (data[2] == 0x00)
+			{
+				temp_lux = CalculateLux(bswap_16(data_message->lux));
+			}
+			else if (data[2] == 0x01)
+			{
+				temp_lux = data_message->lux;
+			}
+
+			if (temp_lux != lux)
+			{
+				lux = temp_lux;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+#endif
+			}
 			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
+			CheckTrigger(jsonValue);
+
 			return false;
 		}
 	}
@@ -92,48 +98,34 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleLightSensor::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_LUX) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_LUX].isInt())
 		{
-			uint16_t value1 = 0, value2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int lux = dataValue[KEY_ATTRIBUTE_LUX].asInt();
+			rs = Util::CompareNumber(op, this->lux, lux);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_LUX].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_LUX];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					value1 = listValue[0].asInt();
-				}
-				rs = Util::CompareNumber(op, this->lux, value1, value2);
+				int lux1 = listValue[0].asInt();
+				int lux2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->lux, lux1, lux2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleLightSensor::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_LUX] = lux;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = lux;
-	jsonValue.append(dataValue);
-#endif
 }

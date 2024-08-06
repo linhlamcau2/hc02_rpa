@@ -5,11 +5,11 @@
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
+#include <math.h>
 
-ModuleDim::ModuleDim(Device *device, uint32_t addr) : Module(device, addr)
+ModuleDim::ModuleDim(Device *device, uint16_t addr) : Module(device, addr)
 {
 	dim = 0;
-	id = BLE_ATTRIBUTE_DIM;
 }
 
 ModuleDim::~ModuleDim()
@@ -17,34 +17,28 @@ ModuleDim::~ModuleDim()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDim::InitAttribute(int id, double value)
+void ModuleDim::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_DIM)
 		dim = value;
 }
 
 void ModuleDim::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, dim);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_DIM, dim);
 }
 #endif
 
 int ModuleDim::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			dim = (dataValue["VALUE"].asInt() * 65535) / 100;
-			BuildTelemetryValue(jsonValue);
-			// CheckTrigger();
-			return CODE_OK;
-		}
+		dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+		// CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -59,26 +53,24 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
 	{
+		int temp_dim;
 		if (len <= 5)
 		{
-			if (dim != data_message->dim_first)
-			{
-				dim = data_message->dim_first;
-				BuildTelemetryValue(jsonValue);
-			}
+			temp_dim = ceil(data_message->dim_first * 100 / 65535.0);
 		}
 		else
 		{
-			if (dim != data_message->dim)
-			{
-				dim = data_message->dim;
-				BuildTelemetryValue(jsonValue);
-			}
+			temp_dim = ceil(data_message->dim * 100 / 65535.0);
 		}
+		if (temp_dim != dim)
+		{
+			dim = temp_dim;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute();
 #endif
-		CheckTrigger();
+		}
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -86,86 +78,53 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleDim::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_DIM].isInt())
 		{
-			uint16_t dim1 = 0, dim2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
+			rs = Util::CompareNumber(op, this->dim, dim);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_DIM].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_DIM];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					dim1 = listValue[0].asInt();
-					dim2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					dim1 = listValue[0].asInt();
-				}
+				int dim1 = listValue[0].asInt();
+				int dim2 = listValue[1].asInt();
 				rs = Util::CompareNumber(op, this->dim, dim1, dim2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleDim::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	jsonValue[KEY_ATTRIBUTE_DIM] = dim * 100 / 65535;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = (dim * 100) / 65535;
-	jsonValue.append(dataValue);
-#endif
+	jsonValue[KEY_ATTRIBUTE_DIM] = dim;
+	if (dim > 0)
+		jsonValue[KEY_ATTRIBUTE_ONOFF] = 1;
+
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleDim::Do(Json::Value &dataValue)
 {
-	// LOGD("ModuleDim Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DIM) && dataValue[KEY_ATTRIBUTE_DIM].isInt())
 	{
 		int dim = dataValue[KEY_ATTRIBUTE_DIM].asInt();
-		uint16_t value = (dim * 65535) / 100;
-		if (bleProtocol->SetDimmingLight(addr, value, 0, true) == CODE_OK)
+		if (bleProtocol->SetDimmingLight(addr, dim * 65535 / 100, TRANSITION_DEFAULT, true) == CODE_OK)
 		{
-			this->dim = dim;
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			uint16_t dim = (value * 65535) / 100;
-			if (bleProtocol)
-			{
-				bleProtocol->SetDimmingLight(addr, dim, 0, true);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

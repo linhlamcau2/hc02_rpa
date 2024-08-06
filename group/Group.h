@@ -7,6 +7,8 @@
 #include "Object.h"
 #include "Device.h"
 
+#define ID_START (0xC000)
+
 using namespace std;
 
 class DeviceInGroup
@@ -26,13 +28,13 @@ public:
 	vector<DeviceInGroup *> deviceList;
 
 public:
-	Group(string id, uint32_t addr, string name);
+	Group(string id, uint16_t addr, string name);
 	~Group();
 
-	int GetPositionDevice(Device *device);
+	int GetPositionDevice(Device *device, int epid);
 
-	int AddDevice(Device *device, int epId, bool sendBle);
-	int DelDevice(Device *device, int epId);
+	int AddDevice(Device *device, int epId, bool sendBle, bool addDb);
+	int DelDevice(Device *device, int epId, bool sendBle, bool delDB);
 
 	int Do(Json::Value &dataValue, bool ack = true);
 	// int DoZigbee();

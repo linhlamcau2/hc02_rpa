@@ -6,10 +6,9 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleModeRgb::ModuleModeRgb(Device *device, uint32_t addr) : Module(device, addr)
+ModuleModeRgb::ModuleModeRgb(Device *device, uint16_t addr) : Module(device, addr)
 {
 	mode = 0;
-	id = BLE_ATTRIBUTE_SCENE_RGB;
 }
 
 ModuleModeRgb::~ModuleModeRgb()
@@ -17,37 +16,28 @@ ModuleModeRgb::~ModuleModeRgb()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleModeRgb::InitAttribute(int id, double value)
+void ModuleModeRgb::InitAttribute(string attridute, double value)
 {
-	if (this->id == id)
+	if (attridute == KEY_ATTRIBUTE_MODE_RGB)
 		mode = value;
 }
 
 void ModuleModeRgb::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, mode);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_MODE_RGB, mode);
 }
 #endif
 
 int ModuleModeRgb::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				mode = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-		}
+		mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+		// CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -66,15 +56,18 @@ int ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (data_message->idScene == 0)
 		{
-			mode = data_message->mode;
-			// TODO: recheck
-			if (1 <= mode && mode <= 6)
+			uint8_t temp = data_message->mode;
+			if (1 <= temp && temp <= 6)
 			{
+				if (temp != mode)
+				{
+					mode = temp;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
+					SaveAttribute();
 #endif
+				}
 				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
+				CheckTrigger(jsonValue);
 				return CODE_OK;
 			}
 		}
@@ -84,84 +77,49 @@ int ModuleModeRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleModeRgb::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
-			uint16_t mode1 = 0, mode2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
+			rs = Util::CompareNumber(op, this->mode, mode);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_MODE_RGB].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_MODE_RGB];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					mode1 = listValue[0].asInt();
-					mode2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					mode1 = listValue[0].asInt();
-				}
+				int mode1 = listValue[0].asInt();
+				int mode2 = listValue[1].asInt();
 				rs = Util::CompareNumber(op, this->mode, mode1, mode2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleModeRgb::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_MODE_RGB] = mode;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = mode;
-	jsonValue.append(dataValue);
-#endif
 }
 
 int ModuleModeRgb::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleModeRgb Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_MODE_RGB) && dataValue[KEY_ATTRIBUTE_MODE_RGB].isInt())
 	{
 		int mode = dataValue[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		if (bleProtocol->CallModeRgb(addr, mode) == CODE_OK)
 		{
-			this->mode = mode;
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-			{
-				bleProtocol->CallModeRgb(addr, value);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

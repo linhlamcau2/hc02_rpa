@@ -120,9 +120,17 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 	Json::Value payloadJson;
 	if (payloadJson.parse(message) && payloadJson.isObject())
 	{
+		string cmd = "";
 		if (payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
 		{
-			string cmd = payloadJson["CMD"].asString();
+			cmd = payloadJson["CMD"].asString();
+		}
+		else if (payloadJson.isMember("cmd") && payloadJson["cmd"].isString())
+		{
+			cmd = payloadJson["cmd"].asString();
+		}
+		if (cmd != "")
+		{
 			if (onRpcCallbackFuncList.find(cmd) != onRpcCallbackFuncList.end())
 			{
 				OnRpcCallbackFunc onRpcCallbackFunc = onRpcCallbackFuncList[cmd];
@@ -140,7 +148,7 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 						for (auto &respV : respValue)
 						{
 							send(respV.toString(), si_other, slen);
-							usleep(10000);
+							SLEEP_MS(10);
 						}
 					}
 				}
@@ -168,6 +176,47 @@ void Udp::UdpOnMessage(string message, struct sockaddr_in *si_other, int slen)
 		{
 			LOGW("UdpOnMessage message: %s", message.c_str());
 		}
+	}
+	else
+	{
+#ifndef __ANDROID__
+		string messageBase64;
+		string decode = macaron::Base64::Decode(message, messageBase64);
+		if (decode == "")
+		{
+			if (payloadJson.parse(messageBase64) && payloadJson.isObject())
+			{
+				if (payloadJson.isMember("SSID") && payloadJson["SSID"].isString() &&
+					payloadJson.isMember("PASSWORD") && payloadJson["PASSWORD"].isString() &&
+					payloadJson.isMember("ENCRYPTION") && payloadJson["ENCRYPTION"].isString())
+				{
+					string ssid = payloadJson["SSID"].asString();
+					string password = payloadJson["PASSWORD"].asString();
+					string encryption = payloadJson["ENCRYPTION"].asString();
+					LOGD("ssid: %s, password: %s, encryption: %s", ssid.c_str(), password.c_str(), encryption.c_str());
+					if (Wifi::ConnectToWifi(ssid, password, encryption) == 0)
+					{
+						LOGI("ip: %s", Wifi::GetIP().c_str());
+					}
+					else
+					{
+						LOGW("Connect wifi err");
+					}
+#ifdef ESP_PLATFORM
+					SetLedInternet(false);
+#endif
+				}
+				else
+				{
+					LOGW("UdpOnMessage message: %s", messageBase64.c_str());
+				}
+			}
+		}
+		else
+		{
+			LOGW("Base64 decode err: %s", decode.c_str());
+		}
+#endif
 	}
 }
 

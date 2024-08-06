@@ -4,16 +4,15 @@
 #include "function/FunctionZone.h"
 #include "function/FunctionFace.h"
 
-DeviceMqtt::DeviceMqtt(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, data, addr, type, version)
+DeviceMqtt::DeviceMqtt(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, dataJson, addr, type, version)
 {
 	protocol = MQTT_DEVICE;
 
 	// parse data to function list
-	Json::Value dataValue;
-	if (dataValue.parse(data) && dataValue.isObject() &&
-			dataValue.isMember("functions") && dataValue["functions"].isArray())
+	if (dataJson.isObject() &&
+			dataJson.isMember("functions") && dataJson["functions"].isArray())
 	{
-		Json::Value functionsValue = dataValue["functions"];
+		Json::Value functionsValue = dataJson["functions"];
 		for (auto functionValue : functionsValue)
 		{
 			AddFuntion(functionValue, false);
@@ -51,11 +50,9 @@ void DeviceMqtt::AddFuntion(Json::Value &funcValue, bool addToDb)
 	}
 	if (addToDb)
 	{
-		Json::Value dataValue;
-		if (dataValue.parse(data) && dataValue.isObject())
+		if (dataJson.isObject())
 		{
-			dataValue["functions"].append(funcValue);
-			data = dataValue.toString();
+			dataJson["functions"].append(funcValue);
 			database->DeviceUpdateData(this);
 		}
 	}
@@ -83,7 +80,7 @@ void DeviceMqtt::InputData(Json::Value &dataValue)
 
 bool DeviceMqtt::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	for (auto &function : functions)
 	{
 		if (function->CheckData(dataValue, rs))

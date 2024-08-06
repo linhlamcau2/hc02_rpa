@@ -3,33 +3,33 @@
 #include "TimerSchedule.h"
 #include "Util.h"
 #include "Log.h"
+#include "Db.h"
 #ifdef ESP_PLATFORM
 #include "Sntp.h"
 #endif
 
-Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = -1;
 	this->endTime = -1;
 	this->ruleData = ruleData;
-	count = 0;
-	lastTimeActive = 0;
+	this->isFavorite = false;
+	isEnable = true;
 	timerRegisterIndex = 0;
 }
 
-Rule::Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
+Rule::Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData) : Object(id, addr, name)
 {
 	this->type = type;
 	this->repeater = repeater;
 	this->startTime = startTime;
 	this->endTime = endTime;
 	this->ruleData = ruleData;
+	this->isFavorite = false;
+	isEnable = true;
 	timerRegisterIndex = timerSchedule->RegisterTimer(startTime, bind(&Rule::Check, this));
-	// timerSchedule->RegisterTimer(endTime, bind(&Rule::Check, this));
-	count = 0;
-	lastTimeActive = 0;
 }
 
 Rule::~Rule()
@@ -52,9 +52,20 @@ Json::Value Rule::GetRuleData()
 	return ruleData;
 }
 
-string Rule::GetType()
+void Rule::SetRuleData(Json::Value ruleData)
+{
+	this->ruleData = ruleData;
+}
+
+RuleType Rule::GetType()
 {
 	return type;
+}
+
+void Rule::UpdateFirstRun()
+{
+	isFirstRun = false;
+	database->RuleUpdateFirstRun(this, isFirstRun);
 }
 
 void Rule::Check()
@@ -64,16 +75,18 @@ void Rule::Check()
 		bool checkRuleInputResult = false;
 		int currentTimer = Util::GetCurrentTimer();
 		int currentWeekDay = Util::GetCurrentWeekDay();
-		LOGI("currentWeekDay : %d", currentWeekDay);
-		LOGI("currenWeekDay convert: %d", Util::ConvertWeekDayToIntCompare(currentWeekDay));
-		LOGI("repeater : 0x%02X", repeater);
-		if (Util::ConvertWeekDayToIntCompare(currentWeekDay) & repeater)
+		if (Util::CheckDayInWeek(currentWeekDay, repeater) || isFirstRun)
 		{
-			LOGI("Check repeater day OK");
-			if ((startTime < 0) || (endTime < 0) || (startTime <= currentTimer && currentTimer <= endTime))
+			LOGD("Check repeater day OK");
+			LOGD("current: %d", currentTimer);
+			LOGD("start: %d", startTime);
+			LOGD("end: %d", endTime);
+			if ((startTime < 0) ||																						// fullDay
+				(Util::HaveRTC() && ((startTime <= currentTimer && currentTimer <= endTime) ||							// bắt đầu và kết thúc trong cùng 1 ngày
+									 (endTime < startTime && (startTime <= currentTimer || currentTimer <= endTime))))) // bắt đầu và kết thúc trong 2 ngày khác nhau
 			{
-				LOGI("Check time OK");
-				if (type == "or")
+				LOGD("Check time OK");
+				if (type == RULE_TYPE_OR || type == RULE_TYPE_TIME_OR || type == RULE_TYPE_TIME)
 				{
 					checkRuleInputResult = false;
 					for (auto &ruleInput : ruleInputList)
@@ -85,7 +98,7 @@ void Rule::Check()
 						}
 					}
 				}
-				else if (type == "and")
+				else if (type == RULE_TYPE_AND || type == RULE_TYPE_TIME_AND)
 				{
 					checkRuleInputResult = true;
 					for (auto &ruleInput : ruleInputList)
@@ -103,29 +116,20 @@ void Rule::Check()
 		{
 			LOGI("Do output rule id: %s", id.c_str());
 			RunOutput();
-			count++;
-			lastTimeActive = time(NULL);
+			if (isFirstRun)
+			{
+				UpdateFirstRun();
+			}
 		}
 	}
 }
 
 void Rule::RunOutput()
 {
-#ifdef ESP_PLATFORM
-	if (Sntp::haveNtpTime())
-	{
-
-		for (auto &ruleOutput : ruleOutputList)
-		{
-			ruleOutput->RunOutput();
-		}
-	}
-#else
 	for (auto &ruleOutput : ruleOutputList)
 	{
 		ruleOutput->RunOutput();
 	}
-#endif
 }
 
 void Rule::AddRuleInput(RuleInput *ruleInput)
@@ -165,4 +169,24 @@ bool Rule::GetStatus()
 void Rule::SetStatus(bool enable)
 {
 	this->isEnable = enable;
+}
+
+bool Rule::GetFirstRun()
+{
+	return this->isFirstRun;
+}
+
+void Rule::SetFirstRun(bool isFirstRun)
+{
+	this->isFirstRun = isFirstRun;
+}
+
+bool Rule::GetIsFavorite()
+{
+	return this->isFavorite;
+}
+
+void Rule::SetIsFavorite(bool isFavorite)
+{
+	this->isFavorite = isFavorite;
 }

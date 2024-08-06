@@ -7,20 +7,19 @@ class ModulePirSensor : public Module
 {
 protected:
 	uint16_t pir;
-	int id;
 
 public:
-	ModulePirSensor(Device *device, uint32_t addr);
+	ModulePirSensor(Device *device, uint16_t addr);
 	~ModulePirSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database

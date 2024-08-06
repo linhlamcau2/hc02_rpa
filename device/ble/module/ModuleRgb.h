@@ -6,30 +6,27 @@ using namespace std;
 class ModuleRgb : public Module
 {
 protected:
-	uint8_t bt;
 	uint8_t r, g, b, dimOn, dimOff;
-	int idR, idG, idB, idDimOn, idDimOff;
-	bool isR, isG, isB, isDimOn, isDimOff;
 	string keyR, keyG, keyB, keyDimOn, keyDimOff;
 
 public:
-	ModuleRgb(Device *device, uint32_t addr, uint8_t button = 0);
+	ModuleRgb(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
+	void SaveAttribute(string key);
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);

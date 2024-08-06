@@ -6,6 +6,13 @@
 #include "json.h"
 #include "ErrorCode.h"
 
+#ifdef ESP_PLATFORM
+#include "freertos/FreeRTOS.h"
+#define SLEEP_MS(ms) vTaskDelay(pdMS_TO_TICKS(ms))
+#else
+#define SLEEP_MS(ms) usleep(ms * 1000)
+#endif
+
 using namespace std;
 
 namespace Util
@@ -39,11 +46,12 @@ namespace Util
 
 	int GetCurrentWeekDay();
 	int ConvertStrTimeToInt(string time);
+	bool HaveRTC(); //Kiểm tra trạng thái giờ thời gian thực
 	uint8_t CalCrc(uint8_t length, uint8_t *data);
 	string setString(const char *value);
 	string ConvertU32ToHexString(uint8_t *data, int len);
-	int ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun);
-	int ConvertWeekDayToIntCompare(int day);
+	int ConvertStringToHex(string str, uint8_t *data, int len);
+	int CheckDayInWeek(int day, int repeater);
 	vector<string> splitString(string str, char splitter);
 	bool CompareNumber(string op, int a, int b, int c = 0);
 
@@ -51,7 +59,7 @@ namespace Util
 	string GetCurrentTimeStr();
 
 	string uuidToStr(uint8_t *uuid);
-	string arrayToString844412(uint8_t *array);
+	string GenUuidFromMac(string mac);
 
 	void LedInternet(bool value);
 	void LedService(bool value);
@@ -67,16 +75,24 @@ namespace Util
 	bool GetStatusLedZigbee();
 	bool GetStatusLedInternet();
 
-	float GetLongitude();
-	float GetLatitude();
-	void SetLongitude(float value);
-	void SetLatitude(float value);
+	float GetLongitude(string data);
+	float GetLatitude(string data);
+
+	void SetStatusWeatherOutdoor(int status);
+	void SetTempWeatherOutdoor(uint16_t temp);
+	int GetStatusWeatherOutdoor();
+	uint16_t GetTempWeatherOutdoor();
 
 	void SetTempOfScreenTouch(uint16_t temp);
 	void SetHumOfScreenTouch(uint16_t hum);
 	uint16_t GetTempOfScreenTouch();
 	uint16_t GetHumOfScreenTouch();
 
-	bool compareByID(const Json::Value& obj1, const Json::Value& obj2);
+	bool compareByID(const Json::Value &obj1, const Json::Value &obj2);
 	Json::Value arrangeJson(Json::Value &obj);
+
+#ifndef ESP_PLATFORM
+	string encryptAes128(string key, string plaintext);
+	string calculateSHA256Checksum(string &filePath);
+#endif
 }

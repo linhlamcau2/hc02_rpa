@@ -1,11 +1,10 @@
 #include "RuleOutputDevice.h"
 #include "Log.h"
 
-RuleOutputDevice::RuleOutputDevice(Device *device, Json::Value &data, int delayTime)
+RuleOutputDevice::RuleOutputDevice(Device *device, Json::Value &data)
 {
 	this->device = device;
 	this->data = data;
-	this->delayTime = delayTime;
 }
 
 RuleOutputDevice::~RuleOutputDevice()
@@ -17,7 +16,6 @@ void RuleOutputDevice::RunOutput()
 {
 	if (device)
 	{
-		sleep(delayTime);
 		device->DoJsonArray(data);
 	}
 }

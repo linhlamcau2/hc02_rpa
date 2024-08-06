@@ -25,10 +25,13 @@ private:
 
 	string mac;
 
+	string subReqTopic;
+	string subRespTopic;
 	string pubReqTopic;
 	string pubRespTopic;
 
 	atomic<bool> isBusy;
+	mutex mtx;
 
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnLocalCallbackFunc;
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncList;

@@ -1,25 +1,22 @@
 #include "DeviceBle.h"
 #include "Log.h"
 
-DeviceBle::DeviceBle(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, data, addr, type, version)
+DeviceBle::DeviceBle(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version) : Device(id, name, mac, dataJson, addr, type, version)
 {
 	protocol = BLE_DEVICE;
 	countElement = 1;
-	deviceKey = GetDeviceKey(data);
+	deviceKey = GetDeviceKey(dataJson);
 }
 
 DeviceBle::~DeviceBle()
 {
 	for (auto &module : modules)
 		delete module;
-	for (auto &element : elements)
-		delete element;
 }
 
-string DeviceBle::GetDeviceKey(string data)
+string DeviceBle::GetDeviceKey(Json::Value &dataJson)
 {
-	Json::Value dataJson;
-	if (dataJson.parse(data) && dataJson.isObject())
+	if (dataJson.isObject())
 	{
 		if (dataJson.isMember("devicekey") && dataJson["devicekey"].isString())
 		{
@@ -29,7 +26,7 @@ string DeviceBle::GetDeviceKey(string data)
 	return deviceKey;
 }
 
-bool DeviceBle::CheckAddr(uint32_t addr)
+bool DeviceBle::CheckAddr(uint16_t addr)
 {
 	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
 }
@@ -45,41 +42,30 @@ int DeviceBle::BuildTelemetryValue(Json::Value &pushDataValue)
 	{
 		module->BuildTelemetryValue(pushDataValue);
 	}
-	for (auto &element : elements)
-	{
-		element->BuildTelemetryValue(pushDataValue);
-	}
+	int temp = isOnline();
+	pushDataValue["stt"] = temp;
 	return CODE_OK;
 }
 
-void DeviceBle::InputData(Json::Value &dataValue)
+void DeviceBle::InputData(Json::Value &dataValue, bool isPushTelemety)
 {
 	values = Json::Value::null;
 	for (auto &module : modules)
 	{
 		module->InputData(dataValue, values);
 	}
-	for (auto &element : elements)
-	{
-		element->InputData(dataValue, values);
-	}
-	if (!values.isNull())
+	if (!values.isNull() && isPushTelemety)
 		PushTelemetry(values);
 }
 
-void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
+void DeviceBle::InputData(uint8_t *data, int len, uint16_t addr)
 {
 	values = Json::Value::null;
 	for (auto &module : modules)
 	{
-		if (module->InputData(data, len, values) == CODE_OK)
-			break;
-	}
-	for (auto &element : elements)
-	{
-		if (element->CheckAddr(addr))
+		if (module->CheckAddr(addr))
 		{
-			if (element->InputData(data, len, values) == CODE_OK)
+			if (module->InputData(data, len, values) == CODE_OK)
 				break;
 		}
 	}
@@ -88,18 +74,18 @@ void DeviceBle::InputData(uint8_t *data, int len, uint32_t addr)
 
 bool DeviceBle::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	for (auto &module : modules)
 	{
 		if (module->CheckData(dataValue, rs))
 			return true;
 	}
-	for (auto &element : elements)
-	{
-		if (element->CheckData(dataValue, rs))
-			return true;
-	}
 	return false;
+}
+
+int DeviceBle::GetNumElement()
+{
+	return countElement;
 }
 
 int DeviceBle::Do(Json::Value &dataValue)
@@ -108,9 +94,14 @@ int DeviceBle::Do(Json::Value &dataValue)
 	{
 		module->Do(dataValue);
 	}
-	for (auto &element : elements)
+	return CODE_OK;
+}
+
+int DeviceBle::InitAttribute(string attribute, double value)
+{
+	for (auto &module : modules)
 	{
-		element->Do(dataValue);
+		module->InitAttribute(attribute, value);
 	}
 	return CODE_OK;
 }

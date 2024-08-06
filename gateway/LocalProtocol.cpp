@@ -10,19 +10,18 @@
 #include "ButtonSignal.h"
 #endif
 
-#define HC_CONTROL_TOPIC "HC.CONTROL"
-#define HC_RESPONSE_TOPIC "HC.CONTROL.RESPONSE"
-
 #ifdef ESP_PLATFORM
 LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : MqttBroker()
 #else
-LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : Mqtt(address, port, token, username, password, keepalive)
+LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive)
+	: Mqtt(address, port, (char*)token.c_str(), username, password, keepalive)
 #endif
 {
 	this->mac = mac;
-
-	pubReqTopic = "v2/json/req/" + mac + "/";
-	pubRespTopic = "v2/json/resp/" + mac + "/";
+	subReqTopic = "/v2/mobile/+/hc/" + mac + "/json_req";
+	subRespTopic = "/v2/mobile/+/hc/" + mac + "/json_resp";
+	pubReqTopic = "/v2/hc/" + mac + "/mobile/all/json_req";
+	pubRespTopic = "/v2/hc/" + mac + "/mobile/";
 }
 
 LocalProtocol::~LocalProtocol()
@@ -37,9 +36,9 @@ void LocalProtocol::init()
 	Mqtt::init();
 #endif
 	isBusy = false;
-	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/" + mac);
-	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
-	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), "v2/json/resp/+/" + mac);
+	addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), subReqTopic);
+	addActionCallback(bind(&LocalProtocol::OnLocalResp, this, placeholders::_1, placeholders::_2), subRespTopic);
+	// addActionCallback(bind(&LocalProtocol::OnLocalReq, this, placeholders::_1, placeholders::_2), "v2/json/req/+/all");
 }
 
 void LocalProtocol::localAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -77,68 +76,102 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	if (topics.size() == 5)
-	{
-		if (topics[4] == mac || topics[4] == "all")
-		{
-			Util::LedServiceLock();
-			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-				payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
-				payloadJson.isMember("data") && payloadJson["data"].isObject())
-			{
-				string cmd = payloadJson["cmd"].asString();
-				string rqi = payloadJson["rqi"].asString();
-				if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
-				{
-					OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
-					isBusy = true;
-					int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
-					isBusy = false;
-					if (rs == CODE_OK)
-					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-						respValue["rqi"] = rqi;
-						Publish(pubRespTopic + topics[3], respValue.toString());
-					}
-					else if (rs == CODE_DATA_ARRAY)
-					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-						if (respValue.isArray())
-						{
-							for (auto &respV : respValue)
-							{
-								respV["rqi"] = rqi;
-								Publish(pubRespTopic + topics[3], respV.toString());
-							}
-						}
-					}
-					else if (rs == CODE_NOT_RESPONSE)
-					{
-						LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
-					}
-					else
-					{
-						LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
-					}
-#ifdef ESP_PATFORM
-					vTaskDelay(1);
+#ifdef ESP_PLATFORM
+	SetLedInternet(false);
 #endif
-				}
-				else
+	Util::LedServiceLock();
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString() &&
+		payloadJson.isMember("data") && payloadJson["data"].isObject())
+	{
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (onLocalCallbackFuncList.find(cmd) != onLocalCallbackFuncList.end())
+		{
+			OnLocalCallbackFunc onLocalCallbackFunc = onLocalCallbackFuncList[cmd];
+			isBusy = true;
+			mtx.lock();
+			int rs = onLocalCallbackFunc(payloadJson["data"], respValue);
+			mtx.unlock();
+			isBusy = false;
+			if (rs == CODE_OK)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+			}
+			else if (rs == CODE_DATA_ARRAY)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				if (respValue.isArray())
 				{
-					LOGW("Method %s not registed", cmd.c_str());
-					LOGW("OnLocalMessage payload: %s", payload.c_str());
+					for (auto &respV : respValue)
+					{
+						respV["rqi"] = rqi;
+						Publish(pubRespTopic + topics[2] + "/json_resp", respV.toString());
+					}
 				}
+			}
+			else if (rs == CODE_NOT_RESPONSE)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+			}
+			else if (rs == CODE_EXIT)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+				sleep(2);
+				exit(1);
+			}
+#ifdef __ANDROID__
+			else if (rs == CODE_REBOOT)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+				sleep(2);
+				system("su");
+				system("reboot");
+			}
+#endif
+			else if (rs == CODE_FACTORY)
+			{
+				LOGD("Call %s OK, rs: %d", cmd.c_str(), rs);
+				respValue["rqi"] = rqi;
+				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
+				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+#ifdef ESP_PLATFORM
+				Wifi::WifiStartAP();
+#elif defined(__OPENWRT__)
+				Wifi::SetModeApWifi();
+#endif
+				exit(1);
 			}
 			else
 			{
-				LOGW("OnLocalMessage topic: %s", topic.c_str());
-				LOGW("OnLocalMessage payload: %s", payload.c_str());
+				LOGW("Call %s ERR rs: %d", cmd.c_str(), rs);
 			}
+			SLEEP_MS(1);
+		}
+		else
+		{
+			LOGW("Method %s not registed", cmd.c_str());
+			LOGW("OnLocalMessage payload: %s", payload.c_str());
 		}
 	}
-
+	else
+	{
+		LOGW("OnLocalMessage topic: %s", topic.c_str());
+		LOGW("OnLocalMessage payload: %s", payload.c_str());
+	}
+#ifdef ESP_PLATFORM
+	SetLedInternet(true);
+#endif
 	Util::LedServiceUnlock();
 }
 
@@ -147,42 +180,42 @@ void LocalProtocol::OnLocalResp(string &topic, string &payload)
 	Json::Value respValue;
 	Json::Value payloadJson;
 	vector<string> topics = Util::splitString(topic, '/');
-	if (topics.size() == 5)
+	// if (topics.size() == 7)
+	// {
+	// 	if (topics[5] == mac || topics[5] == "all")
+	// 	{
+	Util::LedServiceLock();
+	if (payloadJson.parse(payload) && payloadJson.isObject() &&
+		payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
+		payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
 	{
-		if (topics[4] == mac || topics[4] == "all")
+		string cmd = payloadJson["cmd"].asString();
+		string rqi = payloadJson["rqi"].asString();
+		if (requestList.find(rqi) != requestList.end())
 		{
-			Util::LedServiceLock();
-			if (payloadJson.parse(payload) && payloadJson.isObject() &&
-				payloadJson.isMember("cmd") && payloadJson["cmd"].isString() &&
-				payloadJson.isMember("rqi") && payloadJson["rqi"].isString())
+			request_t *request = requestList[rqi];
+			if (cmd == request->respCmd)
 			{
-				string cmd = payloadJson["cmd"].asString();
-				string rqi = payloadJson["rqi"].asString();
-				if (requestList.find(rqi) != requestList.end())
+				request->status = true;
+				if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
 				{
-					request_t *request = requestList[rqi];
-					if (cmd == request->respCmd)
-					{
-						request->status = true;
-						if (request->respValue && payloadJson.isMember("data") && payloadJson["data"].isObject())
-						{
-							*request->respValue = payloadJson["data"];
-						}
-					}
+					*request->respValue = payloadJson["data"];
 				}
-				else
-				{
-					LOGW("rqi %s not found", rqi.c_str());
-					LOGW("OnLocalResp payload: %s", payload.c_str());
-				}
-			}
-			else
-			{
-				LOGW("OnLocalResp topic: %s", topic.c_str());
-				LOGW("OnLocalResp payload: %s", payload.c_str());
 			}
 		}
+		else
+		{
+			LOGW("rqi %s not found", rqi.c_str());
+			LOGW("OnLocalResp payload: %s", payload.c_str());
+		}
 	}
+	else
+	{
+		LOGW("OnLocalResp topic: %s", topic.c_str());
+		LOGW("OnLocalResp payload: %s", payload.c_str());
+	}
+	// 	}
+	// }
 	Util::LedServiceUnlock();
 }
 
@@ -205,17 +238,19 @@ int LocalProtocol::LocalPublish(string topic, char *payload, int payloadLen)
 
 int LocalProtocol::LocalPublish(string &payload)
 {
-	return Publish(HC_RESPONSE_TOPIC, payload);
+	return Publish(pubReqTopic, payload);
 }
 
 int LocalProtocol::LocalPublish(Json::Value &payloadJson)
 {
-	return Publish(HC_RESPONSE_TOPIC, payloadJson.toString());
+	return Publish(pubReqTopic, payloadJson.toString());
 }
 
 int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout)
 {
 	LOGD("PublishToLocalMessage: %s", reqValue.toString().c_str());
+	if (!isConnected())
+		return CODE_TIMEOUT;
 	int rs = CODE_OK;
 	Json::Value sendValue;
 	string rqi = Util::genRandRQI(16);
@@ -228,10 +263,10 @@ int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, s
 		.respValue = respValue,
 	};
 	requestList[rqi] = &request;
-	Publish(pubReqTopic + "all", sendValue.toString());
+	Publish(pubReqTopic, sendValue.toString());
 	while (!request.status && timeout--)
 	{
-		usleep(1000);
+		SLEEP_MS(1);
 	}
 	if (!request.status)
 	{
@@ -244,10 +279,10 @@ int LocalProtocol::PublishToLocalMessage(string reqCmd, Json::Value &reqValue, s
 
 int LocalProtocol::PublishToLocalMessage(string &payload)
 {
-	return Publish("HC.CONTROL.RESPONSE.V2", payload);
+	return Publish(pubReqTopic, payload);
 }
 
 int LocalProtocol::PublishToLocalMessage(Json::Value &payloadJson)
 {
-	return Publish("HC.CONTROL.RESPONSE.V2", payloadJson.toString());
+	return Publish(pubReqTopic, payloadJson.toString());
 }

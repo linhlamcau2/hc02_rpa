@@ -19,21 +19,28 @@ static int DeviceParse(sqlite3_stmt *stmt, void *ptr)
 				string mac = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				uint32_t addr = sqlite3_column_int(stmt, index++);
+				uint16_t addr = sqlite3_column_int(stmt, index++);
 				uint32_t type = sqlite3_column_int(stmt, index++);
-				string firmware_version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				string hardware_version = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				uint32_t active_time = sqlite3_column_int(stmt, index++);
-				uint32_t update_time = sqlite3_column_int(stmt, index++);
+				uint16_t firmwareVersion = sqlite3_column_int(stmt, index++);
+				uint16_t hardwareVersion = sqlite3_column_int(stmt, index++);
+				uint32_t activeTime = sqlite3_column_int(stmt, index++);
+				uint32_t updateTime = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_int(stmt, index++);
+				LOGD("%s, %s, %s, %d, %d, %d, %d, %d, %d, %s", mac.c_str(), id.c_str(), name.c_str(), addr, type, firmwareVersion, hardwareVersion, activeTime, updateTime, data.c_str());
+
+				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
 				string devData;
 				string decode = macaron::Base64::Decode(data, devData);
 				if (decode == "")
 				{
-					uint16_t u16version = (firmware_version[0] - 48) << 8 | (firmware_version[2] - 48);
-					Device *device = gateway->AddNewDevice(id, name, mac, devData, addr, type, u16version, true, false);
-					device->SetIsFavorite(isFavorite);
+					Json::Value dataJson;
+					dataJson.parse(devData);
+					if (dataJson.isObject())
+					{
+						Device *device = gateway->AddNewDevice(id, name, mac, dataJson, addr, type, firmwareVersion, false);
+						if (device)
+							device->SetIsFavorite(isFavorite);
+					}
 				}
 			}
 			else if (s == SQLITE_DONE)
@@ -57,30 +64,30 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version, active_time) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData().toString()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + "," + to_string(device->GetVersion()) + "," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdate(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET device_id='" + device->GetId() + "', name='" + device->GetName() + "', data='" + macaron::Base64::Encode(device->GetData()) + "', addr=" + to_string(device->GetAddr()) + ", type=" + to_string(device->GetType()) + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + device->GetName() + "' WHERE device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceUpdateData(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData()) + "' WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(device->GetData().toString()) + "' WHERE device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::DeviceDel(Device *device)
 {
-	return DeviceDel(device->GetMac());
+	return DeviceDel(device->GetId());
 }
 
-int Db::DeviceDel(string mac)
+int Db::DeviceDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE mac='" + mac + "';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE device_id='" + id + "';";
 	return Sqlite_Exec(sql);
 }
 
@@ -107,6 +114,6 @@ int Db::DelDevExist(Device *device)
 
 int Db::DeviceUpdateFavorite(Device *device)
 {
-	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(device->GetIsFavorite()) + " WHERE mac='" + device->GetMac() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET is_favorite= " + to_string(device->GetIsFavorite()) + " WHERE device_id='" + device->GetId() + "';";
 	return Sqlite_Exec(sql);
 }

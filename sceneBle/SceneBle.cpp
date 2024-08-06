@@ -1,8 +1,8 @@
 #include "SceneBle.h"
-#include <thread>
 #include "Log.h"
 #include "BleProtocol.h"
 #include "BleDefine.h"
+#include "Db.h"
 
 DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 {
@@ -10,8 +10,9 @@ DeviceInSceneBle::DeviceInSceneBle(Device *device, Json::Value data)
 	this->data = data;
 }
 
-SceneBle::SceneBle(string id, uint32_t addr, string name) : Object(id, addr, name)
+SceneBle::SceneBle(string id, uint16_t addr, string name) : Object(id, addr, name)
 {
+	this->isFavorite = false;
 }
 
 bool SceneBle::GetIsFavorite()
@@ -48,37 +49,140 @@ int SceneBle::GetPositionDevice(Device *device)
 	return CODE_ERROR;
 }
 
-int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
+int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool addDb)
 {
-	if (addOnlyDB)
+	if (!device)
+		return CODE_ERROR;
+
+	DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+	if (!deviceInSceneBle)
+		return CODE_ERROR;
+	int positionDevice = GetPositionDevice(device);
+	if (!sendBle)
 	{
-		DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+		mtx.lock();
+		if (positionDevice != CODE_ERROR)
+		{
+			deviceList.erase(deviceList.begin() + positionDevice);
+		}
 		deviceList.push_back(deviceInSceneBle);
+		mtx.unlock();
+
+		if (addDb)
+			database->DeviceInSceneBleAdd(this, device, data.toString());
 		return CODE_OK;
 	}
 	else
 	{
 		int modeRGB = 0;
 		if (data.isObject() &&
-				data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
+			data.isMember(KEY_ATTRIBUTE_MODE_RGB) && data[KEY_ATTRIBUTE_MODE_RGB].isInt())
 		{
 			modeRGB = data[KEY_ATTRIBUTE_MODE_RGB].asInt();
 		}
-		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
+		int indexType = device->GetType() / 1000;
+		if (indexType != 22 && indexType != 24) // sceneble for light
 		{
-			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+			if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == CODE_OK)
+			{
+				mtx.lock();
+				if (positionDevice != CODE_ERROR)
+				{
+					deviceList.erase(deviceList.begin() + positionDevice);
+				}
+				deviceList.push_back(deviceInSceneBle);
+				mtx.unlock();
+
+				if (addDb)
+					database->DeviceInSceneBleAdd(this, device, data.toString());
+				return CODE_OK;
+			}
+		}
+		else // sceneble for switch touch, electrical
+		{
+			for (int i = 0; i < device->GetNumElement(); i++)
+			{
+				if (data.isMember(KEY_ATTRIBUTE_ONOFF) && data[KEY_ATTRIBUTE_ONOFF].isInt())
+				{
+					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
+				}
+
+				if (data.isMember(KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")))
+				{
+					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
+				}
+			}
 			mtx.lock();
+			if (positionDevice != CODE_ERROR)
+			{
+				deviceList.erase(deviceList.begin() + positionDevice);
+			}
 			deviceList.push_back(deviceInSceneBle);
 			mtx.unlock();
+
+			if (addDb)
+				database->DeviceInSceneBleAdd(this, device, data.toString());
 			return CODE_OK;
 		}
 	}
 	return CODE_ERROR;
 }
 
-int SceneBle::DelDevice(Device *device)
+int SceneBle::DelDevice(Device *device, bool sendBle, bool delDb)
 {
-	if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == 0)
+	if (!device)
+		return CODE_ERROR;
+
+	if (delDb)
+		database->DeviceInSceneBleDel(this, device);
+	if (sendBle)
+	{
+		int indexType = device->GetType() / 1000;
+		if (indexType != 22 && indexType != 24) // del scene ble for light
+		{
+			if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == CODE_OK)
+			{
+				int deviceIndex = GetPositionDevice(device);
+				if (deviceIndex > -1)
+				{
+					mtx.lock();
+					deviceList.erase(deviceList.begin() + deviceIndex);
+					mtx.unlock();
+				}
+				return CODE_OK;
+			}
+		}
+		else // del sceneble for switch touch, electrical
+		{
+			vector<DeviceInSceneBle *> tempDeviceList = deviceList;
+			for (auto &devInSceneBle : tempDeviceList)
+			{
+				if (devInSceneBle->device->GetId() == device->GetId())
+				{
+					for (int i = 0; i < devInSceneBle->device->GetNumElement(); i++)
+					{
+						if (devInSceneBle->data.isMember(KEY_ATTRIBUTE_ONOFF) && devInSceneBle->data[KEY_ATTRIBUTE_ONOFF].isInt())
+						{
+							bleProtocol->DelSceneBle(device->GetAddr() + i, addr);
+						}
+						if (devInSceneBle->data.isMember(KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")))
+						{
+							bleProtocol->DelSceneBle(device->GetAddr() + i, addr);
+						}
+					}
+					int deviceIndex = GetPositionDevice(devInSceneBle->device);
+					if (deviceIndex > -1)
+					{
+						mtx.lock();
+						deviceList.erase(deviceList.begin() + deviceIndex);
+						mtx.unlock();
+					}
+					return CODE_OK;
+				}
+			}
+		}
+	}
+	else
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)
@@ -92,7 +196,7 @@ int SceneBle::DelDevice(Device *device)
 	return CODE_ERROR;
 }
 
-int SceneBle::Do()
+int SceneBle::Do(bool ack)
 {
-	return bleProtocol->CallScene(0xffff, addr, 10, true, 1);
+	return bleProtocol->CallScene(0xffff, addr, TRANSITION_DEFAULT, ack);
 }

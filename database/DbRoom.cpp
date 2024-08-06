@@ -17,9 +17,12 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int addr = sqlite3_column_int(stmt, index++);
+				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %d, %s, %s", roomId.c_str(), addr, name.c_str(), data.c_str());
+				
 				Room *room = new Room(roomId, addr, name);
 				if (room)
 				{
@@ -37,7 +40,7 @@ static int RoomParse(sqlite3_stmt *stmt, void *ptr)
 					{
 						LOGW("Decode data error: %s", data.c_str());
 					}
-					if (!gateway->AddNewRoom(room, true, false))
+					if (!gateway->AddNewRoom(room, false))
 					{
 						LOGE("Add new room failed");
 					}
@@ -64,19 +67,19 @@ int Db::RoomRead()
 
 int Db::RoomAdd(Room *room)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (room_id, room_addr, name, data, create_at) VALUES ('" + room->GetId() + "'," + to_string(room->GetAddr()) + ",'" + room->GetName() + "','" + macaron::Base64::Encode(room->GetDataConfig()) + "'," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
-int Db::RoomUpdate(Room *room, int id)
+int Db::RoomUpdate(Room *room)
 {
-	string sql = "UPDATE " TABLE_NAME " SET addr=" + to_string(id) + " WHERE room_id = '" + room->GetId() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + room->GetName() + "' WHERE room_id = '" + room->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RoomDel(Room *room)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id = \'" + room->GetId() + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE room_id = '" + room->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

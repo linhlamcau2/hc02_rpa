@@ -19,7 +19,9 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 				index = 0;
 				string sceneBleId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string deviceId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %s, %s", sceneBleId.c_str(), deviceId.c_str(), data.c_str());
 
 				SceneBle *sceneBle = gateway->getSceneBleFromId(sceneBleId);
 				Device *device = gateway->getDeviceFromId(deviceId);
@@ -32,13 +34,13 @@ static int DeviceInSceneBleParse(sqlite3_stmt *stmt, void *ptr)
 						if (decode == "")
 						{
 							Json::Value devInSceneJson;
-							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isArray())
+							if (devInSceneJson.parse(devInSceneData) && devInSceneJson.isObject())
 							{
-								sceneBle->AddDevice(device, devInSceneJson, true);
+								sceneBle->AddDevice(device, devInSceneJson, false, false);
 							}
 							else
 							{
-								LOGE("data json is not array");
+								LOGE("data json is not object");
 							}
 							// TODO: Check cho du lieu V2
 						}
@@ -76,7 +78,7 @@ int Db::DeviceInSceneBleRead()
 
 int Db::DeviceInSceneBleAdd(SceneBle *sceneBle, Device *device, string data)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id, device_id, data, create_at) VALUES ('" + sceneBle->GetId() + "','" + device->GetId() + "','" + macaron::Base64::Encode(data) + "', " + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 

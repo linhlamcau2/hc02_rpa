@@ -4,12 +4,12 @@
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "Db.h"
 
-ModuleRelaySwitch::ModuleRelaySwitch(Device *device, uint32_t addr, uint8_t relayId) : Module(device, addr)
+ModuleRelaySwitch::ModuleRelaySwitch(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
-	id = BLE_ATTRIBUTE_BUTTON_1 + relayId;
-	key = KEY_ATTRIBUTE_BUTTON + to_string(relayId);
+	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index + 1) : "");
 }
 
 ModuleRelaySwitch::~ModuleRelaySwitch()
@@ -17,39 +17,32 @@ ModuleRelaySwitch::~ModuleRelaySwitch()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleRelaySwitch::InitAttribute(int id, double bt)
+void ModuleRelaySwitch::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
-		this->bt = bt;
+	if (attribute == key)
+		this->bt = value;
 }
 
 void ModuleRelaySwitch::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, bt);
+	database->DeviceAttributeAdd(device, key, bt);
 }
 #endif
 
 int ModuleRelaySwitch::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			bt = dataValue["VALUE"].asInt();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
+		bt = dataValue[key].asInt();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
 int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
+	int temp_bt = 0;
 	if (data[0] == RD_OPCODE_CONFIG_RSP)
 	{
 		typedef struct __attribute__((packed))
@@ -63,17 +56,23 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)data;
 		if (data_message->vendorId == RD_VENDOR_ID)
 		{
-			if (data_message->header == 0x000e || data_message->header == 0x000d || data_message->header == 0x000c || data_message->header == 0x000b)
+			if (data_message->header == 0x000e ||
+				data_message->header == 0x000d ||
+				data_message->header == 0x000c ||
+				data_message->header == 0x000b)
 			{
-				if (data_message->relayId == (this->id - 10))
+				if (data_message->relayId == index)
 				{
-					this->bt = data_message->value;
-
+					temp_bt = data_message->value;
+					if (temp_bt != bt)
+					{
+						bt = temp_bt;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-					SaveAttribute();
+						SaveAttribute();
 #endif
+					}
 					BuildTelemetryValue(jsonValue);
-					CheckTrigger();
+					CheckTrigger(jsonValue);
 					return CODE_OK;
 				}
 			}
@@ -88,17 +87,15 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint8_t relayId;
 			uint8_t value;
 		} data_message_t;
-		data_message_t *data_message1 = (data_message_t *)data;
-		if (data_message1->header == 0x000e || data_message1->header == 0x000d || data_message1->header == 0x000c || data_message1->header == 0x000b)
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->header == 0x000e || data_message->header == 0x000d || data_message->header == 0x000c || data_message->header == 0x000b)
 		{
-			if (data_message1->relayId == (this->id - 10))
+			if (data_message->relayId == index)
 			{
-				this->bt = data_message1->value;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute();
-#endif
+				temp_bt = data_message->value;
 				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
+				CheckTrigger(jsonValue);
+
 				return CODE_OK;
 			}
 		}
@@ -108,95 +105,49 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleRelaySwitch::CheckData(Json::Value &dataValue, bool &rs)
 {
-	// LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(KEY_ATTRIBUTE_BUTTON) && dataValue[KEY_ATTRIBUTE_BUTTON].isInt())
+		dataValue.isMember(key) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_BUTTON].asInt();
 		string op = dataValue["op"].asString();
-		rs = Util::CompareNumber(op, this->bt, value);
-		return true;
-	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		if (dataValue[key].isInt())
 		{
-			uint16_t value1 = 0, value2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int bt = dataValue[key].asInt();
+			rs = Util::CompareNumber(op, this->bt, bt);
+			return true;
+		}
+		else if (dataValue[key].isArray())
+		{
+			Json::Value listValue = dataValue[key];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					value1 = listValue[0].asInt();
-				}
-				rs = Util::CompareNumber(op, this->bt, value1, value2);
+				int bt1 = listValue[0].asInt();
+				int bt2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->bt, bt1, bt2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleRelaySwitch::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	jsonValue[KEY_ATTRIBUTE_BUTTON] = bt;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = bt;
-	jsonValue.append(dataValue);
-#endif
+	jsonValue[key] = bt;
 }
 
 int ModuleRelaySwitch::Do(Json::Value &dataValue)
 {
-	LOGD("ModuleRelaySwitch Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_BUTTON) && dataValue[KEY_ATTRIBUTE_BUTTON].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int bt = dataValue[KEY_ATTRIBUTE_BUTTON].asInt();
-		if (bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), id - 10, bt) == CODE_OK)
-		// if (bleProtocol->SetbtLight(addr, bt, 0, true) == CODE_OK)
+		int bt = dataValue[key].asInt();
+		if (bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), index, bt) == CODE_OK)
 		{
-			this->bt = bt;
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		LOGW("Id: %d: %d", id, this->id);
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-			{
-				bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), id - 10, value);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

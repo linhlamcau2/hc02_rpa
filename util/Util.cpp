@@ -16,6 +16,22 @@
 #include <locale>
 #include "Base64.h"
 #include "Log.h"
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+
+#include <iostream>
+#include <string>
+#include <cstring>
+
+#ifndef ESP_PLATFORM
+#include <openssl/sha.h>
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#else
+#include "Sntp.h"
+#endif
 
 using namespace std;
 
@@ -129,7 +145,20 @@ int Util::ConvertStrTimeToInt(string time)
 	int second;
 	if (sscanf(time.c_str(), "%d:%d:%d", &hour, &minute, &second) == 3)
 		return hour * 3600 + minute * 60 + second;
+	else if (sscanf(time.c_str(), "%d:%d", &hour, &minute) == 2)
+		return hour * 3600 + minute * 60;
 	return CODE_ERROR;
+}
+
+bool Util::HaveRTC()
+{
+#ifdef ESP_PLATFORM
+	if (!Sntp::haveNtpTime())
+	{
+		return false;
+	}
+#endif
+	return true;
 }
 
 uint8_t Util::CalCrc(uint8_t length, uint8_t *data)
@@ -156,44 +185,39 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 		len = 50;
 	for (int i = 0; i < len; i++)
 	{
-		sprintf(buff + i * 2, "%02X", data[i]);
+		sprintf(buff + i * 2, "%02x", data[i]);
 	}
 	return string(buff);
 }
 
-int Util::ConvertRepeatDayToInt(int mon, int tue, int wed, int thu, int fri, int sat, int sun)
+int Util::ConvertStringToHex(string str, uint8_t *data, int len)
 {
-	return mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
+	LOGE("Bo sung code");
+	return 0;
 }
 
-int Util::ConvertWeekDayToIntCompare(int day)
+int Util::CheckDayInWeek(int day, int repeater)
 {
-	int mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0;
+	int byte;
 	switch (day)
 	{
-	case 0:
-		sun = 1;
+	case 0: // sun
+		byte = 6;
 		break;
-	case 1:
-		mon = 1;
+	case 1: // mon
+	case 2: // tue
+	case 3: // wed
+	case 4: // thu
+	case 5: // fri
+	case 6: // sat
+		byte = day - 1;
 		break;
-	case 2:
-		tue = 1;
-		break;
-	case 3:
-		wed = 1;
-		break;
-	case 4:
-		thu = 1;
-		break;
-	case 5:
-		fri = 1;
-		break;
-	case 6:
-		sat = 1;
-		break;
+	default:
+		return false;
 	}
-	return ConvertRepeatDayToInt(mon, tue, wed, thu, fri, sat, sun);
+	if (repeater & (1 << byte))
+		return true;
+	return false;
 }
 
 vector<string> Util::splitString(string str, char splitter)
@@ -251,16 +275,14 @@ string Util::ExecuteCMD(char const *command)
 		LOGE("ExecuteCMD");
 		exit(1);
 	}
-	fgets(msg_line, 100, file);
-	msg_rsp += msg_line;
 	while (1)
 	{
 		fgets(msg_line, 100, file);
+		msg_rsp += msg_line;
 		if (feof(file))
 		{
 			break;
 		}
-		msg_rsp += msg_line;
 	}
 	pclose(file);
 #endif
@@ -279,16 +301,17 @@ string Util::uuidToStr(uint8_t *uuid)
 	return string(buf);
 }
 
-string Util::arrayToString844412(uint8_t *array)
+string Util::GenUuidFromMac(string mac)
 {
-	char buf[100];
-	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			array[0], array[1], array[2], array[3],
-			array[4], array[5], array[6], array[7],
-			array[8], array[9], array[10], array[11],
-			array[12], array[13], array[14], array[15]);
-	buf[36] = '\0';
-	return string(buf);
+	if (mac.length() == 16)
+	{
+		string mac1 = mac.substr(0, 4);
+		string mac2 = mac.substr(4, 4);
+		string mac3 = mac.substr(8, 4);
+		string mac4 = mac.substr(12, 4);
+		return mac1 + mac2 + "-" + mac3 + "-" + mac4 + "-" + mac1 + "-" + mac2 + mac3 + mac4;
+	}
+	return "";
 }
 
 static bool ledInternet = false;
@@ -419,27 +442,50 @@ bool Util::GetStatusLedInternet()
 	return ledInternet;
 }
 
-static float longitude = 0;
-static float latitude = 0;
-
-float Util::GetLongitude()
+float Util::GetLongitude(string data)
 {
+	float longitude = 0.0;
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember("longitude") && dataJson["longitude"].isDouble())
+	{
+		longitude = dataJson["longitude"].asDouble();
+	}
 	return longitude;
 }
 
-float Util::GetLatitude()
+float Util::GetLatitude(string data)
 {
+	float latitude = 0.0;
+	Json::Value dataJson;
+	dataJson.parse(data);
+	if (dataJson.isObject() && dataJson.isMember("latitude") && dataJson["latitude"].isDouble())
+	{
+		latitude = dataJson["latitude"].asDouble();
+	}
 	return latitude;
 }
 
-void Util::SetLongitude(float value)
+static int statusWeather;
+static uint16_t tempWeather;
+void Util::SetStatusWeatherOutdoor(int status)
 {
-	longitude = value;
+	statusWeather = status;
 }
 
-void Util::SetLatitude(float value)
+void Util::SetTempWeatherOutdoor(uint16_t temp)
 {
-	latitude = value;
+	tempWeather = temp;
+}
+
+int Util::GetStatusWeatherOutdoor()
+{
+	return statusWeather;
+}
+
+uint16_t Util::GetTempWeatherOutdoor()
+{
+	return tempWeather;
 }
 
 static uint16_t tempForScreenTouch = 0;
@@ -492,3 +538,91 @@ Json::Value Util::arrangeJson(Json::Value &property)
 	}
 	return Json::Value::null;
 }
+
+#ifndef ESP_PLATFORM
+static void handleErrors(void)
+{
+	ERR_print_errors_fp(stderr);
+	abort();
+}
+
+string Util::encryptAes128(string key, string plaintext)
+{
+	unsigned char *key_c = new unsigned char[key.length() + 1];
+	memcpy((char *)key_c, key.c_str(), key.length());
+	key_c[key.length()] = '\0';
+
+	unsigned char *plaintext_c = new unsigned char[plaintext.length() + 1];
+	memcpy((char *)plaintext_c, plaintext.c_str(), plaintext.length());
+	plaintext_c[plaintext.length()] = '\0';
+
+	int plaintext_len = plaintext.length();
+
+	EVP_CIPHER_CTX *ctx;
+	unsigned char ciphertext[128] = {0};
+	int len;
+	int ciphertext_len;
+
+	if (!(ctx = EVP_CIPHER_CTX_new()))
+		handleErrors();
+
+	if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key_c, NULL))
+	{
+		handleErrors();
+	}
+
+	if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext_c, plaintext_len))
+	{
+		handleErrors();
+	}
+	ciphertext_len = len;
+
+	if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+		handleErrors();
+	ciphertext_len += len;
+
+	EVP_CIPHER_CTX_free(ctx);
+
+	std::stringstream ss;
+	ss << std::hex << std::setfill('0');
+	for (int i = 0; i < ciphertext_len; ++i)
+	{
+		ss << std::setw(2) << static_cast<int>(ciphertext[i]);
+	}
+
+	delete[] key_c;
+	delete[] plaintext_c;
+
+	return ss.str();
+}
+
+string Util::calculateSHA256Checksum(string &filePath)
+{
+	std::ifstream file(filePath, std::ios::binary);
+	if (!file)
+	{
+		throw std::runtime_error("Failed to open file.");
+	}
+
+	SHA256_CTX sha256Context;
+	SHA256_Init(&sha256Context);
+
+	char buffer[1024];
+	while (!file.eof())
+	{
+		file.read(buffer, sizeof(buffer));
+		SHA256_Update(&sha256Context, buffer, file.gcount());
+	}
+
+	unsigned char hash[SHA256_DIGEST_LENGTH];
+	SHA256_Final(hash, &sha256Context);
+
+	std::stringstream checksum;
+	checksum << std::hex << std::setfill('0');
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	{
+		checksum << std::setw(2) << static_cast<int>(hash[i]);
+	}
+	return checksum.str();
+}
+#endif

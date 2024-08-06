@@ -7,27 +7,25 @@ class ModuleHsl : public Module
 {
 protected:
 	uint16_t h, s, l;
-	int idH, idS, idL;
-	bool isH, isS, isL;
 
 public:
-	ModuleHsl(Device *device, uint32_t addr);
+	ModuleHsl(Device *device, uint16_t addr);
 	~ModuleHsl();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
+	void SaveAttribute(string key);
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
@@ -68,7 +66,7 @@ public:
 	 * @return false
 	 */
 	int DoJsonArray(Json::Value &dataValue);
-	
+
 	/**
 	 * @brief Do an action use message format version 2
 	 *

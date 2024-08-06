@@ -6,10 +6,9 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDoorStatus::ModuleDoorStatus(Device *device, uint32_t addr) : Module(device, addr)
+ModuleDoorStatus::ModuleDoorStatus(Device *device, uint16_t addr) : Module(device, addr)
 {
 	status = 0;
-	id = BLE_ATTRIBUTE_DOOR;
 }
 
 ModuleDoorStatus::~ModuleDoorStatus()
@@ -17,34 +16,27 @@ ModuleDoorStatus::~ModuleDoorStatus()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDoorStatus::InitAttribute(int id, double value)
+void ModuleDoorStatus::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == KEY_ATTRIBUTE_DOOR)
 		status = value;
 }
 
 void ModuleDoorStatus::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, status);
+	database->DeviceAttributeAdd(device, KEY_ATTRIBUTE_DOOR, status);
 }
 #endif
 
 int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_DOOR) && dataValue[KEY_ATTRIBUTE_DOOR].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			status = dataValue["VALUE"].asInt();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
+		status = dataValue[KEY_ATTRIBUTE_DOOR].asInt();
+		// CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -52,9 +44,30 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
 	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
 	{
-		status = data[3];
+		if (status != data[3])
+		{
+			status = data[3];
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute();
+#endif
+		}
+#ifdef __ANDROID__
+		if (status == 1 || status == 0)
+		{
+			string content = "cảnh báo cửa mở";
+			if (status == 1)
+			{
+				content = "cảnh báo cửa đóng";
+			}
+
+			string id = Util::genRandRQI(16);
+			Json::Value tempJson = gateway->BuildJsonDataNoti(device, id, "warning", content);
+			Noti *temp = new Noti(id, "warning", tempJson.toString(), to_string(time(NULL)), to_string(time(NULL)));
+			gateway->CreateNoti(temp, true, true);
+		}
+#endif
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -62,48 +75,34 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleDoorStatus::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_DOOR) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_DOOR].isInt())
 		{
-			uint16_t value1 = 0, value2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int status = dataValue[KEY_ATTRIBUTE_DOOR].asInt();
+			rs = Util::CompareNumber(op, this->status, status);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_DOOR].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_DOOR];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					value1 = listValue[0].asInt();
-				}
-				rs = Util::CompareNumber(op, this->status, value1, value2);
+				int status1 = listValue[0].asInt();
+				int status2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->status, status1, status2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleDoorStatus::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_DOOR] = status;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = status;
-	jsonValue.append(dataValue);
-#endif
 }

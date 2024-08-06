@@ -7,20 +7,19 @@ class ModuleModeRgb : public Module
 {
 protected:
 	uint8_t mode;
-	int id;
 
 public:
-	ModuleModeRgb(Device *device, uint32_t addr);
+	ModuleModeRgb(Device *device, uint16_t addr);
 	~ModuleModeRgb();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database

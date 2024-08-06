@@ -135,8 +135,10 @@ bool HTTPRequest::CreateBackup(string refreshToken, string dormitory, string mac
 		dataJson["size"] = size;
 		dataJson["url"] = path;
 		dataJson["homeControllerId"] = hcId;
-		// const char *data = "{\n  \"name\": \"HC-C283\",\n  \"version\": \"1.2.9\",\n  \"size\": \"1.01 MB\",\n  \"url\": \"/home-controller/12038/133148503667486921/rd.Sqlite\",\n  \"homeControllerId\": \"5ab14c1b-6571-503f-a6d0-3157ec44e095\"\n}";
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataJson.toString().c_str());
+
+		std::string dataJsonStr = dataJson.toStyledString();
+
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataJsonStr.c_str());
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK)
 		{
@@ -181,24 +183,23 @@ string HTTPRequest::DownloadFile(string dormitory)
 	return readBuffer;
 }
 
-string HTTPRequest::GetWeather(float longitude, float latitude)
+string HTTPRequest::GetWeather(float latitude, float longitude)
 {
 	return GetWeather(to_string(latitude), to_string(longitude));
 }
 
-string HTTPRequest::GetWeather(string longitude, string latitude)
+string HTTPRequest::GetWeather(string latitude, string longitude)
 {
 	CURL *curl;
 	CURLcode res;
 	curl = curl_easy_init();
+	url = "http://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&appid=ebd13e00acf60358e311499f1701ffc2&units=metric";
 	string readBuffer = "";
 	if (curl)
 	{
-		LOGW("method %s", method.c_str());
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, string("https://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&appid=ebd13e00acf60358e311499f1701ffc2&units=metric").c_str());
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
 
@@ -209,7 +210,7 @@ string HTTPRequest::GetWeather(string longitude, string latitude)
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK)
 		{
-			LOGW("get token error");
+			LOGW("get weather data error");
 		}
 		curl_easy_cleanup(curl);
 		curl = NULL;

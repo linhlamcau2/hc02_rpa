@@ -19,9 +19,13 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				int type = sqlite3_column_int(stmt, index++);
-				bool enable = sqlite3_column_blob(stmt, index++);
-				int addr = sqlite3_column_int(stmt, index++);
-				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				bool enable = sqlite3_column_int(stmt, index++) ? true : false;
+				uint16_t addr = sqlite3_column_int(stmt, index++);
+				long create_at = sqlite3_column_int(stmt, index++);
+				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
+				bool isFirstRun = sqlite3_column_int(stmt, index++) ? true : false;
+				LOGD("%s, %s, %d, %s, %d, %s, %s", id.c_str(), data.c_str(), type, enable ? "true" : "flase", addr, isFavorite ? "true" : "false", isFirstRun ? "true" : "false");
+
 				string ruledata;
 				string decode = macaron::Base64::Decode(data, ruledata);
 				if (decode == "")
@@ -29,11 +33,13 @@ static int RuleParse(sqlite3_stmt *stmt, void *ptr)
 					Json::Value ruleValue;
 					if (ruleValue.parse(ruledata) && ruleValue.isObject())
 					{
-						Rule *rule = gateway->AddRule(ruleValue, true, false);
+						Rule *rule = gateway->AddRule(ruleValue, false);
 						if (rule)
 						{
 							rule->SetStatus(enable);
-							rule->Check();
+							rule->SetIsFavorite(isFavorite);
+							rule->SetFirstRun(isFirstRun);
+							// rule->Check();
 						}
 					}
 					else
@@ -67,13 +73,13 @@ int Db::RuleRead()
 
 int Db::RuleAdd(Rule *rule, string data, int type)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable, rule_addr) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " + to_string(rule->GetStatus()) + ", " + to_string(rule->GetAddr()) + ");";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (rule_id, data, type, enable, rule_addr, create_at) VALUES ('" + rule->GetId() + "','" + macaron::Base64::Encode(data) + "'," + to_string(type) + ", " + to_string(rule->GetStatus()) + ", " + to_string(rule->GetAddr()) + "," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
 int Db::RuleUpdateData(Rule *rule, string data)
 {
-	string sql = "UPDATE " TABLE_NAME " SET data='" + data + "' WHERE rule_id='" + rule->GetId() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET data='" + macaron::Base64::Encode(data) + "' WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 
@@ -92,6 +98,18 @@ int Db::RuleUpdateType(Rule *rule, int type)
 int Db::RuleUpdateAddr(Rule *rule)
 {
 	string sql = "UPDATE " TABLE_NAME " SET rule_addr=" + to_string(rule->GetAddr()) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleUpdateFavorite(Rule *rule, bool isFavorite)
+{
+	string sql = "UPDATE " TABLE_NAME " SET is_favorite =" + to_string(isFavorite) + " WHERE rule_id='" + rule->GetId() + "';";
+	return Sqlite_Exec(sql);
+}
+
+int Db::RuleUpdateFirstRun(Rule *rule, bool isFirstRun)
+{
+	string sql = "UPDATE " TABLE_NAME " SET is_first_run =" + to_string(isFirstRun) + " WHERE rule_id='" + rule->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

@@ -151,32 +151,32 @@ typedef function<int(uint8_t *buff, uint16_t len)> OnCmdCallbackFunc;
 class ZigbeeProtocol : public Uart
 {
 private:
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t type;
 		uint8_t status;
 		uint8_t rev;
 	} message_acknowledge_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
-		// uint8_t header;
+		uint8_t header;
 		uint16_t type;
 		uint16_t len;
 		uint8_t crc;
 		uint8_t payload[];
 	} message_req_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
-		// uint8_t header;
+		uint8_t header;
 		uint16_t type;
 		uint16_t len;
 		uint8_t crc;
 		uint8_t payload[];
 	} message_rsp_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t status;
 		uint16_t reqType;
@@ -185,7 +185,7 @@ private:
 		uint8_t *payload;
 	} message_rsp_list_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint8_t dstAddrMode;
 		uint8_t dstAddr[2];
@@ -193,20 +193,29 @@ private:
 		uint8_t dstEp;
 	} ZCLCmdHdr_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t srcAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
 		uint8_t seqNum;
+		uint8_t data[];
 	} ZCLCmdRspHdr_st;
 
 	vector<message_rsp_list_st *> messageRespList;
+
+#define ZIGBEE_CHECK_OPCODE_BUFFER_MAX_SIZE 20
+	mutex vectorCheckOpcodeMtx;
+	vector<message_rsp_st *> messageCheckOpcodeList;
+
 	map<uint16_t, OnCmdCallbackFunc> onCmdCallbackFuncList;
 	map<uint16_t, string> scanList;
 
-	int RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc);
+	void HandleOpcodeBleThread();
+	int GetOpcodeExceptionMessage(message_rsp_st **data);
 	void CheckOpcodeException(message_rsp_st *message);
+
+	int RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc);
 	int OnMessage(unsigned char *data, int len);
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint16_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout);
 

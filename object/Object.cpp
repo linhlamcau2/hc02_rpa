@@ -1,6 +1,6 @@
 #include "Object.h"
 
-Object::Object(string id, uint32_t addr, string name)
+Object::Object(string id, uint16_t addr, string name)
 {
 	this->id = id;
 	this->addr = addr;
@@ -31,12 +31,12 @@ void Object::SetName(string name)
 	this->name = name;
 }
 
-uint32_t Object::GetAddr()
+uint16_t Object::GetAddr()
 {
 	return addr;
 }
 
-void Object::SetAddr(uint32_t addr)
+void Object::SetAddr(uint16_t addr)
 {
 	this->addr = addr;
 }

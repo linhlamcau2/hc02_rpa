@@ -7,15 +7,10 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 
-ModuleButton::ModuleButton(Device *device, uint32_t addr) : ModuleButton(device, addr, 0)
-{
-}
-
-ModuleButton::ModuleButton(Device *device, uint32_t addr, int index) : Module(device, addr)
+ModuleButton::ModuleButton(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
 	bt = 0;
-	id = BLE_ATTRIBUTE_BUTTON_1 + addr - device->GetAddr() + index;
-	key = KEY_ATTRIBUTE_BUTTON + to_string(addr - device->GetAddr() + index);
+	key = KEY_ATTRIBUTE_BUTTON + (index ? to_string(index + 1) : "");
 }
 
 ModuleButton::~ModuleButton()
@@ -23,36 +18,29 @@ ModuleButton::~ModuleButton()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleButton::InitAttribute(int id, double value)
+void ModuleButton::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == key)
 		bt = value;
 }
 
 void ModuleButton::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, bt);
+	database->DeviceAttributeAdd(device, key, bt);
 }
 #endif
 
-// int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
-// {
-// #ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-// #else
-// 	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-// 	{
-// 		int id = dataValue["ID"].asInt();
-// 		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-// 		{
-// 			bt = dataValue["VALUE"].asInt();
-// 			BuildTelemetryValue(jsonValue);
-// 			CheckTrigger();
-// 			return CODE_OK;
-// 		}
-// 	}
-// #endif
-// 	return CODE_ERROR;
-// }
+int ModuleButton::InputData(Json::Value &dataValue, Json::Value &jsonValue)
+{
+	if (dataValue.isObject() && dataValue.isMember(key) && dataValue[key].isInt())
+	{
+		bt = dataValue[key].asInt();
+		// CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
 
 int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
@@ -67,47 +55,58 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == 0x52)
 	{
-		if (data_message->header == REMOTE_MODULE_DC_TYPE || data_message->header == REMOTE_MODULE_AC_TYPE || data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
+		if (data_message->header == REMOTE_MODULE_DC_TYPE ||
+			data_message->header == REMOTE_MODULE_AC_TYPE ||
+			data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
 		{
-			id = 10 + data_message->btId;
-			bt = data_message->mode;
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			if (data_message->scene > 0)
+			if (data_message->btId == index + 1)
 			{
-				SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
-				if (sceneBle)
+				if (bt != data_message->mode)
 				{
-					for (int i = 0; i < sceneBle->deviceList.size(); i++)
+					bt = data_message->mode;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+					SaveAttribute();
+#endif
+				}
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger(jsonValue);
+
+				if (data_message->scene > 0)
+				{
+					SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
+					if (sceneBle)
 					{
-						DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
-						if (dev)
+						for (int i = 0; i < sceneBle->deviceList.size(); i++)
 						{
-							if (sceneBle->deviceList[i]->data.isArray())
+							DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
+							if (dev)
 							{
-								for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
+								if (sceneBle->deviceList[i]->data.isArray())
 								{
-									if (sceneBle->deviceList[i]->data[j].isObject())
+									for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
 									{
-										dev->InputData(sceneBle->deviceList[i]->data[j]);
+										if (sceneBle->deviceList[i]->data[j].isObject())
+										{
+											dev->InputData(sceneBle->deviceList[i]->data[j]);
+										}
 									}
 								}
+								else if (sceneBle->deviceList[i]->data.isObject())
+								{
+									dev->InputData(sceneBle->deviceList[i]->data);
+								}
 							}
-							else if (sceneBle->deviceList[i]->data.isObject())
+							else
 							{
-								dev->InputData(sceneBle->deviceList[i]->data);
+								LOGW("DeviceBle error");
 							}
-						}
-						else
-						{
-							LOGW("DeviceBle error");
 						}
 					}
+					else
+						LOGW("Scene not found");
 				}
-				else
-					LOGW("Scene not found");
+				return CODE_OK;
 			}
-			return CODE_OK;
 		}
 	}
 	return CODE_ERROR;
@@ -115,83 +114,35 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleButton::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember(key) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id)
+		string op = dataValue["op"].asString();
+		if (dataValue[key].isInt())
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+			int bt = dataValue[key].asInt();
+			rs = Util::CompareNumber(op, this->bt, bt);
+			return true;
+		}
+		else if (dataValue[key].isArray())
+		{
+			Json::Value listValue = dataValue[key];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				uint16_t bt = 0, mode = 0;
-				string op = dataValue["OP"].asString();
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() > 0)
-				{
-					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-					{
-						bt = listValue[0].asInt();
-						mode = listValue[1].asInt();
-					}
-					else if (listValue.size() == 1 && listValue[0].isInt())
-					{
-						bt = listValue[0].asInt();
-					}
-					if (this->id == id)
-						rs = Util::CompareNumber(op, this->bt, bt, mode);
-					return true;
-				}
+				int bt1 = listValue[0].asInt();
+				int bt2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->bt, bt1, bt2);
+				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleButton::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[key] = bt;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = bt;
-	jsonValue.append(dataValue);
-#endif
-}
-
-int ModuleButton::Do(Json::Value &dataValue)
-{
-	// LOGD("ModuleButton Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(key) && dataValue[key].isInt())
-	{
-		int bt = dataValue[key].asInt();
-		if (bleProtocol->SetOnOffLight(addr, bt, 0, true) == CODE_OK)
-		{
-			this->bt = bt;
-			return CODE_OK;
-		}
-	}
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-				bleProtocol->SetOnOffLight(addr, value, 0, true);
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
-	return CODE_ERROR;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }

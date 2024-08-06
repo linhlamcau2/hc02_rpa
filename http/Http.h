@@ -5,9 +5,6 @@
 #include <curl/curl.h>
 #include "ErrorCode.h"
 
-#define BASE_URL_DEV "https://iot-dev.truesight.asia"
-#define BASE_URL_PRO "https://rallismartv2.rangdong.com.vn"
-
 #define RENEW_TOKEN "/rpc/iot-ebe/account/renew-token"
 #define HC_BACKUP_FILE_URL "/rpc/iot-ebe/home-controller/upload-file"
 #define HC_CREATE_BACKUP "/rpc/iot-ebe/home-controller/create-backup"

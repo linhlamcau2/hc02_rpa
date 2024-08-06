@@ -19,11 +19,9 @@ int Timer::GetIndex()
 	return index;
 }
 
-bool Timer::IsAtTime(int time)
+int Timer::GetTime()
 {
-	if (this->time == time)
-		return true;
-	return false;
+	return time;
 }
 
 static void TimerDoThread(void *data)
@@ -59,22 +57,30 @@ static void TimerThread(void *data)
 	int currentTimer, oldTimer = 0;
 	while (1)
 	{
-		currentTimer = Util::GetCurrentTimer();
-		if (currentTimer != oldTimer)
+		if (!Util::HaveRTC())
 		{
-			// LOGD("h:m: %d-%d", currentTimer, currentTimer);
-			timerSchedule->mtx.lock();
-			for (auto &timer : timerSchedule->timerList)
-			{
-				if (timer->IsAtTime(currentTimer))
-				{
-					timer->run();
-				}
-			}
-			timerSchedule->mtx.unlock();
-			oldTimer = currentTimer;
+			LOGW("Cannot get RTC");
+			sleep(60);
 		}
-		usleep(500000);
+		else
+		{
+			currentTimer = Util::GetCurrentTimer();
+			if (currentTimer != oldTimer)
+			{
+				// LOGD("h:m: %d-%d", currentTimer, currentTimer);
+				timerSchedule->mtx.lock();
+				for (auto &timer : timerSchedule->timerList)
+				{
+					if (oldTimer < timer->GetTime() && timer->GetTime() <= currentTimer)
+					{
+						timer->run();
+					}
+				}
+				timerSchedule->mtx.unlock();
+				oldTimer = currentTimer;
+			}
+			SLEEP_MS(500);
+		}
 	}
 }
 
@@ -108,6 +114,7 @@ int TimerSchedule::UnregisterTimer(int index)
 		if (timer->GetIndex() == index)
 		{
 			timerList.erase(remove(timerList.begin(), timerList.end(), timer), timerList.end());
+			delete timer;
 		}
 	}
 	mtx.unlock();

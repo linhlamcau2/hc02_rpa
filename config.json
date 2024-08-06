@@ -1,0 +1,8 @@
+{
+    "host": "mqtt.rangdong.com.vn",
+    "port": 8883,
+    "client_id": "",
+    "username": "",
+    "password": "",
+    "keep_alive": 10
+  }

@@ -3,7 +3,8 @@
 #include "Ota.h"
 #include "Util.h"
 #include "Log.h"
-#include "Http.h"
+#include "Define.h"
+#include <cstring>
 
 void Ota::init()
 {
@@ -16,7 +17,7 @@ int Ota::startOta(string name, string url, string sum)
 	sleep(30);
 
 	// Download file
-	string wget = "wget " + string(BASE_URL_PRO) + url;
+	string wget = "wget " + string(URL_PRO) + url;
 	system(wget.c_str());
 	sleep(10);
 

@@ -6,45 +6,25 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleTimeActionPir::ModuleTimeActionPir(Device *device, uint32_t addr) : Module(device, addr)
+ModuleTimeActionPir::ModuleTimeActionPir(Device *device, uint16_t addr) : Module(device, addr)
 {
 	time = 0;
-	id = BLE_ATTRIBUTE_ACTIME;
 }
 
 ModuleTimeActionPir::~ModuleTimeActionPir()
 {
 }
 
-#ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleTimeActionPir::InitAttribute(int id, double value)
-{
-	if (this->id == id)
-		time = value;
-}
-
-void ModuleTimeActionPir::SaveAttribute()
-{
-	database->DeviceAttributeAddOrReplace(device, id, time);
-}
-#endif
-
 int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			time = dataValue["VALUE"].asInt();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
+		time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
+		// CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -54,7 +34,8 @@ int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 	{
 		time = data[5] | (data[6] << 8);
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
+		CheckTrigger(jsonValue);
+
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -62,56 +43,41 @@ int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 
 bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) &&
+			dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		string op = dataValue["op"].asString();
+		if (dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 		{
-			uint16_t value1 = 0, value2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
+			rs = Util::CompareNumber(op, this->time, time);
+			return true;
+		}
+		else if (dataValue[KEY_ATTRIBUTE_ACTIME].isArray())
+		{
+			Json::Value listValue = dataValue[KEY_ATTRIBUTE_ACTIME];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					value1 = listValue[0].asInt();
-				}
-				rs = Util::CompareNumber(op, this->time, value1, value2);
+				int time1 = listValue[0].asInt();
+				int time2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->time, time1, time2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleTimeActionPir::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[KEY_ATTRIBUTE_ACTIME] = time;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = time;
-	jsonValue.append(dataValue);
-#endif
 }
 
 int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
-	LOGV("ModuleTimeActionPir Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
 			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
@@ -122,23 +88,5 @@ int ModuleTimeActionPir::Do(Json::Value &dataValue)
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-			{
-				bleProtocol->TimeActionPirLightSensor(addr, value);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

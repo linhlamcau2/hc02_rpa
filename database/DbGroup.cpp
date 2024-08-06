@@ -2,7 +2,7 @@
 #include "Log.h"
 #include "Util.h"
 
-#define TABLE_NAME "\"Group\""
+#define TABLE_NAME "[Group]"
 
 static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 {
@@ -16,15 +16,19 @@ static int GroupParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string id = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int addr = sqlite3_column_int(stmt, index++);
+				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %d, %s, %s", id.c_str(), addr, name.c_str(), roomId.c_str());
+				
 				Group *group = gateway->getGroupFromId(id);
 				if (!group)
 					group = new Group(id, addr, name);
 				if (group)
 				{
-					if (gateway->AddNewGroup(group, true, false))
+					if (gateway->AddNewGroup(group, false))
 					{
 						Room *room = gateway->getRoomFromId(roomId);
 						if (room)
@@ -55,7 +59,7 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr, create_at) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + "," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
@@ -71,7 +75,6 @@ int Db::GroupUpdateRoom(Group *group, string roomId)
 	return Sqlite_Exec(sql);
 }
 
-
 int Db::GroupDel(Group *group)
 {
 	return GroupDel(group->GetId());
@@ -79,7 +82,7 @@ int Db::GroupDel(Group *group)
 
 int Db::GroupDel(string id)
 {
-	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id = \'" + id + "\';";
+	string sql = "DELETE FROM " TABLE_NAME " WHERE group_id = '" + id + "';";
 	return Sqlite_Exec(sql);
 }
 

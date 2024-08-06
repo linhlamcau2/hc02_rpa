@@ -7,21 +7,20 @@ class ModuleOnOff : public Module
 {
 protected:
 	uint8_t onoff;
-	int id;
-	string code;
+	string key;
 
 public:
-	ModuleOnOff(Device *device, uint32_t addr);
+	ModuleOnOff(Device *device, uint16_t addr, string onoffKey = "", uint32_t index = 0);
 	~ModuleOnOff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database

@@ -17,15 +17,19 @@ static int SceneBleParse(sqlite3_stmt *stmt, void *ptr)
 			{
 				index = 0;
 				string sceneId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				int addr = sqlite3_column_int(stmt, index++);
+				uint16_t addr = sqlite3_column_int(stmt, index++);
 				string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
 				string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
-				bool isFavorite = sqlite3_column_int(stmt, index++);
+				bool isFavorite = sqlite3_column_int(stmt, index++) ? true : false;
+				long create_at = sqlite3_column_int(stmt, index++);
+				string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+				LOGD("%s, %d, %s, %s", sceneId.c_str(), addr, name.c_str(), roomId.c_str());
+
 				SceneBle *sceneBle = new SceneBle(sceneId, addr, name);
 				if (sceneBle)
 				{
 					sceneBle->SetIsFavorite(isFavorite);
-					if (gateway->AddNewSceneBle(sceneBle, true, false))
+					if (gateway->AddNewSceneBle(sceneBle, false))
 					{
 						Room *room = gateway->getRoomFromId(roomId);
 						if (room)
@@ -56,13 +60,13 @@ int Db::SceneBleRead()
 
 int Db::SceneBleAdd(SceneBle *sceneBle)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name) VALUES ('" + sceneBle->GetId() + "', " + to_string(sceneBle->GetAddr()) + ", '" + sceneBle->GetName() + "');";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (scene_ble_id,scene_ble_addr, name, create_at) VALUES ('" + sceneBle->GetId() + "', " + to_string(sceneBle->GetAddr()) + ", '" + sceneBle->GetName() + "'," + to_string(time(NULL)) + ");";
 	return Sqlite_Exec(sql);
 }
 
 int Db::SceneBleUpdate(SceneBle *sceneBle)
 {
-	string sql = "UPDATE " TABLE_NAME " SET scene_ble_addr=" + to_string(sceneBle->GetAddr()) + " AND name='" + sceneBle->GetName() + "';";
+	string sql = "UPDATE " TABLE_NAME " SET name='" + sceneBle->GetName() + "' WHERE scene_ble_id='" + sceneBle->GetId() + "';";
 	return Sqlite_Exec(sql);
 }
 

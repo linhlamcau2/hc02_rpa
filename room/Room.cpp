@@ -3,13 +3,24 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-Room::Room(string id, uint32_t addr, string name) : Group(id, addr, name)
+Room::Room(string id, uint16_t addr, string name) : Group(id, addr, name)
 {
 	dataConfig = "";
 }
 
 Room::~Room()
 {
+	mtxGroup.lock();
+	groupList.clear();
+	mtxGroup.unlock();
+
+	mtxScene.lock();
+	sceneBleList.clear();
+	mtxScene.unlock();
+
+	mtxRule.lock();
+	ruleList.clear();
+	mtxRule.unlock();
 }
 
 int Room::GetPositionGroup(Group *group)
@@ -44,6 +55,22 @@ int Room::GetPositionSceneBle(SceneBle *sceneBle)
 	return CODE_ERROR;
 }
 
+int Room::GetPositionRule(Rule *rule)
+{
+	string id = rule->GetId();
+	mtxRule.lock();
+	for (int i = 0; i < ruleList.size(); i++)
+	{
+		if (id == ruleList[i]->GetId())
+		{
+			mtxRule.unlock();
+			return i;
+		}
+	}
+	mtxRule.unlock();
+	return CODE_ERROR;
+}
+
 string Room::GetDataConfig()
 {
 	return this->dataConfig;
@@ -54,10 +81,107 @@ void Room::SetDataConfig(string dataConfig)
 	this->dataConfig = dataConfig;
 }
 
-int Room::AddDevice(Device *device, int epId, bool sendBle)
+int Room::AddDeviceOneMessage(Device *device, bool sendBle, bool addDb)
 {
-	database->DeviceInRoomAdd(this, device);
-	return Group::AddDevice(device, epId, sendBle);
+	if (!device)
+		return CODE_ERROR;
+	if (addDb)
+		database->DeviceInRoomAdd(this, device);
+	if (bleProtocol && sendBle)
+	{
+		if (bleProtocol->AddDev2Room(device->GetAddr(), addr + ID_START, addr) != CODE_OK)
+		{
+			return CODE_ERROR;
+		}
+	}
+
+	bool isSuccess = true;
+	int indexTypeDev = device->GetType() / 1000;
+	if (indexTypeDev == 22 || indexTypeDev == 24)
+	{
+		for (int i = 0; i < device->GetNumElement(); i++)
+		{
+			if (Group::AddDevice(device, device->GetAddr() + i, false, false) != CODE_OK)
+				isSuccess = false;
+		}
+		return isSuccess ? CODE_OK : CODE_ERROR;
+	}
+	return Group::AddDevice(device, device->GetAddr(), false, false);
+}
+
+int Room::DelDeviceOneMessage(Device *device, bool sendBle, bool delDb)
+{
+	if (!device)
+		return CODE_ERROR;
+
+	if (delDb)
+		database->DeviceInRoomDel(this, device);
+
+	bool isSuccess = true;
+	if (bleProtocol && sendBle)
+	{
+		if (bleProtocol->DelDev2Room(device->GetAddr(), addr + ID_START, addr) != CODE_OK)
+		{
+			isSuccess = false;
+		}
+	}
+
+	int indexTypeDev = device->GetType() / 1000;
+
+	if (indexTypeDev == 22 || indexTypeDev == 24) // xoa du cac element cua cong tac ra khoi phong
+	{
+		for (int i = 0; i < device->GetNumElement(); i++)
+		{
+			if (Group::DelDevice(device, device->GetAddr() + i, false, false) != CODE_OK)
+				isSuccess = false;
+		}
+		return isSuccess ? CODE_OK : CODE_ERROR;
+	}
+	return !((Group::DelDevice(device, device->GetAddr(), false, false) == CODE_OK) & isSuccess);
+}
+
+int Room::AddDevice(Device *device, bool sendBle, bool addDb)
+{
+	if (!device)
+		return CODE_ERROR;
+	if (addDb)
+		database->DeviceInRoomAdd(this, device);
+
+	int indexTypeDev = device->GetType() / 1000;
+	bool isSuccess = true;
+	if (indexTypeDev == 22 || indexTypeDev == 24) // them du cac element cua cong tac vao phong
+	{
+		for (int i = 0; i < device->GetNumElement(); i++)
+		{
+			if (Group::AddDevice(device, device->GetAddr() + i, sendBle, false) != CODE_OK)
+				isSuccess = false;
+		}
+		return isSuccess ? CODE_OK : CODE_ERROR;
+	}
+
+	return Group::AddDevice(device, device->GetAddr(), sendBle, false); // them den vao phong
+}
+
+int Room::DelDevice(Device *device, bool sendBle, bool delDb)
+{
+	if (!device)
+		return CODE_ERROR;
+	if (delDb)
+		database->DeviceInRoomDel(this, device);
+
+	int indexTypeDev = device->GetType() / 1000;
+	bool isSuccess = true;
+	if (indexTypeDev == 22 || indexTypeDev == 24) // xoa du cac element cua cong tac ra khoi phong
+	{
+		for (int i = 0; i < device->GetNumElement(); i++)
+		{
+			if (Group::DelDevice(device, device->GetAddr() + i, sendBle, false) != CODE_OK)
+				isSuccess = false;
+		}
+		return isSuccess ? CODE_OK : CODE_ERROR;
+	}
+
+	return Group::DelDevice(device, device->GetAddr(), sendBle, false); // xoa den khoi phong
 }
 
 int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
@@ -72,7 +196,7 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
 		}
 		if (isAddDatabase)
 		{
-			database->GroupUpdateRoom(group, id);
+			database->GroupUpdateRoom(group, this->GetId());
 		}
 		return CODE_OK;
 	}
@@ -83,7 +207,7 @@ int Room::AddGroup(Group *group, bool isAddGateway, bool isAddDatabase)
  * Don't delete in database
  * Function main delete record in database
  */
-int Room::DelGroup(Group *group)
+int Room::DelGroup(Group *group, bool delDb)
 {
 	int position = GetPositionGroup(group);
 	if (position > -1)
@@ -91,6 +215,8 @@ int Room::DelGroup(Group *group)
 		mtxGroup.lock();
 		groupList.erase(groupList.begin() + position);
 		mtxGroup.unlock();
+		if (delDb)
+			database->GroupUpdateRoom(group, "");
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -108,7 +234,7 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 		}
 		if (isAddDatabase)
 		{
-			database->SceneBleUpdateRoom(sceneBle, id);
+			database->SceneBleUpdateRoom(sceneBle, this->GetId());
 		}
 		return CODE_OK;
 	}
@@ -118,7 +244,7 @@ int Room::AddSceneBle(SceneBle *sceneBle, bool isAddGateway, bool isAddDatabase)
 /**
  * Don't delete in database same DelGroup
  */
-int Room::DelSceneBle(SceneBle *sceneBle)
+int Room::DelSceneBle(SceneBle *sceneBle, bool delDb)
 {
 	int position = GetPositionSceneBle(sceneBle);
 	if (position > -1)
@@ -126,6 +252,42 @@ int Room::DelSceneBle(SceneBle *sceneBle)
 		mtxScene.lock();
 		sceneBleList.erase(sceneBleList.begin() + position);
 		mtxScene.unlock();
+		if (delDb)
+			database->SceneBleUpdateRoom(sceneBle, "");
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Room::AddRule(Rule *rule, bool isAddGateway, bool isAddDatabase)
+{
+	if (GetPositionRule(rule) < 0)
+	{
+		if (isAddGateway)
+		{
+			mtxScene.lock();
+			ruleList.push_back(rule);
+			mtxScene.unlock();
+		}
+		if (isAddDatabase)
+		{
+		}
+		return CODE_OK;
+	}
+	return CODE_ERROR;
+}
+
+int Room::DelRule(Rule *rule, bool delDb)
+{
+	int position = GetPositionRule(rule);
+	if (position > -1)
+	{
+		mtxRule.lock();
+		ruleList.erase(ruleList.begin() + position);
+		mtxRule.unlock();
+		if (delDb)
+		{
+		}
 		return CODE_OK;
 	}
 	return CODE_ERROR;

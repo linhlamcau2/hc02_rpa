@@ -9,28 +9,25 @@ protected:
 	uint16_t pm25;
 	uint16_t pm10;
 	uint16_t pm1_0;
-	int idPm25;
-	int idPm10;
-	int idPm1_0;
 
 public:
-	ModulePmSensor(Device *device, uint32_t addr);
+	ModulePmSensor(Device *device, uint16_t addr);
 	~ModulePmSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
+	void SaveAttribute(string key);
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);

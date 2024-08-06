@@ -7,20 +7,19 @@ class ModuleDoorHangOn : public Module
 {
 protected:
 	uint16_t hangOn;
-	int id;
 
 public:
-	ModuleDoorHangOn(Device *device, uint32_t addr);
+	ModuleDoorHangOn(Device *device, uint16_t addr);
 	~ModuleDoorHangOn();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database

@@ -9,20 +9,28 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES = -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota
-DEFINES += -DCONFIG_USE_MESSAGE_FORMAT_V2=1
-# DEFINES += -DCONFIG_SAVE_ATTRIBUTE
-LINKEDLIBS = -lmosquittopp -lsqlite3 -pthread -luci -lcurl
+INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/mqtt -Iprotocol/androidBle -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota -Inoti
+# DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
+# DEFINES 	+= -D__OPENWRT__
+LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -lssl -lcrypto
 
 ifeq ($(ZIGBEE),ON)
 	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
-	DEFINES += -DCONFIG_ENABLE_ZIGBEE=1
+	DEFINES 	+= -DCONFIG_ENABLE_ZIGBEE=1
 
 	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/basic/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/basic/attribute/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/*.cpp)
 	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/attribute/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/attribute/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/attribute/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/illuminance/*.cpp)
+	DEVICESRC += $(wildcard device/zigbee/cluster/illuminance/attribute/*.cpp)
 endif
 
 DEVICESRC += $(wildcard button/*.cpp)
@@ -32,9 +40,9 @@ DEVICESRC += $(wildcard database/*.cpp)
 DEVICESRC += $(wildcard device/*.cpp)
 DEVICESRC += $(wildcard device/ble/*.cpp)
 DEVICESRC += $(wildcard device/ble/module/*.cpp)
-DEVICESRC += $(wildcard device/ble/element/*.cpp)
 DEVICESRC += $(wildcard device/mqtt/*.cpp)
 DEVICESRC += $(wildcard device/mqtt/function/*.cpp)
+DEVICESRC += $(wildcard noti/*.cpp)
 DEVICESRC += $(wildcard gateway/*.cpp)
 DEVICESRC += $(wildcard room/*.cpp)
 DEVICESRC += $(wildcard group/*.cpp)
@@ -44,6 +52,7 @@ DEVICESRC += $(wildcard mqtt/*.cpp)
 DEVICESRC += $(wildcard http/*.cpp)
 DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard protocol/mqtt/*.cpp)
+DEVICESRC += $(wildcard protocol/androidBle/*.cpp)
 DEVICESRC += $(wildcard rule/*.cpp)
 DEVICESRC += $(wildcard sceneBle/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
@@ -75,7 +84,7 @@ $(BUILD_PATH)/%.o: %.c
 	
 install: $(APP)
 	install -d $(DESTDIR)$(PREFIX)/bin/
-	install -m 644 $(APP) $(DESTDIR)$(PREFIX)/bin/
+	install -m 744 $(APP) $(DESTDIR)$(PREFIX)/bin/
 
 clean: 
 	rm -rf $(APP) $(BUILD_PATH)

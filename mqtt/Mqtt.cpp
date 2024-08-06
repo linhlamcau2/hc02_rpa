@@ -6,19 +6,22 @@
 #include <thread>
 #include "Log.h"
 #include <Util.h>
+#include "Define.h"
 
 #define TAG "Mqtt"
 
 using namespace mosqpp;
 
-Mqtt::Mqtt(string host, int port, string client_id, string username, string password, int keepalive, string willset_topic, string willset_payload) : mosquittopp(client_id.c_str())
+Mqtt::Mqtt(string host, int port, char* clientId, string username, string password, int keepalive, bool useTls, string willset_topic, string willset_payload) : mosquittopp(clientId)
 {
+	LOGI("MQTT: host: %s, port: %d", host.c_str(), port);
 	this->host = host;
 	this->port = port;
-	this->client_id = client_id;
+	this->clientId = clientId;
 	this->username = username;
 	this->password = password;
 	this->keepalive = keepalive;
+	this->useTls = useTls;
 	this->willset_topic = willset_topic;
 	this->willset_payload = willset_payload;
 	connected = false;
@@ -35,11 +38,11 @@ void Mqtt::init()
 {
 }
 
-void Mqtt::SetServer(string host, int port, string client_id, string username, string password, int keepalive)
+void Mqtt::SetServer(string host, int port, char* clientId, string username, string password, int keepalive)
 {
 	this->host = host;
 	this->port = port;
-	this->client_id = client_id;
+	this->clientId = clientId;
 	this->username = username;
 	this->password = password;
 	this->keepalive = keepalive;
@@ -53,7 +56,14 @@ void Mqtt::SetWillset(string willset_topic, string willset_payload)
 
 int Mqtt::Connect()
 {
-	LOGD("Connect host %s, port %d", host.c_str(), port);
+	LOGI("Connect host %s, port %d, username: %s, pass: %s", host.c_str(), port, username.c_str(), password.c_str());
+	if (useTls)
+	{
+		tls_set(NULL, "/dev/null");
+		tls_insecure_set(true);
+		tls_opts_set(0);
+	}
+
 	if (!username.empty() || !password.empty())
 	{
 		if (username_pw_set(username.c_str(), password.c_str()) != MOSQ_ERR_SUCCESS)
@@ -72,7 +82,11 @@ int Mqtt::Connect()
 	if (result == MOSQ_ERR_SUCCESS)
 	{
 		result = connect_async(host.c_str(), port, keepalive);
-		if (result != MOSQ_ERR_SUCCESS)
+		if (result == MOSQ_ERR_SUCCESS)
+		{
+			LOGI("connect_async SUCCESS");
+		}
+		else
 		{
 			LOGW("connect_async failed code %d, err %s", result, mosqpp::strerror(result));
 		}
@@ -82,12 +96,6 @@ int Mqtt::Connect()
 		LOGE("loop_start failed code %d, err %s", result, mosqpp::strerror(result));
 	}
 	return result;
-	if (result == MOSQ_ERR_SUCCESS)
-	{
-		return CODE_OK;
-	}
-	LOGW("Connect err: %d", result);
-	return CODE_ERROR;
 }
 
 int Mqtt::Reconnect()
@@ -149,7 +157,7 @@ int Mqtt::Subscribe(string topic, int maxTime, int duration)
 				mtx.unlock();
 				return CODE_OK;
 			}
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		ret = subscribe(&mqttSubscribe.id, topic.c_str());
 		LOGI("Resubscribes topic: %s, ret: %d", topic.c_str(), ret);
@@ -191,7 +199,7 @@ int Mqtt::Unsubscribe(string topic, int maxTime, int duration)
 				mtx.unlock();
 				return CODE_OK;
 			}
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		ret = unsubscribe(&mqttUnsubscribe.id, topic.c_str());
 		LOGI("Unsubscribes topic: %s, ret: %d", topic.c_str(), ret);
@@ -214,11 +222,8 @@ int Mqtt::Publish(string topic, const char *payload, int payloadLen)
 	{
 		return CODE_OK;
 	}
-	else
-	{
-		LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
-		return CODE_ERROR;
-	}
+	LOGW("Publish topic: %s err: %d", topic.c_str(), rs);
+	return CODE_ERROR;
 }
 
 bool Mqtt::isConnected()

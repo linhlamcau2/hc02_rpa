@@ -14,6 +14,7 @@
 #include "Ota.h"
 #include "Base64.h"
 #include "Config.h"
+#include "TimerSchedule.h"
 #include "DeviceBleAll.h"
 #include "DeviceBleSwitchOnoff.h"
 #include "DeviceBleLightOnoffCctDim.h"
@@ -28,12 +29,22 @@
 #include "DeviceBleSensorPm.h"
 #include "DeviceBlePirLightSensorDC.h"
 #include "DeviceBlePirLightSensorAC.h"
+#include "DeviceBlePirLightSensorAC_CB09.h"
+#include "DeviceBleRadaSensorAc.h"
 #include "DeviceBleSmokeSensor.h"
 #include "DeviceBleDoorSensor.h"
 #include "DeviceBleScreenTouch.h"
 #include "DeviceBleCurtain.h"
+#include "DeviceBleRepeater.h"
 #include "DeviceBleRoolDoor.h"
 #include "DeviceBleSwitchTouch.h"
+#include "DeviceBleSwitchCeiling.h"
+#include "DeviceBleSeftPowerRemote.h"
+#include "DeviceBleWifiSwitchTouch.h"
+#include "DeviceBleWifiSwitchElectrical.h"
+#include "DeviceBleSocketSwitch.h"
+#include "DeviceBleWifiCurtain.h"
+#include "DeviceBleWifiSwitchRoolDoor.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -46,16 +57,26 @@
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"
+#include "DeviceZigbeeLumiSensorMagnet.h"
+#include "DeviceZigbeeLumiSensorSwitch.h"
+#include "DeviceZigbeeLumiSensorTempHum.h"
+#include "DeviceZigbeeLumiSensorWleakAQ1.h"
 #include "DeviceZigbeeOnoff.h"
-#include "DeviceZigbeeTelinkOnoff.h"
+
+#include "DeviceZigbeeTuyaSensorMagnet.h"
+#include "DeviceZigbeeTuyaSensorPir.h"
+#include "DeviceZigbeeTuyaSensorHumanPresence.h"
 #endif
+
+#define TIME_CHECK_OTA 10800
 
 Gateway *gateway = NULL;
 
-Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
-			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
-			Udp(8181)
+Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
+				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+	  Udp(8181)
 {
 	this->mac = mac;
 	this->id = "";
@@ -63,221 +84,16 @@ Gateway::Gateway(string mac, string address, int port, string clientId, string u
 	this->refresh_token = "";
 	this->ble_addr = 0;
 	this->ble_iv_index = 0;
-	this->ble_appkey = "";
+	this->ble_netkey = "";
 	this->ble_appkey = "";
 	this->ble_devicekey = "";
-	this->numScreenTouchs = 0;
+	this->data = "";
+	this->isAutoOta = true;
+	this->lastTimePingGwBle = time(NULL);
 }
 
 Gateway::~Gateway()
 {
-}
-
-Device *Gateway::getDeviceFromMac(string mac)
-{
-	deviceListMtx.lock();
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->GetMac() == mac)
-		{
-			deviceListMtx.unlock();
-			return device;
-		}
-	}
-	deviceListMtx.unlock();
-	return NULL;
-}
-
-Device *Gateway::getDeviceFromId(string id)
-{
-	deviceListMtx.lock();
-	for (const auto &[idDev, device] : deviceList)
-	{
-		if (device->CheckId(id))
-		{
-			deviceListMtx.unlock();
-			return device;
-		}
-	}
-	// if (deviceList.find(id) != deviceList.end())
-	// {
-	// 	deviceListMtx.unlock();
-	// 	return deviceList[id];
-	// }
-	deviceListMtx.unlock();
-	return NULL;
-}
-
-DeviceBle *Gateway::getDeviceBleFromAddr(uint32_t addr)
-{
-	deviceListMtx.lock();
-	for (const auto &[id, device] : deviceList)
-	{
-		if (device->CheckAddr(addr) && device->GetProtocol() == BLE_DEVICE)
-		{
-			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
-			if (deviceBle)
-			{
-				deviceListMtx.unlock();
-				return deviceBle;
-			}
-		}
-	}
-	deviceListMtx.unlock();
-	return NULL;
-}
-
-void Gateway::delDevice(Device *device)
-{
-	deviceListMtx.lock();
-	deviceList.erase(device->GetId());
-	deviceListMtx.unlock();
-	database->DeviceDel(device);
-	delete device;
-}
-
-Group *Gateway::getGroupFromId(string id)
-{
-	groupListMtx.lock();
-	if (groupList.find(id) != groupList.end())
-	{
-		groupListMtx.unlock();
-		return groupList[id];
-	}
-	groupListMtx.unlock();
-	return NULL;
-}
-
-Group *Gateway::getGroupFromAddr(int addr)
-{
-	groupListMtx.lock();
-	for (const auto &[id, group] : groupList)
-	{
-		if (group->GetAddr() == addr)
-		{
-			groupListMtx.unlock();
-			return group;
-		}
-	}
-	groupListMtx.unlock();
-	return NULL;
-}
-
-void Gateway::delGroup(Group *group)
-{
-	groupListMtx.lock();
-	groupList.erase(group->GetId());
-	groupListMtx.unlock();
-	database->GroupDel(group);
-	delete group;
-}
-
-uint32_t Gateway::getNextGroupAddr()
-{
-	uint32_t groupAddr = 0xD000;
-	groupListMtx.lock();
-	for (const auto &[id, group] : groupList)
-	{
-		if (group->GetAddr() >= groupAddr)
-		{
-			groupAddr = group->GetAddr() + 1;
-		}
-	}
-	groupListMtx.unlock();
-	return groupAddr;
-}
-
-SceneBle *Gateway::getSceneBleFromId(string id)
-{
-	sceneBleListMtx.lock();
-	if (sceneBleList.find(id) != sceneBleList.end())
-	{
-		sceneBleListMtx.unlock();
-		return sceneBleList[id];
-	}
-	sceneBleListMtx.unlock();
-	return NULL;
-}
-
-SceneBle *Gateway::getSceneBleFromAddr(int addr)
-{
-	sceneBleListMtx.lock();
-	for (const auto &[id, sceneBle] : sceneBleList)
-	{
-		if (sceneBle->GetAddr() == addr)
-		{
-			sceneBleListMtx.unlock();
-			return sceneBle;
-		}
-	}
-	sceneBleListMtx.unlock();
-	return NULL;
-}
-
-void Gateway::delSceneBle(SceneBle *sceneBle)
-{
-	sceneBleListMtx.lock();
-	sceneBleList.erase(sceneBle->GetId());
-	sceneBleListMtx.unlock();
-	database->SceneBleDel(sceneBle);
-	delete sceneBle;
-}
-
-uint32_t Gateway::getNextSceneBleAddr()
-{
-	uint32_t sceneAddr = 1;
-	sceneBleListMtx.lock();
-	for (const auto &[id, sceneBle] : sceneBleList)
-	{
-		if (sceneBle->GetAddr() >= sceneAddr)
-		{
-			sceneAddr = sceneBle->GetAddr() + 1;
-		}
-	}
-	sceneBleListMtx.unlock();
-	return sceneAddr;
-}
-
-Rule *Gateway::getRuleFromId(string id)
-{
-	ruleListMtx.lock();
-	if (ruleList.find(id) != ruleList.end())
-	{
-		ruleListMtx.unlock();
-		return ruleList[id];
-	}
-	ruleListMtx.unlock();
-	return NULL;
-}
-
-void Gateway::delRule(Rule *rule)
-{
-	ruleListMtx.lock();
-	ruleList.erase(rule->GetId());
-	ruleListMtx.unlock();
-	database->RuleDel(rule);
-	delete rule;
-}
-
-Room *Gateway::getRoomFromId(string id)
-{
-	roomListMtx.lock();
-	if (roomList.find(id) != roomList.end())
-	{
-		roomListMtx.unlock();
-		return roomList[id];
-	}
-	roomListMtx.unlock();
-	return NULL;
-}
-
-void Gateway::delRoom(Room *room)
-{
-	roomListMtx.lock();
-	roomList.erase(room->GetId());
-	roomListMtx.unlock();
-	database->RoomDel(room);
-	delete room;
 }
 
 #ifdef ESP_PLATFORM
@@ -298,21 +114,28 @@ static void startUdpThread(void *data)
 
 void Gateway::init()
 {
-	CloudProtocol::init();
+	Device::InitDeviceModelList();
+	database->GatewayRead();
 	LocalProtocol::init();
+	CloudProtocol::init();
 	Udp::init();
 
-	initUdpMessage();
-	initMqttMessage();
+	InitUdpMessage();
+	InitMqttMessageDevice();
+	InitMqttMessageGroup();
+	InitMqttMessageRoom();
+	InitMqttMessageRule();
+	InitMqttMessageScene();
+	InitMqttMessageHc();
 
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
-	{
-		LOGE("Failed to create task");
-		SetLedService(false);
-	}
-	vTaskDelay(10);
+	// if (xTaskCreate(startUdpThread, "Udp", 5120, this, 7, NULL) != pdPASS)
+	// {
+	// 	LOGE("Failed to create task");
+	// 	SetLedService(false);
+	// }
+	// vTaskDelay(10);
 	if (xTaskCreate(startCheckOnlineThread, "CheckOnline", 5120, this, 7, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
@@ -326,11 +149,11 @@ void Gateway::init()
 	checkOnlineThread.detach();
 #endif
 
-	database->GatewayRead();
 	database->DeviceRead();
-	gateway->AddNewDevice("", "all", "ble", "eyJkZXZpY2VrZXkiOiIifQ==", 65535, 0, 0, true, false);
 	database->DeviceBleChildRead();
+#ifdef CONFIG_SAVE_ATTRIBUTE
 	database->DeviceAttributeRead();
+#endif
 	database->RoomRead();
 	database->GroupRead();
 	database->DeviceInGroupRead();
@@ -338,6 +161,9 @@ void Gateway::init()
 	database->DeviceInSceneBleRead();
 	database->DeviceInRoomRead();
 	database->RuleRead();
+#ifdef __ANDROID__
+	database->NotiRead();
+#endif
 	if (gateway->getId().compare("") == 0)
 	{
 		id = mac;
@@ -346,17 +172,61 @@ void Gateway::init()
 		database->GatewayRead();
 	}
 
-	CloudConnect();
+	string firmwareVer = STR(VERSION);
+	if (getVersion() != firmwareVer)
+	{
+		setVersion(firmwareVer);
+		database->GatewayUpdateVersion(this, firmwareVer);
+	}
+
 	LocalConnect();
+	int cloudConnected = CloudConnect();
+
+#ifdef __ANDROID__
+	if (cloudConnected != MQTT_ERR_SUCCESS)
+	{
+		Json::Value jsonValue;
+		Json::Value dataValue;
+		dataValue["status"] = 0;
+		dataValue["version"] = STR(VERSION);
+		dataValue["ip"] = Wifi::GetIP();
+		jsonValue["cmd"] = "homeController";
+		jsonValue["data"] = dataValue;
+		LocalPublish(jsonValue);
+	}
+#endif
+
+	// Get data isAutoOta
+	Json::Value dataJson;
+	dataJson.parse(gateway->getData());
+	if (dataJson.isObject() && dataJson.isMember("isAutoOta") && dataJson["isAutoOta"].isBool())
+	{
+		this->isAutoOta = dataJson["isAutoOta"].asBool();
+	}
+
+	if (timerSchedule) // Pre-instantiated timerSchedule for gateway
+	{
+		timerSchedule->RegisterTimer(TIME_CHECK_OTA, std::bind(&Gateway::CheckAutoOta, this));
+	}
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 {
 	LOGI("OnCloudConnect: %d", isConnected);
+	Json::Value jsonValue;
+	Json::Value dataValue;
+	dataValue["status"] = isConnected;
+	dataValue["version"] = STR(VERSION);
+	dataValue["ip"] = Wifi::GetIP();
+	jsonValue["cmd"] = "homeController";
+	jsonValue["data"] = dataValue;
+	LocalPublish(jsonValue);
+
 	if (isConnected)
 	{
 		Util::LedInternet(true);
 		OnlineHC(mac);
+		GatewayConnectToCloudNotice();
 		if (!isReconnect)
 		{
 			deviceListMtx.lock();
@@ -394,6 +264,21 @@ void Gateway::DelDatabase()
 		LOGE("Failed to delete file\n");
 	}
 
+	if (database->IsHaveDb(DB_NAME_V1))
+	{
+		if (unlink(DB_NAME_V1) != 0)
+		{
+			LOGE("Failed to delete file db_v1\n");
+		}
+	}
+
+	if (database->IsHaveDb(DB_NAME "1"))
+	{
+		if (unlink(DB_NAME "1") != 0)
+		{
+			LOGE("Failed to delete file db_restore\n");
+		}
+	}
 	// Unmount SPIFFS
 	esp_vfs_spiffs_unregister(NULL);
 #else
@@ -408,7 +293,7 @@ void Gateway::ResetFactory()
 	if (bleProtocol)
 	{
 		bleProtocol->ResetDelAll();
-		bleProtocol->ResetFactory();
+		// bleProtocol->ResetFactory();
 	}
 	else
 		LOGW("BleProtocol null");
@@ -416,18 +301,45 @@ void Gateway::ResetFactory()
 	DelDatabase();
 }
 
-void Gateway::SendDataForScreenTouch(Device *device, string &dataWeather, uint8_t statusWeather, uint16_t temp)
+void Gateway::CheckAutoOta()
 {
-	if (bleProtocol)
+	if (this->getAutoOta())
 	{
-		bleProtocol->SendDate(device->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
-		bleProtocol->SendTime(device->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
-		bleProtocol->SendWeatherIndoor(device->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
-		if (statusWeather != 254 && temp != 65534)
-			bleProtocol->SendWeatherOutdoor(device->GetAddr(), statusWeather, temp);
+		Json::Value data;
+		data["cmd"] = "checkAutoOta";
+		data["rqi"] = Util::genRandRQI(16);
+		data["data"]["mac"] = this->getMac();
+		data["data"]["version"] = this->getVersion();
+#ifdef ESP_PLATFORM
+		data["data"]["type"] = 2;
+#elif defined(__OPENWRT__)
+		data["data"]["type"] = 1;
+#elif defined(__ANDROID__)
+		data["data"]["type"] = 3;
+#endif
+		CloudPublish(data);
 	}
-	else
-		LOGW("BleProtocol null");
+}
+
+int Gateway::RestartBleGw()
+{
+	LOGW("Restart Gateway Ble");
+#ifdef __ANDROID__
+	Util::ExecuteCMD("su");
+	Util::ExecuteCMD("echo 100 > /sys/class/gpio/export");
+	Util::ExecuteCMD("echo out > /sys/class/gpio/gpio100/direction");
+	Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio100/value");
+	sleep(1);
+	Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio100/value");
+	Util::ExecuteCMD("echo 100 > /sys/class/gpio/unexport");
+#elif defined(__OPENWRT__)
+	Util::ExecuteCMD("echo '0' > /sys/class/gpio/gpio1/value");
+	sleep(1);
+	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");
+#elif defined(ESP_PLATFORM)
+	SetGpioResetGwBle();
+#endif
+	return CODE_OK;
 }
 
 static string ST_array_icon[18] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d", "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
@@ -437,6 +349,7 @@ int Gateway::CheckOnlineThread()
 	LOGI("Start CheckOnlineThread");
 	time_t currentTime = 0;
 	time_t oldTime = 0;
+	time_t oldTimeCheckStatus = 0;
 	uint32_t allTimeCheck = 0; // time total in a loop check
 	bool deviceStateChange = false;
 
@@ -451,14 +364,15 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 
+	Json::Value devicesStatusOld = Json::Value::null;
+
 	while (1)
 	{
-		// Check have device screen touch -> send datetime, weather data
-		if (numScreenTouchs > 0 && (time(NULL) - oldTime) > 1800)
+		if ((time(NULL) - oldTime) > 1800)
 		{
 			oldTime = time(NULL);
 			HTTPRequest *httpRequest = new HTTPRequest();
-			string dataWeather = httpRequest->GetWeather(Util::GetLongitude(), Util::GetLatitude());
+			string dataWeather = httpRequest->GetWeather(Util::GetLatitude(gateway->getData()), Util::GetLongitude(gateway->getData()));
 			delete httpRequest;
 			LOGI("dataWeather:%s", dataWeather.c_str());
 
@@ -469,7 +383,7 @@ int Gateway::CheckOnlineThread()
 			if (dataWeatherJson.parse(dataWeather) && dataWeatherJson.isObject())
 			{
 				if (dataWeatherJson.isMember("weather") && dataWeatherJson["weather"].isArray() &&
-						dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
+					dataWeatherJson.isMember("main") && dataWeatherJson["main"].isObject())
 				{
 					Json::Value weather = dataWeatherJson["weather"][0];
 					Json::Value main = dataWeatherJson["main"];
@@ -485,22 +399,14 @@ int Gateway::CheckOnlineThread()
 							}
 						}
 						temp = main["temp"].asInt();
+						Util::SetStatusWeatherOutdoor(status);
+						Util::SetTempWeatherOutdoor(temp);
 					}
 				}
 			}
-
-			deviceListMtx.lock();
-			for (const auto &[id, device] : deviceList)
-			{
-				if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
-				{
-					SendDataForScreenTouch(device, dataWeather, status, temp);
-				}
-			}
-			deviceListMtx.unlock();
 		}
 
-		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy())
+		if (!bleProtocol->IsProvision() && !LocalProtocol::IsBusy() && !CloudProtocol::IsBusy() && bleProtocol->isInitKey)
 		{
 			// deviceListMtx.lock();
 			devicesData = Json::Value::null;
@@ -527,7 +433,7 @@ int Gateway::CheckOnlineThread()
 								// 2 chu ky khong co ban tin phan hoi thi bao offline
 								if ((device->lastTimeActive + allTimeCheck * 2 + 1) < currentTime)
 								{
-									// LOGI("Device 0x%04X offline", device->GetAddr());
+									LOGI("Device %s addr 0x%04X offline", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = false;
 									deviceStateChange = true;
 								}
@@ -538,7 +444,7 @@ int Gateway::CheckOnlineThread()
 								// 1 ngay khong co ban tin moi thi bao offline
 								if ((device->lastTimeActive + 60 * 60 * 24) < currentTime)
 								{
-									// LOGI("Device 0x%04X offline", device->GetAddr());
+									LOGI("Device %s addr 0x%04X offline", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = false;
 									deviceStateChange = true;
 								}
@@ -557,7 +463,7 @@ int Gateway::CheckOnlineThread()
 								// neu co ban tin moi trong vong 2 chu ky check thi bao online
 								if ((device->lastTimeActive + allTimeCheck * 2) >= currentTime)
 								{
-									// LOGI("Device 0x%04X online", device->GetAddr());
+									LOGI("Device %s addr 0x%04X online", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = true;
 									deviceStateChange = true;
 								}
@@ -567,7 +473,7 @@ int Gateway::CheckOnlineThread()
 								// trong ngay co ban tin thi online
 								if ((device->lastTimeActive + 60 * 60 * 24) >= currentTime)
 								{
-									// LOGI("Device 0x%04X online", device->GetAddr());
+									LOGI("Device %s addr 0x%04X online", device->GetName().c_str(), device->GetAddr());
 									device->lastOnlineState = true;
 									deviceStateChange = true;
 								}
@@ -589,6 +495,7 @@ int Gateway::CheckOnlineThread()
 				else
 					break;
 			}
+
 			// deviceListMtx.unlock();
 			if (!devicesData.isNull())
 			{
@@ -596,6 +503,16 @@ int Gateway::CheckOnlineThread()
 				dataValue["device"] = devicesData;
 				gateway->pushDeviceUpdateLocal(dataValue);
 				gateway->pushDeviceUpdateCloud(dataValue);
+			}
+
+			if (allTimeCheck > 0)
+			{
+				currentTime = time(NULL);
+				if (currentTime - getLastTimePingGwBle() > allTimeCheck)
+				{
+					setLastTimePingGwBle(time(NULL));
+					RestartBleGw();
+				}
 			}
 		}
 		sleep(1);
@@ -659,10 +576,10 @@ int Gateway::UdpBroadcastThread()
 		if (isUdpBroadcasting)
 		{
 			Util::LedInternet(false);
-			usleep(500000);
+			SLEEP_MS(500);
 			send(dataStr, &s, sizeof(s));
 			Util::LedInternet(true);
-			usleep(500000);
+			SLEEP_MS(500);
 		}
 		else
 		{
@@ -710,25 +627,7 @@ int Gateway::GatewayConnectToCloudNotice()
 
 	// respValue["DATA"] = data;
 
-	return CloudPublish("HC.CONTROL.RESPONSE", respValue.toString());
-}
-
-static Json::Value PushNewDevMqtt(Device *newDev)
-{
-	Json::Value jsonValue;
-	Json::Value devValue;
-	devValue["id"] = newDev->GetId();
-	devValue["addr"] = newDev->GetAddr();
-	devValue["type"] = newDev->GetType();
-	devValue["ver"] = newDev->GetVersionStr();
-	devValue["mac"] = newDev->GetMac();
-	string data = newDev->GetData();
-	string devKey = "";
-	Json::Value json;
-	json.parse(data);
-	devValue["data"] = json;
-	jsonValue["device"].append(devValue);
-	return jsonValue;
+	return CloudPublish(respValue.toString());
 }
 
 void Gateway::AddDeviceToScanList(Device *scanDevice)
@@ -745,95 +644,57 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	{
 		database->DelDevExist(temp_dev);
 	}
-	string data = scanDevice->GetData();
-	string devKey = "";
-	Json::Value json;
-	if (json.parse(data) && json.isObject())
-	{
-		if (json.isMember("devicekey") && json["devicekey"].isString())
-		{
-			devKey = json["devicekey"].asString();
-		}
-	}
 
-	dataValue["DEVICE_ID"] = scanDevice->GetId();
-	dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
-	dataValue["DEVICE_TYPE_ID"] = (int)scanDevice->GetType();
-	dataValue["MAC_ADDRESS"] = scanDevice->GetMac();
-	dataValue["FIRMWARE_VERSION"] = scanDevice->GetVersionStr();
-	dataValue["DEVICE_KEY"] = devKey;
-	dataValue["NET_KEY"] = gateway->getBleNetKey();
-	dataValue["APP_KEY"] = gateway->getBleAppKey();
-	jsonValue["CMD"] = "NEW_DEVICE";
-	jsonValue["DATA"] = dataValue;
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	LocalPublish(jsonValue);
-#else
-	CloudPublish(jsonValue);
-#endif
-
-#ifndef CONFIG_USE_MESSAGE_FORMAT_V2
-	jsonValue["CMD"] = "NEW_CHILD_DEVICE";
-	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 || scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2)
+	Json::Value devValue;
+	devValue["id"] = scanDevice->GetId();
+	devValue["addr"] = scanDevice->GetAddr();
+	devValue["ver"] = scanDevice->GetVersionStr();
+	devValue["mac"] = scanDevice->GetMac();
+	devValue["data"] = scanDevice->GetData();
+	if (scanDevice->GetType() == ZIGBEE_LUMI_PLUG ||
+		scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_SWITCH)
 	{
-		dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-		dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), 1);
-		dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + 1;
-		dataValue["BUTTON_ID"] = 12;
-		jsonValue["DATA"] = dataValue;
-		LocalPublish(jsonValue);
+		devValue["type"] = BLE_SWITCH_ONOFF;
 	}
-	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 || scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3)
+	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_TEMP_HUM)
 	{
-		for (int i = 1; i <= 2; i++)
-		{
-			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
-			dataValue["BUTTON_ID"] = 11 + i;
-			jsonValue["DATA"] = dataValue;
-			LocalPublish(jsonValue);
-		}
+		devValue["type"] = BLE_TEMP_HUM_SENSOR;
 	}
-	else if (scanDevice->GetType() == BLE_SWITCH_RGB_4 || scanDevice->GetType() == BLE_SWITCH_RGB_4_SQUARE || scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_4)
+	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_WLEAK_AQ1)
 	{
-		for (int i = 1; i <= 3; i++)
-		{
-			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr() + i;
-			dataValue["BUTTON_ID"] = 11 + i;
-			jsonValue["DATA"] = dataValue;
-			LocalPublish(jsonValue);
-		}
+		devValue["type"] = BLE_SMOKE_SENSOR;
 	}
-	else if (scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB || scanDevice->GetType() == BLE_AC_SCENE_CONTACT_RGB_SQUARE)
+	else if (scanDevice->GetType() == ZIGBEE_LUMI_SENSOR_MAGNET ||
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_MAGNET_TY0203)
 	{
-		for (int i = 1; i <= 5; i++)
-		{
-			dataValue["PARENT_DEVICE_ID"] = scanDevice->GetId();
-			dataValue["DEVICE_ID"] = Util::GenIdDeviceByElement(scanDevice->GetId(), i);
-			dataValue["DEVICE_UNICAST_ID"] = (int)scanDevice->GetAddr();
-			dataValue["BUTTON_ID"] = 11 + i;
-			jsonValue["DATA"] = dataValue;
-			LocalPublish(jsonValue);
-		}
+		devValue["type"] = BLE_DOOR_SENSOR;
 	}
-#endif
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	Json::Value jsonData = PushNewDevMqtt(scanDevice);
-	pushNewDeviceLocal(jsonData);
-#endif
+	else if (scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_PIR_RH3040 ||
+			 scanDevice->GetType() == ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225)
+	{
+		devValue["type"] = BLE_PIR_LIGHT_SENSOR_DC;
+	}
+	else
+	{
+		devValue["type"] = (Json::Value::UInt)scanDevice->GetType();
+	}
+	jsonValue["device"].append(devValue);
+	pushNewDeviceLocal(jsonValue);
 }
 
-Device *Gateway::AddNewDevice(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, bool addGateway, bool addDatabase)
+Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, bool addDatabase)
 {
 	LOGI("Add new device id: %s, name: %s, mac: %s, addr: 0x%04X, type: 0x%04X, verion: %d", id.c_str(), name.c_str(), mac.c_str(), addr, type, version);
-	Device *device = NULL;
+	Device *device = getDeviceFromId(id);
+	if (device)
+	{
+		bleProtocol->ResetDev(device->GetAddr());
+	}
+
 	switch (type)
 	{
 	case BLE_ALL:
-		device = new DeviceBleAll(id, name, mac, data, addr, type, version);
+		device = new DeviceBleAll(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_LED_CHIEU_TRANH:
 	case BLE_LED_CHIEU_GUONG:
@@ -845,6 +706,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_LED_FLOOD:
 	case BLE_LED_DAY_LINEAR:
 	case BLE_LED_OP_TRAN:
+	case BLE_LED_OP_TRAN_40W:
 	case BLE_LED_OP_TUONG:
 	case BLE_LED_OP_TRAN_LOA:
 	case BLE_PANEL_TRON:
@@ -852,206 +714,245 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
-		device = new DeviceBleLightOnoffCctDim(id, name, mac, data, addr, type, version);
+	case BLE_LED_RLT03_06W:
+	case BLE_LED_RLT02_10W:
+	case BLE_LED_RLT02_20W:
+	case BLE_LED_RLT01_10W:
+	case BLE_LED_TRL08_20W:
+	case BLE_LED_TRL08_10W:
+	case BLE_LED_RLT03_12W:
+		device = new DeviceBleLightOnoffCctDim(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_DOWNLIGHT_RGBCW:
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
-		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, data, addr, type, version);
+		device = new DeviceBleLightOnoffCctDimHslModeRGB(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_LED_DAY_RGB:
-		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, data, addr, type, version);
+		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_ONOFF:
-		device = new DeviceBleSwitchOnoff(id, name, mac, data, addr, type, version);
+	case BLE_SWITCH_ONOFF_V2:
+		device = new DeviceBleSwitchOnoff(id, name, mac, dataJson, addr, type, version);
+		break;
+
+	case BLE_SWITCH_RGB_SOCKET_1:
+		device = new DeviceBleSocketSwitch(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
 	case BLE_SWITCH_RGB_WATER_HEATER:
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 1);
+	case BLE_SWITCH_RGB_1_V2:
+	case BLE_SWITCH_RGB_1_SQUARE_V2:
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_RGB_2:
 	case BLE_SWITCH_RGB_2_SQUARE:
-		for (int i = 1; i < 2; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				device->lastTimeActive = time(NULL);
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
-			}
-		}
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 2);
+	case BLE_SWITCH_RGB_2_V2:
+	case BLE_SWITCH_RGB_2_SQUARE_V2:
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_3:
 	case BLE_SWITCH_RGB_3_SQUARE:
-		for (int i = 1; i < 3; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				device->lastTimeActive = time(NULL);
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
-			}
-		}
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 3);
+	case BLE_SWITCH_RGB_3_V2:
+	case BLE_SWITCH_RGB_3_SQUARE_V2:
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
-		for (int i = 1; i < 4; i++)
-		{
-			device = new DeviceBleSwitchTouchRgb(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				device->lastTimeActive = time(NULL);
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
-			}
-		}
-		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
+	case BLE_SWITCH_RGB_4_V2:
+	case BLE_SWITCH_RGB_4_SQUARE_V2:
+		device = new DeviceBleSwitchTouchRgb(id, name, mac, dataJson, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_1_V2:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 1);
+		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
-		for (int i = 1; i < 2; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				device->lastTimeActive = time(NULL);
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
-			}
-		}
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
+	case BLE_SWITCH_ELECTRICAL_2_V2:
+		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
-		for (int i = 1; i < 3; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				device->lastTimeActive = time(NULL);
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
-			}
-		}
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 3);
+	case BLE_SWITCH_ELECTRICAL_3_V2:
+		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_ELECTRICAL_4:
-		for (int i = 1; i < 4; i++)
-		{
-			device = new DeviceBleSwitchElectrical(Util::GenIdDeviceByElement(id, i), name, mac, data, addr + i, type, version);
-			if (device)
-			{
-				device->lastTimeActive = time(NULL);
-				if (addGateway)
-				{
-					deviceList[Util::GenIdDeviceByElement(id, i)] = device;
-				}
-				if (addDatabase)
-				{
-					database->DeviceAdd(device);
-				}
-			}
-		}
-		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 4);
+		device = new DeviceBleSwitchElectrical(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_1:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_2:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_SWITCH_ELECTRICAL_3:
+		device = new DeviceBleWifiSwitchElectrical(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_SWITCH_2_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_SWITCH_3_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_SWITCH_5_CEILING:
+		device = new DeviceBleSwitchCeiling(id, name, mac, dataJson, addr, type, version, 5);
 		break;
 	case BLE_DC_SCENE_CONTACT:
 	case BLE_REMOTE_M3:
 	case BLE_REMOTE_M3_V2:
 	case BLE_REMOTE_M4:
-		device = new DeviceBleSwitchScene6DC(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchScene6DC(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_AC_SCENE_CONTACT:
-		device = new DeviceBleSwitchScene6AC(id, name, mac, data, addr, version);
+		device = new DeviceBleSwitchScene6AC(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_AC_SCENE_CONTACT_RGB:
 	case BLE_AC_SCENE_CONTACT_RGB_SQUARE:
-		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, data, addr, type, version);
+		device = new DeviceBleSwitchScene6ACRgb(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_TEMP_HUM_SENSOR:
-		device = new DeviceBleSensorTempHum(id, name, mac, data, addr, version);
+		device = new DeviceBleSensorTempHum(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_PM_SENSOR:
-		device = new DeviceBleSensorPm(id, name, mac, data, addr, version);
+		device = new DeviceBleSensorPm(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_DC:
-		device = new DeviceBlePirLightSensorDC(id, name, mac, data, addr, version);
+	case BLE_PIR_LIGHT_SENSOR_DC_CB10:
+	case BLE_PIR_LIGHT_SENSOR_DC_CB09:
+		device = new DeviceBlePirLightSensorDC(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_RADA_LIGHT_SENSOR_AC_CB15:
+		device = new DeviceBleRadaSensorAc(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_PIR_LIGHT_SENSOR_AC:
+		device = new DeviceBlePirLightSensorAC(id, name, mac, dataJson, addr, type, version);
+		break;
 	case BLE_PIR_LIGHT_SENSOR_AC_AMTRAN:
-		device = new DeviceBlePirLightSensorAC(id, name, mac, data, addr, version);
+		device = new DeviceBlePirLightSensorAC_CB09(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SMOKE_SENSOR:
-		device = new DeviceBleSmokeSensor(id, name, mac, data, addr, version);
+		device = new DeviceBleSmokeSensor(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_DOOR_SENSOR:
-		device = new DeviceBleDoorSensor(id, name, mac, data, addr, version);
+	case BLE_DOOR_CB16_SENSOR:
+		device = new DeviceBleDoorSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
-		device = new DeviceBleScreenTouch(id, name, mac, data, addr, version);
-		numScreenTouchs++;
+		device = new DeviceBleScreenTouch(id, name, mac, dataJson, addr, version);
 		break;
 	case BLE_SWITCH_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN:
 	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
-		device = new DeviceBleCurtain(id, name, mac, data, addr, type, version);
+	case BLE_SWITCH_RGB_CURTAIN_HCN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE_V2:
+		device = new DeviceBleCurtain(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_ROOLING_DOOR:
-		device = new DeviceBleRoolDoor(id, name, mac, data, addr, type, version);
+	case BLE_SWITCH_ROOLING_DOOR_V2:
+	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
+		device = new DeviceBleRoolDoor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_SWITCH_1:
 	case BLE_SWITCH_WATER_HEATER:
-		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 1);
+		device = new DeviceBleSwitchTouch(id, name, mac, dataJson, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_2:
-		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 2);
+		device = new DeviceBleSwitchTouch(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_3:
-		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 3);
+		device = new DeviceBleSwitchTouch(id, name, mac, dataJson, addr, type, version, 3);
 		break;
 	case BLE_SWITCH_4:
-		device = new DeviceBleSwitchTouch(id, name, mac, data, addr, type, version, 4);
+		device = new DeviceBleSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_REPEATER:
+		device = new DeviceBleRepeater(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_WIFI_SWITCH_1:
+	case BLE_WIFI_SWITCH_1_SQUARE:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_SWITCH_2:
+	case BLE_WIFI_SWITCH_2_SQUARE:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_SWITCH_3:
+	case BLE_WIFI_SWITCH_3_SQUARE:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 3);
+		break;
+	case BLE_WIFI_SWITCH_4:
+	case BLE_WIFI_SWITCH_4_SQUARE:
+		device = new DeviceBleWifiSwitchTouch(id, name, mac, dataJson, addr, type, version, 4);
+		break;
+	case BLE_WIFI_SWITCH_ROOLING_DOOR:
+	case BLE_WIFI_SWITCH_ROOLING_DOOR_SQUARE:
+		device = new DeviceBleWifiSwitchRoolDoor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_WIFI_SWITCH_CURTAIN:
+	case BLE_WIFI_SWITCH_CURTAIN_SQUARE:
+		device = new DeviceBleWifiCurtain(id, name, mac, dataJson, addr, type, version);
+		break;
+
+	case BLE_SEFTPOWER_REMOTE_1:
+	case BLE_SEFTPOWER_REMOTE_2:
+	case BLE_SEFTPOWER_REMOTE_3:
+	case BLE_SEFTPOWER_REMOTE_6:
+		device = getDeviceFromId(id);
+		if (device)
+		{
+			DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+			if (deviceBleSeftPowerRemote)
+			{
+				Device *parent = deviceBleSeftPowerRemote->GetParent();
+				if (parent)
+				{
+					database->DeviceBleChildDel(deviceBleSeftPowerRemote, parent);
+					bleProtocol->ResetSeftPowerRemote(parent->GetAddr(), deviceBleSeftPowerRemote->GetAddr());
+				}
+				else
+					LOGW("parent device null");
+			}
+			delDevice(device);
+		}
+		device = new DeviceBleSeftPowerRemote(id, name, mac, dataJson, addr, type, version, NULL);
 		break;
 
 #ifndef ESP_PLATFORM
 	case MQTT_AI_HUB:
-		device = new DeviceMqttAihub(id, name, mac, data, version);
+		device = new DeviceMqttAihub(id, name, mac, dataJson, version);
+		break;
+	case CAMERA_TUYA:
+	case CAMERA_DAHUA:
+	case CAMERA_HKVISION:
+		device = new Device(id, name, mac, dataJson, addr, type, version);
+		break;
+#endif
+
+#ifdef CONFIG_ENABLE_ZIGBEE
+	case ZIGBEE_LUMI_SENSOR_MAGNET:
+		device = new DeviceZigbeeLumiSensorMagnet(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_LUMI_SENSOR_SWITCH:
+		device = new DeviceZigbeeLumiSensorSwitch(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_LUMI_SENSOR_TEMP_HUM:
+		device = new DeviceZigbeeLumiSensorTempHum(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_LUMI_SENSOR_WLEAK_AQ1:
+		device = new DeviceZigbeeLumiSensorWleakAQ1(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_LUMI_PLUG:
+		device = new DeviceZigbeeOnoff(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_TUYA_SENSOR_MAGNET_TY0203:
+		device = new DeviceZigbeeTuyaSensorMagnet(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_TUYA_SENSOR_PIR_RH3040:
+		device = new DeviceZigbeeTuyaSensorPir(id, name, mac, dataJson, addr);
+		break;
+	case ZIGBEE_TUYA_SENSOR_HUMAN_PRESENCE_TS0225:
+		device = new DeviceZigbeeTuyaSensorHumanPresence(id, name, mac, dataJson, addr);
 		break;
 #endif
 
@@ -1060,24 +961,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		break;
 	}
 
-#ifdef CONFIG_ENABLE_ZIGBEE
-	if (type == ZIGBEE_LUMI_PLUG)
-	{
-		device = new DeviceZigbeeOnoff(id, name, mac, addr);
-	}
-	else if (type == ZIGBEE_TELINK_TLSR82xx)
-	{
-		device = new DeviceZigbeeTelinkOnoff(id, name, mac, addr);
-	}
-#endif
-
 	if (device)
 	{
-		device->lastTimeActive = time(NULL);
-		if (addGateway)
-		{
-			deviceList[id] = device;
-		}
+		deviceList[id] = device;
 		if (addDatabase)
 		{
 			database->DeviceAdd(device);
@@ -1090,7 +976,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 	return device;
 }
 
-Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
+Group *Gateway::AddNewGroup(Group *group, bool addDatabase)
 {
 	if (group)
 	{
@@ -1103,187 +989,362 @@ Group *Gateway::AddNewGroup(Group *group, bool addGateway, bool addDatabase)
 				return NULL;
 			}
 		}
-		if (addGateway)
-		{
-			groupListMtx.lock();
-			groupList[group->GetId()] = group;
-			groupListMtx.unlock();
-		}
+		groupListMtx.lock();
+		groupList[group->GetId()] = group;
+		groupListMtx.unlock();
 	}
 	return group;
 }
 
-Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase)
+Rule *Gateway::AddRule(Json::Value &ruleValue, bool addDatabase)
 {
-	// TODO: Check Rule id exist
 	LOGD("OnAddRule");
 	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
-			ruleValue.isMember("name") && ruleValue["name"].isString() &&
-			ruleValue.isMember("type") && ruleValue["type"].isString() &&
-			ruleValue.isMember("repeat") && ruleValue["repeat"].isInt() &&
-			ruleValue.isMember("input") && ruleValue["input"].isObject() &&
-			ruleValue.isMember("output") && ruleValue["output"].isArray())
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
 	{
 		string id = ruleValue["id"].asString();
-		string type = ruleValue["type"].asString();
-		int repeat = ruleValue["repeat"].asInt();
+		int type = ruleValue["type"].asInt();
 		Json::Value inputValue = ruleValue["input"];
-		Json::Value outputValue = ruleValue["output"];
-		uint32_t addr = 0;
-		string name;
-		if (ruleValue.isMember("name") && ruleValue["name"].isString())
-			name = ruleValue["name"].asString();
-		else
-			name = id;
-
+		Json::Value outputValues = ruleValue["output"];
+		string name = ruleValue["name"].asString();
+		int repeat = 255;
+		uint16_t addr = 0;
 		Rule *rule = NULL;
-		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
+
+		if (inputValue.isMember("timer") && inputValue["timer"].isObject())
 		{
-			Json::Value timeValue = ruleValue["time"];
-			if (timeValue.isMember("start") && timeValue["start"].isString() &&
-					timeValue.isMember("end") && timeValue["end"].isString())
+			Json::Value timer = inputValue["timer"];
+			if (timer.isMember("start") && timer["start"].isString())
 			{
-				string startTime = timeValue["start"].asString();
-				string endTime = timeValue["end"].asString();
-				rule = new Rule(id, type, repeat, name, 0, Util::ConvertStrTimeToInt(startTime), Util::ConvertStrTimeToInt(endTime), ruleValue);
-				ruleListMtx.lock();
-				ruleList[rule->GetId()] = rule;
-				ruleListMtx.unlock();
+				repeat = 0;
+				if (inputValue.isMember("repeat") && inputValue["repeat"].isInt())
+				{
+					repeat = inputValue["repeat"].asInt();
+				}
+				string startAt = timer["start"].asString();
+				string endAt = "";
+				if (timer.isMember("end") && timer["end"].isString())
+				{
+					endAt = timer["end"].asString();
+				}
+				int startAtInt = Util::ConvertStrTimeToInt(startAt);
+				int endAtInt = Util::ConvertStrTimeToInt(endAt);
+				if ((startAtInt == endAtInt) || (startAtInt > 0 && endAtInt < 0))
+				{
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+					RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, startAtInt, repeat);
+					rule->AddRuleInput(ruleInputTimer);
+				}
+				else
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, startAtInt, endAtInt, ruleValue);
 			}
 		}
-		if (!rule)
+		else
 		{
-			rule = new Rule(id, type, repeat, name, 0, ruleValue);
-			ruleListMtx.lock();
-			ruleList[rule->GetId()] = rule;
-			ruleListMtx.unlock();
+			rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
 		}
 
 		if (rule)
 		{
-			rule->SetStatus(true);
-			rule->UpdateData(ruleValue);
-			if (inputValue.isMember("timer") && inputValue["timer"].isObject())
+			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
+				rule->SetStatus(ruleValue["enable"].asInt());
+			// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			// {
+			// 	rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
+			// }
+
+			if (inputValue.isMember("device") && inputValue["device"].isArray())
 			{
-				Json::Value timerValue = inputValue["timer"];
-				if (timerValue.isMember("repeat") && timerValue["repeat"].isInt() &&
-						timerValue.isMember("time") && timerValue["time"].isString())
+				Json::Value devicesJson = inputValue["device"];
+				for (auto &deviceJson : devicesJson)
 				{
-					int repeat = timerValue["repeat"].asInt();
-					string timerStr = timerValue["time"].asString();
-					LOGI("Have Timer: %s", timerStr.c_str());
-					int timer = Util::ConvertStrTimeToInt(timerStr);
-					if (timer > 0)
+					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
-						RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, timer, repeat);
+						string deviceId = deviceJson["id"].asString();
+						Device *deviceInRule = getDeviceFromId(deviceId);
+						if (deviceInRule)
+						{
+							Json::Value dataJson = deviceJson["data"];
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInRule, dataJson);
+							rule->AddRuleInput(ruleInputDevice);
+						}
+						else
+							LOGW("Device not found");
+					}
+				}
+			}
+
+			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
+			{
+				Json::Value outputValue = outputValues[i];
+				if (outputValue.isMember("delay"))
+				{
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["delay"].asInt());
+					rule->AddRuleOutput(ruleOutputDelay);
+				}
+				else if (outputValue.isMember("deviceId"))
+				{
+					if (outputValue["deviceId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					{
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["deviceId"].asString();
+						Device *device = gateway->getDeviceFromId(id);
+						if (device)
+						{
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
+						}
+						else
+							LOGW("Device not found");
+					}
+				}
+				else if (outputValue.isMember("groupId"))
+				{
+					if (outputValue["groupId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
+					{
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["groupId"].asString();
+						Group *group = gateway->getGroupFromId(id);
+						if (group)
+						{
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
+						}
+					}
+				}
+				else if (outputValue.isMember("sceneId"))
+				{
+					if (outputValue["sceneId"].isString())
+					{
+						string id = outputValue["sceneId"].asString();
+						SceneBle *sceneBle = gateway->getSceneBleFromId(id);
+						if (sceneBle)
+						{
+							RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+							rule->AddRuleOutput(ruleOutputSceneBle);
+						}
+					}
+				}
+			}
+			ruleListMtx.lock();
+			ruleList[id] = rule;
+			ruleListMtx.unlock();
+			if (addDatabase)
+			{
+				string ruleStr = ruleValue.toString();
+				// ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				database->RuleAdd(rule, ruleStr, 0);
+				bool isFirstStt = false;
+				if (repeat == 0)
+				{
+					isFirstStt = true;
+				}
+				rule->SetFirstRun(isFirstStt);
+				database->RuleUpdateFirstRun(rule, isFirstStt);
+			}
+
+			if (ruleValue.isMember("roomId") && ruleValue["roomId"].isString())
+			{
+				string roomId = ruleValue["roomId"].asString();
+				Room *room = getRoomFromId(roomId);
+				if (room)
+				{
+					room->AddRule(rule, true, true);
+				}
+			}
+		}
+		else
+			LOGW("Rule null");
+		return rule;
+	}
+	else
+		LOGE("New rule error, out of memory");
+	return NULL;
+}
+
+Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
+{
+	// TODO: Check Rule id exist
+	LOGD("OnAddRuleV2");
+	if (ruleValue.isMember("id") && ruleValue["id"].isString() &&
+		ruleValue.isMember("name") && ruleValue["name"].isString() &&
+		ruleValue.isMember("type") && ruleValue["type"].isInt() &&
+		ruleValue.isMember("input") && ruleValue["input"].isObject() &&
+		ruleValue.isMember("output") && ruleValue["output"].isArray())
+	{
+		string id = ruleValue["id"].asString();
+		int type = ruleValue["type"].asInt();
+		Json::Value inputValue = ruleValue["input"];
+		Json::Value outputValues = ruleValue["output"];
+		string name = ruleValue["name"].asString();
+		uint16_t addr = 0;
+		Rule *rule = NULL;
+		bool isFullDay = true;
+		int repeat = 255;
+
+		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
+		{
+			Json::Value timeRule = ruleValue["time"];
+			if (timeRule.isMember("fullDay") && timeRule["fullDay"].isBool())
+			{
+				isFullDay = timeRule["fullDay"].asBool();
+				if (isFullDay)
+				{
+					rule = new Rule(id, (RuleType)type, repeat, name, addr, ruleValue);
+				}
+				else
+				{
+					if (timeRule.isMember("repeat") && timeRule["repeat"].isInt() &&
+						timeRule.isMember("start") && timeRule["start"].isString() &&
+						timeRule.isMember("end") && timeRule["end"].isString())
+					{
+						repeat = timeRule["repeat"].asInt();
+						string startRule = timeRule["start"].asString();
+						string endRule = timeRule["end"].asString();
+						rule = new Rule(id, (RuleType)type, repeat, name, addr, Util::ConvertStrTimeToInt(startRule), Util::ConvertStrTimeToInt(endRule), ruleValue);
+					}
+					else
+					{
+						LOGW("Time format error");
+						return NULL;
+					}
+				}
+			}
+		}
+
+		if (rule)
+		{
+			if (ruleValue.isMember("enable") && ruleValue["enable"].isInt())
+				rule->SetStatus(ruleValue["enable"].asInt());
+
+			// if (ruleValue.isMember("isFirstRun") && ruleValue["isFirstRun"].isBool())
+			// 	rule->SetFirstRun(ruleValue["isFirstRun"].asBool());
+
+			// parse input
+			if (inputValue.isMember("timer") && inputValue["timer"].isArray())
+			{
+				Json::Value timersJson = inputValue["timer"];
+				for (auto &timerJson : timersJson)
+				{
+					if (timerJson.isMember("time") && timerJson["time"].isString() &&
+						timerJson.isMember("repeat") && timerJson["repeat"].isInt())
+					{
+						string timerTime = timerJson["time"].asString();
+						int timerRepeat = timerJson["repeat"].asInt();
+						RuleInputTimer *ruleInputTimer = new RuleInputTimer(rule, Util::ConvertStrTimeToInt(timerTime), timerRepeat);
 						rule->AddRuleInput(ruleInputTimer);
 					}
 				}
 			}
+
 			if (inputValue.isMember("device") && inputValue["device"].isArray())
 			{
-				Json::Value deviceRuleInputList = inputValue["device"];
-				for (Json::Value::ArrayIndex i = 0; i < deviceRuleInputList.size(); i++)
+				Json::Value devicesJson = inputValue["device"];
+				for (auto &deviceJson : devicesJson)
 				{
-					Json::Value deviceRuleInputValue = deviceRuleInputList[i];
-					if (deviceRuleInputValue.isObject())
+					if (deviceJson.isObject() && deviceJson.isMember("id") && deviceJson["id"].isString() &&
+						deviceJson.isMember("data") && deviceJson["data"].isObject())
 					{
-						if (deviceRuleInputValue.isMember("mac") && deviceRuleInputValue["mac"].isString() &&
-								deviceRuleInputValue.isMember("data") && deviceRuleInputValue["data"].isObject())
+						string deviceId = deviceJson["id"].asString();
+						Device *deviceInRule = getDeviceFromId(deviceId);
+						if (deviceInRule)
 						{
-							string id = deviceRuleInputValue["id"].asString();
-							Json::Value dataValue = deviceRuleInputValue["data"];
-							Device *device = gateway->getDeviceFromMac(mac);
-							if (device)
-							{
-								RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, device, dataValue);
-								rule->AddRuleInput(ruleInputDevice);
-							}
+							Json::Value dataJson = deviceJson["data"];
+							RuleInputDevice *ruleInputDevice = new RuleInputDevice(rule, deviceInRule, dataJson);
+							rule->AddRuleInput(ruleInputDevice);
 						}
+						else
+							LOGW("Device not found");
 					}
 				}
 			}
-			int delayTime = 0;
-			for (Json::Value::ArrayIndex i = 0; i < outputValue.size(); i++)
+
+			// parse output
+			for (Json::Value::ArrayIndex i = 0; i < outputValues.size(); i++)
 			{
-				Json::Value temp_outputValue = outputValue[i];
-				if (temp_outputValue.isMember("delay"))
+				Json::Value outputValue = outputValues[i];
+				if (outputValue.isMember("time") && outputValue["time"].isInt())
 				{
-					delayTime = temp_outputValue.asInt();
+					RuleOutputDelay *ruleOutputDelay = new RuleOutputDelay(outputValue["time"].asInt());
+					rule->AddRuleOutput(ruleOutputDelay);
 				}
-				else if (temp_outputValue.isMember("deviceId"))
+				else if (outputValue.isMember("devId"))
 				{
-					if (temp_outputValue["deviceId"].isString() && temp_outputValue.isMember("data") && temp_outputValue["data"].isObject())
+					if (outputValue["devId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
 					{
-						Json::Value dataValue = temp_outputValue["data"];
-						string id = temp_outputValue["deviceId"].asString();
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["devId"].asString();
 						Device *device = gateway->getDeviceFromId(id);
 						if (device)
 						{
-							RuleOutputDevice *ruleOutput = new RuleOutputDevice(device, dataValue, delayTime);
-							rule->AddRuleOutput(ruleOutput);
-							delayTime = 0;
+							RuleOutputDevice *ruleOutputDevice = new RuleOutputDevice(device, dataValue);
+							rule->AddRuleOutput(ruleOutputDevice);
 						}
+						else
+							LOGW("Device not found");
 					}
 				}
-				else if (temp_outputValue.isMember("groupId"))
+				else if (outputValue.isMember("groupId"))
 				{
-					if (temp_outputValue["groupId"].isString() && temp_outputValue.isMember("data") && temp_outputValue["data"].isObject())
+					if (outputValue["groupId"].isString() && outputValue.isMember("data") && outputValue["data"].isObject())
 					{
-						Json::Value dataValue = temp_outputValue["data"];
-						string id = temp_outputValue["groupId"].asString();
+						Json::Value dataValue = outputValue["data"];
+						string id = outputValue["groupId"].asString();
 						Group *group = gateway->getGroupFromId(id);
 						if (group)
 						{
-							RuleOutputGroup *ruleOutput = new RuleOutputGroup(group, dataValue, delayTime);
-							rule->AddRuleOutput(ruleOutput);
-							delayTime = 0;
+							RuleOutputGroup *ruleOutputGroup = new RuleOutputGroup(group, dataValue);
+							rule->AddRuleOutput(ruleOutputGroup);
 						}
 					}
 				}
-				else if (temp_outputValue.isMember("sceneId"))
+				else if (outputValue.isMember("sceneId"))
 				{
-					if (temp_outputValue["sceneId"].isString() && temp_outputValue.isMember("data") && temp_outputValue["data"].isObject())
+					if (outputValue["sceneId"].isString())
 					{
-						Json::Value dataValue = temp_outputValue["data"];
-						string id = temp_outputValue["sceneId"].asString();
+						string id = outputValue["sceneId"].asString();
 						SceneBle *sceneBle = gateway->getSceneBleFromId(id);
 						if (sceneBle)
 						{
-							RuleOutputSceneBle *ruleOutput = new RuleOutputSceneBle(sceneBle, delayTime);
-							rule->AddRuleOutput(ruleOutput);
-							delayTime = 0;
+							RuleOutputSceneBle *ruleOutputSceneBle = new RuleOutputSceneBle(sceneBle);
+							rule->AddRuleOutput(ruleOutputSceneBle);
 						}
 					}
 				}
 			}
-			if (addGateway)
-			{
-				ruleListMtx.lock();
-				ruleList[id] = rule;
-				ruleListMtx.unlock();
-			}
+			ruleListMtx.lock();
+			ruleList[id] = rule;
+			ruleListMtx.unlock();
 			if (addDatabase)
 			{
+				ruleValue["isFirstRun"] = true;
 				string ruleStr = ruleValue.toString();
-				ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
+				// ruleStr.erase(remove_if(ruleStr.begin(), ruleStr.end(), ::isspace), ruleStr.end());
 				database->RuleAdd(rule, ruleStr, 0);
+
+				bool isFirstStt = false;
+				if (repeat == 0)
+				{
+					isFirstStt = true;
+				}
+				rule->SetFirstRun(isFirstStt);
+				database->RuleUpdateFirstRun(rule, isFirstStt);
 			}
 		}
 		else
-		{
-			LOGE("New rule error, out of memory");
-		}
+			LOGW("Rule null");
 		return rule;
 	}
 	else
-	{
-		LOGW("Rule format error");
-	}
+		LOGE("New rule error, out of memory");
 	return NULL;
 }
 
-SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addDatabase)
+SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addDatabase)
 {
 	if (sceneBle)
 	{
@@ -1296,30 +1357,24 @@ SceneBle *Gateway::AddNewSceneBle(SceneBle *sceneBle, bool addGateway, bool addD
 				return NULL;
 			}
 		}
-		if (addGateway)
-		{
-			sceneBleListMtx.lock();
-			sceneBleList[sceneBle->GetId()] = sceneBle;
-			sceneBleListMtx.unlock();
-		}
+		sceneBleListMtx.lock();
+		sceneBleList[sceneBle->GetId()] = sceneBle;
+		sceneBleListMtx.unlock();
 	}
 	return sceneBle;
 }
 
-Room *Gateway::AddNewRoom(Room *room, bool addGateway, bool addDatabase)
+Room *Gateway::AddNewRoom(Room *room, bool addDatabase)
 {
 	if (room)
 	{
-		if (addGateway)
-		{
-			roomList[room->GetId()] = room;
-		}
+		roomList[room->GetId()] = room;
 		if (addDatabase)
 		{
 			database->RoomAdd(room);
 		}
 	}
-	AddNewGroup(room, addGateway, false);
+	AddNewGroup(room, false);
 	return room;
 }
 
@@ -1373,9 +1428,19 @@ string Gateway::getRefreshToken()
 	return refresh_token;
 }
 
+string Gateway::getData()
+{
+	return data;
+}
+
 string Gateway::getMac()
 {
 	return mac;
+}
+
+bool Gateway::getAutoOta()
+{
+	return this->isAutoOta;
 }
 
 void Gateway::setBleAddr(uint16_t addr)
@@ -1412,6 +1477,10 @@ void Gateway::setRefreshToken(string refresh_token)
 {
 	this->refresh_token = refresh_token;
 }
+void Gateway::setData(string data)
+{
+	this->data = data;
+}
 
 void Gateway::setId(string id)
 {
@@ -1430,6 +1499,11 @@ void Gateway::setVersion(string version)
 
 void Gateway::setName(string name)
 {
+}
+
+void Gateway::setAutoOta(bool isAutoOta)
+{
+	this->isAutoOta = isAutoOta;
 }
 
 int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
@@ -1543,11 +1617,11 @@ int Gateway::Do(Json::Value &dataValue)
 			onoff = dataValue[KEY_ATTRIBUTE_RELAY "0"].asInt();
 			if (onoff)
 			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio114/value");
+				Util::ExecuteCMD("echo 1 > /sys/class/st_relay/relay1");
 			}
 			else
 			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio114/value");
+				Util::ExecuteCMD("echo 0 > /sys/class/st_relay/relay1");
 			}
 		}
 		if (dataValue.isMember(KEY_ATTRIBUTE_RELAY "1") && dataValue[KEY_ATTRIBUTE_RELAY "1"].isInt())
@@ -1555,11 +1629,11 @@ int Gateway::Do(Json::Value &dataValue)
 			onoff = dataValue[KEY_ATTRIBUTE_RELAY "1"].asInt();
 			if (onoff)
 			{
-				Util::ExecuteCMD("/system/bin/echo 1 > /sys/class/gpio/gpio115/value");
+				Util::ExecuteCMD("echo 1 > /sys/class/st_relay/relay2");
 			}
 			else
 			{
-				Util::ExecuteCMD("/system/bin/echo 0 > /sys/class/gpio/gpio115/value");
+				Util::ExecuteCMD("echo 0 > /sys/class/st_relay/relay2");
 			}
 		}
 		return CODE_OK;
@@ -1587,3 +1661,153 @@ int Gateway::pushNewDeviceLocal(Json::Value &dataValue)
 {
 	return PublishToLocalMessage("newDev", dataValue, "newDevRsp", NULL, 0);
 }
+
+int Gateway::pushStartAddHc(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("startAddHc", dataValue, "startAddHcRsp", NULL, 0);
+}
+
+int Gateway::pushStopAddHc(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("stopAddHc", dataValue, "stopAddHcRsp", NULL, 0);
+}
+
+int Gateway::pushNotify(Json::Value &dataValue)
+{
+	return PublishToLocalMessage("newNotify", dataValue, "newNotifyRsp", NULL, 0);
+}
+
+int Gateway::pushMsgHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
+{
+#ifdef __ANDROID__
+	Json::Value msg;
+	msg["cmd"] = cmd;
+	msg["rqi"] = Util::genRandRQI(16);
+	msg["data"]["id"] = id;
+	msg["data"]["name"] = name;
+	msg["data"]["devices"] = listDevice;
+	if (roomId != "")
+		msg["data"]["roomId"] = roomId;
+	return PublishToLocalMessage(msg);
+#else
+	return CODE_OK;
+#endif
+}
+
+string Gateway::CreateJsonGroupSceneSendHcCoreToHcApp(string cmd, string id, string name, Json::Value &listDevice, string roomId)
+{
+	Json::Value msg;
+	msg["cmd"] = cmd;
+	msg["rqi"] = Util::genRandRQI(16);
+	msg["data"]["id"] = id;
+	msg["data"]["name"] = name;
+	msg["data"]["devices"] = listDevice;
+	if (roomId != "")
+		msg["data"]["roomId"] = roomId;
+	return msg.toString();
+}
+
+void Gateway::printGroup()
+{
+	for (auto &[id, grp] : groupList)
+	{
+		LOGI("group: %s", id.c_str());
+		for (auto &dev : grp->deviceList)
+		{
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->epId);
+		}
+	}
+}
+
+time_t Gateway::getLastTimePingGwBle()
+{
+	return this->lastTimePingGwBle;
+}
+
+void Gateway::setLastTimePingGwBle(time_t timeUpdate)
+{
+	this->lastTimePingGwBle = timeUpdate;
+}
+
+void Gateway::printScene()
+{
+	for (auto &[id, sce] : sceneBleList)
+	{
+		LOGI("scene: %s", id.c_str());
+		for (auto &dev : sce->deviceList)
+		{
+			LOGI("\tdev:%s: %d", dev->device->GetId().c_str(), dev->device->GetAddr());
+		}
+	}
+}
+void Gateway::printRoom()
+{
+	for (auto &[id, rm] : roomList)
+	{
+		LOGI("room: %s", id.c_str());
+		for (auto &dev : rm->deviceList)
+		{
+			LOGI("\tdev:%s: %d: %d", dev->device->GetId().c_str(), dev->device->GetAddr(), dev->epId);
+		}
+	}
+}
+
+#ifdef __ANDROID__
+int Gateway::CreateNoti(Noti *noti, bool addDatabase, bool pushNoti)
+{
+	if (addDatabase)
+	{
+		database->NotiAdd(noti);
+	}
+	if (pushNoti)
+	{
+		Json::Value notiValue;
+		notiValue["cmd"] = "newNotify";
+		notiValue["rqi"] = Util::genRandRQI(16);
+		notiValue["data"] = Json::arrayValue;
+		Json::Value payloadJson;
+		payloadJson.parse(noti->GetContent());
+		payloadJson["isRead"] = false;
+		notiValue["data"].append(payloadJson);
+		PublishToLocalMessage(notiValue);
+	}
+	notiList[noti->GetId()] = noti;
+	return CODE_OK;
+}
+
+int Gateway::DelNoti(Noti *noti)
+{
+	database->NotiDel(noti);
+	notiList.erase(noti->GetId());
+	return CODE_OK;
+}
+
+Noti *Gateway::getNotifromId(string id)
+{
+	if (notiList.find(id) != notiList.end())
+	{
+		return notiList[id];
+	}
+	return NULL;
+}
+
+Json::Value Gateway::BuildJsonDataNoti(Device *device, string id, string type, string content)
+{
+	Json::Value notiData;
+	notiData["id"] = id;
+	notiData["type"] = type;
+	notiData["content"] = content;
+	notiData["title"] = device->GetName();
+	notiData["time"] = to_string(time(NULL));
+	notiData["location"] = "";
+	for (auto temp : roomList)
+	{
+		Room *room = temp.second;
+		if (room->GetPositionDevice(device, device->GetAddr()) != CODE_ERROR)
+		{
+			notiData["location"] = room->GetName();
+		}
+	}
+	return notiData;
+}
+#endif

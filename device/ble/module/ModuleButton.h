@@ -1,5 +1,6 @@
 #pragma once
 #include "Module.h"
+#include "Db.h"
 
 using namespace std;
 
@@ -7,22 +8,20 @@ class ModuleButton : public Module
 {
 protected:
 	uint8_t bt;
-	int id;
 	string key;
 
 public:
-	ModuleButton(Device *device, uint32_t addr);
-	ModuleButton(Device *device, uint32_t addr, int index);
+	ModuleButton(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleButton();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
@@ -31,7 +30,7 @@ public:
 	void SaveAttribute();
 #endif
 
-	// int InputData(Json::Value &dataValue, Json::Value &jsonValue);
+	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 
 	/**
 	 * @brief Parse raw data to element parameter value
@@ -60,13 +59,4 @@ public:
 	 * @param jsonValue
 	 */
 	void BuildTelemetryValue(Json::Value &jsonValue);
-
-	/**
-	 * @brief Do an action
-	 *
-	 * @param dataValue data of action
-	 * @return true
-	 * @return false
-	 */
-	int Do(Json::Value &dataValue);
 };

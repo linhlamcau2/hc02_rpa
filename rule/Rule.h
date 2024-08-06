@@ -12,53 +12,63 @@ using namespace std;
 
 typedef enum
 {
-	SCENE_TYPE_OR = 0,
-	SCENE_TYPE_AND
+	RULE_TYPE_TAP_TO_RUN = -2,
+	RULE_TYPE_TIME = -1,
+	RULE_TYPE_OR = 0,
+	RULE_TYPE_AND,
+	RULE_TYPE_TIME_OR,
+	RULE_TYPE_TIME_AND
 } RuleType;
 
 typedef enum
 {
-	SCENE_MODE_ALL_DAY = 0xFE,
-	SCENE_MODE_WORK_DAY = 0xF1,
-	SCENE_MODE_WEEKEND_DAY = 0x06,
+	RULE_MODE_ALL_DAY = 0xFE,
+	RULE_MODE_WORK_DAY = 0xF1,
+	RULE_MODE_WEEKEND_DAY = 0x06,
 } RuleMode;
 
 class Rule : public Object
 {
 private:
 	Json::Value ruleData;
-	string type;
+	RuleType type;
 	string name;
-	
+
 	unsigned char repeater;
 	bool fullDay;
 	int startTime;
 	int endTime;
-	int count;
-	time_t lastTimeActive;
+	bool isFirstRun;
 
 	bool isAvailable;
 	bool isEnable;
+	bool isFavorite;
 	int timerRegisterIndex;
 
 	vector<RuleInput *> ruleInputList;
 	vector<RuleOutput *> ruleOutputList;
 
 public:
-	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, Json::Value &ruleData);
-	Rule(string id, string type, unsigned char repeater, string name, uint32_t addr, int startTime, int endTime, Json::Value &ruleData);
+	Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, Json::Value &ruleData);
+	Rule(string id, RuleType type, unsigned char repeater, string name, uint16_t addr, int startTime, int endTime, Json::Value &ruleData);
 	~Rule();
 
 	Json::Value GetRuleData();
-	string GetType();
+	void SetRuleData(Json::Value ruleData);
+	RuleType GetType();
 	void AddRuleInput(RuleInput *ruleInput);
 	void AddRuleOutput(RuleOutput *ruleOutput);
 	void DelAllRuleInput();
 	void DelAllRuleOutput();
+	void UpdateFirstRun();
 	void Check();
 	void RunOutput();
 
 	void UpdateData(Json::Value &ruleData);
 	bool GetStatus();
 	void SetStatus(bool enable);
+	bool GetFirstRun();
+	void SetFirstRun(bool isFirstRun);
+	bool GetIsFavorite();
+	void SetIsFavorite(bool isFavorite);
 };

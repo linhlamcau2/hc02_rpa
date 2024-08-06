@@ -10,11 +10,10 @@ class RuleOutputSceneBle : public RuleOutput
 {
 private:
 	SceneBle *sceneBle;
-	int delayTime;
 	Json::Value data;
 
 public:
-	RuleOutputSceneBle(SceneBle *sceneBle, int delayTime);
+	RuleOutputSceneBle(SceneBle *sceneBle);
 	~RuleOutputSceneBle();
 
 	void RunOutput();

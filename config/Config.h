@@ -4,17 +4,17 @@
 #include <string.h>
 
 #define STRING_VALUE_MAX_SIZE 128
-#define CONFIG_ENV "smh.@server[0]."
-#define CONFIG_ENV_LOCAL "smh.@local[0]."
+// #define CONFIG_ENV "smh.@server[0]."
+// #define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "mqtt.truesight.asia"
+#define HOST_DEFAULT "mqtt.rangdong.com.vn"
 #define PORT_KEY "port"
-#define PORT_DEFAULT 1884
+#define PORT_DEFAULT 8883
 #define CLIENT_ID_KEY "client_id"
-#define CLIENT_ID_DEFAULT "minihub-"
+#define CLIENT_ID_DEFAULT "hc"
 #define USERNAME_KEY "username"
-#define USERNAME_DEFAULT "minihub-"
+#define USERNAME_DEFAULT "hc"
 #define PASSWORD_KEY "password"
 #define PASSWORD_DEFAULT "ABC123456"
 #define KEEP_ALIVE_KEY "keep_alive"

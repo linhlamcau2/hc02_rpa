@@ -7,27 +7,10 @@ class ModuleTimeActionPir : public Module
 {
 protected:
 	uint16_t time;
-	int id;
 
 public:
-	ModuleTimeActionPir(Device *device, uint32_t addr);
+	ModuleTimeActionPir(Device *device, uint16_t addr);
 	~ModuleTimeActionPir();
-
-#ifdef CONFIG_SAVE_ATTRIBUTE
-	/**
-	 * @brief Init parameter value from database after system start
-	 *
-	 * @param attributeId id of attribute
-	 * @param value value of attribute
-	 */
-	void InitAttribute(int attributeId, double value);
-
-	/**
-	 * @brief Save parameter value to database
-	 *
-	 */
-	void SaveAttribute();
-#endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);
 

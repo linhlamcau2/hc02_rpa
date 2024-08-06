@@ -6,30 +6,27 @@ using namespace std;
 class ModuleDimonDimoff : public Module
 {
 protected:
-	uint8_t bt;
 	uint8_t dimOn, dimOff;
-	int idDimOn, idDimOff;
-	bool isDimOn, isDimOff;
 	string keyDimOn, keyDimOff;
 
 public:
-	ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t button = 0);
+	ModuleDimonDimoff(Device *device, uint16_t addr, uint32_t index = 0);
 	~ModuleDimonDimoff();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
+	void SaveAttribute(string key);
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);

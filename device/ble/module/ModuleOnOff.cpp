@@ -6,11 +6,10 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleOnOff::ModuleOnOff(Device *device, uint32_t addr) : Module(device, addr)
+ModuleOnOff::ModuleOnOff(Device *device, uint16_t addr, string onoffKey, uint32_t index) : Module(device, addr, index)
 {
 	onoff = 0;
-	id = BLE_ATTRIBUTE_ONOFF;
-	code = KEY_ATTRIBUTE_ONOFF;
+	key = onoffKey + (index ? to_string(index + 1) : "");
 }
 
 ModuleOnOff::~ModuleOnOff()
@@ -18,155 +17,146 @@ ModuleOnOff::~ModuleOnOff()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleOnOff::InitAttribute(int id, double value)
+void ModuleOnOff::InitAttribute(string attribute, double value)
 {
-	if (this->id == id)
+	if (attribute == key)
 		onoff = value;
 }
 
 void ModuleOnOff::SaveAttribute()
 {
-	database->DeviceAttributeAddOrReplace(device, id, onoff);
+	database->DeviceAttributeAdd(device, key, onoff);
 }
 #endif
 
 int ModuleOnOff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			onoff = dataValue["VALUE"].asInt();
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger();
-			return CODE_OK;
-		}
+		onoff = dataValue[key].asInt();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
 int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	typedef struct __attribute__((packed))
+	int temp_onoff = 0;
+	if (data[0] == 0x82)
 	{
-		uint16_t opcode;
-		uint8_t state;
-		uint8_t onoff;
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
-	{
-		if (len == 3)
+		typedef struct __attribute__((packed))
 		{
-			onoff = data_message->state;
-		}
-		else
+			uint16_t opcode;
+			uint8_t state;
+			uint8_t onoff;
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
 		{
-			onoff = data_message->onoff;
-		}
+			if (len == 3)
+			{
+				temp_onoff = data_message->state;
+			}
+			else
+			{
+				temp_onoff = data_message->onoff;
+			}
+			if (temp_onoff != onoff)
+			{
+				onoff = temp_onoff;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+				SaveAttribute();
 #endif
-		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
-		return CODE_OK;
+			}
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
+			return CODE_OK;
+		}
+	}
+	if (data[0] == RD_OPCODE_CONFIG_RSP)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint8_t opcodeVendor;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t data[100];
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->vendorId == RD_VENDOR_ID)
+		{
+			if (data_message->header == RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4)
+			{
+				temp_onoff = data_message->data[index + 1];
+				if (temp_onoff != onoff)
+				{
+					onoff = temp_onoff;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+					SaveAttribute();
+#endif
+				}
+				BuildTelemetryValue(jsonValue);
+				CheckTrigger(jsonValue);
+				return CODE_OK;
+			}
+		}
 	}
 	return CODE_ERROR;
 }
 
 bool ModuleOnOff::CheckData(Json::Value &dataValue, bool &rs)
 {
-	// LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("op") && dataValue["op"].isString() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		dataValue.isMember(key) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int value = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
 		string op = dataValue["op"].asString();
-		rs = Util::CompareNumber(op, this->onoff, value);
-		return true;
-	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-				dataValue.isMember("OP") && dataValue["OP"].isString())
+		if (dataValue[key].isInt())
 		{
-			uint16_t value1 = 0, value2 = 0;
-			string op = dataValue["OP"].asString();
-			Json::Value listValue = dataValue["VALUE"];
-			if (listValue.size() > 0)
+			int onoff = dataValue[key].asInt();
+			rs = Util::CompareNumber(op, this->onoff, onoff);
+			return true;
+		}
+		else if (dataValue[key].isArray())
+		{
+			Json::Value listValue = dataValue[key];
+			if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 			{
-				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-				{
-					value1 = listValue[0].asInt();
-					value2 = listValue[1].asInt();
-				}
-				else if (listValue.size() == 1 && listValue[0].isInt())
-				{
-					value1 = listValue[0].asInt();
-				}
-				rs = Util::CompareNumber(op, this->onoff, value1, value2);
+				int onoff1 = listValue[0].asInt();
+				int onoff2 = listValue[1].asInt();
+				rs = Util::CompareNumber(op, this->onoff, onoff1, onoff2);
 				return true;
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleOnOff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-	jsonValue[KEY_ATTRIBUTE_ONOFF] = onoff;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = id;
-	dataValue["VALUE"] = onoff;
-	jsonValue.append(dataValue);
-#endif
+	jsonValue[key] = onoff;
+	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleOnOff::Do(Json::Value &dataValue)
 {
-	// LOGD("ModuleOnOff Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ONOFF) && dataValue[KEY_ATTRIBUTE_ONOFF].isInt())
+		dataValue.isMember(key) && dataValue[key].isInt())
 	{
-		int onoff = dataValue[KEY_ATTRIBUTE_ONOFF].asInt();
-		if (bleProtocol->SetOnOffLight(addr, onoff, 0, true) == CODE_OK)
+		int onoff = dataValue[key].asInt();
+		if ((key == KEY_ATTRIBUTE_ONOFF) && ((device->GetType() / 1000) == 22 || (device->GetType() / 1000) == 24))
 		{
-			this->onoff = onoff;
+			if (bleProtocol->ControlRelayOfSwitch(addr, device->GetType(), 255, onoff) == CODE_OK)
+				return CODE_OK;
+		}
+		else if (bleProtocol->SetOnOffLight(addr, onoff, TRANSITION_DEFAULT, true) == CODE_OK)
+		{
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
-	{
-		int id = dataValue["ID"].asInt();
-		if (this->id == id &&
-				dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			int value = dataValue["VALUE"].asInt();
-			if (bleProtocol)
-			{
-				bleProtocol->SetOnOffLight(addr, value, 0, true);
-			}
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

@@ -8,6 +8,21 @@
 #ifndef LOG_H__
 #define LOG_H__
 
+#include "Define.h"
+
+#ifdef __ANDROID__
+
+#include <android/log.h>
+void logPrint(int priority, const char* tag, const char* format, ...);
+
+#define LOGV(...) ((void)logPrint(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
+#define LOGD(...) ((void)logPrint(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
+#define LOGI(...) ((void)logPrint(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
+#define LOGW(...) ((void)logPrint(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
+#define LOGE(...) ((void)logPrint(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
+
+#else
+
 #include <stdint.h>
 #include <stdarg.h>
 #include <time.h>
@@ -41,7 +56,7 @@ char* log_cut_str(char* full_path, uint8_t len);
 
 #define CONFIG_LOG_COLORS 1
 
-#define TAG_DEFAULT		  "Thin"
+#define TAG_DEFAULT		  "smh"
 
 #if CONFIG_LOG_COLORS
 #define LOG_COLOR_BLACK   "30"
@@ -88,4 +103,8 @@ char* log_cut_str(char* full_path, uint8_t len);
 }
 #endif
 
+#endif /* __ANDROID__ */
+#ifndef ESP_PLATFORM
+void checkLogFile();
+#endif 
 #endif /* LOG_H__ */

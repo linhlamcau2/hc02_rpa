@@ -3,7 +3,7 @@
 #include "DeviceBle.h"
 #include "module/ModuleDoorHangOn.h"
 #include "module/ModuleDoorStatus.h"
-#include "module/ModulePinLevel.h"
+#include "module/ModuleBatteryLevel.h"
 
 using namespace std;
 
@@ -12,8 +12,8 @@ class DeviceBleDoorSensor : public DeviceBle
 private:
 	ModuleDoorHangOn *moduleDoorHangOn;
 	ModuleDoorStatus *moduleDoorStatus;
-	ModulePinLevel *modulePinLevel;
+	ModuleBatteryLevel *moduleBatteryLevel;
 
 public:
-	DeviceBleDoorSensor(string id, string name, string mac, string data, uint32_t addr, uint16_t version);
+	DeviceBleDoorSensor(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version);
 };

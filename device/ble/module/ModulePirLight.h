@@ -8,27 +8,25 @@ class ModulePirLight : public Module
 protected:
 	uint16_t pir;
 	uint16_t lux;
-	int idPir;
-	int idLux;
 
 public:
-	ModulePirLight(Device *device, uint32_t addr);
+	ModulePirLight(Device *device, uint16_t addr);
 	~ModulePirLight();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
+	void SaveAttribute(string key);
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);

@@ -6,6 +6,7 @@
 #include "Uart.h"
 #include <atomic>
 #include <functional>
+#include <mutex>
 
 #ifdef ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
@@ -34,6 +35,10 @@
 #define RD_OPCODE_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR 0x0145
 #define RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR 0x0245
 #define RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR 0x0345
+#define RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR 0x0445
+#define RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR 0x0545
+#define RD_OPCODE_RSP_PIR_LIGHT_SENSOR_STARTUP 0x0645
+#define RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR 0x0745
 #define RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH 0x010A
 #define RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH 0x020A
 #define RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR 0x030A
@@ -43,21 +48,45 @@
 #define RD_OPCODE_CONFIG_SEND_TIME 0x090A
 #define RD_OPCODE_CONFIG_DEL_ALL_SCENE 0x0A0A
 #define RD_OPCODE_CONFIG_SET_GROUP 0x0B0A
+#define RD_OPCODE_CONFIG_ADD_ROOM 0x0C0A
+#define RD_OPCODE_CONFIG_DEL_ROOM 0x0D0A
 
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_1 0x000E
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2 0x000D
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3 0x000C
 #define RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4 0x000B
+#define RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH 0x100B
+#define RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF 0x0012
 
 #define RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH 0x050B
 #define RD_OPCODE_CONFIG_SET_ID_COMBINE 0x060B
 #define RD_OPCODE_CONFIG_SET_TIMER 0x070B
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_1 0x030e
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_2 0x030d
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_3 0x030c
+#define RD_OPCODE_REQUEST_STATUS_SWITCH_4 0x030b
 #define RD_OPCODE_REQUEST_STATUS_SWITCH 0x090B
 #define RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE 0x0011
+#define RD_OPCODE_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED 0x0311
 #define RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING 0x0611
+#define RD_OPCODE_CALIBAUTO 0x0711
+#define RD_OPCODE_LOCK 0x0811
+#define RD_OPCODE_MODE_WIFI 0x0911
 #define RD_OPCODE_CONFIG_MOTOR 0x0511
 #define RD_OPCODE_CALIB 0x0411
 #define RD_OPCODE_REQUEST_STATUS_CURTAIN 0x0311
+
+#define RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME 0xF00A
+#define RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP 0xF10A
+
+#define RD_OPCODE_SEFTPOWER_REMOTE_SCAN 0x0a0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_SAVE 0x0d0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_RESET 0x0e0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_PRESS 0x0b0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE 0x0c0b
+#define RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE 0x0f0b
+
+#define TRANSITION_DEFAULT 5
 
 enum
 {
@@ -114,6 +143,7 @@ enum
 };
 
 #define CONNECT_DEVICE_TIMEOUT 40 // seconds
+#define BLE_MAX_ELEMENT 4 
 
 using namespace std;
 
@@ -129,6 +159,18 @@ typedef struct __attribute__((packed))
 	int8_t rssi;
 	uint16_t dc;
 } scan_device_message_t;
+
+typedef struct __attribute__((packed))
+{
+	uint16_t parentAddr;
+	uint16_t gwAddr;
+	uint8_t opcodeRsp;
+	uint16_t vendorId;
+	uint16_t header;
+	uint8_t mac[4];
+	uint8_t type;
+	uint8_t rssi;
+} scan_device_pair_message_t;
 
 typedef struct __attribute__((packed))
 {
@@ -185,8 +227,11 @@ private:
 	} ble_message_header_t;
 
 	vector<message_rsp_list_st *> messageRespList;
-	// mutex mtxWaitSendUart;
-	pthread_mutex_t mutex;
+	mutex mtxWaitSendUart;
+
+#define BLE_CHECK_OPCODE_BUFFER_MAX_SIZE 500
+	mutex vectorCheckOpcodeMtx;
+	vector<message_rsp_st *> messageCheckOpcodeList;
 
 	// TODO: Add init state
 	pro_net_info_t pro_net_info;
@@ -200,27 +245,37 @@ private:
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
-#ifdef ESP_PLATFORM
-	QueueHandle_t opcodeMessageQueue;
-#endif
 	atomic<bool> haveNewMac;
+	atomic<bool> haveGetMacRsp;
 	atomic<bool> isProvisioning;
+	atomic<bool> isInitKey;
 	scan_device_message_t scanDeviceMessage;
+	scan_device_pair_message_t scanDevicePairMessage;
 
 #ifdef ESP_PLATFORM
-	BleProtocol(int num, int txPin, int rxPin, int baudrate);
+	BleProtocol(uart_port_t num, int txPin, int rxPin, int baudrate);
 #else
 	BleProtocol(char *uartPort, int uartBaudrate);
 #endif
 	virtual ~BleProtocol();
 	void init();
+
+	int GetOpcodeExceptionMessage(message_rsp_st **data);
 	void CheckOpcodeException(message_rsp_st *message);
 
 	void InitKey();
-	string GetAppKey();
+	void CheckKeyBle();
+	// string GetAppKey();
 	int GetNetKey();
 	int SetNetKey();
 	int SetGwKey();
+
+	// SeftPower Remote
+	int ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status);
+	int SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uint16_t childDev);
+	int SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode, uint16_t scene);
+	int DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode);
+	int ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr);
 
 	int StartScan();
 	int StopScan();
@@ -229,8 +284,8 @@ public:
 
 	bool IsProvision();
 	void SetProvisioning(bool isProvision);
-	void FunctionAddDevice();
 	int AddDevice(scan_device_message_t *scan_device_message);
+	int AddPairDevice(uint32_t parentAddr, uint32_t childAddr);
 	int SelectMac(uint8_t *mac);
 	int Provision(uint16_t deviceAddr);
 	int BindingAll();
@@ -241,6 +296,7 @@ public:
 	int ResetDelAll();
 
 	int SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version);
+	int GetTTL(uint16_t devAddr);
 
 	int SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transition, bool ack);
 	int GetOnoffLight(uint16_t devAddr);
@@ -256,10 +312,14 @@ public:
 	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
 	int DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
+
+	int AddDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene);
+	int DelDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene);
+
 	// Scene light
 	int SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb);
 	int DelSceneBle(uint16_t devAddr, uint16_t scene);
-	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime);
+	int CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack);
 	int CallModeRgb(uint16_t devAddr, uint8_t modeRgb);
 
 	// update status lights
@@ -276,13 +336,18 @@ public:
 	int SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type);
 	int DelScenePirLightSensor(uint16_t devAddr, uint16_t scene);
 	int TimeActionPirLightSensor(uint16_t devAddr, uint16_t time);
+	int SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode);
+	int SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi);
+	int SetDistanceSensor(uint16_t devAddr, uint8_t distance);
 
 	// switch
 	int ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff);
 	int ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t relay, uint8_t value);
 	int SetIdCombine(uint16_t devAddr, uint16_t id);
-	int SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status);
-	int UpdateStatusRelaySwitch(uint16_t devAddr);
+	int CountDownSwitch(uint16_t devAddr, uint16_t timer, uint8_t status);
+	int UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type = 0);
+	int ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uint32_t type = 0);
+	int ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode);
 
 	// screen touch
 	int SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type);
@@ -300,9 +365,12 @@ public:
 	int ConfigMotor(uint16_t devAddr, uint8_t typeMotor);
 	int CalibCurtain(uint16_t devAddr, uint8_t status);
 	int UpdateStatusCurtain(uint16_t devAddr);
+	int CalibAuto(uint16_t devAddr, uint16_t time);
+	int LockDevice(uint16_t devAddr, uint8_t locked);
+	int SetModeWifi(uint16_t devAddr, uint8_t mode);
 
 	// Optimize add device to Room
-	int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
+	// int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);
 
 	// Backup
 	int GetInfogw();

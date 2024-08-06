@@ -9,6 +9,9 @@
 #include "Gateway.h"
 #include "SceneBle.h"
 #include "Room.h"
+#ifdef __ANDROID__
+#include "Noti.h"
+#endif
 
 using namespace std;
 
@@ -17,18 +20,26 @@ class Db
 
 private:
 	sqlite3 *db;
-	pthread_mutex_t mutex;
+	mutex mtx;
 
 	int Sqlite_Exec(string &sql);
 	int ReadAll(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
+#ifdef __ANDROID__
+	mutex listSqlMtx;
+	vector<string> listSql;
+	void Sqlite_ExecList();
+#endif
 
 public:
 	Db();
 	~Db();
 
 	void init(void);
-	bool IsHaveDb();
+	bool IsHaveDb(const char *dbName);
 	int createTableIfNotExists();
+
+	int Sqlite_BenginTransaction();
+	int Sqlite_EndTransaction();
 
 	int DeviceRead();
 	int DeviceAdd(Device *device);
@@ -41,16 +52,15 @@ public:
 	int DeviceUpdateFavorite(Device *device);
 
 	int DeviceAttributeRead();
-	int DeviceAttributeAdd(Device *device, int attributeId, double value);
-	int DeviceAttributeUpdate(Device *device, int attributeId, double value);
-	int DeviceAttributeAddOrReplace(Device *device, int attributeId, double value);
-	int DeviceAttributeDel(Device *device, int attributeId);
+	int DeviceAttributeAdd(Device *device, string attribute, double value);
+	int DeviceAttributeUpdate(Device *device, string attribute, double value);
+	int DeviceAttributeDel(Device *device, string attribute);
 	int DeviceAttributeDelAll();
 
 	int DeviceBleChildRead();
-	int DeviceBleChildAdd(string deviceId, int element);
-	int DeviceBleChildUpdate(string deviceId, int element);
-	int DeviceBleChildDel(string deviceId);
+	int DeviceBleChildAdd(Device *child, Device *parent, string data);
+	int DeviceBleChildUpdateData(Device *child, Device *parent, string data);
+	int DeviceBleChildDel(Device *child, Device *parent);
 	int DeviceBleChildDelAll();
 
 	int DeviceInGroupRead();
@@ -84,6 +94,8 @@ public:
 	int GatewayUpdateIvIndex(Gateway *gateway, uint32_t iv_index);
 	int GatewayUpdateDormitory(Gateway *gateway, string dormitory);
 	int GatewayUpdateRefreshToken(Gateway *gateway, string refreshToken);
+	int GatewayUpdateData(Gateway *gateway, string data);
+	int GatewayUpdateVersion(Gateway *gateway, string version);
 	int GatewayDel(Gateway *gateway);
 	int GatewayDel(string id);
 	int GatewayDelAll();
@@ -98,7 +110,7 @@ public:
 
 	int RoomRead();
 	int RoomAdd(Room *room);
-	int RoomUpdate(Room *room, int id);
+	int RoomUpdate(Room *room);
 	int RoomDel(Room *room);
 	int RoomDelAll();
 
@@ -108,6 +120,8 @@ public:
 	int RuleUpdateStatus(Rule *rule);
 	int RuleUpdateAddr(Rule *rule);
 	int RuleUpdateType(Rule *rule, int type);
+	int RuleUpdateFavorite(Rule *rule, bool isFavorite);
+	int RuleUpdateFirstRun(Rule *rule, bool isFirstRun);
 	int RuleDel(Rule *rule);
 	int RuleDelAll();
 
@@ -118,6 +132,33 @@ public:
 	int SceneBleDel(SceneBle *sceneBle);
 	int SceneBleDelAll();
 	int SceneBleUpdateFavorite(SceneBle *scene);
+
+#ifdef ESP_PLATFORM
+	int OpenDbV1();
+	int ConvertTableDevice();
+	int ConvertTableDeviceAttribute();
+	int ConvertTableDeviceBleChild();
+	int ConvertTableDeviceInGroup();
+	int ConvertTableDeviceInRoom();
+	int ConvertTableDeviceInSceneBle();
+	int ConvertTableGateway();
+	int ConvertTableGroup();
+	int ConvertTableRoom();
+	int ConvertTableSceneBle();
+	int ReadAll_V1(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *));
+	int ConvertTableRule();
+	int ConvertTableSceneDelay();
+	int EditTableDeviceInGroup();
+
+#endif
+
+#ifdef __ANDROID__
+	int NotiRead();
+	int NotiAdd(Noti *noti);
+	int NotiUpdate(Noti *noti);
+	int NotiDel(Noti *noti);
+	void pushToListSql(string sql);
+#endif
 };
 
 extern Db *database;

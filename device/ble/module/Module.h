@@ -10,12 +10,15 @@ class Device;
 class Module
 {
 protected:
-	uint32_t addr;
+	uint16_t addr;
+	uint32_t index;
 	Device *device;
 
 public:
-	Module(Device *device, uint32_t addr);
+	Module(Device *device, uint16_t addr, uint32_t index = 0);
 	virtual ~Module();
+
+	bool CheckAddr(uint16_t addr);
 
 	/**
 	 * @brief Parse raw data to element parameter value
@@ -42,7 +45,7 @@ public:
 	 * @brief Check rules related with this element
 	 *
 	 */
-	virtual void CheckTrigger();
+	virtual void CheckTrigger(Json::Value &data);
 
 	virtual bool CheckData(Json::Value &dataValue, bool &rs);
 
@@ -61,4 +64,5 @@ public:
 	 * @return false
 	 */
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
+	virtual void InitAttribute(string attribute, double value) {}
 };

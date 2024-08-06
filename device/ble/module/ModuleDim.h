@@ -7,20 +7,19 @@ class ModuleDim : public Module
 {
 protected:
 	uint16_t dim;
-	int id;
 
 public:
-	ModuleDim(Device *device, uint32_t addr);
+	ModuleDim(Device *device, uint16_t addr);
 	~ModuleDim();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database

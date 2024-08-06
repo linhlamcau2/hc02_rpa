@@ -6,16 +6,12 @@
 #include "BleProtocol.h"
 #include "Db.h"
 
-ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint32_t addr, uint8_t button) : Module(device, addr)
+ModuleDimonDimoff::ModuleDimonDimoff(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
-	bt = button;
 	dimOn = 0;
 	dimOff = 0;
-	idDimOn = BLE_ATTRIBUTE_DIM_ON;
-	idDimOff = BLE_ATTRIBUTE_DIM_OFF;
-	isDimOn = isDimOff = false;
-	keyDimOn = KEY_ATTRIBUTE_DIM_ON + to_string(addr - device->GetAddr());
-	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + to_string(addr - device->GetAddr());
+	keyDimOn = KEY_ATTRIBUTE_DIM_ON + (index ? to_string(index + 1) : "");
+	keyDimOff = KEY_ATTRIBUTE_DIM_OFF + (index ? to_string(index + 1) : "");
 }
 
 ModuleDimonDimoff::~ModuleDimonDimoff()
@@ -23,47 +19,39 @@ ModuleDimonDimoff::~ModuleDimonDimoff()
 }
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
-void ModuleDimonDimoff::InitAttribute(int id, double value)
+void ModuleDimonDimoff::InitAttribute(string attribute, double value)
 {
-	if (this->id = idDimOn)
+	if (attribute == keyDimOn)
 	{
 		dimOn = value;
 	}
-	else if (this->id = idDimOff)
+	else if (attribute == keyDimOff)
 	{
 		dimOff = value;
 	}
 }
 
-void ModuleDimonDimoff::SaveAttribute()
+void ModuleDimonDimoff::SaveAttribute(string key)
 {
-	database->DeviceAttributeAddOrReplace(device, idDimOn, dimOn);
-	database->DeviceAttributeAddOrReplace(device, idDimOff, dimOff);
+	if (key == keyDimOn)
+		database->DeviceAttributeAdd(device, keyDimOn, dimOn);
+	else if (key == keyDimOff)
+		database->DeviceAttributeAdd(device, keyDimOff, dimOff);
 }
 #endif
 
 int ModuleDimonDimoff::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
-	if (dataValue.isObject() && dataValue.isMember("ID") && dataValue["ID"].isInt())
+	if (dataValue.isObject() &&
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idDimOff == id || this->idDimOn == id)
-		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-			{
-				if (this->idDimOff == id)
-					dimOff = dataValue["VALUE"].asInt();
-				else if (this->idDimOn == id)
-					dimOn = dataValue["VALUE"].asInt();
-				BuildTelemetryValue(jsonValue);
-				CheckTrigger();
-				return CODE_OK;
-			}
-		}
+		dimOn = dataValue[keyDimOn].asInt();
+		dimOff = dataValue[keyDimOff].asInt();
+		// CheckTrigger();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
 	}
-#endif
 	return CODE_ERROR;
 }
 
@@ -82,15 +70,27 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint8_t dimOff;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == 0xE3 && data_message->header == 0x050b)
+	if (data_message->opcode == 0xE3 && data_message->header == RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH)
 	{
-		dimOn = data_message->dimOn;
-		dimOff = data_message->dimOff;
+		int temp_dimOn, temp_dimOff;
+		temp_dimOn = data_message->dimOn;
+		temp_dimOff = data_message->dimOff;
+		if (temp_dimOff != dimOff)
+		{
+			dimOff = temp_dimOff;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-		SaveAttribute();
+			SaveAttribute(keyDimOff);
 #endif
+		}
+		if (temp_dimOn != dimOn)
+		{
+			dimOn = temp_dimOn;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+			SaveAttribute(keyDimOn);
+#endif
+		}
 		BuildTelemetryValue(jsonValue);
-		CheckTrigger();
+		CheckTrigger(jsonValue);
 		return CODE_OK;
 	}
 	return CODE_ERROR;
@@ -98,104 +98,74 @@ int ModuleDimonDimoff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 bool ModuleDimonDimoff::CheckData(Json::Value &dataValue, bool &rs)
 {
-	LOGD("CheckData data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
-#else
+	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember("ID") && dataValue["ID"].isInt())
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
-		int id = dataValue["ID"].asInt();
-		if (this->idDimOn == id || this->idDimOff == id)
+		string op = dataValue["op"].asString();
+		if (dataValue.isMember(keyDimOn))
 		{
-			if (dataValue.isMember("VALUE") && dataValue["VALUE"].isArray() &&
-					dataValue.isMember("OP") && dataValue["OP"].isString())
+			if (dataValue[keyDimOn].isInt())
 			{
-				uint16_t value1 = 0, value2 = 0;
-				string op = dataValue["OP"].asString();
-				Json::Value listValue = dataValue["VALUE"];
-				if (listValue.size() > 0)
+				int dimOn = dataValue[keyDimOn].asInt();
+				rs = Util::CompareNumber(op, this->dimOn, dimOn);
+				return true;
+			}
+			else if (dataValue[keyDimOn].isArray())
+			{
+				Json::Value listValue = dataValue[keyDimOn];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
 				{
-					if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
-					{
-						value1 = listValue[0].asInt();
-						value2 = listValue[1].asInt();
-					}
-					else if (listValue.size() == 1 && listValue[0].isInt())
-					{
-						value1 = listValue[0].asInt();
-					}
-					if (this->idDimOn == id)
-						rs = Util::CompareNumber(op, this->dimOn, value1, value2);
-					else if (this->idDimOff == id)
-						rs = Util::CompareNumber(op, this->dimOff, value1, value2);
+					int dimOn1 = listValue[0].asInt();
+					int dimOn2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->dimOn, dimOn1, dimOn2);
+					return true;
+				}
+			}
+		}
+		else if (dataValue.isMember(keyDimOff))
+		{
+			if (dataValue[keyDimOff].isInt())
+			{
+				int dimOff = dataValue[keyDimOff].asInt();
+				rs = Util::CompareNumber(op, this->dimOff, dimOff);
+				return true;
+			}
+			else if (dataValue[keyDimOff].isArray())
+			{
+				Json::Value listValue = dataValue[keyDimOff];
+				if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
+				{
+					int dimOff1 = listValue[0].asInt();
+					int dimOff2 = listValue[1].asInt();
+					rs = Util::CompareNumber(op, this->dimOff, dimOff1, dimOff2);
 					return true;
 				}
 			}
 		}
 	}
-#endif
 	return false;
 }
 
 void ModuleDimonDimoff::BuildTelemetryValue(Json::Value &jsonValue)
 {
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
 	jsonValue[keyDimOn] = dimOn;
 	jsonValue[keyDimOff] = dimOff;
-#else
-	Json::Value dataValue;
-	dataValue["ID"] = idDimOn;
-	dataValue["VALUE"] = dimOn;
-	jsonValue.append(dataValue);
-	dataValue["ID"] = idDimOff;
-	dataValue["VALUE"] = dimOff;
-	jsonValue.append(dataValue);
-#endif
 }
 
 int ModuleDimonDimoff::Do(Json::Value &dataValue)
 {
-	LOGD("Do data: %s", dataValue.toString().c_str());
-#ifdef CONFIG_USE_MESSAGE_FORMAT_V2
+	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
-			dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
+		dataValue.isMember(keyDimOn) && dataValue[keyDimOn].isInt() &&
+		dataValue.isMember(keyDimOff) && dataValue[keyDimOff].isInt())
 	{
 		int dimOn = dataValue[keyDimOn].asInt();
 		int dimOff = dataValue[keyDimOff].asInt();
-		if (bleProtocol->ControlRgbSwitch(addr, 0, 0, 0, 0, dimOn, dimOff) == CODE_OK)
+		if (bleProtocol->ControlRgbSwitch(addr, index, 0, 0, 0, dimOn, dimOff) == CODE_OK)
 		{
-			this->dimOn = dimOn;
-			this->dimOff = dimOff;
 			return CODE_OK;
 		}
 	}
-#else
-	if (dataValue.isObject())
-	{
-		if (dataValue.isMember("ID") && dataValue["ID"].isInt() && dataValue.isMember("VALUE") && dataValue["VALUE"].isInt())
-		{
-			if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_ON)
-			{
-				isDimOn = true;
-				dimOn = dataValue["VALUE"].asInt();
-			}
-			else if (dataValue["ID"].asInt() == BLE_ATTRIBUTE_DIM_OFF)
-			{
-				isDimOff = true;
-				dimOff = dataValue["VALUE"].asInt();
-			}
-		}
-		if (isDimOn && isDimOff)
-		{
-			isDimOff = isDimOn = false;
-			if (bleProtocol)
-				bleProtocol->ControlRgbSwitch(addr, bt, 0, 0, 0, dimOn, dimOff);
-			else
-				LOGW("BleProtocol null");
-			return CODE_OK;
-		}
-	}
-#endif
 	return CODE_ERROR;
 }

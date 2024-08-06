@@ -12,29 +12,44 @@
 #include <Db.h>
 #include "DeviceZigbee.h"
 
-#include "zigbee/cluster/basic/ClusterBasic.h"
-#include "zigbee/ZigbeeDataTypes.h"
+#include "cluster/basic/ClusterBasic.h"
 
 ZigbeeProtocol *zigbeeProtocol = NULL;
 
 ZigbeeProtocol::ZigbeeProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 {
-	if (Open(baudrate) < 0)
-	{
-		LOGE("Open uart error")
-		exit(1);
-	}
 }
 
 ZigbeeProtocol::~ZigbeeProtocol()
 {
 }
 
+void ZigbeeProtocol::HandleOpcodeBleThread()
+{
+	LOGI("Start HandleOpcodeBleThread");
+	message_rsp_st *message_rsp = NULL;
+	while (1)
+	{
+		if (GetOpcodeExceptionMessage(&message_rsp) == CODE_OK)
+		{
+			CheckOpcodeException(message_rsp);
+			free(message_rsp);
+		}
+		SLEEP_MS(100);
+	}
+}
+
 void ZigbeeProtocol::init()
 {
+	Uart::init();
+	SLEEP_MS(100);
+
 	RegisterCmdCallback(ZBHCI_CMD_NODES_DEV_ANNCE_IND, bind(&ZigbeeProtocol::OnDeviceAnnounce, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_REPORT_MSG_RCV, bind(&ZigbeeProtocol::OnReportAttribute, this, placeholders::_1, placeholders::_2));
 	RegisterCmdCallback(ZBHCI_CMD_ZCL_ATTR_READ_RSP, bind(&ZigbeeProtocol::OnReadAttributeResp, this, placeholders::_1, placeholders::_2));
+
+	thread handleOpcodeBleThread(bind(&ZigbeeProtocol::HandleOpcodeBleThread, this));
+	handleOpcodeBleThread.detach();
 }
 
 int ZigbeeProtocol::RegisterCmdCallback(uint16_t type, OnCmdCallbackFunc onCmdCallbackFunc)
@@ -55,6 +70,20 @@ static uint8_t checCrC(uint16_t type, uint16_t len, uint8_t *payload)
 		crc8 ^= payload[i];
 	}
 	return crc8;
+}
+
+int ZigbeeProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
+{
+	int rs = CODE_ERROR;
+	vectorCheckOpcodeMtx.lock();
+	if (messageCheckOpcodeList.size() > 0)
+	{
+		*data = messageCheckOpcodeList[0];
+		messageCheckOpcodeList.erase(messageCheckOpcodeList.begin());
+		rs = CODE_OK;
+	}
+	vectorCheckOpcodeMtx.unlock();
+	return rs;
 }
 
 void ZigbeeProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -86,14 +115,14 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 	LOGD("OnMessage len: %d", len);
 	uint8_t *message = data;
 	int lenRemain = len;
-	message_rsp_st *message_rsp = NULL;
+	message_rsp_st *message_rsp = (message_rsp_st *)message;
 	Util::LedZigbee(false);
 	Util::LedServiceLock();
-	while (lenRemain >= 7 && message[0] == MESSAGE_HEADER)
+	while (lenRemain >= sizeof(message_rsp_st) && message_rsp->header == MESSAGE_HEADER)
 	{
-		message_rsp = (message_rsp_st *)(message + 1);
 		uint16_t type = bswap_16(message_rsp->type);
 		uint16_t payloadLen = bswap_16(message_rsp->len);
+		uint16_t packageLen = payloadLen + sizeof(message_rsp_st) + 1;
 		if (message_rsp->payload[payloadLen] == MESSAGE_TAIL)
 		{
 			// LOGD("message_rsp->type: 0x%04X, message_rsp->len: %d", type, payloadLen);
@@ -118,11 +147,19 @@ int ZigbeeProtocol::OnMessage(unsigned char *data, int len)
 			}
 			else
 			{
-				CheckOpcodeException(message_rsp);
+				vectorCheckOpcodeMtx.lock();
+				if (messageCheckOpcodeList.size() < ZIGBEE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+				{
+					message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+					memcpy(messageCheckOpcode, message_rsp, packageLen);
+					messageCheckOpcodeList.push_back(messageCheckOpcode);
+				}
+				vectorCheckOpcodeMtx.unlock();
 			}
 		}
-		lenRemain -= payloadLen + 7;
-		message += payloadLen + 7;
+		lenRemain -= packageLen;
+		message += packageLen;
+		message_rsp = (message_rsp_st *)message;
 	}
 	Util::LedZigbee(true);
 	Util::LedServiceUnlock();
@@ -143,8 +180,8 @@ int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, ui
 		messageRespList.push_back(&message_rsp_list);
 	}
 
-	buff[0] = MESSAGE_HEADER;
-	message_req_st *message_req = (message_req_st *)(buff + 1);
+	message_req_st *message_req = (message_req_st *)buff;
+	message_req->header = MESSAGE_HEADER;
 	message_req->type = bswap_16(opReq);
 	message_req->len = bswap_16(lenReq);
 	message_req->crc = checCrC(opReq, lenReq, dataReq);
@@ -161,7 +198,7 @@ int ZigbeeProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, ui
 
 		while (message_rsp_list.status == 0xFF && timeout--)
 		{
-			usleep(1000);
+			SLEEP_MS(1);
 		}
 		messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
 	}
@@ -180,7 +217,7 @@ int ZigbeeProtocol::OnDeviceAnnounce(uint8_t *buff, uint16_t len)
 		LOGW("DeviceAnnounce format error");
 		return CODE_ERROR;
 	}
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t nwkAddr;
 		uint8_t ieeeAddr[8];
@@ -204,15 +241,86 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 		ZCLCmdRspHdr_st *zclCmdRspHdr = (ZCLCmdRspHdr_st *)buff;
 		uint16_t srcAddr = bswap_16(zclCmdRspHdr->srcAddr);
 		LOGD("srcAddr: 0x%04X, srcEp: %d, dstEp: %d, seqNum: %d", srcAddr, zclCmdRspHdr->srcEp, zclCmdRspHdr->dstEp, zclCmdRspHdr->seqNum);
-		// DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
-		// if (deviceZigbee)
-		// {
-		// 	deviceZigbee->DeviceInputData(buff + 5, len - 5);
-		// }
-		// else
-		// {
-		// 	LOGW("Zigbee device 0x%04X not found", srcAddr);
-		// }
+		DeviceZigbee *deviceZigbee = gateway->getDeviceZigbeeFromAddr(srcAddr);
+		if (deviceZigbee)
+		{
+			deviceZigbee->InputData(buff + 5, len - 5);
+		}
+		else
+		{
+			LOGW("Zigbee device 0x%04X not found", srcAddr);
+			int clusterLen = len - sizeof(ZCLCmdRspHdr_st);
+			typedef struct __attribute__((packed))
+			{
+				uint16_t clusterId;
+				uint8_t attrNum;
+				uint8_t data[];
+			} ClusterMessage_st;
+			ClusterMessage_st *clusterMessage = (ClusterMessage_st *)zclCmdRspHdr->data;
+
+			int attrLen = clusterLen - sizeof(ClusterMessage_st);
+			typedef struct __attribute__((packed))
+			{
+				uint16_t attrID;
+				uint8_t dataType;
+				uint8_t data[];
+			} AttrMessage_st;
+			AttrMessage_st *attrMessage = NULL;
+
+			if (clusterLen > sizeof(ClusterMessage_st))
+			{
+				LOGD("clusterMessage->clusterId: 0x%04X, clusterMessage->attrNum: %d", bswap_16(clusterMessage->clusterId), clusterMessage->attrNum);
+				uint8_t *attrData = clusterMessage->data;
+				if (bswap_16(clusterMessage->clusterId) == 0x0000)
+				{
+					string model;
+					uint8_t appVersion = 0, zclVersion = 0;
+					for (int i = 0; i < clusterMessage->attrNum; i++)
+					{
+						attrMessage = (AttrMessage_st *)attrData;
+						LOGD("Attribute ID: 0x%04X", bswap_16(attrMessage->attrID));
+						if (bswap_16(attrMessage->attrID) == 0x0001)
+						{
+							if (attrMessage->dataType == ZCL_DATA_TYPE_UINT8)
+							{
+								appVersion = attrMessage->data[0];
+								LOGW("appVersion: %d", appVersion);
+							}
+						}
+						else if (bswap_16(attrMessage->attrID) == 0x0005)
+						{
+							if (attrMessage->dataType == ZCL_DATA_TYPE_CHAR_STR)
+							{
+								for (int i = 0; i < attrMessage->data[0]; i++)
+								{
+									model += attrMessage->data[i + 1];
+								}
+								LOGW("model: %s", model.c_str());
+							}
+						}
+						int dataSize = getSizeOfDataType(&attrMessage->dataType);
+						attrData += 3 + dataSize;
+						attrLen -= 3 + dataSize;
+					}
+
+					if (!model.empty())
+					{
+						uint32_t type = Device::ConvertModelToDeviceType(model);
+						string mac = scanList[srcAddr];
+						scanList.erase(srcAddr);
+						LOGI("addr: 0x%04X, type: 0x%04X, mac: %s", srcAddr, type, mac.c_str());
+						if (type && mac != "")
+						{
+							Json::Value dataJson;
+							Device *device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Util::setString(Device::ConvertDeviceTypeToName(type)), mac, dataJson, srcAddr, type, zclVersion | appVersion << 8, true);
+							if (device)
+								gateway->AddDeviceToScanList(device);
+						}
+					}
+					return CODE_OK;
+				}
+			}
+		}
 		return CODE_OK;
 	}
 	else
@@ -225,14 +333,14 @@ int ZigbeeProtocol::OnReportAttribute(uint8_t *buff, uint16_t len)
 int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 {
 	LOGI("OnReadAttributeResp");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t clusterID;
 		uint8_t attrNum;
 		uint8_t attrList[];
 	} ReadAttributeResp_st;
 
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t attrID;
 		uint8_t status;
@@ -248,12 +356,14 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 		uint16_t srcAddr = bswap_16(zclCmdRspHdr->srcAddr);
 		LOGD("srcAddr: 0x%04X, srcEp: %d, dstEp: %d, seqNum: %d", srcAddr, zclCmdRspHdr->srcEp, zclCmdRspHdr->dstEp, zclCmdRspHdr->seqNum)
 
-		ReadAttributeResp_st *readAttributeResp = (ReadAttributeResp_st *)(buff + 5);
+		ReadAttributeResp_st *readAttributeResp = (ReadAttributeResp_st *)zclCmdRspHdr->data;
 		uint16_t clusterID = bswap_16(readAttributeResp->clusterID);
+		uint8_t attrNum = readAttributeResp->attrNum;
+		LOGD("clusterID: 0x%04X, attrNum: %d", clusterID, attrNum);
 		Attribute_st *attribute = (Attribute_st *)readAttributeResp->attrList;
 		uint16_t attrID;
-		uint8_t dataLen = 0;
-		if (clusterID == CLUSTER_GENERAL_BASIC)
+		int dataLen = 0;
+		if (clusterID == ZCL_CLUSTER_GEN_BASIC)
 		{
 			uint8_t zclVersion = 0;
 			uint8_t appVersion = 0;
@@ -261,7 +371,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 			string modelIdentifier = "";
 			uint8_t powerSource = 0;
 			messageLen -= 8;
-			for (int i = 0; i < readAttributeResp->attrNum; i++)
+			for (int i = 0; i < attrNum; i++)
 			{
 				if (messageLen < 5)
 				{
@@ -269,55 +379,49 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 					rs = 1;
 					break;
 				}
-				dataLen = 0;
 				attrID = bswap_16(attribute->attrID);
 				LOGD("attrID: 0x%04X", attrID);
 				if (attribute->status == ZIGBEE_SUCCESS)
 				{
 					if (attrID == ATTRIBUTE_BASIC_ZCLVersion)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_UINT8)
+						if (attribute->dataType == ZCL_DATA_TYPE_UINT8)
 						{
 							zclVersion = attribute->data[0];
-							dataLen = 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ApplicationVersion)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_UINT8)
+						if (attribute->dataType == ZCL_DATA_TYPE_UINT8)
 						{
 							appVersion = attribute->data[0];
-							dataLen = 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ManufacturerName)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_STRING)
+						if (attribute->dataType == ZCL_DATA_TYPE_CHAR_STR)
 						{
 							for (int j = 1; j <= attribute->data[0]; j++)
 							{
 								manufacturerName += attribute->data[j];
 							}
-							dataLen = attribute->data[0] + 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_ModelIdentifier)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_STRING)
+						if (attribute->dataType == ZCL_DATA_TYPE_CHAR_STR)
 						{
 							for (int j = 1; j <= attribute->data[0]; j++)
 							{
 								modelIdentifier += attribute->data[j];
 							}
-							dataLen = attribute->data[0] + 1;
 						}
 					}
 					else if (attrID == ATTRIBUTE_BASIC_PowerSource)
 					{
-						if (attribute->dataType == ZIGBEE_DATATYPE_ENUM8)
+						if (attribute->dataType == ZCL_DATA_TYPE_ENUM8)
 						{
 							powerSource = attribute->data[0];
-							dataLen = 1;
 						}
 					}
 					else
@@ -329,6 +433,7 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				{
 					LOGW("Read Attribute response status err: %d, id: 0x%04X", attribute->status, attrID);
 				}
+				dataLen = getSizeOfDataType(&attribute->dataType);
 				attribute = (Attribute_st *)((uint8_t *)attribute + dataLen + 4);
 				messageLen -= dataLen + 4;
 			}
@@ -348,7 +453,8 @@ int ZigbeeProtocol::OnReadAttributeResp(uint8_t *buff, uint16_t len)
 				}
 				else
 				{
-					// device = gateway->AddNewDevice("Zigbee_" + mac, Device::ConvertDeviceTypeToName(type), mac, srcAddr, type, true, true);
+					Json::Value dataJson;
+					device = gateway->AddNewDevice(Util::GenUuidFromMac(mac), Util::setString(Device::ConvertDeviceTypeToName(type)), mac, dataJson, srcAddr, type, zclVersion | appVersion << 8, true);
 				}
 				if (device)
 					gateway->AddDeviceToScanList(device);
@@ -410,7 +516,7 @@ int ZigbeeProtocol::SetChannel(uint8_t channel)
 int ZigbeeProtocol::DiscoverySimpleDescription(uint16_t addr, uint8_t endpoint)
 {
 	LOGD("DiscoverySimpleDescription");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t dstAddr;
 		uint16_t nwkAddrOfInterest;
@@ -436,7 +542,7 @@ int ZigbeeProtocol::DiscoverySimpleDescription(uint16_t addr, uint8_t endpoint)
 int ZigbeeProtocol::DiscoveryActiveEndpoint(uint16_t addr)
 {
 	LOGD("DiscoveryActiveEndpoint");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t dstAddr;
 		uint16_t nwkAddrOfInterest;
@@ -460,7 +566,7 @@ int ZigbeeProtocol::DiscoveryActiveEndpoint(uint16_t addr)
 int ZigbeeProtocol::PermitJoin(uint8_t duration)
 {
 	LOGD("PermitJoin");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		uint16_t dstAddr;
 		uint8_t permitDuration;
@@ -485,37 +591,33 @@ int ZigbeeProtocol::PermitJoin(uint8_t duration)
 int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 {
 	LOGD("ReadAttribute");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
-
-		uint8_t profileID[2];
+		uint16_t profileID;
 		uint8_t direction;
-		uint8_t clusterID[2];
+		uint16_t clusterID;
 		uint8_t attrNum;
 		uint16_t attrList[32];
 	} read_attribute_req_t;
 	read_attribute_req_t read_attribute_req;
 	read_attribute_req.dstAddrMode = 2;
-	read_attribute_req.dstAddr[0] = (uint8_t)((addr >> 8) & 0xFF);
-	read_attribute_req.dstAddr[1] = (uint8_t)(addr & 0xFF);
+	read_attribute_req.dstAddr = bswap_16(addr);
 	read_attribute_req.srcEp = 0x01;
 	read_attribute_req.dstEp = 0xFF;
-	read_attribute_req.profileID[0] = (uint8_t)((PROFILE_ZHA >> 8) & 0xFF);
-	read_attribute_req.profileID[1] = (uint8_t)(PROFILE_ZHA & 0xFF);
+	read_attribute_req.profileID = bswap_16(PROFILE_ZHA);
 	read_attribute_req.direction = 0;
-	read_attribute_req.clusterID[0] = (uint8_t)(CLUSTER_GENERAL_BASIC & 0xFF);
-	read_attribute_req.clusterID[1] = (uint8_t)((CLUSTER_GENERAL_BASIC >> 8) & 0xFF);
+	read_attribute_req.clusterID = bswap_16(ZCL_CLUSTER_GEN_BASIC);
 	read_attribute_req.attrNum = 5;
-	read_attribute_req.attrList[0] = ATTRIBUTE_BASIC_ZCLVersion;
-	read_attribute_req.attrList[1] = ATTRIBUTE_BASIC_ApplicationVersion;
-	read_attribute_req.attrList[2] = ATTRIBUTE_BASIC_ManufacturerName;
-	read_attribute_req.attrList[3] = ATTRIBUTE_BASIC_ModelIdentifier;
-	read_attribute_req.attrList[4] = ATTRIBUTE_BASIC_PowerSource;
+	read_attribute_req.attrList[0] = bswap_16(ATTRIBUTE_BASIC_ZCLVersion);
+	read_attribute_req.attrList[1] = bswap_16(ATTRIBUTE_BASIC_ApplicationVersion);
+	read_attribute_req.attrList[2] = bswap_16(ATTRIBUTE_BASIC_ManufacturerName);
+	read_attribute_req.attrList[3] = bswap_16(ATTRIBUTE_BASIC_ModelIdentifier);
+	read_attribute_req.attrList[4] = bswap_16(ATTRIBUTE_BASIC_PowerSource);
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ATTR_READ, (uint8_t *)&read_attribute_req, 11 + 2 * read_attribute_req.attrNum, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
 	if (rs == CODE_OK)
@@ -532,29 +634,24 @@ int ZigbeeProtocol::ReadAttribute(uint16_t addr)
 int ZigbeeProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 {
 	LOGD("AddGroup");
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
-
-		uint8_t groupId[2];
-		uint8_t groupName[2];
+		uint16_t groupId;
+		uint16_t groupName;
 	} add_group_t;
 	add_group_t add_group;
 
 	add_group.dstAddrMode = 2;
-	add_group.dstAddr[0] = (uint8_t)((devAddr >> 8) & 0xFF);
-	add_group.dstAddr[1] = (uint8_t)(devAddr & 0xFF);
+	add_group.dstAddr = bswap_16(devAddr);
 	add_group.srcEp = 0x01;
 	add_group.dstEp = epId;
-
-	add_group.groupId[0] = (uint8_t)((groupId >> 8) & 0xFF);
-	add_group.groupId[1] = (uint8_t)(groupId & 0xFF);
-	add_group.groupName[0] = 'a';
-	add_group.groupName[1] = 'b';
+	add_group.groupId = bswap_16(groupId);
+	add_group.groupName = bswap_16(0x4142);
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_GROUP_ADD, (uint8_t *)&add_group, 9, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
 	if (rs == CODE_OK)
@@ -571,26 +668,33 @@ int ZigbeeProtocol::AddGroup(uint16_t groupId, uint16_t devAddr, uint8_t epId)
 int ZigbeeProtocol::ZCLOnoffDevice(uint16_t devAddr, uint8_t func)
 {
 	LOGD("ZCLOnoffDevice");
-	if (func > 2)
+	uint16_t codeFunc;
+	if (func == 0)
+		codeFunc = ZBHCI_CMD_ZCL_ONOFF_OFF;
+	else if (func == 1)
+		codeFunc = ZBHCI_CMD_ZCL_ONOFF_ON;
+	else if (func == 2)
+		codeFunc = ZBHCI_CMD_ZCL_ONOFF_TOGGLE;
+	else
 	{
+		return CODE_ERROR;
 		LOGW("ZCLOnoffDevice func not match: %d", func);
 	}
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 		uint8_t dstEp;
 	} zcl_onoff_t;
 	zcl_onoff_t zcl_onoff;
 	zcl_onoff.dstAddrMode = 2;
-	zcl_onoff.dstAddr[0] = (uint8_t)((devAddr >> 8) & 0xFF);
-	zcl_onoff.dstAddr[1] = (uint8_t)(devAddr & 0xFF);
+	zcl_onoff.dstAddr = bswap_16(devAddr);
 	zcl_onoff.srcEp = 0x01;
 	zcl_onoff.dstEp = 0xFF;
 
-	int rs = SendMessage(ZBHCI_CMD_ZCL_ONOFF_ON + func, (uint8_t *)&zcl_onoff, 5, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
+	int rs = SendMessage(codeFunc, (uint8_t *)&zcl_onoff, 5, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);
 	if (rs == CODE_OK)
 	{
 		LOGD("ZCLOnoffDevice ok");
@@ -609,17 +713,16 @@ int ZigbeeProtocol::ZCLOnoffGroup(uint16_t groupAddr, uint8_t func)
 	{
 		LOGW("ZCLOnoffGroup func not match: %d", func);
 	}
-	typedef struct
+	typedef struct __attribute__((packed))
 	{
 		// ZCLCmdHdr
 		uint8_t dstAddrMode;
-		uint8_t dstAddr[2];
+		uint16_t dstAddr;
 		uint8_t srcEp;
 	} zcl_onoff_t;
 	zcl_onoff_t zcl_onoff;
 	zcl_onoff.dstAddrMode = 1;
-	zcl_onoff.dstAddr[0] = (uint8_t)((groupAddr >> 8) & 0xFF);
-	zcl_onoff.dstAddr[1] = (uint8_t)(groupAddr & 0xFF);
+	zcl_onoff.dstAddr = bswap_16(groupAddr);
 	zcl_onoff.srcEp = 0x01;
 
 	int rs = SendMessage(ZBHCI_CMD_ZCL_ONOFF_ON + func, (uint8_t *)&zcl_onoff, 4, ZBHCI_CMD_ACKNOWLEDGE, 0, 0, 2000);

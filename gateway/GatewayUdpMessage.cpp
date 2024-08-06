@@ -1,21 +1,23 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "Wifi.h"
-#include "Util.h"
 #include "Db.h"
 #include <algorithm>
 
 #ifdef ESP_PLATFORM
 #include "mongoose.h"
+#include "Led.h"
 #endif
 
-void Gateway::initUdpMessage()
+void Gateway::InitUdpMessage()
 {
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("aiHubBroadCast", bind(&Gateway::OnUdpHcInfo, this, placeholders::_1, placeholders::_2));
+	UdpCmdCallbackRegister("scanIpHc", bind(&Gateway::OnScanIpHc, this, placeholders::_1, placeholders::_2));
 }
 
 int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
@@ -31,8 +33,8 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 		string macGw = mac;
 		string hostName = "";
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
-													{ return c == ':'; }),
-								macGw.end());
+							  { return c == ':'; }),
+					macGw.end());
 		respValue["CMD"] = "HC_RESPONSE";
 		respValue["IP"] = Wifi::GetIP();
 #ifdef ESP_PLATFORM
@@ -47,7 +49,11 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 #endif
 #else
 		hostName = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+#ifdef __OPENWRT__
 		respValue["TYPE"] = 1;
+#elif defined(__ANDROID__)
+		respValue["TYPE"] = 3;
+#endif
 		respValue["TLS"] = false;
 		respValue["MQTT_PORT"] = 1883;
 #endif
@@ -111,7 +117,25 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 	}
 	else
 	{
+#ifdef __ANDROID__
 		LOGW("OnUdpHcScanWifi payload: %s error", reqValue.toString().c_str());
+#else
+		Json::Value fromRsp;
+		Json::Value toRsp;
+		Json::Value dataRsp;
+		StopUdpBroadcast();
+		respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
+		respValue["REQUEST_ID"] = rqi;
+		respValue["TIME"] = Util::GetCurrentTimeStr();
+		respValue["CONNECTION_TYPE"] = 0;
+		fromRsp["TYPE"] = 2;
+		respValue["FROM"] = fromRsp;
+		toRsp["TYPE"] = 0;
+		respValue["TO"] = toRsp;
+		Wifi::ScanWifi(dataRsp);
+		respValue["DATA"] = dataRsp;
+		return CODE_OK;
+#endif
 	}
 
 	return CODE_ERROR;
@@ -172,7 +196,9 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 				{
 					dormitoryId = data["DORMITORY_ID"].asString();
 					database->GatewayUpdateDormitory(gateway, dormitoryId);
-#ifndef ESP_PLATFORM
+					Json::Value jsonData;
+					jsonData["data"] = Json::objectValue;
+					gateway->pushStartAddHc(jsonData);
 					if (Wifi::GetIP().compare("10.10.10.1") != 0)
 					{
 						LOGI("Hc have IP: %s", Wifi::GetIP().c_str());
@@ -186,13 +212,12 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 					}
 					else
 					{
-#endif
 						if (data.isMember("WIFI"))
 						{
 							Json::Value wifi = data["WIFI"];
 							if (wifi.isMember("SSID") && wifi["SSID"].isString() &&
-									wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
-									wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
+								wifi.isMember("PASSWORD") && wifi["PASSWORD"].isString() &&
+								wifi.isMember("ENCRYPTION") && wifi["ENCRYPTION"].isString())
 							{
 								string ssid = wifi["SSID"].asString();
 								string password = wifi["PASSWORD"].asString();
@@ -215,21 +240,29 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 									fromRsp["DORMITORY_ID"] = dormitoryId;
 									respValue["FROM"] = fromRsp;
 								}
+#ifdef ESP_PLATFORM
+								SetLedInternet(false);
+#endif
 								GatewayConnectToCloudNotice();
+								Json::Value jsonData;
+								jsonData["data"] = Json::objectValue;
+								gateway->pushStopAddHc(jsonData);
+#ifdef __OPENWRT__
+								return CODE_EXIT;
+#else
 								return CODE_OK;
+#endif
 							}
 							else
 							{
 								LOGW("OnUdpHcSetup don't have wifi data");
 							}
 						}
-#ifndef ESP_PLATFORM
 						else
 						{
 							LOGW("OnUdpHcSetup don't have wifi object");
 						}
 					}
-#endif
 				}
 				else
 				{
@@ -253,8 +286,47 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_ERROR;
 }
 
-int Gateway::OnUdpHcConnectCloud(Json::Value &reqValue, Json::Value &respValue)
+int Gateway::OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue)
 {
-	LOGD("OnUdpHcConnectCloud");
-	return CODE_ERROR;
+	LOGD("OnRpcRspHcInfo");
+	string macGw = mac;
+	macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
+						  { return c == ':'; }),
+				macGw.end());
+	Json::Value dataValue;
+	dataValue["mac"] = mac;
+	dataValue["ip"] = Wifi::GetIP();
+#ifdef ESP_PLATFORM
+	dataValue["name"] = "RD_MH_" + macGw.substr(macGw.size() - 4, 4);
+#else
+	dataValue["name"] = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+#endif
+	dataValue["type"] = MODEL;
+	dataValue["ver"] = STR(VERSION);
+	respValue["data"] = dataValue;
+	respValue["cmd"] = "getHcInfoRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnScanIpHc(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnScanIpHc");
+	string macGw = mac;
+	macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
+						  { return c == ':'; }),
+				macGw.end());
+	Json::Value dataValue = Json::objectValue;
+	dataValue["mac"] = mac;
+#ifndef ESP_PLATFORM
+	string ipWlan = Wifi::GetIP("wlan0");
+	string ipEth = Wifi::GetIP("eth0");
+	dataValue["ipWlan"] = ipWlan;
+	dataValue["ipEth"] = ipEth;
+	dataValue["name"] = "RD_HC_" + macGw.substr(macGw.size() - 4, 4);
+	dataValue["type"] = MODEL;
+	dataValue["ver"] = STR(VERSION);
+#endif
+	respValue["data"] = dataValue;
+	respValue["cmd"] = "scanIpHcRsp";
+	return CODE_OK;
 }

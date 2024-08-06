@@ -11,10 +11,10 @@
 #include "BleOpCode.h"
 #include "DeviceBle.h"
 #include "DeviceBleSwitchScene6ACRgb.h"
+#include "DeviceBleSeftPowerRemote.h"
 #include "AES.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
-#include "ButtonSignal.h"
 #endif
 
 BleProtocol *bleProtocol = NULL;
@@ -24,24 +24,25 @@ static uint8_t plaintext[] = {0x24, 0x02, 0x28, 0x04, 0x28, 0x11, 0x20, 0x20, 0x
 static uint8_t appKeyDefault[] = {0x60, 0x96, 0x47, 0x71, 0x73, 0x4f, 0xbd, 0x76, 0xe3, 0xb4, 0x05, 0x19, 0xd1, 0xd9, 0x4a, 0x48};
 
 #ifdef ESP_PLATFORM
-BleProtocol::BleProtocol(int num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
+BleProtocol::BleProtocol(uart_port_t num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
 #else
 BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 #endif
 {
 	nextAddr = 0;
 	haveNewMac = false;
+	haveGetMacRsp = true;
 	isProvisioning = false;
+	isInitKey = false;
 }
 
 BleProtocol::~BleProtocol()
 {
 }
 
-static void HandleOpcodeBle(void *data)
+static void AddDeviceThread(void *data)
 {
 	BleProtocol *bleProtocol = (BleProtocol *)data;
-	message_rsp_st *messageRsp;
 	int timeout = 0;
 	while (1)
 	{
@@ -53,77 +54,68 @@ static void HandleOpcodeBle(void *data)
 				timeout = 0;
 				memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
 				bleProtocol->AddDevice(&scan_device_message);
+				bleProtocol->haveGetMacRsp = true;
 				bleProtocol->haveNewMac = false;
 			}
 			else
 			{
+				// TODO: sua lai cach tinh 30s
 				timeout++;
 				if (timeout >= 300)
 				{
 					timeout = 0;
 					bleProtocol->SetProvisioning(false);
 					bleProtocol->StopScan();
-					string cmdStop = "{\"CMD\":\"STOP\"}";
+					string cmdStop = "{\"cmd\":\"stopScanBle\",\"data\":{\"code\":0}}";
 					gateway->LocalPublish(cmdStop);
 				}
-				else
-#ifdef ESP_PLATFORM
-					vTaskDelay(pdMS_TO_TICKS(100));
-#else
-					usleep(100000);
-#endif
 			}
 		}
+		SLEEP_MS(100);
+	}
+}
 
-#ifdef ESP_PLATFORM
-		if (xQueueReceive(bleProtocol->opcodeMessageQueue, &messageRsp, (TickType_t)5))
+static void HandleOpcodeBle(void *data)
+{
+	BleProtocol *bleProtocol = (BleProtocol *)data;
+	message_rsp_st *message_rsp = NULL;
+	while (1)
+	{
+		if (bleProtocol->GetOpcodeExceptionMessage(&message_rsp) == CODE_OK)
 		{
-			if (messageRsp)
-			{
-				bleProtocol->CheckOpcodeException(messageRsp);
-				free(messageRsp);
-			}
+			bleProtocol->CheckOpcodeException(message_rsp);
+			free(message_rsp);
 		}
-		else
-			vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+		SLEEP_MS(100);
 	}
 }
 
 void BleProtocol::init()
 {
-	if (pthread_mutex_init(&mutex, NULL) != 0)
-	{
-		LOGE("Failed to initialize the mutex");
-	}
 	Uart::init();
-	usleep(100000); // wait uart rx thread start
-
 #ifdef ESP_PLATFORM
-	opcodeMessageQueue = xQueueCreate(10, sizeof(message_rsp_st *));
-	// LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	// if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 8192, this, 10, NULL) != pdPASS)
-	// {
-	// 	LOGE("Failed to create task");
-	// 	Led::SetLedService(MODE_OFF);
-	// }
-	// vTaskDelay(10);
-	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 15360, this, 10, NULL) != pdPASS)
+	if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 8192, this, 10, NULL) != pdPASS)
 	{
 		LOGE("Failed to create task");
 		SetLedService(false);
 	}
-	vTaskDelay(10);
+	if (xTaskCreate(HandleOpcodeBle, "HandleOpcodeBle", 10240, this, 10, NULL) != pdPASS)
+	{
+		LOGE("Failed to create task");
+		SetLedService(false);
+	}
 #else
+	thread addDeviceThreadThread(AddDeviceThread, this);
+	addDeviceThreadThread.detach();
 	thread handleOpcodeBleThread(HandleOpcodeBle, this);
 	handleOpcodeBleThread.detach();
 #endif
+
+	SLEEP_MS(100); // wait for thread start
 }
 
 void BleProtocol::InitKey()
 {
-	if (GetAppKey() == "")
-		ResetBle();
 	while (GetNetKey())
 	{
 #ifdef ESP_PLATFORM
@@ -132,11 +124,135 @@ void BleProtocol::InitKey()
 		sleep(4);
 #endif
 	}
+	CheckKeyBle();
+	isInitKey = true;
 }
 
-static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
+void BleProtocol::CheckKeyBle()
 {
-	Json::Value dataValue = Json::objectValue;
+	string bleAppkey = gateway->getBleAppKey();
+	string bleNetkey = gateway->getBleNetKey();
+	string bleDevicekey = gateway->getBleDeviceKey();
+	srand(time(NULL));
+
+	string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
+
+	// LOGW("bleNetkey: %s, netKey: %s", bleNetkey.c_str(), netkeyStr.c_str());
+
+	if (bleAppkey != "")
+	{
+		string tempAppKey = bleAppkey;
+		LOGD("Appkey: %s", tempAppKey.c_str());
+		tempAppKey.erase(std::remove(tempAppKey.begin(), tempAppKey.end(), '-'), tempAppKey.end());
+		if (tempAppKey.size() == 32)
+		{
+			for (int i = 0; i < tempAppKey.length(); i += 2)
+			{
+				std::string hexByte = tempAppKey.substr(i, 2);
+				appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+			}
+		}
+	}
+
+	if (bleAppkey == "" || bleDevicekey == "" || bleNetkey == "" || bleNetkey != netkeyStr)
+	{
+		ResetBle();
+
+		// this->UpdateDeviceKeyGateway(gateway->getBleAddr(), gateway->getBleDeviceKey());
+		map<string, Device *> listDevs = gateway->GetListDevices();
+		for (const auto &[id, device] : listDevs)
+		{
+			this->UpdateDeviceKeyDev(device->GetAddr(), device->GetDeviceKey());
+		}
+
+		if (bleNetkey != "")
+		{
+			string tempNetKey = bleNetkey;
+			LOGD("Netkey: %s", tempNetKey.c_str());
+			tempNetKey.erase(std::remove(tempNetKey.begin(), tempNetKey.end(), '-'), tempNetKey.end());
+			if (tempNetKey.size() == 32)
+			{
+				for (int i = 0; i < tempNetKey.length(); i += 2)
+				{
+					std::string hexByte = tempNetKey.substr(i, 2);
+					netKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				netKey[i] = rand() % 256;
+			}
+			netkeyStr = Util::uuidToStr((uint8_t *)netKey);
+			bleNetkey = netkeyStr;
+			database->GatewayUpdateNetKey(gateway, bleNetkey);
+			gateway->setBleNetkey(bleNetkey);
+		}
+		LOGD("New ble_netkey: %s", bleNetkey.c_str());
+		SetNetKey();
+
+		if (bleDevicekey != "")
+		{
+			string tempDeviceKey = bleDevicekey;
+			LOGD("Gwkey: %s", tempDeviceKey.c_str());
+			tempDeviceKey.erase(std::remove(tempDeviceKey.begin(), tempDeviceKey.end(), '-'), tempDeviceKey.end());
+			if (tempDeviceKey.size() == 32)
+			{
+				for (int i = 0; i < tempDeviceKey.length(); i += 2)
+				{
+					std::string hexByte = tempDeviceKey.substr(i, 2);
+					gwKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				gwKey[i] = rand() % 256;
+			}
+			bleDevicekey = Util::uuidToStr((uint8_t *)gwKey);
+			database->GatewayUpdateDeviceKey(gateway, bleDevicekey);
+			gateway->setBleDevicekey(bleDevicekey);
+		}
+
+		LOGD("New ble_devicekey: %s", bleDevicekey.c_str());
+		SetGwKey();
+
+		if (bleAppkey != "")
+		{
+			string tempAppKey = bleAppkey;
+			LOGD("Appkey: %s", tempAppKey.c_str());
+			tempAppKey.erase(std::remove(tempAppKey.begin(), tempAppKey.end(), '-'), tempAppKey.end());
+			if (tempAppKey.size() == 32)
+			{
+				for (int i = 0; i < tempAppKey.length(); i += 2)
+				{
+					std::string hexByte = tempAppKey.substr(i, 2);
+					appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				appKey[i] = appKeyDefault[i];
+				// appKey[i] = rand() % 256;
+			}
+			bleAppkey = Util::uuidToStr((uint8_t *)appKey);
+			database->GatewayUpdateAppKey(gateway, bleAppkey);
+			gateway->setBleAppkey(bleAppkey);
+		}
+		LOGD("New ble_appkey: %s", bleAppkey.c_str());
+		UpdateAppKey(bleAppkey);
+	}
+}
+
+static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataValues)
+{
 	typedef struct __attribute__((packed))
 	{
 		uint16_t opcode;
@@ -150,42 +266,102 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 
 	if (data_message->opcode == LIGHTNESS_LINEAR_STATUS && data_message->header == 2)
 	{
-		dataValue["ID"] = 0;
-		dataValue["VALUE"] = (data_message->status_mode >> 4) & 0x0F;
-		dataArray.append(dataValue);
+		dataValues[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
 		if ((data_message->status_mode & 0x0F) == 1)
 		{
-			dataValue["ID"] = 1;
-			dataValue["VALUE"] = (data_message->value1 * 100) / 65535;
-			dataArray.append(dataValue);
-			dataValue["ID"] = 2;
-			dataValue["VALUE"] = (data_message->value2 - 800) / 192;
-			dataArray.append(dataValue);
+			dataValues[KEY_ATTRIBUTE_DIM] = (data_message->value1 * 100) / 65535;
+			dataValues[KEY_ATTRIBUTE_CCT] = (data_message->value2 - 800) / 192;
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
-			if (data_message->value1 != 0 && data_message->value2 != 0 && data_message->value3 != 0)
+			if (data_message->value2 > 0 && data_message->value1 > 0 && data_message->value3 > 0)
 			{
-				if (data_message->value1 >= 30000)
-				{
-					dataValue["ID"] = 5;
-					dataValue["VALUE"] = data_message->value1;
-					dataArray.append(dataValue);
-				}
-				dataValue["ID"] = 3;
-				dataValue["VALUE"] = data_message->value2;
-				dataArray.append(dataValue);
-				dataValue["ID"] = 4;
-				dataValue["VALUE"] = data_message->value3;
-				dataArray.append(dataValue);
+				dataValues[KEY_ATTRIBUTE_HUE] = data_message->value2;
+				dataValues[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
+				dataValues[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
 			}
 		}
 	}
 }
 
+static void GetDataUpdateSwitch(uint8_t *data, int len, Json::Value &dataValues)
+{
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t element;
+		uint8_t bt;
+		uint8_t bt2;
+		uint8_t bt3;
+		uint8_t bt4;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+
+	for (int i = 0; i < data_message->element; i++)
+	{
+		dataValues[KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")] = ((uint8_t *)data_message)[i + offsetof(data_message_t, bt)];
+	}
+}
+
+static void GetDataUpdateCurtain(uint8_t *data, int len, Json::Value &dataValues)
+{
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t type;
+		uint8_t curtain;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+
+	uint8_t temp = data_message->type;
+	switch (temp)
+	{
+	case 1:
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+		break;
+	case 0:
+		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
+		break;
+	case 2:
+		if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+		{
+			dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
+		}
+		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
+		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
+		break;
+	case 3:
+		dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
+		break;
+	}
+}
+
+int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
+{
+	int rs = CODE_ERROR;
+	vectorCheckOpcodeMtx.lock();
+	if (messageCheckOpcodeList.size() > 0)
+	{
+		*data = messageCheckOpcodeList[0];
+		messageCheckOpcodeList.erase(messageCheckOpcodeList.begin());
+		rs = CODE_OK;
+	}
+	vectorCheckOpcodeMtx.unlock();
+	return rs;
+}
+
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
-	// LOGD("CheckOpcodeException");
+	gateway->setLastTimePingGwBle(time(NULL));
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
@@ -193,6 +369,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		{
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			haveNewMac = true;
+			haveGetMacRsp = false;
 		}
 		break;
 
@@ -207,27 +384,57 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		data_message_t *data_message = (data_message_t *)message_rsp->data;
 		// LOGV("Device addr 0x%04X", data_message->dev_addr);
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
+		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
+		uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
-			LOGV("Have device mac 0x%s type: 0x%08X", deviceBle->GetMac().c_str(), deviceBle->GetType());
 			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
-				Json::Value dataArray = Json::arrayValue;
-				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataArray);
-				if (dataArray.size() > 0)
+				Json::Value dataValues = Json::objectValue;
+				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
+				deviceBle->SetPropertyJsonUpdate(dataValues);
+			}
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_SWITCH)
+			{
+				Json::Value dataValues = Json::objectValue;
+				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
+				deviceBle->SetPropertyJsonUpdate(dataValues);
+			}
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+			{
+				Json::Value dataValues = Json::objectValue;
+				GetDataUpdateCurtain(data_message->data, message_rsp->len - 6, dataValues);
+				deviceBle->SetPropertyJsonUpdate(dataValues);
+			}
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
+			{
+				DeviceBle *deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
+				if (deviceBleChild)
 				{
-					for (Json::ArrayIndex i = 0; i < dataArray.size(); i++)
-					{
-						deviceBle->InputData(dataArray[i]);
-					}
+					deviceBleChild->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->data[5] | (data_message->data[6] << 8));
 				}
 			}
 			else
 			{
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
+
+			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH)
+			{
+				if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME)
+				{
+					SendDate(deviceBle->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
+					SendTime(deviceBle->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
+				}
+				else if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP)
+				{
+					SendWeatherOutdoor(deviceBle->GetAddr(), Util::GetStatusWeatherOutdoor(), Util::GetTempWeatherOutdoor());
+					SendWeatherIndoor(deviceBle->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
+				}
+			}
+			break;
 		}
 		else
 		{
@@ -261,177 +468,171 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedService = GetStatusLedService();
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(!statusLedService);
-	}
+	SetLedService(false);
 #endif
-	int index = 0;
-	while (l >= 4)
+	while (l >= 5)
 	{
-		if ((d[index] | d[index + 1] << 8) >= 3)
+		message_rsp = (message_rsp_st *)d;
+		if (message_rsp->len >= 3 && message_rsp->len <= 36)
 		{
-			if (d[index + 2] == 0x80 || d[index + 2] == 0x90 || d[index + 2] == 0x91 || d[index + 2] == 0x92 || d[index + 2] == 0xfa)
+			if (message_rsp->magic == 0x80 ||
+				message_rsp->magic == 0x90 ||
+				message_rsp->magic == 0x91 ||
+				message_rsp->magic == 0x92 ||
+				message_rsp->magic == 0xfa)
 			{
-				message_rsp = (message_rsp_st *)&d[index];
-				is_dupplicate = false;
-				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
+				if (haveGetMacRsp || (!haveGetMacRsp && message_rsp->opcode != HCI_GATEWAY_CMD_UPDATE_MAC))
 				{
-					is_dupplicate = true;
-					for (int i = 0; i < message_rsp->len; i++)
+					uint16_t packageLen = message_rsp->len + 2;
+					is_dupplicate = false;
+					if (old_message_rsp && message_rsp->len == old_message_rsp->len)
 					{
-						if (message_rsp->data[i] != old_message_rsp->data[i])
+						is_dupplicate = true;
+						for (int i = 0; i < message_rsp->len; i++)
 						{
-							is_dupplicate = false;
-							break;
+							if (message_rsp->data[i] != old_message_rsp->data[i])
+							{
+								is_dupplicate = false;
+								break;
+							}
 						}
 					}
-				}
-				if (!is_dupplicate)
-				{
-					if (message_rsp->len >= 2 && message_rsp->len <= l - 2)
+					if (!is_dupplicate)
 					{
-						// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
-						for (auto &messageResp : messageRespList)
+						if (message_rsp->len >= 3 && message_rsp->len <= l - 2)
 						{
-							if (message_rsp->opcode == messageResp->opcode)
+							// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
+							for (auto &messageResp : messageRespList)
 							{
-								match = true;
-								if (messageResp->compare_data)
+								if (message_rsp->opcode == messageResp->opcode)
 								{
-									for (int i = 0; i < messageResp->compare_len; i++)
+									match = true;
+									if (messageResp->compare_data)
 									{
-										if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
-											match = false;
+										for (int i = 0; i < messageResp->compare_len; i++)
+										{
+											if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
+												match = false;
+										}
 									}
-								}
-								if (match)
-								{
-									messageResp->status = true;
-									if (messageResp->len)
+									if (match)
 									{
-										*(messageResp->len) = message_rsp->len - 2;
-										if (messageResp->data)
-											memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+										messageResp->status = true;
+										if (messageResp->len)
+										{
+											*(messageResp->len) = message_rsp->len - 2;
+											if (*(messageResp->len) > 0)
+												if (messageResp->data)
+													memcpy(messageResp->data, message_rsp->data, *messageResp->len);
+										}
 									}
 								}
 							}
-						}
-						if (gateway)
-						{
+							vectorCheckOpcodeMtx.lock();
+							if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+							{
 #ifdef ESP_PLATFORM
-							// message_rsp_st *temp_message = (message_rsp_st *)malloc(message_rsp->len + 2);
-							message_rsp_st *temp_message = (message_rsp_st *)heap_caps_malloc_prefer(message_rsp->len + 2, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
-							memcpy(temp_message, message_rsp, message_rsp->len + 2);
-							xQueueSend(opcodeMessageQueue, (void *)&temp_message, (TickType_t)0);
-							vTaskDelay(pdMS_TO_TICKS(50));
+								message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
-							CheckOpcodeException(message_rsp);
+								// CheckOpcodeException(message_rsp);
+								message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
 #endif
+								memcpy(messageCheckOpcode, message_rsp, packageLen);
+								messageCheckOpcodeList.push_back(messageCheckOpcode);
+							}
+							vectorCheckOpcodeMtx.unlock();
+						}
+						else if (message_rsp->len < 3 || message_rsp->len > 36)
+						{
+							LOGW("Wrong uart data");
+							l = 0;
+							break;
+						}
+						else
+						{
+							break;
 						}
 					}
-					else if (message_rsp->len < 2 && message_rsp->len > 36)
-					{
-						LOGW("Wrong uart data");
-						l = 0;
-						break;
-					}
-					else
-					{
-						break;
-					}
+					old_message_rsp = message_rsp;
+					l -= packageLen;
+					d += packageLen;
 				}
 				else
 				{
-					// LOGW("dupplicate");
+					d++;
+					l--;
 				}
-				old_message_rsp = message_rsp;
-				l -= message_rsp->len + 2;
-				d += message_rsp->len + 2;
 			}
 			else
 			{
-				index++;
+				d++;
 				l--;
 			}
 		}
 		else
 		{
-			index++;
+			d++;
 			l--;
 		}
-#ifdef ESP_PLATFORM
-		vTaskDelay(10 / portTICK_PERIOD_MS);
-#else
-		usleep(10000);
-#endif
+		usleep(300);
 	}
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(statusLedService);
-	}
+	SLEEP_MS(70);
+	SetLedService(true);
 #endif
 	return l;
 }
 
 int BleProtocol::SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data, int compare_position, int compare_len)
 {
-	// mtxWaitSendUart.lock();
+	mtxWaitSendUart.lock();
 	int rs = CODE_OK;
-	if (pthread_mutex_lock(&mutex) == 0)
+	message_rsp_list_st message_rsp_list = {
+		.status = false,
+		.opcode = opRsp,
+		.len = lenRsp,
+		.data = dataRsp,
+		.compare_data = compare_data,
+		.compare_position = compare_position,
+		.compare_len = compare_len,
+	};
+	if (opRsp)
 	{
-		message_rsp_list_st message_rsp_list = {
-				.status = false,
-				.opcode = opRsp,
-				.len = lenRsp,
-				.data = dataRsp,
-				.compare_data = compare_data,
-				.compare_position = compare_position,
-				.compare_len = compare_len,
-		};
-		if (opRsp)
-		{
-			// TODO: add mutex
-			messageRespList.push_back(&message_rsp_list);
-		}
-
-		message_req_st message_req = {
-				.opcode = opReq,
-		};
-		for (int i = 0; i < lenReq; i++)
-		{
-			message_req.data[i] = dataReq[i];
-		}
-
-		Write((uint8_t *)&message_req, lenReq + 2);
-
-		if (opRsp)
-		{
-			while (!message_rsp_list.status && timeout--)
-			{
-				usleep(1000);
-			}
-			if (!message_rsp_list.status)
-			{
-				rs = CODE_ERROR;
-			}
-			messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
-		}
-		else
-		{
-			usleep(1000 * timeout);
-		}
-		// mtxWaitSendUart.unlock();
-		pthread_mutex_unlock(&mutex);
+		// TODO: add mutex
+		messageRespList.push_back(&message_rsp_list);
 	}
+	message_req_st message_req = {
+		.opcode = opReq,
+	};
+	for (int i = 0; i < lenReq; i++)
+	{
+		message_req.data[i] = dataReq[i];
+	}
+	Write((uint8_t *)&message_req, lenReq + 2);
+	if (opRsp)
+	{
+		while (!message_rsp_list.status && timeout--)
+		{
+			SLEEP_MS(1);
+		}
+		if (!message_rsp_list.status)
+		{
+			rs = CODE_ERROR;
+		}
+		messageRespList.erase(remove(messageRespList.begin(), messageRespList.end(), &message_rsp_list), messageRespList.end());
+	}
+	else
+	{
+		usleep(1000 * timeout);
+	}
+	mtxWaitSendUart.unlock();
 	return rs;
 	// return Write(dataReq, lenReq);
 }
 
+/*
 string BleProtocol::GetAppKey()
 {
 	string appkeyStr = gateway->getBleAppKey();
@@ -443,7 +644,7 @@ string BleProtocol::GetAppKey()
 		{
 			appKey[i] = appKeyDefault[i];
 		}
-		string appkey = Util::arrayToString844412((uint8_t *)appKey);
+		string appkey = Util::uuidToStr((uint8_t *)appKey);
 		LOGD("New ble_appkey: %s", appkey.c_str());
 		database->GatewayUpdateAppKey(gateway, appkey);
 		gateway->setBleAppkey(appkey);
@@ -470,6 +671,7 @@ string BleProtocol::GetAppKey()
 	}
 	return appkeyStr;
 }
+*/
 
 int BleProtocol::GetNetKey()
 {
@@ -477,23 +679,27 @@ int BleProtocol::GetNetKey()
 	uint8_t d = HCI_GATEWAY_CMD_GET_PRO_SELF_STS;
 	uint8_t dataRsp[100];
 	int lenRsp;
-	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 2000);
+	int rs = SendMessage(SYSTEM_REQ, &d, 1, HCI_GATEWAY_CMD_PRO_STS_RSP, dataRsp, &lenRsp, 5000);
 	if (rs == CODE_OK)
 	{
 		// pro_net_info = (pro_net_info_t *)&dataRsp[1];
 		memcpy(&pro_net_info.netKey[0], &dataRsp[1], sizeof(pro_net_info_t));
 
 		uint32_t ivIndex = bswap_32(pro_net_info.iv_index);
-		if ((ivIndex == 0x11223344) || (ivIndex == 0))
+		if ((ivIndex == 0x11223344))
 		{
 			// database->GatewayUpdateIvIndex(gateway, ivIndex);
 			for (int i = 0; i < 16; i++)
 			{
 				netKey[i] = pro_net_info.netKey[i];
 			}
+
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
 				nextAddr = 2;
+			uint32_t maxAddr = gateway->GetMaxAddrBle();
+			if (nextAddr <= maxAddr)
+				nextAddr = maxAddr + BLE_MAX_ELEMENT;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else
@@ -502,20 +708,8 @@ int BleProtocol::GetNetKey()
 			for (int i = 0; i < 16; i++)
 			{
 				netKey[i] = rand() % 256;
-				gwKey[i] = rand() % 256;
 			}
-			SetNetKey();
-			SetGwKey();
-			string netkeyStr = Util::arrayToString844412((uint8_t *)netKey);
-			LOGD("New ble_netkey: %s", netkeyStr.c_str());
-			database->GatewayUpdateNetKey(gateway, netkeyStr);
-
-			string devicekeyGwStr = Util::arrayToString844412((uint8_t *)gwKey);
-			LOGD("New ble_devicekeyGw: %s", devicekeyGwStr.c_str());
-			database->GatewayUpdateDeviceKey(gateway, devicekeyGwStr);
-
-			gateway->setBleDevicekey(devicekeyGwStr);
-			gateway->setBleNetkey(netkeyStr);
+			string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
 		}
 	}
 	else
@@ -637,6 +831,7 @@ void BleProtocol::SetProvisioning(bool isProvision)
 
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
+	// TODO: convert to non-blocking func
 	LOGD("AddDevice");
 	// #ifdef ESP_PLATFORM
 	// 	Led::TaskLedService(MODE_BLINK);
@@ -660,9 +855,9 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 						if (IsProvision() && !GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
 						{
 							deviceType = convertDeviceType(deviceType);
-							Json::Value devKeyJson;
-							devKeyJson["devicekey"] = Util::arrayToString844412((uint8_t *)deviceKey);
-							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Device::ConvertDeviceTypeToName(deviceType), mac, devKeyJson.toString(), nextAddr, deviceType, version, true, true);
+							Json::Value dataJson;
+							dataJson["devicekey"] = Util::uuidToStr((uint8_t *)deviceKey);
+							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Util::setString(Device::ConvertDeviceTypeToName(deviceType)), mac, dataJson, nextAddr, deviceType, version, true);
 							if (device)
 							{
 								gateway->AddDeviceToScanList(device);
@@ -694,35 +889,64 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 	return rs;
 }
 
-void BleProtocol::FunctionAddDevice()
+int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
 {
-	int timeout = 0;
-	scan_device_message_t scan_device_message;
-	while (IsProvision())
+	if (ScanStopSeftPowerRemote(parentAddr, 1) == CODE_OK)
 	{
-		if (bleProtocol->haveNewMac)
+		uint16_t adrMax = gateway->GetMaxAddrBle() + BLE_MAX_ELEMENT;
+		LOGW("Max address is %d", adrMax);
+		if (SaveSeftPowerRemote(scanDevicePairMessage, adrMax) == CODE_OK)
 		{
-			timeout = 0;
-			memcpy(&scan_device_message, &bleProtocol->scanDeviceMessage, sizeof(scan_device_message_t));
-			bleProtocol->AddDevice(&scan_device_message);
-			bleProtocol->haveNewMac = false;
-		}
-		else
-		{
-			timeout++;
-			if (timeout >= 30)
+			uint16_t version = 0;
+			uint32_t deviceType = 0;
+			char tempId[100] = {0};
+			sprintf((char *)tempId, "%02x%02x%02x%02x-0000-0000-0000-000000000000", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
+			tempId[36] = '\0';
+			std::string uuid(tempId);
+
+			char tempMac[100] = {0};
+			sprintf((char *)tempMac, "%02x%02x%02x%02x0000", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
+			tempMac[12] = '\0';
+			std::string mac(tempMac);
+
+			Json::Value dataJson = Json::objectValue;
+			switch (scanDevicePairMessage.type)
 			{
-				SetProvisioning(false);
-				StopScan();
+			case 1:
+				deviceType = BLE_SEFTPOWER_REMOTE_1;
+				break;
+			case 2:
+				deviceType = BLE_SEFTPOWER_REMOTE_2;
+				break;
+			case 3:
+				deviceType = BLE_SEFTPOWER_REMOTE_3;
+				break;
+			case 6:
+				deviceType = BLE_SEFTPOWER_REMOTE_6;
+				break;
 			}
-			else
-#ifdef ESP_PLATFORM
-				vTaskDelay(pdMS_TO_TICKS(100));
-#else
-				usleep(100000);
-#endif
+			Device *device = gateway->AddNewDevice(uuid, "", mac, dataJson, childAddr, deviceType, 257, true);
+			if (device)
+			{
+				Device *parent = gateway->getDeviceBleFromAddr(parentAddr);
+				DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
+				if (parent && deviceBleSeftPowerRemote)
+				{
+					deviceBleSeftPowerRemote->SetParentDev(parent);
+				}
+				if (deviceBleSeftPowerRemote->GetParent())
+				{
+					gateway->AddDeviceToScanList(device);
+					database->DeviceBleChildAdd(deviceBleSeftPowerRemote, parent, "");
+				}
+			}
 		}
+		// else
+		// ScanStopSeftPowerRemote(parentAddr, 0);
 	}
+	else
+		ScanStopSeftPowerRemote(parentAddr, 0);
+	return CODE_OK;
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -752,7 +976,7 @@ int BleProtocol::Provision(uint16_t deviceAddr)
 	provision_message.opcode = HCI_GATEWAY_CMD_SET_NODE_PARA;
 	memcpy(&provision_message.data_pro.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
 	provision_message.data_pro.unicast_address = deviceAddr;
-	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 20000);
+	int rs = SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 30000);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -868,17 +1092,17 @@ static void genSecurityKey(uint8_t *mac, uint16_t devAddr, uint8_t *out)
 	AES aes(AESKeyLength::AES_128);
 	memcpy(plaintext + 8, mac, 6);
 	memcpy(plaintext + 14, (uint8_t *)&devAddr, 2);
-	for (int n = 0; n < 16; n++)
-	{
-		printf("%02x ", plaintext[n]);
-	}
-	printf("\n");
+	// for (int n = 0; n < 16; n++)
+	// {
+	// 	printf("%02x ", plaintext[n]);
+	// }
+	// printf("\n");
 	unsigned char *outAes = aes.EncryptECB(plaintext, 32, keyAes);
-	for (int j = 0; j < 32; j++)
-	{
-		printf("%02x ", outAes[j]);
-	}
-	printf("\n");
+	// for (int j = 0; j < 32; j++)
+	// {
+	// 	printf("%02x ", outAes[j]);
+	// }
+	// printf("\n");
 	for (int i = 0; i < 6; i++)
 	{
 		out[i] = outAes[i + 10];
@@ -995,9 +1219,45 @@ int BleProtocol::ResetDelAll()
 	return CODE_ERROR;
 }
 
+int BleProtocol::GetTTL(uint16_t devAddr)
+{
+	LOGD("GetTTL");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint16_t opcode;
+	} ttl_message_t;
+	ttl_message_t ttl_message = {0};
+	memset(&ttl_message, 0x00, sizeof(ttl_message));
+	uint8_t getOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x80, 0x0e};
+	ttl_message.ble_message_header.devAddr = devAddr;
+	ttl_message.opcode = CFG_DEFAULT_TTL_GET;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&ttl_message, sizeof(ttl_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, getOnOffHeader, 0, 6);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t data[1];
+		} ttl_rsp_message_t;
+		ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
+		if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
+		{
+			return CODE_OK;
+		}
+	}
+	LOGW("Get TTL error");
+	return CODE_ERROR;
+}
+
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
-	LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
+	// #ifndef CONFIG_SAVE_ATTRIBUTE
 	switch (typeDev)
 	{
 	case BLE_LED_CHIEU_TRANH:
@@ -1017,15 +1277,25 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_TRACKLIGHT:
 	case BLE_LED_THA_TRAN:
 	case BLE_LED_TUBE_M16:
+	case BLE_LED_RLT03_06W:
+	case BLE_LED_RLT02_10W:
+	case BLE_LED_RLT02_20W:
+	case BLE_LED_RLT01_10W:
+	case BLE_LED_TRL08_20W:
+	case BLE_LED_TRL08_10W:
+	case BLE_LED_RLT03_12W:
 	case BLE_DOWNLIGHT_RGBCW:
 	case BLE_LED_DAY_RGBCW:
 	case BLE_LED_BULB:
 	case BLE_LED_DAY_RGB:
-	case BLE_SWITCH_ONOFF:
 		if (version > 256)
 			BleProtocol::UpdateLights(devAddr);
 		else
 			BleProtocol::GetOnoffLight(devAddr);
+		break;
+	case BLE_SWITCH_ONOFF:
+	case BLE_SWITCH_ONOFF_V2:
+		BleProtocol::GetOnoffLight(devAddr);
 		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
@@ -1036,15 +1306,58 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_RGB_3_SQUARE:
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
+	case BLE_SWITCH_RGB_1_V2:
+	case BLE_SWITCH_RGB_2_V2:
+	case BLE_SWITCH_RGB_3_V2:
+	case BLE_SWITCH_RGB_4_V2:
+	case BLE_SWITCH_RGB_1_SQUARE_V2:
+	case BLE_SWITCH_RGB_2_SQUARE_V2:
+	case BLE_SWITCH_RGB_3_SQUARE_V2:
+	case BLE_SWITCH_RGB_4_SQUARE_V2:
 	case BLE_SWITCH_ELECTRICAL_1:
 	case BLE_SWITCH_ELECTRICAL_2:
 	case BLE_SWITCH_ELECTRICAL_3:
 	case BLE_SWITCH_ELECTRICAL_4:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-		BleProtocol::GetOnoffLight(devAddr);
+	case BLE_SWITCH_ELECTRICAL_1_V2:
+	case BLE_SWITCH_ELECTRICAL_2_V2:
+	case BLE_SWITCH_ELECTRICAL_3_V2:
+	case BLE_SWITCH_1:
+	case BLE_SWITCH_WATER_HEATER:
+	case BLE_SWITCH_2:
+	case BLE_SWITCH_3:
+	case BLE_SWITCH_4:
+	case BLE_WIFI_SWITCH_1:
+	case BLE_WIFI_SWITCH_2:
+	case BLE_WIFI_SWITCH_3:
+	case BLE_WIFI_SWITCH_4:
+	case BLE_WIFI_SWITCH_1_SQUARE:
+	case BLE_WIFI_SWITCH_2_SQUARE:
+	case BLE_WIFI_SWITCH_3_SQUARE:
+	case BLE_WIFI_SWITCH_4_SQUARE:
+	case BLE_WIFI_SWITCH_ELECTRICAL_1:
+	case BLE_WIFI_SWITCH_ELECTRICAL_2:
+	case BLE_WIFI_SWITCH_ELECTRICAL_3:
+		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
+		break;
+	case BLE_SWITCH_CURTAIN:
+	case BLE_SWITCH_RGB_CURTAIN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
+	case BLE_SWITCH_RGB_CURTAIN_HCN:
+	case BLE_SWITCH_RGB_CURTAIN_SQUARE_V2:
+	case BLE_SWITCH_ROOLING_DOOR:
+	case BLE_SWITCH_ROOLING_DOOR_V2:
+	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
+	case BLE_WIFI_SWITCH_CURTAIN:
+	case BLE_WIFI_SWITCH_CURTAIN_SQUARE:
+	case BLE_WIFI_SWITCH_ROOLING_DOOR:
+	case BLE_WIFI_SWITCH_ROOLING_DOOR_SQUARE:
+		BleProtocol::UpdateStatusCurtain(devAddr);
+		break;
+	default:
+		BleProtocol::GetTTL(devAddr);
 		break;
 	}
-
 	return CODE_OK;
 }
 
@@ -1071,9 +1384,9 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 			uint16_t gwAddr;
 			uint16_t opcodeRsp;
 		} turnOnOffHeader = {
-				.devAddr = devAddr,
-				.gwAddr = 0x0001,
-				.opcodeRsp = G_ONOFF_STATUS,
+			.devAddr = devAddr,
+			.gwAddr = 0x0001,
+			.opcodeRsp = G_ONOFF_STATUS,
 		};
 		onoff_message.ble_message_header.devAddr = devAddr;
 		onoff_message.opcode = G_ONOFF_SET;
@@ -1504,9 +1817,76 @@ int BleProtocol::DelDev2Group(uint16_t devAddr, uint16_t element, uint16_t group
 	return CODE_ERROR;
 }
 
+int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t group, uint16_t scene)
+{
+	LOGW("Add dev addr: 0x%04X to room: 0x%04X", devAddr, group);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t addDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t groupId;
+		uint16_t sceneId;
+		uint8_t data[2];
+	} addDev2Room_t;
+	addDev2Room_t addDev2Room = {0};
+	memset(&addDev2Room, 0x00, sizeof(addDev2Room));
+	addDev2Room.ble_message_header.devAddr = devAddr;
+	addDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
+	addDev2Room.vendorId = RD_VENDOR_ID;
+	addDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	addDev2Room.header = RD_OPCODE_CONFIG_ADD_ROOM;
+	addDev2Room.groupId = group;
+	addDev2Room.sceneId = scene;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&addDev2Room, sizeof(addDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDev2RoomHeader, 0, 7);
+	if (rs != CODE_OK)
+		LOGW("AddDev2Room error");
+	return rs;
+}
+
+int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene)
+{
+	LOGW("Del dev addr: 0x%04X from room: %d, scene: %d", devAddr, room, scene);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t delDev2RoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t group;
+		uint16_t scene;
+		uint8_t data[2];
+	} delDev2Room_t;
+	delDev2Room_t delDev2Room = {0};
+	memset(&delDev2Room, 0x00, sizeof(delDev2Room));
+	delDev2Room.ble_message_header.devAddr = devAddr;
+	delDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
+	delDev2Room.vendorId = RD_VENDOR_ID;
+	delDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	delDev2Room.header = RD_OPCODE_CONFIG_DEL_ROOM;
+	delDev2Room.group = room;
+	delDev2Room.scene = scene;
+
+	int rs = SendMessage(APP_REQ, (uint8_t *)&delDev2Room, sizeof(delDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delDev2RoomHeader, 0, 7);
+	if (rs != CODE_OK)
+		LOGW("DelDev2Room error");
+	return rs;
+}
+
 int BleProtocol::SetSceneBle(uint16_t devAddr, uint16_t scene, uint8_t modeRgb)
 {
-	LOGD("Set scene addr: 0x%04X to scene: 0x%04X", devAddr, scene);
+	LOGD("Set scene addr: 0x%04X to scene: 0x%04X, modergb: %d", devAddr, scene, modeRgb);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t setSceneHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x45};
@@ -1578,7 +1958,7 @@ int BleProtocol::DelSceneBle(uint16_t devAddr, uint16_t scene)
 
 // TODO: BelProtocol ActiveScene
 // add delay time
-int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack, int delayTime)
+int BleProtocol::CallScene(uint16_t devAddr, uint16_t scene, uint16_t transition, bool ack)
 {
 	LOGD("Call scene: 0x%04X", scene);
 	uint8_t dataRsp[100];
@@ -1700,7 +2080,7 @@ int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
 
 int BleProtocol::UpdateLights(uint16_t devAddr)
 {
-	LOGV("Update lights addr: 0x%04X ", devAddr);
+	LOGI("Update lights addr: 0x%04X ", devAddr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t updateHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x52};
@@ -1987,7 +2367,7 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 
 int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uint8_t pir, uint16_t lowLux, uint16_t highLux, uint16_t scene, uint8_t type)
 {
-	LOGD("SetScenePirLightSensor");
+	LOGD("SetScenePirLightSensor condition: %d, pir: %d, lowLux: %d, highLux: %d", condition, pir, lowLux, highLux);
 	typedef struct __attribute__((packed))
 	{
 		union
@@ -1995,9 +2375,9 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 			uint32_t data;
 			struct
 			{
-				uint32_t store : 8;					 // 8 bit not use
-				uint32_t Lux_hi : 10;				 // 10 bit lux hi
-				uint32_t Lux_low : 10;			 // 10 bit lux low
+				uint32_t store : 8;			 // 8 bit not use
+				uint32_t Lux_hi : 10;		 // 10 bit lux hi
+				uint32_t Lux_low : 10;		 // 10 bit lux low
 				uint32_t Light_Conditon : 3; // 7 bit low
 				uint32_t Pir_Conditon : 1;	 // 1 bit hight
 			};
@@ -2162,6 +2542,122 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 		LOGW("time action pir light resp state not match with input control");
 	}
 	LOGW("time action pir light err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
+{
+	LOGD("ModeActionPirLightSensor 0x%04X", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeActionHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+		uint8_t future[5];
+	} mode_action_message_t;
+	mode_action_message_t mode_action_message = {0};
+	memset(&mode_action_message, 0x00, sizeof(mode_action_message));
+	mode_action_message.ble_message_header.devAddr = devAddr;
+	mode_action_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_action_message.vendorId = RD_VENDOR_ID;
+	mode_action_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_action_message.header = RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR;
+	mode_action_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_action_message, sizeof(mode_action_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeActionHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+		} mode_action_rsp_message_t;
+		mode_action_rsp_message_t *mode_action_rsp_message = (mode_action_rsp_message_t *)dataRsp;
+		if (mode_action_rsp_message->header == 0x0445 && mode_action_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode action pir light resp state not match with input control");
+	}
+	LOGW("mode action pir light err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi)
+{
+	LOGD("Set sensiPirLightSensor: 0x%04X, sensi: %d", devAddr, sensi);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sensiHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t sensi;
+	} sensi_message_t;
+	sensi_message_t sensi_message = {0};
+	memset(&sensi_message, 0x00, sizeof(sensi_message));
+	sensi_message.ble_message_header.devAddr = devAddr;
+	sensi_message.opcodeVendor = RD_OPCODE_CONFIG;
+	sensi_message.vendorId = RD_VENDOR_ID;
+	sensi_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	sensi_message.header = RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR;
+	sensi_message.sensi = sensi;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&sensi_message, sizeof(sensi_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sensiHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	else
+		LOGW("Set sensi error");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetDistanceSensor(uint16_t devAddr, uint8_t distance)
+{
+	LOGD("Set distance sensor: 0x%04X, distance: %d", devAddr, distance);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t distanceHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t distance;
+	} distance_message_t;
+	distance_message_t distance_message = {0};
+	memset(&distance_message, 0x00, sizeof(distance_message));
+	distance_message.ble_message_header.devAddr = devAddr;
+	distance_message.opcodeVendor = RD_OPCODE_CONFIG;
+	distance_message.vendorId = RD_VENDOR_ID;
+	distance_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	distance_message.header = RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR;
+	distance_message.distance = distance;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&distance_message, sizeof(distance_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, distanceHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	else
+		LOGW("Set distance error");
 	return CODE_ERROR;
 }
 
@@ -2661,9 +3157,21 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 			uint8_t percent;
 		} control_rsp_message_t;
 		control_rsp_message_t *control_rsp_message = (control_rsp_message_t *)dataRsp;
-		if (control_rsp_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE && control_rsp_message->type == type && control_rsp_message->percent == percent)
+		if (control_rsp_message->header == RD_OPCODE_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED && control_rsp_message->type == type)
 		{
-			return CODE_OK;
+			if (type == PERCENT)
+			{
+				if (control_rsp_message->percent == percent)
+				{
+					return CODE_OK;
+				}
+				LOGW("control resp opened error");
+				return CODE_ERROR;
+			}
+			else
+			{
+				return CODE_OK;
+			}
 		}
 		LOGW("control resp state not match with input control");
 	}
@@ -2765,6 +3273,150 @@ int BleProtocol::CalibCurtain(uint16_t devAddr, uint8_t status)
 	return CODE_ERROR;
 }
 
+int BleProtocol::CalibAuto(uint16_t devAddr, uint16_t time)
+{
+	LOGD("CalibAuto 0x%04x, time %d", devAddr, time);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t calibHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t time;
+		uint8_t future[4];
+	} calib_message_t;
+	calib_message_t calib_message = {0};
+	memset(&calib_message, 0x00, sizeof(calib_message));
+	calib_message.ble_message_header.devAddr = devAddr;
+	calib_message.opcodeVendor = RD_OPCODE_CONFIG;
+	calib_message.vendorId = RD_VENDOR_ID;
+	calib_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	calib_message.header = RD_OPCODE_CALIBAUTO;
+	calib_message.time = time;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&calib_message, sizeof(calib_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, calibHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t time;
+		} calib_rsp_message_t;
+		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
+		if (calib_rsp_message->header == RD_OPCODE_CALIBAUTO && calib_rsp_message->time == time)
+		{
+			return CODE_OK;
+		}
+		LOGW("calib auto resp state not match with input control");
+	}
+	LOGW("calib auto err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::LockDevice(uint16_t devAddr, uint8_t locked)
+{
+	LOGD("LockDevice 0x%04x, locked %d", devAddr, locked);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t lockHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t lock;
+		uint8_t future[5];
+	} lock_message_t;
+	lock_message_t lock_message = {0};
+	memset(&lock_message, 0x00, sizeof(lock_message));
+	lock_message.ble_message_header.devAddr = devAddr;
+	lock_message.opcodeVendor = RD_OPCODE_CONFIG;
+	lock_message.vendorId = RD_VENDOR_ID;
+	lock_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	lock_message.header = RD_OPCODE_LOCK;
+	lock_message.lock = locked;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&lock_message, sizeof(lock_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, lockHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t lock;
+		} lock_rsp_message_t;
+		lock_rsp_message_t *lock_rsp_message = (lock_rsp_message_t *)dataRsp;
+		if (lock_rsp_message->header == RD_OPCODE_LOCK && lock_rsp_message->lock == locked)
+		{
+			return CODE_OK;
+		}
+		LOGW("lock device resp state not match with input control");
+	}
+	LOGW("lock device auto err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetModeWifi(uint16_t devAddr, uint8_t mode)
+{
+	LOGD("SetModeWifi 0x%04x, mode %d", devAddr, mode);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+		uint8_t future[5];
+	} mode_message_t;
+	mode_message_t mode_message = {0};
+	memset(&mode_message, 0x00, sizeof(mode_message));
+	mode_message.ble_message_header.devAddr = devAddr;
+	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_message.vendorId = RD_VENDOR_ID;
+	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_message.header = RD_OPCODE_MODE_WIFI;
+	mode_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+		} mode_rsp_message_t;
+		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
+		if (mode_rsp_message->header == RD_OPCODE_MODE_WIFI && mode_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode resp state not match with input control");
+	}
+	LOGW("mode device auto err");
+	return CODE_ERROR;
+}
+
 int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
 {
 	LOGD("UpdateStatusCurtain 0x%04x", devAddr);
@@ -2810,12 +3462,12 @@ int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
 	return CODE_ERROR;
 }
 
-int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
+int BleProtocol::ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status)
 {
-	LOGD("AddDeviceToRoom 0x%04x, roomAddr %d", devAddr, roomAddr);
+	LOGD("Scan SeftPowerRemote: 0x%04X, status: %d", devAddr, status);
 	uint8_t dataRsp[100];
 	int lenRsp;
-	uint8_t addDevToRoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	uint8_t dataCompare[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
@@ -2824,17 +3476,61 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 		uint8_t opcodeRsp;
 		uint8_t tidPos;
 		uint16_t header;
-		uint16_t roomAddr;
-	} add_dev_to_room_message_t;
-	add_dev_to_room_message_t add_dev_to_room_message = {0};
-	memset(&add_dev_to_room_message, 0x00, sizeof(add_dev_to_room_message));
-	add_dev_to_room_message.ble_message_header.devAddr = devAddr;
-	add_dev_to_room_message.opcodeVendor = RD_OPCODE_CONFIG;
-	add_dev_to_room_message.vendorId = RD_VENDOR_ID;
-	add_dev_to_room_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	add_dev_to_room_message.header = 0x0b0a;
-	add_dev_to_room_message.roomAddr = bswap_16(roomAddr);
-	int rs = SendMessage(APP_REQ, (uint8_t *)&add_dev_to_room_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDevToRoomHeader, 0, 7);
+		uint8_t status;
+		uint8_t future[5];
+	} scan_message_t;
+	scan_message_t scan_message = {0};
+	memset(&scan_message, 0x00, sizeof(scan_message));
+	scan_message.ble_message_header.devAddr = devAddr;
+	scan_message.opcodeVendor = RD_OPCODE_CONFIG;
+	scan_message.vendorId = RD_VENDOR_ID;
+	scan_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	scan_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SCAN;
+	scan_message.status = status;
+	uint16_t timeout = 10000;
+	if (!status)
+		timeout = 1000;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scan_message, sizeof(scan_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, timeout, dataCompare, 0, 7);
+	if (rs == CODE_OK)
+	{
+		memcpy(&scanDevicePairMessage, dataRsp, sizeof(scan_device_pair_message_t));
+		// LOGW("parent: %d", scanDevicePairMessage.parentAddr);
+		// LOGW("mac: %02x%02x%02x%02x", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
+		// LOGW("type: %d", scanDevicePairMessage.type);
+	}
+	return rs;
+}
+
+int BleProtocol::SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uint16_t childDev)
+{
+	LOGD("Save SeftPowerRemote");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dataCompare[] = {(uint8_t)(scanMessage.parentAddr & 0xFF), (uint8_t)((scanMessage.parentAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02, 0x0b, 0x0d};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mac[4];
+		uint16_t childDev;
+	} save_message_t;
+	save_message_t save_message = {0};
+	memset(&save_message, 0x00, sizeof(save_message));
+	save_message.ble_message_header.devAddr = scanMessage.parentAddr;
+	save_message.opcodeVendor = RD_OPCODE_CONFIG;
+	save_message.vendorId = RD_VENDOR_ID;
+	save_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	save_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SAVE;
+	save_message.childDev = childDev;
+	for (int i = 0; i < 4; i++)
+	{
+		save_message.mac[i] = scanMessage.mac[i];
+	}
+	int rs = SendMessage(APP_REQ, (uint8_t *)&save_message, sizeof(save_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 3000, dataCompare, 0, 9);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -2844,18 +3540,207 @@ int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
 			uint8_t opcodeRsp;
 			uint16_t vendorId;
 			uint16_t header;
-			uint16_t group;
-		} group_screen_touch_rsp_message_t;
-		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
-		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(roomAddr))
-		{
-			return CODE_OK;
-		}
-		LOGW("group screen touch resp state not match with input control");
+			uint8_t mac[4];
+			uint8_t status;
+		} save_rsp_message_t;
+		save_rsp_message_t *save_rsp_message = (save_rsp_message_t *)dataRsp;
+		uint32_t parentAddrRsp = save_rsp_message->mac[0] | save_rsp_message->mac[1] << 8 | save_rsp_message->mac[2] << 16 | save_rsp_message->mac[3] << 24;
+		uint32_t parentAddr = scanMessage.mac[0] | scanMessage.mac[1] << 8 | scanMessage.mac[2] << 16 | scanMessage.mac[3] << 24;
+		if ((parentAddrRsp != parentAddr) || (save_rsp_message->status == 0))
+			rs = CODE_ERROR;
 	}
-	LOGW("group screen touch err");
-	return CODE_ERROR;
+	return rs;
 }
+
+int BleProtocol::SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode, uint16_t scene)
+{
+	LOGD("SetSceneSeftPowerRemote parent: 0x%04X, device: 0x%04X, button: %d, mode: %d, scene: %d", devAddr, seftPowerAddr, button, mode, scene);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dataCompare[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t childDev;
+		uint8_t button;
+		uint8_t mode;
+		uint16_t scene;
+	} scene_message_t;
+	scene_message_t scene_message = {0};
+	memset(&scene_message, 0x00, sizeof(scene_message));
+	scene_message.ble_message_header.devAddr = devAddr;
+	scene_message.opcodeVendor = RD_OPCODE_CONFIG;
+	scene_message.vendorId = RD_VENDOR_ID;
+	scene_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	scene_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE;
+	scene_message.childDev = seftPowerAddr;
+	scene_message.button = button;
+	scene_message.mode = mode;
+	scene_message.scene = scene;
+
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_message, sizeof(scene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dataCompare, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t status;
+		} scene_rsp_message_t;
+		scene_rsp_message_t *scene_rsp_message = (scene_rsp_message_t *)dataRsp;
+		if (scene_rsp_message->header != RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE)
+			rs = CODE_ERROR;
+	}
+	return rs;
+}
+
+int BleProtocol::DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr, uint8_t button, uint8_t mode)
+{
+	LOGD("DelSceneSeftPowerRemote parent: 0x%04X, device: 0x%04X, button: %d, mode: %d", devAddr, seftPowerAddr, button, mode);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dataCompare[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t childDev;
+		uint8_t button;
+		uint8_t mode;
+		uint16_t feature;
+	} scene_message_t;
+	scene_message_t scene_message = {0};
+	memset(&scene_message, 0x00, sizeof(scene_message));
+	scene_message.ble_message_header.devAddr = devAddr;
+	scene_message.opcodeVendor = RD_OPCODE_CONFIG;
+	scene_message.vendorId = RD_VENDOR_ID;
+	scene_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	scene_message.header = RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE;
+	scene_message.childDev = seftPowerAddr;
+	scene_message.button = button;
+	scene_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_message, sizeof(scene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dataCompare, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t status;
+		} scene_rsp_message_t;
+		scene_rsp_message_t *scene_rsp_message = (scene_rsp_message_t *)dataRsp;
+		if (scene_rsp_message->header != RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE)
+			rs = CODE_ERROR;
+	}
+	return rs;
+}
+
+int BleProtocol::ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr)
+{
+	LOGD("ResetSeftPowerRemote parent: 0x%04X, device: 0x%04X", devAddr, seftPowerAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t dataCompare[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t childDev;
+		uint8_t feature[4];
+	} reset_message_t;
+	reset_message_t reset_message = {0};
+	memset(&reset_message, 0x00, sizeof(reset_message));
+	reset_message.ble_message_header.devAddr = devAddr;
+	reset_message.opcodeVendor = RD_OPCODE_CONFIG;
+	reset_message.vendorId = RD_VENDOR_ID;
+	reset_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	reset_message.header = RD_OPCODE_SEFTPOWER_REMOTE_RESET;
+	reset_message.childDev = seftPowerAddr;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, sizeof(reset_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dataCompare, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t childAddr;
+			uint8_t status;
+		} reset_rsp_message_t;
+		reset_rsp_message_t *reset_rsp_message = (reset_rsp_message_t *)dataRsp;
+		if (reset_rsp_message->header != RD_OPCODE_SEFTPOWER_REMOTE_RESET)
+			rs = CODE_ERROR;
+	}
+	return rs;
+}
+
+// int BleProtocol::AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr)
+// {
+// 	LOGD("AddDeviceToRoom 0x%04x, roomAddr %d", devAddr, roomAddr);
+// 	uint8_t dataRsp[100];
+// 	int lenRsp;
+// 	uint8_t addDevToRoomHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+// 	typedef struct __attribute__((packed))
+// 	{
+// 		ble_message_header_t ble_message_header;
+// 		uint8_t opcodeVendor;
+// 		uint16_t vendorId;
+// 		uint8_t opcodeRsp;
+// 		uint8_t tidPos;
+// 		uint16_t header;
+// 		uint16_t roomAddr;
+// 	} add_dev_to_room_message_t;
+// 	add_dev_to_room_message_t add_dev_to_room_message = {0};
+// 	memset(&add_dev_to_room_message, 0x00, sizeof(add_dev_to_room_message));
+// 	add_dev_to_room_message.ble_message_header.devAddr = devAddr;
+// 	add_dev_to_room_message.opcodeVendor = RD_OPCODE_CONFIG;
+// 	add_dev_to_room_message.vendorId = RD_VENDOR_ID;
+// 	add_dev_to_room_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+// 	add_dev_to_room_message.header = 0x0b0a;
+// 	add_dev_to_room_message.roomAddr = bswap_16(roomAddr);
+// 	int rs = SendMessage(APP_REQ, (uint8_t *)&add_dev_to_room_message, 21, HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDevToRoomHeader, 0, 7);
+// 	if (rs == CODE_OK)
+// 	{
+// 		typedef struct __attribute__((packed))
+// 		{
+// 			uint16_t devAddr;
+// 			uint16_t gwAddr;
+// 			uint8_t opcodeRsp;
+// 			uint16_t vendorId;
+// 			uint16_t header;
+// 			uint16_t group;
+// 		} group_screen_touch_rsp_message_t;
+// 		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
+// 		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(roomAddr))
+// 		{
+// 			return CODE_OK;
+// 		}
+// 		LOGW("group screen touch resp state not match with input control");
+// 	}
+// 	LOGW("group screen touch err");
+// 	return CODE_ERROR;
+// }
 
 int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, uint8_t g, uint8_t r, uint8_t dimOn, uint8_t dimOff)
 {
@@ -2904,7 +3789,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 			uint8_t button;
 		} controlrgb_switch_rsp_message_t;
 		controlrgb_switch_rsp_message_t *controlrgb_switch_rsp_message = (controlrgb_switch_rsp_message_t *)dataRsp;
-		if (controlrgb_switch_rsp_message->header == 0x050b && controlrgb_switch_rsp_message->button == button)
+		if (controlrgb_switch_rsp_message->header == RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH && controlrgb_switch_rsp_message->button == button)
 		{
 			return CODE_OK;
 		}
@@ -3026,9 +3911,9 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	return CODE_ERROR;
 }
 
-int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
+int BleProtocol::CountDownSwitch(uint16_t devAddr, uint16_t timer, uint8_t status)
 {
-	LOGD("SetTimer 0x%04x, timer %d, status %d", devAddr, timer, status);
+	LOGD("CountDownSwitch 0x%04x, timer %d, status %d", devAddr, timer, status);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -3041,7 +3926,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 		uint8_t tidPos;
 		uint16_t header;
 		uint8_t status;
-		uint32_t timer;
+		uint16_t timer;
 	} timer_message_t;
 	timer_message_t timer_message = {0};
 	memset(&timer_message, 0x00, sizeof(timer_message));
@@ -3051,7 +3936,7 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 	timer_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	timer_message.header = RD_OPCODE_CONFIG_SET_TIMER;
 	timer_message.status = status;
-	timer_message.timer = bswap_32(timer);
+	timer_message.timer = timer;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, sizeof(timer_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
@@ -3063,22 +3948,40 @@ int BleProtocol::SetTimer(uint16_t devAddr, uint32_t timer, uint8_t status)
 			uint16_t vendorId;
 			uint16_t header;
 			uint8_t status;
-			uint8_t timer[4];
+			uint8_t timer[2];
 		} timer_rsp_message_t;
 		timer_rsp_message_t *timer_rsp_message = (timer_rsp_message_t *)dataRsp;
 		if (timer_rsp_message->header == 0x070b && timer_rsp_message->status == status)
 		{
 			return CODE_OK;
 		}
-		LOGW("timer resp state not match with input control");
+		LOGW("CountDownSwitch resp state not match with input control");
 	}
-	LOGW("timer switch err");
+	LOGW("CountDownSwitch err");
 	return CODE_ERROR;
 }
 
-int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr)
+int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type)
 {
 	LOGD("Update status Relay Switch 0x%04x", devAddr);
+	uint16_t header;
+	switch (type)
+	{
+	case BLE_SWITCH_1:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_1;
+		break;
+	case BLE_SWITCH_2:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_2;
+		break;
+	case BLE_SWITCH_3:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_3;
+		break;
+	case BLE_SWITCH_4:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH_4;
+		break;
+	default:
+		header = RD_OPCODE_REQUEST_STATUS_SWITCH;
+	}
 	uint8_t dataRsp[100];
 	int lenRsp;
 	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
@@ -3097,13 +4000,107 @@ int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr)
 	request_status_message.opcodeVendor = RD_OPCODE_CONFIG;
 	request_status_message.vendorId = RD_VENDOR_ID;
 	request_status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	request_status_message.header = RD_OPCODE_REQUEST_STATUS_SWITCH;
+	request_status_message.header = header;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&request_status_message, sizeof(request_status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
 		return CODE_OK;
 	}
 	LOGW("request status switch err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uint32_t type)
+{
+	LOGD("ConfigStatusStartup 0x%04x, status %d", devAddr, status);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t statusHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t status;
+	} status_message_t;
+	status_message_t status_message = {0};
+	memset(&status_message, 0x00, sizeof(status_message));
+	status_message.ble_message_header.devAddr = devAddr;
+	status_message.opcodeVendor = RD_OPCODE_CONFIG;
+	status_message.vendorId = RD_VENDOR_ID;
+	status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	status_message.header = RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH;
+	status_message.status = status;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&status_message, sizeof(status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, statusHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t status;
+		} status_rsp_message_t;
+		status_rsp_message_t *status_rsp_message = (status_rsp_message_t *)dataRsp;
+		if (status_rsp_message->header == RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH && status_rsp_message->status == status)
+		{
+			return CODE_OK;
+		}
+		LOGW("status startup resp state not match with input control");
+	}
+	LOGW("status startup switch err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode)
+{
+	LOGD("ConfigModeInputStatusOnoff 0x%04x, mode %d", devAddr, mode);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+	} mode_message_t;
+	mode_message_t mode_message = {0};
+	memset(&mode_message, 0x00, sizeof(mode_message));
+	mode_message.ble_message_header.devAddr = devAddr;
+	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_message.vendorId = RD_VENDOR_ID;
+	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_message.header = RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF;
+	mode_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+		} mode_rsp_message_t;
+		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
+		if (mode_rsp_message->header == RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF && mode_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode input resp state not match with input control");
+	}
+	LOGW("mode input switch err");
 	return CODE_ERROR;
 }
 
@@ -3127,7 +4124,8 @@ int BleProtocol::GetInfoMesh()
 
 int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 {
-	LOGD("UpdateDeviceKeyDev");
+	LOGD("UpdateDeviceKeyDev: %d, devKey: %s", devAddr, devKeyDev.c_str());
+	devKeyDev.erase(std::remove(devKeyDev.begin(), devKeyDev.end(), '-'), devKeyDev.end());
 	if (devKeyDev.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3138,14 +4136,15 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = devAddr};
+			.header = 0x12,
+			.devAddr = devAddr};
 		update_devkey_device.element = 0x0002;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < devKeyDev.length(); i += 2)
 		{
-			sscanf(devKeyDev.c_str() + i * 2, "%2x", (unsigned int *)&update_devkey_device.devKey[i]);
+			std::string hexByte = devKeyDev.substr(i, 2);
+			update_devkey_device.devKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
-		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, sizeof(update_devkey_device_t), 0, 0, 0, 1000);
+		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, sizeof(update_devkey_device_t), 0, 0, 0, 600);
 	}
 	else
 	{
@@ -3156,7 +4155,8 @@ int BleProtocol::UpdateDeviceKeyDev(uint16_t devAddr, string devKeyDev)
 
 int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 {
-	LOGD("UpdateDeviceKeyGateway");
+	LOGD("UpdateDeviceKeyGateway: %s", devKeyDev.c_str());
+	devKeyDev.erase(std::remove(devKeyDev.begin(), devKeyDev.end(), '-'), devKeyDev.end());
 	if (devKeyDev.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3167,12 +4167,13 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 			uint8_t devKey[16];
 		} update_devkey_device_t;
 		update_devkey_device_t update_devkey_device = {
-				.header = 0x12,
-				.devAddr = gwAddr};
+			.header = 0x12,
+			.devAddr = gwAddr};
 		update_devkey_device.element = 0x0001;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < devKeyDev.length(); i += 2)
 		{
-			sscanf(devKeyDev.c_str() + i * 2, "%2x", (unsigned int *)&update_devkey_device.devKey[i]);
+			std::string hexByte = devKeyDev.substr(i, 2);
+			update_devkey_device.devKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&update_devkey_device, sizeof(update_devkey_device_t), 0, 0, 0, 1000);
 	}
@@ -3185,7 +4186,8 @@ int BleProtocol::UpdateDeviceKeyGateway(uint16_t gwAddr, string devKeyDev)
 
 int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 {
-	LOGD("UpdateNetKey");
+	LOGD("UpdateNetKey: %s, indexId: %d", netKey.c_str(), indexId);
+	netKey.erase(std::remove(netKey.begin(), netKey.end(), '-'), netKey.end());
 	if (netKey.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3199,9 +4201,10 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 		set_netkey_message_t set_netkey_message;
 		memset(&set_netkey_message, 0x00, sizeof(set_netkey_message));
 		set_netkey_message.opcode = HCI_GATEWAY_CMD_SET_PRO_PARA;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < netKey.length(); i += 2)
 		{
-			sscanf(netKey.c_str() + i * 2, "%2x", (unsigned int *)&set_netkey_message.netKey[i]);
+			std::string hexByte = netKey.substr(i, 2);
+			set_netkey_message.netKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		set_netkey_message.index = bswap_32(indexId);
 		set_netkey_message.addGw = gwAddr;
@@ -3219,7 +4222,8 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 
 int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 {
-	LOGD("UpdateDevKey");
+	LOGD("UpdateDevKey %s", devKey.c_str());
+	devKey.erase(std::remove(devKey.begin(), devKey.end(), '-'), devKey.end());
 	if (devKey.size() == 32)
 	{
 		typedef struct __attribute__((packed))
@@ -3231,9 +4235,10 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 		set_gwkey_message_t set_gwkey_message;
 		set_gwkey_message.opcode = 0x0D;
 		set_gwkey_message.gwAddr = (gwAddr);
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < devKey.length(); i += 2)
 		{
-			sscanf(devKey.c_str() + i * 2, "%2x", (unsigned int *)&set_gwkey_message.gwKey[i]);
+			std::string hexByte = devKey.substr(i, 2);
+			set_gwkey_message.gwKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&set_gwkey_message, sizeof(set_gwkey_message_t), 0, 0, 0, 1000);
 	}
@@ -3246,7 +4251,8 @@ int BleProtocol::UpdateDevKey(uint16_t gwAddr, string devKey)
 
 int BleProtocol::UpdateAppKey(string appKey)
 {
-	LOGD("UpdateAppKey");
+	LOGD("UpdateAppKey %s", appKey.c_str());
+	appKey.erase(std::remove(appKey.begin(), appKey.end(), '-'), appKey.end());
 	if (appKey.size() == 32)
 	{
 		uint8_t dataRsp[100];
@@ -3260,9 +4266,10 @@ int BleProtocol::UpdateAppKey(string appKey)
 		binding_all_message_t binding_all_message;
 		memset(&binding_all_message, 0x00, sizeof(binding_all_message));
 		binding_all_message.opcode = HCI_GATEWAY_CMD_START_KEYBIND;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < appKey.length(); i += 2)
 		{
-			sscanf(appKey.c_str() + i * 2, "%2x", (unsigned int *)&binding_all_message.appKey[i]);
+			std::string hexByte = appKey.substr(i, 2);
+			binding_all_message.appKey[i / 2] = std::stoi(hexByte, nullptr, 16);
 		}
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&binding_all_message, sizeof(binding_all_message_t), HCI_GATEWAY_CMD_KEY_BIND_EVT, dataRsp, &lenRsp, 30000);
 	}
@@ -3275,7 +4282,7 @@ int BleProtocol::UpdateAppKey(string appKey)
 
 int BleProtocol::UpdateMaxAddr(uint16_t addr)
 {
-	LOGD("UpdateMaxAddr");
+	LOGD("UpdateMaxAddr: %d", addr);
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct __attribute__((packed))

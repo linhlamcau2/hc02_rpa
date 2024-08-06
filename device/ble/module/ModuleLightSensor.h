@@ -7,20 +7,19 @@ class ModuleLightSensor : public Module
 {
 protected:
 	uint16_t lux;
-	int id;
 
 public:
-	ModuleLightSensor(Device *device, uint32_t addr);
+	ModuleLightSensor(Device *device, uint16_t addr);
 	~ModuleLightSensor();
 
 #ifdef CONFIG_SAVE_ATTRIBUTE
 	/**
 	 * @brief Init parameter value from database after system start
 	 *
-	 * @param attributeId id of attribute
+	 * @param attribute id of attribute
 	 * @param value value of attribute
 	 */
-	void InitAttribute(int attributeId, double value);
+	void InitAttribute(string attribute, double value);
 
 	/**
 	 * @brief Save parameter value to database
