@@ -210,7 +210,7 @@ private:
 #endif
 
 public:
-	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
+	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);
 	~Gateway();
 	void init();
 

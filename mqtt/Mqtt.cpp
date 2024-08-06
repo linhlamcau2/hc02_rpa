@@ -12,16 +12,16 @@
 
 using namespace mosqpp;
 
-Mqtt::Mqtt(string host, int port, char* client_id, string username, string password, int keepalive, char *cert, string willset_topic, string willset_payload) : mosquittopp(client_id)
+Mqtt::Mqtt(string host, int port, char* clientId, string username, string password, int keepalive, bool useTls, string willset_topic, string willset_payload) : mosquittopp(clientId)
 {
 	LOGI("MQTT: host: %s, port: %d", host.c_str(), port);
 	this->host = host;
 	this->port = port;
-	this->client_id = client_id;
+	this->clientId = clientId;
 	this->username = username;
 	this->password = password;
 	this->keepalive = keepalive;
-	this->cert = cert;
+	this->useTls = useTls;
 	this->willset_topic = willset_topic;
 	this->willset_payload = willset_payload;
 	connected = false;
@@ -38,11 +38,11 @@ void Mqtt::init()
 {
 }
 
-void Mqtt::SetServer(string host, int port, char* client_id, string username, string password, int keepalive)
+void Mqtt::SetServer(string host, int port, char* clientId, string username, string password, int keepalive)
 {
 	this->host = host;
 	this->port = port;
-	this->client_id = client_id;
+	this->clientId = clientId;
 	this->username = username;
 	this->password = password;
 	this->keepalive = keepalive;
@@ -57,12 +57,11 @@ void Mqtt::SetWillset(string willset_topic, string willset_payload)
 int Mqtt::Connect()
 {
 	LOGI("Connect host %s, port %d, username: %s, pass: %s", host.c_str(), port, username.c_str(), password.c_str());
-	if (cert)
+	if (useTls)
 	{
-		LOGI("Cert: %s", cert);
-		tls_set(cert);
+		tls_set(NULL, "/dev/null");
 		tls_insecure_set(true);
-		tls_opts_set(0, NULL, NULL);
+		tls_opts_set(0);
 	}
 
 	if (!username.empty() || !password.empty())

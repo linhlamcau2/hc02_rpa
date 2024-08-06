@@ -12,13 +12,8 @@
 #include "ButtonSignal.h"
 #endif
 
-CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, char *cert)
-#ifdef ESP_PLATFORM
-	: Mqtt(address, port, clientId, username, password, keepalive)
-#else
-	: Mqtt(address, port, (char*)clientId.c_str(), username, password, keepalive, cert)
-#endif
-
+CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive)
+	: Mqtt(address, port, (char*)clientId.c_str(), username, password, keepalive, true)
 {
 	this->mac = mac;
 

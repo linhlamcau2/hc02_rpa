@@ -80,16 +80,6 @@ int main(int argc, char *argv[])
 	// zigbeeProtocol->CommissionFormation();
 #endif
 
-	string cmd_get_cert = "openssl s_client -connect " + config->GetHost() + ":" + to_string(config->GetPort()) + " 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'";
-	string cert = Util::ExecuteCMD(cmd_get_cert.c_str());
-	LOGI("cert: %s", cert.c_str());
-	if (!cert.empty())
-	{
-		ofstream certFile(CERT_FILE_NAME);
-		certFile << cert;
-		certFile.close();
-	}
-
 	string mac = Wifi::GetMacAddress();
 	// string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
@@ -107,7 +97,7 @@ int main(int argc, char *argv[])
 	}
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
-	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(), CERT_FILE_NAME,
+	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), "hc-" + mac, "hc-" + mac, config->GetPassword(), config->GetKeepAlive(),
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
