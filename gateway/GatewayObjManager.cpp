@@ -451,7 +451,8 @@ int Gateway::isDevFast2Room(Device *device)
 			 device->GetType() == BLE_SWITCH_RGB_1_SQUARE ||
 			 device->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
 			 device->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
-			 device->GetType() == BLE_SWITCH_RGB_4_SQUARE)
+			 device->GetType() == BLE_SWITCH_RGB_4_SQUARE ||
+			 device->GetType() == BLE_SWITCH_KNOB)
 	{
 		rs = 1;
 	}

@@ -13,7 +13,7 @@
 #endif
 
 CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive)
-	: Mqtt(address, port, (char*)clientId.c_str(), username, password, keepalive, true)
+	: Mqtt(address, port, clientId, username, password, keepalive, true)
 {
 	this->mac = mac;
 
