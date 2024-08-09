@@ -216,7 +216,7 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	LOGI("OnCloudConnect: %d", isConnected);
 	Json::Value jsonValue;
 	Json::Value dataValue;
-	dataValue["status"] = isConnected;
+	dataValue["status"] = isConnected ? 1 : 0;
 	dataValue["version"] = STR(VERSION);
 	dataValue["ip"] = Wifi::GetIP();
 	jsonValue["cmd"] = "homeController";
@@ -226,7 +226,7 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	if (isConnected)
 	{
 		Util::LedInternet(true);
-		OnlineHC(mac);
+		// OnlineHC(mac);
 		GatewayConnectToCloudNotice();
 		if (!isReconnect)
 		{

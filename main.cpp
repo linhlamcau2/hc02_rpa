@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 	LOGI("mac: %s", mac.c_str());
 
 	string passMqttLocal = "1";
-#ifdef __OPENWRT__
+#ifndef ESP_PLATFORM
 	string macNotDot = mac;
 	macNotDot.erase(std::remove(macNotDot.begin(), macNotDot.end(), ':'), macNotDot.end());
 	string key = "RANGDONGRALSMART";

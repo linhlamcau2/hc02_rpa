@@ -13,12 +13,21 @@
 using namespace mosqpp;
 
 Mqtt::Mqtt(string host, int port, string clientId, string username, string password, int keepalive, bool useTls, string willset_topic, string willset_payload)
-	: host(host), port(port), clientId(clientId), username(username), password(password), keepalive(keepalive), useTls(useTls), willset_topic(willset_topic), willset_payload(willset_payload)
+	: mosquittopp(nullptr)
 {
 	LOGI("MQTT: host: %s, port: %d", this->host.c_str(), this->port);
+	this->host = host;
+	this->port = port;
+	this->clientId = clientId;
+	this->username = username;
+	this->password = password;
+	this->keepalive = keepalive;
+	this->useTls = useTls;
+	this->willset_topic = willset_topic;
+	this->willset_payload = willset_payload;
 	connected = false;
 	reconnected = false;
-	mosquittopp(this->clientId.c_str());
+	mosquittopp::reinitialise(this->clientId.c_str(), true);
 }
 
 Mqtt::~Mqtt()
