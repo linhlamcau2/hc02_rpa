@@ -226,7 +226,7 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	if (isConnected)
 	{
 		Util::LedInternet(true);
-		// OnlineHC(mac);
+		OnlineHC(mac);
 		GatewayConnectToCloudNotice();
 		if (!isReconnect)
 		{

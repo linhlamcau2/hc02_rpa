@@ -340,7 +340,7 @@ static int TableRuleConvert(sqlite3_stmt *stmt, void *ptr)
                                             sun = 1;
                                     }
                                 }
-                                repeat = mon * 64 + tue * 32 + wed * 16 + thu * 8 + fri * 4 + sat * 2 + sun;
+                                repeat = sun * 64 + sat * 32 + fri * 16 + thu * 8 + wed * 4 + tue * 2 + mon;
                             }
                             ruleInput["repeat"] = repeat;
 
