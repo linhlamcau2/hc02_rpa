@@ -14,7 +14,7 @@
 LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : MqttBroker()
 #else
 LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive)
-	: Mqtt(address, port, token, username, password, keepalive)
+	: Mqtt(address, port, token, username, password, keepalive, true)
 #endif
 {
 	this->mac = mac;
