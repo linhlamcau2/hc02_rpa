@@ -100,16 +100,19 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 		}
 		else // sceneble for switch touch, electrical
 		{
+			bool isSuccess = true;
 			for (int i = 0; i < device->GetNumElement(); i++)
 			{
 				if (data.isMember(KEY_ATTRIBUTE_ONOFF) && data[KEY_ATTRIBUTE_ONOFF].isInt())
 				{
-					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
+					if (bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0) != CODE_OK)
+						isSuccess = false;
 				}
 
 				if (data.isMember(KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")))
 				{
-					bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0);
+					if (bleProtocol->SetSceneBle(device->GetAddr() + i, addr, 0) != CODE_OK)
+						isSuccess = false;
 				}
 			}
 			mtx.lock();
@@ -122,7 +125,11 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool sendBle, bool add
 
 			if (addDb)
 				database->DeviceInSceneBleAdd(this, device, data.toString());
-			return CODE_OK;
+
+			if (isSuccess)
+				return CODE_OK;
+			else
+				return CODE_ERROR;
 		}
 	}
 	return CODE_ERROR;
