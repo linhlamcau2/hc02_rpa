@@ -58,7 +58,7 @@ void Module::CheckTrigger(Json::Value &data)
 		for (auto &ruleInputDevice : device->deviceRuleInputList)
 		{
 			Json::Value &ruleValue = *(ruleInputDevice->GetData());
-			if (data.isObject() && data.isObject())
+			if (data.isObject() && ruleValue.isObject())
 			{
 				for (auto const &key : data.getMemberNames())
 				{

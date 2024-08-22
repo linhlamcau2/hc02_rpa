@@ -4,6 +4,7 @@
 #include "module/ModuleStatusStartup.h"
 #include "module/ModuleCountDownSwitch.h"
 #include "module/ModuleCallScene.h"
+#include "module/ModuleButtonAll.h"
 
 DeviceBleWifiSwitchElectrical::DeviceBleWifiSwitchElectrical(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, uint8_t countElement)
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
@@ -13,6 +14,7 @@ DeviceBleWifiSwitchElectrical::DeviceBleWifiSwitchElectrical(string id, string n
 	ModuleDimonDimoff *moduleDimonDimoff;
 	ModuleStatusStartup *moduleStatusStartup;
 	ModuleCallScene *moduleCallScene;
+	ModuleButtonAll *moduleButtonAll;
 
 	this->countElement = countElement;
 	for (int i = 0; i < countElement; i++)
@@ -28,5 +30,8 @@ DeviceBleWifiSwitchElectrical::DeviceBleWifiSwitchElectrical(string id, string n
 	modules.push_back(moduleStatusStartup);
 	moduleCallScene = new ModuleCallScene(this, addr);
 	modules.push_back(moduleCallScene);
+	moduleButtonAll = new ModuleButtonAll(this, addr, countElement);
+	modules.push_back(moduleButtonAll);
+
 	powerSource = POWER_AC;
 }
