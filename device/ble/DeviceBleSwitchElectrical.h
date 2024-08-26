@@ -4,6 +4,8 @@
 #include "module/ModuleButton.h"
 #include "module/ModuleOnOff.h"
 #include "module/ModuleDimonDimoff.h"
+#include "module/ModuleStatusStartup.h"
+#include "module/ModuleCountDownSwitch.h"
 
 using namespace std;
 
@@ -13,6 +15,8 @@ private:
 	ModuleButton *moduleButton;
 	ModuleOnOff *moduleOnOff;
 	ModuleDimonDimoff *moduleDimonDimoff;
+	ModuleStatusStartup *moduleStatusStartup;
+	ModuleCountDownSwitch *moduleCountDownSwitch;
 	uint8_t element;
 
 public:

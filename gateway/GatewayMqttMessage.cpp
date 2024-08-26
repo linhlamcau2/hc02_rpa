@@ -58,6 +58,7 @@ void Gateway::initMqttMessage()
 	OnDeviceRpcCallbackRegister("DEVICE_UPDATE", bind(&Gateway::OnRpcUpdateAllTelemetry, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("REMOTE_SSH", bind(&Gateway::OnRpcSSHRemote, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("UPDATE_FIRMWARE", bind(&Gateway::OnRpcUpdateFirmware, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("UPDATE_FIRMWARE_URL", bind(&Gateway::OnRpcUpdateFirmwareUrl, this, placeholders::_1, placeholders::_2));
 
 	OnDeviceRpcCallbackRegister("SCENE_FOR_REMOTE", bind(&Gateway::OnRpcSetSceneForRemote, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("DELETE_SCENE_FOR_REMOTE", bind(&Gateway::OnRpcDelSceneForRemote, this, placeholders::_1, placeholders::_2));
@@ -396,11 +397,11 @@ int Gateway::OnRpcBleDelDevice(Json::Value &reqValue, Json::Value &respValue)
 				{
 					DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
 					int numDeviceChild = 0;
-					if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2_SQUARE)
+					if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_2 || deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 || deviceBle->GetType() == BLE_SWITCH_RGB_2 || deviceBle->GetType() == BLE_SWITCH_RGB_2_SQUARE)
 					{
 						numDeviceChild = 1;
 					}
-					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3_SQUARE)
+					else if (deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_3 || deviceBle->GetType() == BLE_SWITCH_ELECTRICAL_3_V2 || deviceBle->GetType() == BLE_SWITCH_RGB_3 || deviceBle->GetType() == BLE_SWITCH_RGB_3_SQUARE)
 					{
 						numDeviceChild = 2;
 					}
@@ -3193,6 +3194,9 @@ int Gateway::OnRpcPowerSwitchTimeout(Json::Value &reqValue, Json::Value &respVal
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_1_V2 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 ||
+					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_3_V2 ||
 					deviceParent->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER ||
 					deviceParent->GetType() == BLE_SWITCH_RGB_SOCKET_1)
 				{
@@ -3885,6 +3889,66 @@ int Gateway::OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue)
 			// DelAllRule();
 			// DelAllSceneBle();
 			// DelAllSceneDelay();
+#ifdef ESP_PLATFORM
+			config->SetUrlOta(domain);
+			config->SetCheckSumOta(sum);
+			esp_restart();
+#endif
+			Ota::startOta(name, domain, sum);
+			return CODE_OK;
+		}
+	}
+	else
+	{
+		LOGW("Format error");
+	}
+	return CODE_ERROR;
+}
+
+int Gateway::OnRpcUpdateFirmwareUrl(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OnRPCUpdateFirmware");
+	if (reqValue.isMember("DATA") && reqValue["DATA"].isArray())
+	{
+		Json::Value datasValue = reqValue["DATA"];
+		string nameOld = "";
+		string name;
+		string sum;
+		string url;
+		int numFirm = datasValue.size();
+		if (numFirm > 0)
+		{
+			Json::Value dataValue = datasValue[numFirm - 1];
+			if (dataValue.isMember("NAME") && dataValue["NAME"].isString() &&
+				dataValue.isMember("CHECK_SUM") && dataValue["CHECK_SUM"].isString() &&
+				dataValue.isMember("URL") && dataValue["URL"].isString())
+			{
+				name = dataValue["NAME"].asString();
+				sum = dataValue["CHECK_SUM"].asString();
+				url = dataValue["URL"].asString();
+				string check = name + ".tar.xz";
+
+#ifdef ESP_PLATFORM
+
+				if (url.find("smh_gw.bin") != std::string::npos)
+				{
+					nameOld = name;
+				}
+#else
+				if (url.find(check) != std::string::npos)
+				{
+					if (name > nameOld)
+					{
+						nameOld = name;
+					}
+				}
+#endif
+			}
+		}
+		if (nameOld != "")
+		{
+			LOGD("name: %s, url: %s, sum: %s", name.c_str(), url.c_str(), sum.c_str());
+			string domain = url;
 #ifdef ESP_PLATFORM
 			config->SetUrlOta(domain);
 			config->SetCheckSumOta(sum);

@@ -158,6 +158,7 @@ private:
 	int OnRpcControlSceneBle(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcSSHRemote(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcUpdateFirmware(Json::Value &reqValue, Json::Value &respValue);
+	int OnRpcUpdateFirmwareUrl(Json::Value &reqValue, Json::Value &respValue);
 
 	int OnRpcAddDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);
 	int OnRpcRemoveDeviceSmartHomeToRoom(Json::Value &reqValue, Json::Value &respValue);

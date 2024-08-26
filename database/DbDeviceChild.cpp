@@ -39,7 +39,7 @@ int Db::DeviceBleChildRead()
 
 int Db::DeviceBleChildAdd(string deviceId, int element)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, element) VALUES ('" + deviceId + "'," + to_string(element) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, element) VALUES ('" + deviceId + "'," + to_string(element) + ");";
 	return Sqlite_Exec(sql);
 }
 

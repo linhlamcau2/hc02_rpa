@@ -155,6 +155,9 @@ enum
 	BLE_SWITCH_ELECTRICAL_3 = 24003,
 	BLE_SWITCH_ELECTRICAL_4 = 24004,
 	BLE_SWITCH_ELECTRICAL_WATER_HEATER = 24005,
+	BLE_SWITCH_ELECTRICAL_1_V2 = 24006,
+	BLE_SWITCH_ELECTRICAL_2_V2 = 24007,
+	BLE_SWITCH_ELECTRICAL_3_V2 = 24008,
 
 	BLE_SWITCH_RGB_SOCKET_1 = 26003,
 
@@ -257,7 +260,7 @@ public:
 	// virtual void Getstatus(Json::Value &jsonValue) {}
 
 	virtual void InputData(Json::Value &dataValue) {}
-	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0){};
+	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0) {};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
 
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }

@@ -225,11 +225,12 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 	Util::LedInternet(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedInternet = GetStatusLedInternet();
-	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
-	{
-		SetLedInternet(!statusLedInternet);
-	}
+	// bool statusLedInternet = GetStatusLedInternet();
+	// if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+	// {
+	// 	SetLedInternet(!statusLedInternet);
+	// }
+	SetLedInternet(false);
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
@@ -298,10 +299,11 @@ void CloudProtocol::OnDeviceRpc(string &topic, string &payload)
 		LOGW("OnDeviceRpc payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
-	{
-		SetLedInternet(statusLedInternet);
-	}
+	// if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+	// {
+	// 	SetLedInternet(statusLedInternet);
+	// }
+	SetLedInternet(true);
 #endif
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();

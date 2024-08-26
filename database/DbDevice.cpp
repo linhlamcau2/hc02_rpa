@@ -57,7 +57,7 @@ int Db::DeviceRead()
 
 int Db::DeviceAdd(Device *device)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "')";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (device_id, name, mac, data, addr, type, firmware_version) VALUES ('" + device->GetId() + "','" + device->GetName() + "','" + device->GetMac() + "','" + macaron::Base64::Encode(device->GetData()) + "'," + to_string(device->GetAddr()) + "," + to_string(device->GetType()) + ",'" + device->GetVersionStr() + "');";
 	return Sqlite_Exec(sql);
 }
 

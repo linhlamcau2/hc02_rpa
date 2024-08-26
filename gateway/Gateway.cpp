@@ -847,6 +847,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	if (scanDevice->GetType() == BLE_SWITCH_RGB_2 ||
 		scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE ||
 		scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
+		scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 ||
 		scanDevice->GetType() == BLE_SWITCH_RGB_2_V2 ||
 		scanDevice->GetType() == BLE_SWITCH_RGB_2_SQUARE_V2 ||
 		scanDevice->GetType() == BLE_SWITCH_2_CEILING)
@@ -861,6 +862,7 @@ void Gateway::AddDeviceToScanList(Device *scanDevice)
 	else if (scanDevice->GetType() == BLE_SWITCH_RGB_3 ||
 			 scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE ||
 			 scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
+			 scanDevice->GetType() == BLE_SWITCH_ELECTRICAL_3_V2 ||
 			 scanDevice->GetType() == BLE_SWITCH_RGB_3_V2 ||
 			 scanDevice->GetType() == BLE_SWITCH_RGB_3_SQUARE_V2 ||
 			 scanDevice->GetType() == BLE_SWITCH_3_CEILING)
@@ -1036,10 +1038,12 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleSwitchTouchRgb(id, name, mac, data, addr, type, version, 4);
 		break;
 	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_1_V2:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 1);
 		break;
 	case BLE_SWITCH_ELECTRICAL_2:
+	case BLE_SWITCH_ELECTRICAL_2_V2:
 		for (int i = 1; i < 2; i++)
 		{
 			deviceChildId = Util::GenIdDeviceByElement(id, i, Util::checkGenIdDeviceChild(data, KEYJSON_GEN_DEVICEID));
@@ -1056,6 +1060,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, string data, u
 		device = new DeviceBleSwitchElectrical(id, name, mac, data, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_ELECTRICAL_3:
+	case BLE_SWITCH_ELECTRICAL_3_V2:
 		for (int i = 1; i < 3; i++)
 		{
 			deviceChildId = Util::GenIdDeviceByElement(id, i, Util::checkGenIdDeviceChild(data, KEYJSON_GEN_DEVICEID));
@@ -1606,6 +1611,9 @@ Rule *Gateway::AddRule(Json::Value &ruleValue, bool addGateway, bool addDatabase
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_2 ||
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_3 ||
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_4 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_1_V2 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_2_V2 ||
+									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_3_V2 ||
 									deviceInputRule->GetType() == BLE_SWITCH_ELECTRICAL_WATER_HEATER ||
 									deviceInputRule->GetType() == BLE_SWITCH_RGB_SOCKET_1 ||
 									deviceInputRule->GetType() == BLE_SWITCH_RGB_1_V2 ||

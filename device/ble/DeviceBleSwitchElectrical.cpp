@@ -14,6 +14,10 @@ DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, str
 	modules.push_back(moduleOnOff);
 	moduleDimonDimoff = new ModuleDimonDimoff(this, addr, 0);
 	modules.push_back(moduleDimonDimoff);
+	moduleStatusStartup = new ModuleStatusStartup(this, addr);
+	modules.push_back(moduleStatusStartup);
+	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
+	modules.push_back(moduleCountDownSwitch);
 	powerSource = POWER_AC;
 }
 

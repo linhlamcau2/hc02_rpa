@@ -304,11 +304,12 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(false);
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedService = GetStatusLedService();
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(!statusLedService);
-	}
+	// bool statusLedService = GetStatusLedService();
+	// if (!buttonSignal->GetStatus())
+	// {
+	// 	SetLedService(!statusLedService);
+	// }
+	SetLedService(false);
 #endif
 	while (l >= 4)
 	{
@@ -412,10 +413,11 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 	Util::LedBle(true);
 	Util::LedServiceUnlock();
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus())
-	{
-		SetLedService(statusLedService);
-	}
+	// if (!buttonSignal->GetStatus())
+	// {
+	// 	SetLedService(statusLedService);
+	// }
+	SetLedService(true);
 #endif
 	return l;
 }
@@ -1179,9 +1181,13 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_SWITCH_RGB_4:
 	case BLE_SWITCH_RGB_4_SQUARE:
 	case BLE_SWITCH_ELECTRICAL_1:
+	case BLE_SWITCH_ELECTRICAL_2:
 	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
 	case BLE_SWITCH_ELECTRICAL_3:
 	case BLE_SWITCH_ELECTRICAL_4:
+	case BLE_SWITCH_ELECTRICAL_1_V2:
+	case BLE_SWITCH_ELECTRICAL_2_V2:
+	case BLE_SWITCH_ELECTRICAL_3_V2:
 	case BLE_SWITCH_1:
 	case BLE_SWITCH_WATER_HEATER:
 	case BLE_SWITCH_2:

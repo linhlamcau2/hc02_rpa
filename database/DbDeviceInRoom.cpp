@@ -73,6 +73,6 @@ int Db::DeviceInRoomDelDev(Device *device)
 
 int Db::DeviceInRoomDelAll()
 {
-	string sql = "DELETE FROM " TABLE_NAME " ; ";
+	string sql = "DELETE FROM " TABLE_NAME ";";
 	return Sqlite_Exec(sql);
 }

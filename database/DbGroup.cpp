@@ -55,7 +55,7 @@ int Db::GroupRead()
 
 int Db::GroupAdd(Group *group)
 {
-	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + ")";
+	string sql = "INSERT OR REPLACE INTO " TABLE_NAME " (group_id, name, group_addr) VALUES ('" + group->GetId() + "','" + group->GetName() + "'," + to_string(group->GetAddr()) + ");";
 	return Sqlite_Exec(sql);
 }
 

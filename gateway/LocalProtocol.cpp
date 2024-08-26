@@ -201,11 +201,12 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 	Json::Value payloadJson;
 	Util::LedServiceLock();
 #ifdef ESP_PLATFORM
-	bool statusLedInternet = GetStatusLedInternet();
-	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
-	{
-		SetLedInternet(!statusLedInternet);
-	}
+	// bool statusLedInternet = GetStatusLedInternet();
+	// if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+	// {
+	// 	SetLedInternet(!statusLedInternet);
+	// }
+	SetLedInternet(false);
 #endif
 	if (payloadJson.parse(payload) && payloadJson.isObject() &&
 		payloadJson.isMember("CMD") && payloadJson["CMD"].isString())
@@ -274,10 +275,11 @@ void LocalProtocol::OnLocalMessage(string &topic, string &payload)
 		LOGW("OnLocalMessage payload: %s", payload.c_str());
 	}
 #ifdef ESP_PLATFORM
-	if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
-	{
-		SetLedInternet(statusLedInternet);
-	}
+	// if (!buttonSignal->GetStatus() && GetModeLedInternet() != LED_BLINK && GetModeLedInternet() != LED_FLASH)
+	// {
+	// 	SetLedInternet(statusLedInternet);
+	// }
+	SetLedInternet(true);
 #endif
 	Util::LedServiceUnlock();
 }

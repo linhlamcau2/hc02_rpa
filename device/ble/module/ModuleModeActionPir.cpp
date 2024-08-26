@@ -116,7 +116,7 @@ int ModuleModeActionPir::Do(Json::Value &dataValue)
 			dataValue.isMember(KEY_ATTRIBUTE_ACMODE) && dataValue[KEY_ATTRIBUTE_ACMODE].isInt())
 	{
 		int mode = dataValue[KEY_ATTRIBUTE_ACMODE].asInt();
-		if bleProtocol->SetModeActionPirLightSensor(addr, mode); == CODE_OK)
+		if (bleProtocol->SetModeActionPirLightSensor(addr, mode) == CODE_OK)
 		{
 			this->mode = mode;
 			return CODE_OK;
