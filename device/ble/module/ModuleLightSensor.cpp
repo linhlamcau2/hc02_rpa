@@ -90,10 +90,10 @@ int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger(jsonValue);
 
-			return false;
+			return CODE_OK;
 		}
 	}
-	return true;
+	return CODE_ERROR;
 }
 
 bool ModuleLightSensor::CheckData(Json::Value &dataValue, bool &rs)

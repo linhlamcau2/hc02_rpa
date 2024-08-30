@@ -46,6 +46,13 @@
 #include "DeviceBleWifiCurtain.h"
 #include "DeviceBleWifiSwitchRoolDoor.h"
 #include "DeviceBleSwitchKnob.h"
+#include "DeviceBleLightAgriculturalSensor.h"
+#include "DeviceBleTempHumAirAgriculturalSensor.h"
+#include "DeviceBleTempHumSoilAgriculturalSensor.h"
+#include "DeviceBlePhSoilAgriculturalSensor.h"
+#include "DeviceBleEcTempHumSoilAgriculturalSensor.h"
+#include "DeviceBlePhTempWaterAgriculturalSensor.h"
+#include "DeviceBleOxyTempWaterAgriculturalSensor.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -919,6 +926,29 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_SWITCH_KNOB:
 		device = new DeviceBleSwitchKnob(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_TEMP_HUM_AIR_AGRICULTURAL_SENSOR:
+		device = new DeviceBleTempHumAirAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_LIGHT_SENSOR:
+		device = new DeviceBleLightAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_TEMP_HUM_SOIL_AGRICULTURAL_SENSOR:
+		device = new DeviceBleTempHumSoilAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_PH_SOIL_AGRICULTURAL_SENSOR:
+		device = new DeviceBlePhSoilAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_EC_TEMP_HUM_SOIL_AGRICULTURAL_SENSOR:
+		device = new DeviceBleTempHumSoilAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_PH_WATER_AGRICULTURAL_SENSOR:
+		device = new DeviceBlePhTempWaterAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_EC_WATER_AGRICULTURAL_SENSOR:
+		break;
+	case BLE_OXY_WATER_AGRICULTURAL_SENSOR:
+		device = new DeviceBleOxyTempWaterAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 
 #ifndef ESP_PLATFORM
