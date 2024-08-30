@@ -8,7 +8,7 @@ DeviceBleSwitchCeiling::DeviceBleSwitchCeiling(string id, string name, string ma
 	ModuleOnOff *moduleOnOff;
 	ModuleCallScene *moduleCallScene;
 
-    this->countElement = countElement;
+    this->countElement = element;
 	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
 	modules.push_back(moduleCountDownSwitch);
 	moduleStatusStartup = new ModuleStatusStartup(this, addr);
