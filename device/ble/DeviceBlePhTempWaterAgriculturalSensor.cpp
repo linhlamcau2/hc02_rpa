@@ -1,15 +1,21 @@
 #include "DeviceBlePhTempWaterAgriculturalSensor.h"
+#include "module/ModulePhWater.h"
+#include "module/ModuleTempWater.h"
+#include "module/ModuleTimeRspSensor.h"
 
 DeviceBlePhTempWaterAgriculturalSensor::DeviceBlePhTempWaterAgriculturalSensor(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version)
-		: DeviceBle(id, name, mac, dataJson, addr, type, version)
+    : DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
-    ModulePhWater * modulePhWater;
-    ModuleTempWater * moduleTempWater;
+    ModulePhWater *modulePhWater;
+    ModuleTempWater *moduleTempWater;
+    ModuleTimeRspSensor *moduleTimeRspSensor;
 
     modulePhWater = new ModulePhWater(this, addr);
     modules.push_back(modulePhWater);
     moduleTempWater = new ModuleTempWater(this, addr);
     modules.push_back(moduleTempWater);
-    
+    moduleTimeRspSensor = new ModuleTimeRspSensor(this, addr);
+    modules.push_back(moduleTimeRspSensor);
+
     powerSource = POWER_BATTERY;
 }

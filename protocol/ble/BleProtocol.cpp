@@ -2662,6 +2662,40 @@ int BleProtocol::SetDistanceSensor(uint16_t devAddr, uint8_t distance)
 	return CODE_ERROR;
 }
 
+int BleProtocol::SetTimeRspSensor(uint16_t devAddr, uint16_t time)
+{	
+	LOGD("Set time rsp sensor: 0x%04X, time: %d", devAddr, time);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timeRspHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t time;
+	} timeRsp_message_t;
+	timeRsp_message_t timeRsp_message = {0};
+	memset(&timeRsp_message, 0x00, sizeof(timeRsp_message));
+	timeRsp_message.ble_message_header.devAddr = devAddr;
+	timeRsp_message.opcodeVendor = RD_OPCODE_CONFIG;
+	timeRsp_message.vendorId = RD_VENDOR_ID;
+	timeRsp_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	timeRsp_message.header = RD_OPCODE_CONFIG_TIME_RSP_SENSOR;
+	timeRsp_message.time = time;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&timeRsp_message, sizeof(timeRsp_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeRspHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		return CODE_OK;
+	}
+	else
+		LOGW("Set distance error");
+	return CODE_ERROR;
+}
+
 int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t icon, uint8_t type)
 {
 	LOGD("SceneForScreenTouch 0x%04X, scene %d, icon %d", devAddr, scene, icon);

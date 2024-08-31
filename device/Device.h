@@ -56,6 +56,7 @@
 #define KEY_ATTRIBUTE_DIM_OFF "dimOff"
 #define KEY_ATTRIBUTE_RELAY "rl"
 #define KEY_ATTRIBUTE_DISTANCE "distance"
+#define KEY_ATTRIBUTE_TIME_RSP "timeRsp"
 #define KEY_ATTRIBUTE_STATUS_STARTUP "statusStartup"
 #define KEY_ATTRIBUTE_MODE_INPUT "modeInput"
 

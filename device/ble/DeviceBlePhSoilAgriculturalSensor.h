@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "module/ModulePhSoil.h"
 
 using namespace std;
 

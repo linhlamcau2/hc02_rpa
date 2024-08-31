@@ -1,8 +1,6 @@
 #pragma once
 
 #include "DeviceBle.h"
-#include "module/ModulePhWater.h"
-#include "module/ModuleTempWater.h"
 
 using namespace std;
 
