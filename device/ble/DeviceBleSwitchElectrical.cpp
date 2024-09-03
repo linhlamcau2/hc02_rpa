@@ -4,8 +4,8 @@
 DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element)
 	: DeviceBle(id, name, mac, data, addr, type, version)
 {
-	this->element = element;
-	for (int i = 0; i < this->element; i++)
+	this->countElement = element;
+	for (int i = 0; i < this->countElement; i++)
 	{
 		moduleButton = new ModuleButton(this, addr + i);
 		modules.push_back(moduleButton);
@@ -18,6 +18,8 @@ DeviceBleSwitchElectrical::DeviceBleSwitchElectrical(string id, string name, str
 	modules.push_back(moduleStatusStartup);
 	moduleCountDownSwitch = new ModuleCountDownSwitch(this, addr);
 	modules.push_back(moduleCountDownSwitch);
+	moduleAllRelay = new ModuleAllRelay(this, addr);
+	modules.push_back(moduleAllRelay);
 	powerSource = POWER_AC;
 }
 

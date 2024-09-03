@@ -22,7 +22,7 @@ public:
 
 	string GetDeviceKey(string data);
 	string GetDeviceKey();
-	int GetCountElement();
+	int GetNumElement();
 
 	virtual bool CheckAddr(uint32_t addr);
 

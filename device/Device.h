@@ -262,6 +262,6 @@ public:
 	virtual void InputData(Json::Value &dataValue) {}
 	virtual void InputData(uint8_t *data, int len, uint32_t addr = 0) {};
 	virtual bool CheckData(Json::Value &dataValue, bool &rs) { return false; }
-
+	virtual int GetNumElement() { return 1; }
 	virtual int Do(Json::Value &dataValue) { return CODE_ERROR; }
 };

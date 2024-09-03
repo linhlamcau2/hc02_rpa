@@ -6,6 +6,7 @@
 #include "module/ModuleDimonDimoff.h"
 #include "module/ModuleStatusStartup.h"
 #include "module/ModuleCountDownSwitch.h"
+#include "module/ModuleAllRelay.h"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ private:
 	ModuleDimonDimoff *moduleDimonDimoff;
 	ModuleStatusStartup *moduleStatusStartup;
 	ModuleCountDownSwitch *moduleCountDownSwitch;
-	uint8_t element;
+	ModuleAllRelay *moduleAllRelay;
 
 public:
 	DeviceBleSwitchElectrical(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);

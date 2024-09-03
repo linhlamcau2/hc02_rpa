@@ -5,6 +5,7 @@
 #include "module/ModuleOnOff.h"
 #include "module/ModuleCountDownSwitch.h"
 #include "module/ModuleStatusStartup.h"
+#include "module/ModuleAllRelay.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ private:
     ModuleOnOff *moduleOnOff;
     ModuleCountDownSwitch *moduleCountDownSwitch;
     ModuleStatusStartup *moduleStatusStartup;
-    uint8_t element;
+    ModuleAllRelay *moduleAllRelay;
 
 public:
     DeviceBleSwitchCeiling(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);

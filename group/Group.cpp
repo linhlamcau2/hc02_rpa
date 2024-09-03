@@ -65,11 +65,26 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
 		DeviceInGroup *deviceInGroup = new DeviceInGroup(device, epId);
+		int indexType = device->GetType() / 1000;
 		if (sendBle)
 		{
 			if (bleProtocol)
 			{
-				if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
+				if (indexType == 22 || indexType == 24)
+				{
+					for (int i = 0; i < device->GetNumElement(); i++)
+					{
+						bleProtocol->AddDev2Group(device->GetAddr(), device->GetAddr() + i, addr + ID_START);
+					}
+					if (deviceInGroup)
+					{
+						mtx.lock();
+						deviceList.push_back(deviceInGroup);
+						mtx.unlock();
+						return CODE_OK;
+					}
+				}
+				else if (bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 				{
 					if (deviceInGroup)
 					{
@@ -125,9 +140,25 @@ int Group::DelDevice(Device *device, int epId)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
+		int indexType = device->GetType() / 1000;
 		if (bleProtocol)
 		{
-			if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
+			if (indexType == 22 || indexType == 24)
+			{
+				for (int i = 0; i < device->GetNumElement(); i++)
+				{
+					bleProtocol->DelDev2Group(device->GetAddr(), device->GetAddr() + i, addr + ID_START);
+				}
+				int deviceIndex = GetPositionDevice(device, epId);
+				if (deviceIndex > -1)
+				{
+					mtx.lock();
+					deviceList.erase(deviceList.begin() + deviceIndex);
+					mtx.unlock();
+				}
+				return CODE_OK;
+			}
+			else if (bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START) == CODE_OK)
 			{
 				int deviceIndex = GetPositionDevice(device, epId);
 				if (deviceIndex > -1)

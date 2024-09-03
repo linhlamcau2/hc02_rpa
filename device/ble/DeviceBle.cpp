@@ -31,7 +31,7 @@ string DeviceBle::GetDeviceKey(string data)
 
 bool DeviceBle::CheckAddr(uint32_t addr)
 {
-	return ((this->addr <= addr) && (this->addr + countElement - 1 >= addr));
+	return (this->addr == addr) /*&& ((this->addr + this->countElement - 1) >= addr))*/;
 }
 
 string DeviceBle::GetDeviceKey()
@@ -39,7 +39,7 @@ string DeviceBle::GetDeviceKey()
 	return deviceKey;
 }
 
-int DeviceBle::GetCountElement()
+int DeviceBle::GetNumElement()
 {
 	return this->countElement;
 }

@@ -6,6 +6,7 @@
 #include "module/ModuleCountDownSwitch.h"
 #include "module/ModuleRgb.h"
 #include "module/ModuleStatusStartup.h"
+#include "module/ModuleAllRelay.h"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ private:
 	ModuleRgb *moduleRgb;
 	ModuleCountDownSwitch *moduleCountDownSwitch;
 	ModuleStatusStartup *moduleStatusStartup;
-	uint8_t element;
+	ModuleAllRelay * moduleAllRelay;
 
 public:
 	DeviceBleSwitchTouchRgb(string id, string name, string mac, string data, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
