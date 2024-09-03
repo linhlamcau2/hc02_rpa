@@ -12,6 +12,7 @@ Device::Device(string id, string name, string mac, string data, uint32_t addr, u
 	this->data = data;
 	this->version = version;
 	powerSource = POWER_UNKNOWN;
+	this->propertyJsonUpdate = Json::arrayValue;
 
 	lastOnlineState = false;
 	lastTimeActive = 0;
@@ -239,4 +240,13 @@ bool Device::SetIsFavorite(bool isFavorite)
 {
 	this->isFavorite = isFavorite;
 	return this->isFavorite;
+}
+
+void Device::SetPropertyJsonUpdate(Json::Value property)
+{
+	if (this->propertyJsonUpdate != property)
+	{
+		PushTelemetry(property);
+		this->propertyJsonUpdate = property;
+	}
 }

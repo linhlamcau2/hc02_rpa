@@ -90,26 +90,50 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 	}
 	else
 	{
-		int modeRGB = 0;
-		for (Json::ArrayIndex i = 0; i < data.size(); i++)
+		int indexType = device->GetType() / 1000;
+		if (indexType == 22 || indexType == 24)
 		{
-			Json::Value property = data[i];
-			if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
+			for (Json::ArrayIndex i = 0; i < data.size(); i++)
 			{
-				if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
+				Json::Value property = data[i];
+				if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
 				{
-					modeRGB = property["VALUE"].asInt();
-					break;
+					int idButton = property["ID"].asInt();
+					if (idButton >= 11 && idButton <= 16)
+					{
+						bleProtocol->SetSceneBle(device->GetAddr() + (idButton - 11), addr, 0);
+					}
 				}
 			}
-		}
-		if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
-		{
 			DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
 			mtx.lock();
 			deviceList.push_back(deviceInSceneBle);
 			mtx.unlock();
 			return CODE_OK;
+		}
+		else
+		{
+			int modeRGB = 0;
+			for (Json::ArrayIndex i = 0; i < data.size(); i++)
+			{
+				Json::Value property = data[i];
+				if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
+				{
+					if (property["ID"].asInt() == BLE_ATTRIBUTE_SCENE_RGB)
+					{
+						modeRGB = property["VALUE"].asInt();
+						break;
+					}
+				}
+			}
+			if (bleProtocol->SetSceneBle(device->GetAddr(), addr, modeRGB) == 0)
+			{
+				DeviceInSceneBle *deviceInSceneBle = new DeviceInSceneBle(device, data);
+				mtx.lock();
+				deviceList.push_back(deviceInSceneBle);
+				mtx.unlock();
+				return CODE_OK;
+			}
 		}
 	}
 #endif
@@ -118,7 +142,31 @@ int SceneBle::AddDevice(Device *device, Json::Value data, bool addOnlyDB)
 
 int SceneBle::DelDevice(Device *device)
 {
-	if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == 0)
+	int indexType = device->GetType() / 1000;
+	if (indexType == 22 || indexType == 24)
+	{
+		int devIndex = GetPositionDevice(device);
+		if (devIndex > -1)
+		{
+			Json::Value dataScene = deviceList[devIndex]->data;
+			for (Json::ArrayIndex i = 0; i < dataScene.size(); i++)
+			{
+				Json::Value property = dataScene[i];
+				if (property.isMember("ID") && property["ID"].isInt() && property.isMember("VALUE") && property["VALUE"].isInt())
+				{
+					int idButton = property["ID"].asInt();
+					if (idButton >= 11 && idButton <= 16)
+					{
+						bleProtocol->DelSceneBle(device->GetAddr() + (idButton - 11), addr);
+					}
+				}
+			}
+			mtx.lock();
+			deviceList.erase(deviceList.begin() + devIndex);
+			mtx.unlock();
+		}
+	}
+	else if (bleProtocol->DelSceneBle(device->GetAddr(), addr) == 0)
 	{
 		int deviceIndex = GetPositionDevice(device);
 		if (deviceIndex > -1)

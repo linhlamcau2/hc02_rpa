@@ -32,8 +32,8 @@ public:
 
 	int GetPositionDevice(Device *device, int epid);
 
-	int AddDevice(Device *device, int epId, bool sendBle);
-	int DelDevice(Device *device, int epId);
+	int AddDevice(Device *device, int epId, bool sendBle, bool isCheckElement = true);
+	int DelDevice(Device *device, int epId, bool isCheckElement = true);
 
 	int Do(Json::Value &dataValue, bool ack);
 	int DoV2(Json::Value &dataValue);

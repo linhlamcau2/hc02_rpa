@@ -182,8 +182,10 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataArray)
 
 static void GetDataUpdateSwitch(uint8_t value, Json::Value &dataJson)
 {
-	dataJson["ID"] = 0;
-	dataJson["VALUE"] = value;
+	Json::Value data;
+	data["ID"] = 0;
+	data["VALUE"] = value;
+	dataJson.append(data);
 }
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
@@ -234,7 +236,8 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			{
 				Json::Value dataJson;
 				GetDataUpdateSwitch(data_message->data[6], dataJson);
-				deviceBle->InputData(dataJson, false);
+				// deviceBle->InputData(dataJson, false);
+				deviceBle->SetPropertyJsonUpdate(dataJson);
 				uint8_t numRelay = data_message->data[5];
 				for (int n = 1; n < numRelay; n++)
 				{
@@ -243,7 +246,8 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 					{
 						dataJson.clear();
 						GetDataUpdateSwitch(data_message->data[6 + n], dataJson);
-						deviceChild->InputData(dataJson, false);
+						deviceChild->SetPropertyJsonUpdate(dataJson);
+						// deviceChild->InputData(dataJson, false);
 					}
 				}
 			}

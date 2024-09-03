@@ -49,7 +49,7 @@ int Group::GetPositionDevice(Device *device, int epid)
  * @return true success
  * @return false fail
  */
-int Group::AddDevice(Device *device, int epId, bool sendBle)
+int Group::AddDevice(Device *device, int epId, bool sendBle, bool isCheckElement)
 {
 	// TODO: Check exist
 	// if (std::find(deviceList.begin(), deviceList.end(), device) != deviceList.end())
@@ -72,9 +72,14 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 			{
 				if (indexType == 22 || indexType == 24)
 				{
-					for (int i = 0; i < device->GetNumElement(); i++)
+					if (isCheckElement)
+						for (int i = 0; i < device->GetNumElement(); i++)
+						{
+							bleProtocol->AddDev2Group(device->GetAddr(), device->GetAddr() + i, addr + ID_START);
+						}
+					else
 					{
-						bleProtocol->AddDev2Group(device->GetAddr(), device->GetAddr() + i, addr + ID_START);
+						bleProtocol->AddDev2Group(device->GetAddr(), epId, addr + ID_START);
 					}
 					if (deviceInGroup)
 					{
@@ -136,7 +141,7 @@ int Group::AddDevice(Device *device, int epId, bool sendBle)
 	return CODE_ERROR;
 }
 
-int Group::DelDevice(Device *device, int epId)
+int Group::DelDevice(Device *device, int epId, bool isCheckElement)
 {
 	if (device->GetProtocol() == BLE_DEVICE)
 	{
@@ -145,9 +150,14 @@ int Group::DelDevice(Device *device, int epId)
 		{
 			if (indexType == 22 || indexType == 24)
 			{
-				for (int i = 0; i < device->GetNumElement(); i++)
+				if (isCheckElement)
+					for (int i = 0; i < device->GetNumElement(); i++)
+					{
+						bleProtocol->DelDev2Group(device->GetAddr(), device->GetAddr() + i, addr + ID_START);
+					}
+				else
 				{
-					bleProtocol->DelDev2Group(device->GetAddr(), device->GetAddr() + i, addr + ID_START);
+					bleProtocol->DelDev2Group(device->GetAddr(), epId, addr + ID_START);
 				}
 				int deviceIndex = GetPositionDevice(device, epId);
 				if (deviceIndex > -1)

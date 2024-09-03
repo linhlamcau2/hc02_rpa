@@ -201,6 +201,7 @@ protected:
 	string data;
 	bool isFavorite;
 	Json::Value values;
+	Json::Value propertyJsonUpdate;
 
 public:
 	vector<RuleInputDevice *> deviceRuleInputList;
@@ -234,6 +235,7 @@ public:
 
 	bool GetIsFavorite();
 	bool SetIsFavorite(bool isFavorite);
+	virtual void SetPropertyJsonUpdate(Json::Value property);
 
 	void RegisterTrigger(RuleInputDevice *ruleInputDevice);
 	void UnregisterTrigger(RuleInputDevice *ruleInputDevice);

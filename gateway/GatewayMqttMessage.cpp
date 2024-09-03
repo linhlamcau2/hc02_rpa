@@ -2909,7 +2909,7 @@ int Gateway::OnRpcStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 							if (deviceChild)
 							{
 								uint32_t addrChild = deviceChild->GetAddr();
-								if (group->AddDevice(deviceParent, addrChild, true) != CODE_OK)
+								if (group->AddDevice(deviceParent, addrChild, true, false) != CODE_OK)
 								{
 									statusRsp = "FAILED";
 								}
@@ -2979,7 +2979,7 @@ int Gateway::OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue
 								if (deviceAddChild)
 								{
 									uint32_t addrChild = deviceAddChild->GetAddr();
-									if (group->AddDevice(deviceAddParent, addrChild, true) != CODE_OK)
+									if (group->AddDevice(deviceAddParent, addrChild, true, false) != CODE_OK)
 									{
 										statusRsp = "FAILED";
 									}
@@ -3022,7 +3022,7 @@ int Gateway::OnRpcEditStairsSwitch(Json::Value &reqValue, Json::Value &respValue
 								if (deviceRemoveChild)
 								{
 									uint32_t addrChild = deviceRemoveChild->GetAddr();
-									if (group->DelDevice(deviceRemoveParent, addrChild) != CODE_OK)
+									if (group->DelDevice(deviceRemoveParent, addrChild, false) != CODE_OK)
 									{
 										statusRsp = "FAILED";
 									}
@@ -3085,7 +3085,7 @@ int Gateway::OnRpcDelStairsSwitch(Json::Value &reqValue, Json::Value &respValue)
 				// }
 				for (int i = 0; i < numDevices; i++)
 				{
-					if (group->DelDevice(list[i]->device, list[i]->epId) != CODE_OK)
+					if (group->DelDevice(list[i]->device, list[i]->epId, false) != CODE_OK)
 					{
 						statusRsp = "FAILED";
 					}
