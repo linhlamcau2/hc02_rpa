@@ -4,6 +4,7 @@
 #include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModuleBatteryLevel::ModuleBatteryLevel(Device *device, uint16_t addr) : Module(device, addr)
@@ -55,6 +56,29 @@ int ModuleBatteryLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue
 		CheckTrigger();
 		BuildTelemetryValue(jsonValue);
 		return CODE_OK;
+	}
+	else
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t opcode;
+			uint16_t header;
+			uint8_t battery;
+		} data_message_t;
+		data_message_t *data_message = (data_message_t *)data;
+		if (data_message->opcode == G_BATTERY_STATUS)
+		{
+			if (bat != data_message->battery)
+			{
+				bat = data_message->battery;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute();
+#endif
+			}
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger();
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }
