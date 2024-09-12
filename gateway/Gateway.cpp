@@ -781,7 +781,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_DOOR_SENSOR:
 	case BLE_DOOR_CB16_SENSOR:
-		device = new DeviceBleDoorSensor(id, name, mac, dataJson, addr, version);
+		device = new DeviceBleDoorSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_AC_SCENE_SCREEN_TOUCH:
 		device = new DeviceBleScreenTouch(id, name, mac, dataJson, addr, version);
