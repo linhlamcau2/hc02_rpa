@@ -812,7 +812,7 @@ int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 							if (device)
 							{
 								gateway->AddDeviceToScanList(device);
-								StopScan();
+								// StopScan();
 								rs = CODE_OK;
 							}
 						}
