@@ -149,6 +149,7 @@ public:
 	int ConvertTableRule();
 	int ConvertTableSceneDelay();
 	int EditTableDeviceInGroup();
+	int EditTableGroup();
 
 #endif
 

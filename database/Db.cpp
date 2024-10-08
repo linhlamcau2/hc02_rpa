@@ -94,6 +94,7 @@ void Db::init(void)
 			ConvertTableRule();
 			ConvertTableSceneDelay();
 			EditTableDeviceInGroup();
+			EditTableGroup();
 			exit(1);
 		}
 #endif

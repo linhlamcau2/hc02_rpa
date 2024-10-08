@@ -744,6 +744,48 @@ static int TableDeviceInGroupEdit(sqlite3_stmt *stmt, void *ptr)
     return CODE_OK;
 }
 
+static int TableGroupEdit(sqlite3_stmt *stmt, void *ptr)
+{
+    sqlite3 *db = (sqlite3 *)ptr;
+    int s, index;
+    if (stmt)
+    {
+        while (1)
+        {
+            s = sqlite3_step(stmt);
+            if (s == SQLITE_ROW)
+            {
+                index = 0;
+                string roomId = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+                uint16_t addr = sqlite3_column_int(stmt, index++);
+                string name = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+                long create_at = sqlite3_column_int(stmt, index++);
+                string data = Util::setString(reinterpret_cast<const char *>(sqlite3_column_text(stmt, index++)));
+
+                string sql = "DELETE FROM [Group] WHERE group_id= '" + roomId + "';";
+                char *err_msg = 0;
+                int rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+                if (rc != SQLITE_OK)
+                {
+                    LOGE("Error executing sql statement :%s", err_msg);
+                    sqlite3_free(err_msg);
+                }
+            }
+            else if (s == SQLITE_DONE)
+            {
+                return CODE_OK;
+            }
+            else
+            {
+                LOGE("RoomParse");
+                return CODE_ERROR;
+            }
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
+    return CODE_OK;
+}
+
 int Db::ReadAll_V1(string table, void *listPtr, int (*Parse)(sqlite3_stmt *, void *))
 {
     int rc = SQLITE_ERROR;
@@ -810,6 +852,17 @@ int Db::EditTableDeviceInGroup()
     if (OpenDbV1() == CODE_OK)
     {
         ReadAll_V1("Room", NULL, TableDeviceInGroupEdit);
+        return CODE_OK;
+    }
+    LOGW("Failed to open");
+    return CODE_ERROR;
+}
+
+int Db::EditTableGroup()
+{
+    if (OpenDbV1() == CODE_OK)
+    {
+        ReadAll_V1("Room", NULL, TableGroupEdit);
         return CODE_OK;
     }
     LOGW("Failed to open");
