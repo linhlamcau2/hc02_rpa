@@ -107,45 +107,48 @@ int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint8_t rTemp = data_message->r;
 		uint8_t dimOnTemp = data_message->dimOn;
 		uint8_t dimOffTemp = data_message->dimOff;
-		if (b != bTemp)
+		if (data_message->btn == index + 1)
 		{
-			b = data_message->b;
+			if (b != bTemp)
+			{
+				b = data_message->b;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(keyB);
+				SaveAttribute(keyB);
 #endif
-		}
-		if (g != gTemp)
-		{
-			g = data_message->g;
+			}
+			if (g != gTemp)
+			{
+				g = data_message->g;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(keyG);
+				SaveAttribute(keyG);
 #endif
-		}
-		if (r != rTemp)
-		{
-			r = data_message->r;
+			}
+			if (r != rTemp)
+			{
+				r = data_message->r;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(keyR);
+				SaveAttribute(keyR);
 #endif
-		}
-		if (dimOn != dimOnTemp)
-		{
-			dimOn = data_message->dimOn;
+			}
+			if (dimOn != dimOnTemp)
+			{
+				dimOn = data_message->dimOn;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(keyDimOn);
+				SaveAttribute(keyDimOn);
 #endif
-		}
-		if (dimOff != dimOffTemp)
-		{
-			dimOff = data_message->dimOff;
+			}
+			if (dimOff != dimOffTemp)
+			{
+				dimOff = data_message->dimOff;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-			SaveAttribute(keyDimOff);
+				SaveAttribute(keyDimOff);
 #endif
-		}
-		BuildTelemetryValue(jsonValue);
-		CheckTrigger(jsonValue);
+			}
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
 
-		return CODE_OK;
+			return CODE_OK;
+		}
 	}
 	return CODE_ERROR;
 }
@@ -268,6 +271,7 @@ void ModuleRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue[keyB] = b;
 	jsonValue[keyDimOn] = dimOn;
 	jsonValue[keyDimOff] = dimOff;
+	LOGE("jsonValue: %s", jsonValue.toString().c_str());
 }
 
 int ModuleRgb::Do(Json::Value &dataValue)
