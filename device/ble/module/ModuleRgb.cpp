@@ -271,7 +271,6 @@ void ModuleRgb::BuildTelemetryValue(Json::Value &jsonValue)
 	jsonValue[keyB] = b;
 	jsonValue[keyDimOn] = dimOn;
 	jsonValue[keyDimOff] = dimOff;
-	LOGE("jsonValue: %s", jsonValue.toString().c_str());
 }
 
 int ModuleRgb::Do(Json::Value &dataValue)
