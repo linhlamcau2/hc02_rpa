@@ -72,7 +72,8 @@
 #define KEY_ATTRIBUTE_TEMP_WATER "tempWater"
 #define KEY_ATTRIBUTE_PH_WATER "phWater"
 #define KEY_ATTRIBUTE_EC_WATER "ecWater"
-#define KEY_ATTRIBUTE_OXY_WATER "oxyWater"
+#define KEY_ATTRIBUTE_PERCENT_OXY_WATER "percentOxyWater"
+#define KEY_ATTRIBUTE_CONCENTRATION_OXY_WATER "concentrationOxyWater"
 
 using namespace std;
 

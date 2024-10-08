@@ -6,7 +6,8 @@ using namespace std;
 class ModuleOxyWater : public Module
 {
 protected:
-	uint16_t oxy;
+	uint16_t percentOxy;
+	uint16_t concentrationOxy;
 
 public:
 	ModuleOxyWater(Device *device, uint16_t addr);
