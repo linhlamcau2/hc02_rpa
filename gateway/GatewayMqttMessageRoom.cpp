@@ -773,7 +773,7 @@ int Gateway::OnDeleteDeviceFromRoom(Json::Value &reqValue, Json::Value &respValu
 							if (room->DelDevice(device, true, true) != CODE_OK)
 								devicesStatusConfig[deviceId] = false;
 						}
-						else if (devFast2Room == 2)
+						else if (devFast2Room == 2 || devFast2Room == -1)
 						{
 							if (room->DelDevice(device, false, true) != CODE_OK)
 								devicesStatusConfig[deviceId] = false;
