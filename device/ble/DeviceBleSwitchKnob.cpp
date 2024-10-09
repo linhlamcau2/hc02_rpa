@@ -26,7 +26,7 @@ DeviceBleSwitchKnob::DeviceBleSwitchKnob(string id, string name, string mac, Jso
 
 	for (int i = 0; i < NUM_BTN_ID; i++)
 	{
-        moduleRgb = new ModuleRgb(this, addr + i, i);
+        moduleRgb = new ModuleRgb(this, addr, i);
 		modules.push_back(moduleRgb);
 	}
 

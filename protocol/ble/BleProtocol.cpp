@@ -2738,7 +2738,7 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 			uint8_t icon;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == 0x010a && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
+		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
 		{
 			return CODE_OK;
 		}
@@ -2788,7 +2788,7 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 			uint8_t icon;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == 0x070a && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
+		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_EDIT_ICON_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
 		{
 			return CODE_OK;
 		}
@@ -2835,7 +2835,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 			uint16_t scene;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == 0x020a && scene_screen_touch_rsp_message->scene == scene)
+		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene)
 		{
 			return CODE_OK;
 		}
@@ -2884,7 +2884,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 			uint16_t header;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == 0x0a0a)
+		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_DEL_ALL_SCENE)
 		{
 			return CODE_OK;
 		}
@@ -2934,7 +2934,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 			uint8_t status;
 		} weather_outdoor_screen_touch_rsp_message_t;
 		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
-		if (weather_outdoor_screen_touch_rsp_message->header == 0x050a && weather_outdoor_screen_touch_rsp_message->temp == temp && weather_outdoor_screen_touch_rsp_message->status == status)
+		if (weather_outdoor_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_WEATHER_OUTDOOR && weather_outdoor_screen_touch_rsp_message->temp == bswap_16(temp) && weather_outdoor_screen_touch_rsp_message->status == status)
 		{
 			return CODE_OK;
 		}
@@ -2968,7 +2968,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	weather_indoor_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	weather_indoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_indoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	weather_indoor_screen_touch_message.header = 0x030a;
+	weather_indoor_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR;
 	weather_indoor_screen_touch_message.temp = bswap_16(temp);
 	weather_indoor_screen_touch_message.hum = bswap_16(hum);
 	weather_indoor_screen_touch_message.pm25 = pm25;
@@ -2987,7 +2987,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 			uint16_t pm25;
 		} weather_outdoor_screen_touch_rsp_message_t;
 		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
-		if (weather_outdoor_screen_touch_rsp_message->header == 0x030a && weather_outdoor_screen_touch_rsp_message->temp == temp && weather_outdoor_screen_touch_rsp_message->hum == hum)
+		if (weather_outdoor_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR && weather_outdoor_screen_touch_rsp_message->temp == bswap_16(temp) && weather_outdoor_screen_touch_rsp_message->hum == bswap_16(hum))
 		{
 			return CODE_OK;
 		}
@@ -3043,7 +3043,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 			uint8_t day;
 		} date_screen_touch_rsp_message_t;
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
-		if (date_screen_touch_rsp_message->header == 0x080a && date_screen_touch_rsp_message->years == bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
+		if (date_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_DATE && date_screen_touch_rsp_message->years == bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
 		{
 			return CODE_OK;
 		}
@@ -3095,7 +3095,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 			uint8_t second;
 		} date_screen_touch_rsp_message_t;
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
-		if (date_screen_touch_rsp_message->header == 0x090a && date_screen_touch_rsp_message->hours == hours && date_screen_touch_rsp_message->minute == minute && date_screen_touch_rsp_message->second == second)
+		if (date_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_TIME && date_screen_touch_rsp_message->hours == hours && date_screen_touch_rsp_message->minute == minute && date_screen_touch_rsp_message->second == second)
 		{
 			return CODE_OK;
 		}
@@ -3141,7 +3141,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 			uint16_t group;
 		} group_screen_touch_rsp_message_t;
 		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
-		if (group_screen_touch_rsp_message->header == 0x0b0a && group_screen_touch_rsp_message->group == bswap_16(group))
+		if (group_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SET_GROUP && group_screen_touch_rsp_message->group == bswap_16(group))
 		{
 			return CODE_OK;
 		}

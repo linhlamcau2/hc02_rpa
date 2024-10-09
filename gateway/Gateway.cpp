@@ -516,6 +516,9 @@ int Gateway::CheckOnlineThread()
 			if (allTimeCheck > 0)
 			{
 				currentTime = time(NULL);
+				// LOGE("current: %ld", currentTime);
+				// LOGE("lastime: %ld", getLastTimePingGwBle());
+				// LOGE("alltime: %d", allTimeCheck);
 				if (currentTime - getLastTimePingGwBle() > allTimeCheck)
 				{
 					setLastTimePingGwBle(time(NULL));
