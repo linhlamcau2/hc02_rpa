@@ -82,8 +82,8 @@ Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
 				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive),
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, true),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, true),
 	  Udp(8181)
 {
 	this->mac = mac;

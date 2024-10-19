@@ -33,6 +33,8 @@ private:
 	atomic<bool> isBusy;
 	mutex mtx;
 
+	bool useTls;
+
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnLocalCallbackFunc;
 	map<string, OnLocalCallbackFunc> onLocalCallbackFuncList;
 
@@ -41,7 +43,7 @@ private:
 	void OnLocalResp(string &topic, string &payload);
 
 public:
-	LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive);
+	LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive, bool useTls);
 	virtual ~LocalProtocol();
 
 	void init();
@@ -66,4 +68,7 @@ public:
 	int PublishToLocalMessage(string &payload);
 	int PublishToLocalMessage(Json::Value &payloadJson);
 	int PublishToLocalMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 1000);
+
+	bool GetTls();
+	void SetTls(bool useTls);
 };

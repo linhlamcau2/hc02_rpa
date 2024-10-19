@@ -56,8 +56,16 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 #elif defined(__ANDROID__)
 		respValue["TYPE"] = 3;
 #endif
-		respValue["TLS"] = false;
-		respValue["MQTT_PORT"] = 1883;
+		if (LocalProtocol::GetTls())
+		{
+			respValue["TLS"] = true;
+			respValue["MQTT_PORT"] = 8883;
+		}
+		else
+		{
+			respValue["TLS"] = false;
+			respValue["MQTT_PORT"] = 1883;
+		}
 #endif
 		for (auto &c : hostName)
 			c = toupper(c);

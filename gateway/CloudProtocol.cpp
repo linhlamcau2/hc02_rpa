@@ -12,11 +12,11 @@
 #include "ButtonSignal.h"
 #endif
 
-CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive)
-	: Mqtt(address, port, clientId, username, password, keepalive, true)
+CloudProtocol::CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, bool useTls)
+	: Mqtt(address, port, clientId, username, password, keepalive, useTls)
 {
 	this->mac = mac;
-
+	this->useTls = useTls;
 	subServerReqTopic = "/v2/server/hc/" + mac + "/json_req";
 	subServerRespTopic = "/v2/server/hc/" + mac + "/json_resp";
 	subMobileReqTopic = "/v2/mobile/+/hc/" + mac + "/json_req";
@@ -489,4 +489,14 @@ int CloudProtocol::PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &r
 	requestBinList.erase(rqi);
 	LOGD("PublishToCloudRecieveBinMessage rs: %d", rs);
 	return rs;
+}
+
+bool CloudProtocol::GetTls()
+{
+	return this->useTls;
+}
+
+void CloudProtocol::SetTls(bool useTls)
+{
+	this->useTls = useTls;
 }

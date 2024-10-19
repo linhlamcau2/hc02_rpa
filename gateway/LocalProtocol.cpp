@@ -11,13 +11,14 @@
 #endif
 
 #ifdef ESP_PLATFORM
-LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive) : MqttBroker()
+LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive, bool useTls) : MqttBroker()
 #else
-LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive)
-	: Mqtt(address, port, token, username, password, keepalive, true)
+LocalProtocol::LocalProtocol(string mac, string address, int port, string token, string username, string password, int keepalive, bool useTls)
+	: Mqtt(address, port, token, username, password, keepalive, useTls)
 #endif
 {
 	this->mac = mac;
+	this->useTls = useTls;
 	subReqTopic = "/v2/mobile/+/hc/" + mac + "/json_req";
 	subRespTopic = "/v2/mobile/+/hc/" + mac + "/json_resp";
 	pubReqTopic = "/v2/hc/" + mac + "/mobile/all/json_req";
@@ -285,4 +286,14 @@ int LocalProtocol::PublishToLocalMessage(string &payload)
 int LocalProtocol::PublishToLocalMessage(Json::Value &payloadJson)
 {
 	return Publish(pubReqTopic, payloadJson.toString());
+}
+
+bool LocalProtocol::GetTls()
+{
+	return this->useTls;
+}
+
+void LocalProtocol::SetTls(bool useTls)
+{
+	this->useTls = useTls;
 }

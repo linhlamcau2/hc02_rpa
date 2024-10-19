@@ -44,6 +44,8 @@ private:
 	atomic<bool> isBusy;
 	mutex mtx;
 
+	bool useTls;
+
 	typedef function<int(Json::Value &reqValue, Json::Value &respValue)> OnRpcCallbackFunc;
 	map<string, OnRpcCallbackFunc> onRpcCallbackFuncList;
 
@@ -54,7 +56,7 @@ private:
 	void OnServerBinResp(string &topic, char *payload, int payloadLen);
 
 public:
-	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive);
+	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, bool useTls);
 	virtual ~CloudProtocol();
 
 	void init();
@@ -82,4 +84,7 @@ public:
 	int PublishToCloudMessage(string reqCmd, Json::Value &reqValue, string respCmd, Json::Value *respValue, uint32_t timeout = 0);
 	int PublishBinToCloudMessage(string sessionId, int index, char *payload, int payloadLen, string respCmd, Json::Value *respValue, uint32_t timeout = 0);
 	int PublishToCloudRecieveBinMessage(string reqCmd, Json::Value &reqValue, string rqi, char *payload, int *payloadLen, uint32_t timeout = 0);
+
+	bool GetTls();
+	void SetTls(bool useTls);
 };
