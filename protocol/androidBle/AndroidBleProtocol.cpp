@@ -110,6 +110,7 @@ int AndroidBleProtocol::StartScan()
 	secondElements.append(BLE_WIFI_SWITCH_2);
 	secondElements.append(BLE_WIFI_SWITCH_2_SQUARE);
 	secondElements.append(BLE_WIFI_SWITCH_ELECTRICAL_2);
+	secondElements.append(BLE_SWITCH_KNOB);
 
 	Json::Value thirdElements = Json::arrayValue;
 	thirdElements.append(BLE_LED_DAY_RGB);

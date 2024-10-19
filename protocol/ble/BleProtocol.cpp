@@ -361,7 +361,6 @@ int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
-	gateway->setLastTimePingGwBle(time(NULL));
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
@@ -459,6 +458,8 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 int BleProtocol::OnMessage(unsigned char *data, int len)
 {
 	// LOGD("OnMessage len: %d", len);
+	if (len > 0)
+		gateway->setLastTimePingGwBle(time(NULL));
 	uint8_t *d = data;
 	int l = len;
 	message_rsp_st *message_rsp = NULL;
@@ -2663,7 +2664,7 @@ int BleProtocol::SetDistanceSensor(uint16_t devAddr, uint8_t distance)
 }
 
 int BleProtocol::SetTimeRspSensor(uint16_t devAddr, uint16_t time)
-{	
+{
 	LOGD("Set time rsp sensor: 0x%04X, time: %d", devAddr, time);
 	uint8_t dataRsp[100];
 	int lenRsp;
