@@ -12,6 +12,11 @@ using namespace std;
 class DeviceBleSwitchCeiling : public DeviceBle
 {
 private:
+    ModuleCountDownSwitch *moduleCountDownSwitch;
+    ModuleStatusStartup *moduleStatusStartup;
+    ModuleOnOff *moduleOnOff;
+    ModuleCallScene *moduleCallScene;
+
 public:
-    DeviceBleSwitchCeiling(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, uint8_t element = 0);
+    DeviceBleSwitchCeiling(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version, uint8_t countElement);
 };

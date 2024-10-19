@@ -19,11 +19,11 @@ private:
 	ModulePirSensor *modulePirSensor;
 	ModuleLightSensor *moduleLightSensor;
 	ModuleTimeActionPir *moduleTimeActionPir;
-    ModuleModeActionPir *moduleModeActionPir;
+	ModuleModeActionPir *moduleModeActionPir;
 	ModuleSensiPir *moduleSensiPir;
-    ModuleOnOff *moduleOnOff;
-	ModulePirLightSensorStartup * modulePirLightSensorStartup;
+	ModuleOnOff *moduleOnOff;
+	ModulePirLightSensorStartup *modulePirLightSensorStartup;
 
 public:
-	DeviceBlePirLightSensorAC_CB09(string id, string name, string mac,Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
+	DeviceBlePirLightSensorAC_CB09(string id, string name, string mac, Json::Value &dataJson, uint32_t addr, uint32_t type, uint16_t version);
 };

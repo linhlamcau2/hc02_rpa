@@ -1,20 +1,8 @@
 #include "DeviceBleWifiSwitchElectrical.h"
-#include "module/ModuleOnOff.h"
-#include "module/ModuleDimonDimoff.h"
-#include "module/ModuleStatusStartup.h"
-#include "module/ModuleCountDownSwitch.h"
-#include "module/ModuleCallScene.h"
-#include "module/ModuleButtonAll.h"
 
 DeviceBleWifiSwitchElectrical::DeviceBleWifiSwitchElectrical(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, uint8_t countElement)
 	: DeviceBle(id, name, mac, dataJson, addr, type, version)
 {
-	ModuleOnOff *moduleOnOff;
-	ModuleOnOff *moduleOnOffAll;
-	ModuleDimonDimoff *moduleDimonDimoff;
-	ModuleStatusStartup *moduleStatusStartup;
-	ModuleCallScene *moduleCallScene;
-	ModuleButtonAll *moduleButtonAll;
 
 	this->countElement = countElement;
 	for (int i = 0; i < countElement; i++)
