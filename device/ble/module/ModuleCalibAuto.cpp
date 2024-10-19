@@ -48,16 +48,26 @@ int ModuleCalibAuto::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint8_t opcodeRsp;
         uint16_t vendorId;
         uint16_t header;
-        uint16_t time;
+        uint8_t data[6];
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
+    uint16_t tempTime = 0;
     if (data_message->opcodeRsp == RD_OPCODE_CONFIG_RSP)
     {
-        if (data_message->header == RD_OPCODE_CALIBAUTO)
+        if (data_message->header == RD_OPCODE_CALIBAUTO || data_message->header == RD_OPCODE_LOCK)
         {
-            if (data_message->time != time)
+            if (data_message->header == RD_OPCODE_CALIBAUTO)
             {
-                time = data_message->time;
+                tempTime = data_message->data[0] | (data_message->data[1] << 8);
+            }
+            else if (data_message->header == RD_OPCODE_LOCK)
+            {
+                tempTime = data_message->data[1] | (data_message->data[2] << 8);
+            }
+
+            if (tempTime != time)
+            {
+                time = tempTime;
 #ifdef CONFIG_SAVE_ATTRIBUTE
                 SaveAttribute();
 #endif
