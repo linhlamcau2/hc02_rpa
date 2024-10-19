@@ -146,6 +146,9 @@ void LocalProtocol::OnLocalReq(string &topic, string &payload)
 				respValue["rqi"] = rqi;
 				LOGD("local publish: %s: %s", (pubRespTopic + topics[2] + "/json_resp").c_str(), respValue.toString().c_str());
 				Publish(pubRespTopic + topics[2] + "/json_resp", respValue.toString());
+#ifdef __ANDROID__
+				Publish(pubReqTopic, respValue.toString());
+#endif
 #ifdef ESP_PLATFORM
 				Wifi::WifiStartAP();
 #elif defined(__OPENWRT__)
