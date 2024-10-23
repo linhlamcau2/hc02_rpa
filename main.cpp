@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
+	Util::LedInternet(false);
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
 	zigbeeProtocol->init();
