@@ -934,6 +934,7 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBleTempHumAirAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_LIGHT_SENSOR:
+	case BLE_LIGHT_SENSOR_AGRI:
 		device = new DeviceBleLightAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_TEMP_HUM_SOIL_AGRICULTURAL_SENSOR:

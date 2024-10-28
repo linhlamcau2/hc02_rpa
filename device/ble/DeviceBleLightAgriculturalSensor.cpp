@@ -5,5 +5,7 @@ DeviceBleLightAgriculturalSensor::DeviceBleLightAgriculturalSensor(string id, st
 {
     moduleLightSensor = new ModuleLightSensor(this, addr);
     modules.push_back(moduleLightSensor);
+    moduleTimeRspSensor = new ModuleTimeRspSensor(this, addr);
+    modules.push_back(moduleTimeRspSensor);
     powerSource = POWER_BATTERY;
 }
