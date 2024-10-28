@@ -54,6 +54,7 @@ int ModulePhWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t tempPh = data_message->ph;
         if (ph != tempPh)
         {
+            ph = tempPh;
 #ifdef CONFIG_SAVE_ATTRIBUTE
             SaveAttribute();
 #endif

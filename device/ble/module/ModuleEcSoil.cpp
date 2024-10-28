@@ -54,6 +54,7 @@ int ModuleEcSoil::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t tempEc = data_message->ec;
         if (ec != tempEc)
         {
+            ec = tempEc;
 #ifdef CONFIG_SAVE_ATTRIBUTE
             SaveAttribute();
 #endif

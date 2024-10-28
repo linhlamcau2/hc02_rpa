@@ -64,6 +64,7 @@ int ModuleOxyWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t tempConcentrationOxy = data_message->concentrationOxy;
         if (percentOxy != tempPercentOxy)
         {
+            percentOxy = tempPercentOxy;
 #ifdef CONFIG_SAVE_ATTRIBUTE
             SaveAttribute(KEY_ATTRIBUTE_PERCENT_OXY_WATER);
 #endif
@@ -71,6 +72,7 @@ int ModuleOxyWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
         if (concentrationOxy != tempConcentrationOxy)
         {
+            concentrationOxy = tempConcentrationOxy;
 #ifdef CONFIG_SAVE_ATTRIBUTE
             SaveAttribute(KEY_ATTRIBUTE_CONCENTRATION_OXY_WATER);
 #endif

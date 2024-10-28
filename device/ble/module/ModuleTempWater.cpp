@@ -54,6 +54,7 @@ int ModuleTempWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t tp = data_message->temp;
         if (temp != tp)
         {
+            temp = tp;
 #ifdef CONFIG_SAVE_ATTRIBUTE
             SaveAttribute();
 #endif

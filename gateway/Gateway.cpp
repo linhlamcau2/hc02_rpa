@@ -53,6 +53,7 @@
 #include "DeviceBleEcTempHumSoilAgriculturalSensor.h"
 #include "DeviceBlePhTempWaterAgriculturalSensor.h"
 #include "DeviceBleOxyTempWaterAgriculturalSensor.h"
+#include "DeviceBleEcSaliTdsWaterAgriculturalSensor.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -944,12 +945,13 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		device = new DeviceBlePhSoilAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_EC_TEMP_HUM_SOIL_AGRICULTURAL_SENSOR:
-		device = new DeviceBleTempHumSoilAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		device = new DeviceBleEcTempHumSoilAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_PH_WATER_AGRICULTURAL_SENSOR:
 		device = new DeviceBlePhTempWaterAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_EC_WATER_AGRICULTURAL_SENSOR:
+		device = new DeviceBleEcSaliTdsWaterAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
 		break;
 	case BLE_OXY_WATER_AGRICULTURAL_SENSOR:
 		device = new DeviceBleOxyTempWaterAgriculturalSensor(id, name, mac, dataJson, addr, type, version);

@@ -139,7 +139,6 @@ bool ModuleTempHumSoil::CheckData(Json::Value &dataValue, bool &rs)
 				{
 					int temp1 = listValue[0].asInt();
 					int temp2 = listValue[1].asInt();
-					LOGE("temp1 = %d, temp2 = %d, temp = %d", temp1, temp2, this->temp);
 					rs = Util::CompareNumber(op, this->temp, temp1, temp2);
 					return true;
 				}
