@@ -1,9 +1,9 @@
 #include "ModuleCurtain.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 enum
@@ -101,9 +101,9 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	Json::Value telemetryPrecent;
 	telemetryPrecent[KEY_ATTRIBUTE_CURTAIN_OPENED] = 0;
 
-	if (data_message->opcode == 0x52)
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP)
 	{
-		if (data_message->vendorId == RD_OPCODE_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+		if (data_message->vendorId == RD_HEADER_PRESS_BUTTON_CURTAN_DOOR_ROOLING || data_message->vendorId == RD_HEADER_REQUEST_STATUS_CURTAIN)
 		{
 			uint8_t temp = data_message->header & 0xFF;
 			switch (temp)
@@ -115,11 +115,11 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
 				break;
 			case CURTAIN_PAUSE:
-				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
-				{
+				// if (data_message->vendorId == RD_HEADER_REQUEST_STATUS_CURTAIN)
+				// {
 					curtain = (data_message->header >> 8) & 0xFF;
 					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = (data_message->header >> 8) & 0xFF;
-				}
+				// }
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
@@ -144,7 +144,7 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	}
 	else if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
 	{
-		if (data_message->header == RD_OPCODE_REQUEST_STATUS_CURTAIN || data_message->header == RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE)
+		if (data_message->header == RD_HEADER_REQUEST_STATUS_CURTAIN || data_message->header == RD_HEADER_CONTROL_OPEN_CLOSE_PAUSE)
 		{
 			uint8_t temp = data_message->type;
 			switch (temp)
@@ -156,11 +156,11 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 				telemetry[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
 				break;
 			case CURTAIN_PAUSE:
-				if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
-				{
+				// if (data_message->vendorId == RD_HEADER_REQUEST_STATUS_CURTAIN)
+				// {
 					curtain = data_message->curtain;
 					telemetry[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
-				}
+				// }
 				telemetry[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
 				break;
 			case CURTAIN_PERCENT:
@@ -184,7 +184,7 @@ int ModuleCurtain::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		}
 	}
 
-	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->vendorId == RD_VENDOR_ID && data_message->header == RD_OPCODE_CONFIG_MOTOR)
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->vendorId == RD_VENDOR_ID && data_message->header == RD_HEADER_CONFIG_MOTOR)
 	{
 		motor = data_message->type;
 		Json::Value dataMotor;
@@ -260,10 +260,6 @@ int ModuleCurtain::Do(Json::Value &dataValue)
 		{
 			if (bleProtocol->ControlOpenClosePausePercent(addr, mode, (uint8_t)value) == CODE_OK)
 			{
-				// if (mode == CURTAIN_PERCENT)
-				// {
-				// 	this->curtain = value;
-				// }
 				return CODE_OK;
 			}
 		}

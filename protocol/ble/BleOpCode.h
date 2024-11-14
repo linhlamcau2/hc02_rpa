@@ -105,18 +105,7 @@ extern "C"
 #define SIG_MD_LIGHT_XYL_C 0x130E
 #define SIG_MD_LIGHT_LC_S 0x130F
 #define SIG_MD_LIGHT_LC_SETUP_S 0x1310
-/*
- * Opcode of sensor
- */
-#define SENSOR_TYPE 0x52
-/*
- * Define type device
- */
-#define POWER_TYPE 0x0001
-#define REMOTE_MODULE_DC_TYPE 0x0002
-#define REMOTE_MODULE_AC_TYPE 0x0003
-#define LIGHT_SENSOR_MODULE_TYPE 0x0004
-#define PIR_SENSOR_MODULE_TYPE 0x0005
+
 //
 #define APPKEY_DEL 0x0080
 #define APPKEY_GET 0x0180
@@ -304,6 +293,9 @@ extern "C"
 
 #define GET_STATUS 0x0705
 #define GET_STATUS_SENSOR_PM 0xE405
+
+#define BLE_MESH_OPCODE_HSL 0x7882
+#define BLE_MESH_OPCODE_RGB 0x005e
 
 /**
  * Opcode of room

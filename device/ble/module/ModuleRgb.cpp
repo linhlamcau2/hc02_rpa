@@ -1,7 +1,6 @@
 #include "ModuleRgb.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -100,7 +99,7 @@ int ModuleRgb::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint8_t dimOff;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == 0xE3 && data_message->header == RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH)
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_HEADER_CONFIG_CONTROL_RGB_SWITCH)
 	{
 		uint8_t bTemp = data_message->b;
 		uint8_t gTemp = data_message->g;

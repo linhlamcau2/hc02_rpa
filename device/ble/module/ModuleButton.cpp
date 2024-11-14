@@ -1,11 +1,12 @@
 #include "ModuleButton.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Gateway.h"
 #include "SceneBle.h"
+#include "Db.h"
 
 ModuleButton::ModuleButton(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
@@ -53,11 +54,11 @@ int ModuleButton::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint16_t scene;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == 0x52)
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP)
 	{
-		if (data_message->header == REMOTE_MODULE_DC_TYPE ||
-			data_message->header == REMOTE_MODULE_AC_TYPE ||
-			data_message->header == REMOTE_MUL_RSP_SCENE_ACTIVE)
+		if (data_message->header == RD_HEADER_REMOTE_MODULE_DC_TYPE ||
+			data_message->header == RD_HEADER_REMOTE_MODULE_AC_TYPE ||
+			data_message->header == RD_HEADER_REMOTE_MUL_RSP_SCENE_ACTIVE)
 		{
 			if (data_message->btId == index + 1)
 			{

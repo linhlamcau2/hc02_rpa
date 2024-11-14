@@ -1,7 +1,6 @@
 #include "ModuleEcWater.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -49,7 +48,7 @@ int ModuleEcWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t ec;
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
-    if (data_message->opcode == 0x52 && data_message->header == RD_HEADER_EC_WATER_STATUS)
+    if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_EC_WATER_STATUS)
     {
         uint16_t tempEc = data_message->ec;
         if (ec != tempEc)

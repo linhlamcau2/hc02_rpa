@@ -1,7 +1,6 @@
 #include "ModuleModeActionPir.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -17,20 +16,30 @@ ModuleModeActionPir::~ModuleModeActionPir()
 
 int ModuleModeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-    if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_ACMODE) && dataValue[KEY_ATTRIBUTE_ACMODE].isInt())
-    {
-        mode = dataValue[KEY_ATTRIBUTE_ACMODE].asInt();
-        BuildTelemetryValue(jsonValue);
-        return CODE_OK;
-    }
-    return CODE_ERROR;
+	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_ACMODE) && dataValue[KEY_ATTRIBUTE_ACMODE].isInt())
+	{
+		mode = dataValue[KEY_ATTRIBUTE_ACMODE].asInt();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 int ModuleModeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x04)
+	typedef struct __attribute__((packed))
 	{
-		mode = data[5];
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t mode;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP &&
+		data_message->vendorId == RD_VENDOR_ID &&
+		data_message->header == RD_HEADER_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR)
+	{
+		mode = data_message->mode;
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger(jsonValue);
 		return CODE_OK;
@@ -40,7 +49,7 @@ int ModuleModeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 
 bool ModuleModeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 {
-    LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGD("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
 		dataValue.isMember(KEY_ATTRIBUTE_ACMODE) &&
 		dataValue.isMember("op") && dataValue["op"].isString())
@@ -76,7 +85,7 @@ int ModuleModeActionPir::Do(Json::Value &dataValue)
 {
 	LOGV("ModuleModeActionPir Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ACMODE) && dataValue[KEY_ATTRIBUTE_ACMODE].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ACMODE) && dataValue[KEY_ATTRIBUTE_ACMODE].isInt())
 	{
 		int mode = dataValue[KEY_ATTRIBUTE_ACMODE].asInt();
 		if (bleProtocol->SetModeActionPirLightSensor(addr, mode) == CODE_OK)

@@ -1,9 +1,9 @@
 #include "ModulePhWater.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModulePhWater::ModulePhWater(Device *device, uint16_t addr) : Module(device, addr)
@@ -49,7 +49,7 @@ int ModulePhWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t ph;
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
-    if (data_message->opcode == 0x52 && data_message->header == RD_HEADER_PH_WATER_STATUS)
+    if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_PH_WATER_STATUS)
     {
         uint16_t tempPh = data_message->ph;
         if (ph != tempPh)

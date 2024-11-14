@@ -1,7 +1,6 @@
 #include "ModuleEcSaliTds.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -66,7 +65,7 @@ int ModuleEcSaliTds::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t tds;
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
-    if (data_message->opcode == 0x52 && data_message->header == RD_HEADER_EC_SALI_TDS_WATER)
+    if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_EC_SALI_TDS_WATER)
     {
         uint16_t ecTemp = data_message->ec;
         uint16_t saliTemp = data_message->sali;
@@ -108,7 +107,6 @@ bool ModuleEcSaliTds::CheckData(Json::Value &dataValue, bool &rs)
         string op = dataValue["op"].asString();
         if (dataValue.isMember(KEY_ATTRIBUTE_SALI))
         {
-            LOGE("TP1 : 1");
             if (dataValue[KEY_ATTRIBUTE_SALI].isInt())
             {
                 int saliCheck = dataValue[KEY_ATTRIBUTE_SALI].asInt();
@@ -117,8 +115,6 @@ bool ModuleEcSaliTds::CheckData(Json::Value &dataValue, bool &rs)
             }
             else if (dataValue[KEY_ATTRIBUTE_SALI].isArray())
             {
-            LOGE("TP1 : 2");
-
                 Json::Value listValue = dataValue[KEY_ATTRIBUTE_SALI];
                 if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
                 {
@@ -131,8 +127,6 @@ bool ModuleEcSaliTds::CheckData(Json::Value &dataValue, bool &rs)
         }
         else if (dataValue.isMember(KEY_ATTRIBUTE_EC_WATER))
         {
-            LOGE("TP2 : 1");
-
             if (dataValue[KEY_ATTRIBUTE_EC_WATER].isInt())
             {
                 int ecCheck = dataValue[KEY_ATTRIBUTE_EC_WATER].asInt();
@@ -141,8 +135,6 @@ bool ModuleEcSaliTds::CheckData(Json::Value &dataValue, bool &rs)
             }
             else if (dataValue[KEY_ATTRIBUTE_EC_WATER].isArray())
             {
-            LOGE("TP2 : 2");
-
                 Json::Value listValue = dataValue[KEY_ATTRIBUTE_EC_WATER];
                 if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
                 {
@@ -155,8 +147,6 @@ bool ModuleEcSaliTds::CheckData(Json::Value &dataValue, bool &rs)
         }
         else if (dataValue.isMember(KEY_ATTRIBUTE_TDS))
         {
-            LOGE("TP3 : 1");
-
             if (dataValue[KEY_ATTRIBUTE_TDS].isInt())
             {
                 int tdsCheck = dataValue[KEY_ATTRIBUTE_TDS].asInt();
@@ -165,8 +155,6 @@ bool ModuleEcSaliTds::CheckData(Json::Value &dataValue, bool &rs)
             }
             else if (dataValue[KEY_ATTRIBUTE_TDS].isArray())
             {
-            LOGE("TP3 : 2");
-
                 Json::Value listValue = dataValue[KEY_ATTRIBUTE_TDS];
                 if (listValue.size() == 2 && listValue[0].isInt() && listValue[1].isInt())
                 {

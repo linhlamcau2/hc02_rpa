@@ -1,9 +1,9 @@
 #include "ModuleDoorHangOn.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModuleDoorHangOn::ModuleDoorHangOn(Device *device, uint16_t addr) : Module(device, addr)
@@ -42,11 +42,18 @@ int ModuleDoorHangOn::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleDoorHangOn::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x04)
+	typedef struct __attribute__((packed))
 	{
-		if (hangOn != data[3])
+		uint8_t opcode;
+		uint16_t header;
+		uint8_t hangOn;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_HANGON_DOOR_SENSOR)
+	{
+		if (hangOn != data_message->hangOn)
 		{
-			hangOn = data[3];
+			hangOn = data_message->hangOn;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif

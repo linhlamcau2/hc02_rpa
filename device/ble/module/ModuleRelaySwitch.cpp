@@ -1,7 +1,6 @@
 #include "ModuleRelaySwitch.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -56,10 +55,10 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)data;
 		if (data_message->vendorId == RD_VENDOR_ID)
 		{
-			if (data_message->header == 0x000e ||
-				data_message->header == 0x000d ||
-				data_message->header == 0x000c ||
-				data_message->header == 0x000b)
+			if (data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_1 ||
+				data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_2 ||
+				data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_3 ||
+				data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_4)
 			{
 				if (data_message->relayId == index)
 				{
@@ -78,7 +77,7 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			}
 		}
 	}
-	else if (data[0] == 0x52)
+	else if (data[0] == RD_OPCODE_SENSOR_RSP)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -88,7 +87,10 @@ int ModuleRelaySwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint8_t value;
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)data;
-		if (data_message->header == 0x000e || data_message->header == 0x000d || data_message->header == 0x000c || data_message->header == 0x000b)
+		if (data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_1 ||
+			data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_2 ||
+			data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_3 ||
+			data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_4)
 		{
 			if (data_message->relayId == index)
 			{

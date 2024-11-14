@@ -1,9 +1,9 @@
 #include "ModuleLock.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModuleLock::ModuleLock(Device *device, uint16_t addr) : Module(device, addr)
@@ -42,38 +42,51 @@ int ModuleLock::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleLock::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-    if (data[0] == RD_OPCODE_CONFIG_RSP)
+    typedef struct __attribute__((packed))
     {
-        if (data[3] == 0x11 && data[4] == 0x08)
+        uint8_t opcode;
+        uint16_t vendorId;
+        uint16_t header;
+        uint8_t lock;
+    } data_msg_t;
+    data_msg_t *data_msg = (data_msg_t *)data;
+    if (data_msg->opcode == RD_OPCODE_CONFIG_RSP && data_msg->header == RD_HEADER_LOCK)
+    {
+        if (lock != data_msg->lock)
         {
-            if (lock != data[5])
+            lock = data_msg->lock;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+            SaveAttribute();
+#endif
+        }
+        BuildTelemetryValue(jsonValue);
+        CheckTrigger(jsonValue);
+        return CODE_OK;
+    }
+    else
+    {
+        typedef struct __attribute__((packed))
+        {
+            uint8_t opcode;
+            uint16_t header;
+            uint8_t lock;
+        } data_message_t;
+        data_message_t *data_message = (data_message_t *)data;
+        if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_LOCK)
+        {
+            if (lock != data_message->lock)
             {
-                lock = data[5];
+                lock = data_message->lock;
 #ifdef CONFIG_SAVE_ATTRIBUTE
                 SaveAttribute();
 #endif
             }
             BuildTelemetryValue(jsonValue);
             CheckTrigger(jsonValue);
+            return CODE_OK;
         }
     }
-
-    if (data[0] == 0x52)
-    {
-        if (data[1] == 0x11 && data[2] == 0x08)
-        {
-            if (lock != data[3])
-            {
-                lock = data[3];
-#ifdef CONFIG_SAVE_ATTRIBUTE
-                SaveAttribute();
-#endif
-            }
-            BuildTelemetryValue(jsonValue);
-            CheckTrigger(jsonValue);
-        }
-    }
-    return true;
+    return CODE_ERROR;
 }
 
 bool ModuleLock::CheckData(Json::Value &dataValue, bool &rs)

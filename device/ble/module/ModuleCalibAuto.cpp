@@ -1,7 +1,6 @@
 #include "ModuleCalibAuto.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -54,13 +53,13 @@ int ModuleCalibAuto::InputData(uint8_t *data, int len, Json::Value &jsonValue)
     uint16_t tempTime = 0;
     if (data_message->opcodeRsp == RD_OPCODE_CONFIG_RSP)
     {
-        if (data_message->header == RD_OPCODE_CALIBAUTO || data_message->header == RD_OPCODE_LOCK)
+        if (data_message->header == RD_HEADER_CALIBAUTO || data_message->header == RD_HEADER_LOCK)
         {
-            if (data_message->header == RD_OPCODE_CALIBAUTO)
+            if (data_message->header == RD_HEADER_CALIBAUTO)
             {
                 tempTime = data_message->data[0] | (data_message->data[1] << 8);
             }
-            else if (data_message->header == RD_OPCODE_LOCK)
+            else if (data_message->header == RD_HEADER_LOCK)
             {
                 tempTime = data_message->data[1] | (data_message->data[2] << 8);
             }

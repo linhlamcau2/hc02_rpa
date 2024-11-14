@@ -1,9 +1,9 @@
 #include "ModuleDim.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 #include <math.h>
 
@@ -51,7 +51,7 @@ int ModuleDim::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint16_t dim;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == BLE_MESH_OPCODE_DIM)
+	if (data_message->opcode == LIGHTNESS_STATUS)
 	{
 		int temp_dim;
 		if (len <= 5)

@@ -1,7 +1,6 @@
 #include "ModuleSmoke.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -51,14 +50,16 @@ int ModuleSmoke::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x08 && data[2] == 0x01)
+	typedef struct __attribute__((packed))
 	{
-		typedef struct __attribute__((packed))
-		{
-			uint8_t smoke;
-			uint8_t power;
-		} data_message_t;
-		data_message_t *data_message = (data_message_t *)&data[3];
+		uint8_t opcode;
+		uint16_t header;
+		uint8_t smoke;
+		uint8_t power;
+	} data_message_t;
+	data_message_t * data_message = (data_message_t*) data;
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_SMOKE)
+	{
 		int temp_smoke = (data_message->smoke);
 		int temp_power = (data_message->power);
 		if (temp_smoke != smoke)

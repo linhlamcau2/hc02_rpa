@@ -1,7 +1,6 @@
 #include "ModuleTimeActionPir.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -18,7 +17,7 @@ ModuleTimeActionPir::~ModuleTimeActionPir()
 int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
 		time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
 		// CheckTrigger();
@@ -30,7 +29,17 @@ int ModuleTimeActionPir::InputData(Json::Value &dataValue, Json::Value &jsonValu
 
 int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x45 && data[4] == 0x03)
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint16_t time;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP &&
+		data_message->vendorId == RD_VENDOR_ID &&
+		data_message->header == RD_HEADER_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR)
 	{
 		time = data[5] | (data[6] << 8);
 		BuildTelemetryValue(jsonValue);
@@ -45,8 +54,8 @@ bool ModuleTimeActionPir::CheckData(Json::Value &dataValue, bool &rs)
 {
 	LOGV("CheckData data: %s", dataValue.toString().c_str());
 	if (dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) &&
-			dataValue.isMember("op") && dataValue["op"].isString())
+		dataValue.isMember(KEY_ATTRIBUTE_ACTIME) &&
+		dataValue.isMember("op") && dataValue["op"].isString())
 	{
 		string op = dataValue["op"].asString();
 		if (dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
@@ -79,7 +88,7 @@ int ModuleTimeActionPir::Do(Json::Value &dataValue)
 {
 	LOGV("Do data: %s", dataValue.toString().c_str());
 	if (bleProtocol && dataValue.isObject() &&
-			dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
+		dataValue.isMember(KEY_ATTRIBUTE_ACTIME) && dataValue[KEY_ATTRIBUTE_ACTIME].isInt())
 	{
 		int time = dataValue[KEY_ATTRIBUTE_ACTIME].asInt();
 		if (bleProtocol->TimeActionPirLightSensor(addr, time) == CODE_OK)

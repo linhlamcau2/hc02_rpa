@@ -1,7 +1,6 @@
 #include "ModuleBatteryLevel.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "BleOpCode.h"
@@ -44,11 +43,19 @@ int ModuleBatteryLevel::InputData(Json::Value &dataValue, Json::Value &jsonValue
 
 int ModuleBatteryLevel::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x01 && data[2] == 0x00)
+	typedef struct __attribute__((packed))
 	{
-		if (bat != data[4])
+		uint8_t opcode;
+		uint16_t header;
+		uint16_t bat;
+	} data_msg_t;
+	data_msg_t *data_msg = (data_msg_t *)data;
+	if (data_msg->opcode == RD_OPCODE_SENSOR_RSP && data_msg->header == RD_HEADER_SATAUS_POWER)
+	{
+		uint16_t batTmp = bswap_16(data_msg->bat);
+		if (bat != batTmp)
 		{
-			bat = data[4];
+			bat = batTmp;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif

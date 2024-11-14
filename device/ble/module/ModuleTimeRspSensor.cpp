@@ -1,7 +1,6 @@
 #include "ModuleTimeRspSensor.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -53,7 +52,7 @@ int ModuleTimeRspSensor::InputData(uint8_t *data, int len, Json::Value &jsonValu
     data_message_t *data_message = (data_message_t *)data;
     if (data_message->opcode == RD_OPCODE_CONFIG_RSP)
     {
-        if (data_message->header == RD_OPCODE_CONFIG_TIME_RSP_SENSOR)
+        if (data_message->header == RD_HEADER_CONFIG_TIME_RSP_SENSOR)
         {
             if (time != data_message->time)
             {

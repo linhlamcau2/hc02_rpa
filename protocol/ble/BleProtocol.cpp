@@ -331,7 +331,7 @@ static void GetDataUpdateCurtain(uint8_t *data, int len, Json::Value &dataValues
 		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
 		break;
 	case 2:
-		if (data_message->vendorId == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+		if (data_message->vendorId == RD_HEADER_REQUEST_STATUS_CURTAIN)
 		{
 			dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
 		}
@@ -395,19 +395,19 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_SWITCH)
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_SWITCH)
 			{
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_CURTAIN)
 			{
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateCurtain(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
+			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_SEFTPOWER_REMOTE_PRESS)
 			{
 				DeviceBle *deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
 				if (deviceBleChild)
@@ -422,12 +422,12 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 
 			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || deviceBle->GetType() == BLE_SWITCH_KNOB)
 			{
-				if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TIME)
+				if (header == RD_HEADER_SCREEN_TOUCH_REQUEST_TIME)
 				{
 					SendDate(deviceBle->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
 					SendTime(deviceBle->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
 				}
-				else if (header == RD_OPCODE_SCREEN_TOUCH_REQUEST_TEMP)
+				else if (header == RD_HEADER_SCREEN_TOUCH_REQUEST_TEMP)
 				{
 					SendWeatherOutdoor(deviceBle->GetAddr(), Util::GetStatusWeatherOutdoor(), Util::GetTempWeatherOutdoor());
 					SendWeatherIndoor(deviceBle->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
@@ -1843,7 +1843,7 @@ int BleProtocol::AddDev2Room(uint16_t devAddr, uint16_t group, uint16_t scene)
 	addDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
 	addDev2Room.vendorId = RD_VENDOR_ID;
 	addDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	addDev2Room.header = RD_OPCODE_CONFIG_ADD_ROOM;
+	addDev2Room.header = RD_HEADER_CONFIG_ADD_ROOM;
 	addDev2Room.groupId = group;
 	addDev2Room.sceneId = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&addDev2Room, sizeof(addDev2Room_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, addDev2RoomHeader, 0, 7);
@@ -1876,7 +1876,7 @@ int BleProtocol::DelDev2Room(uint16_t devAddr, uint16_t room, uint16_t scene)
 	delDev2Room.opcodeVendor = RD_OPCODE_CONFIG;
 	delDev2Room.vendorId = RD_VENDOR_ID;
 	delDev2Room.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	delDev2Room.header = RD_OPCODE_CONFIG_DEL_ROOM;
+	delDev2Room.header = RD_HEADER_CONFIG_DEL_ROOM;
 	delDev2Room.group = room;
 	delDev2Room.scene = scene;
 
@@ -2174,7 +2174,7 @@ int BleProtocol::SetSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	set_scene_dc_message.opcodeVendor = RD_OPCODE_CONFIG;
 	set_scene_dc_message.vendorId = RD_VENDOR_ID;
 	set_scene_dc_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	set_scene_dc_message.header = RD_OPCODE_CONFIG_SET_SCENE_SWITCH_SCENE_DC;
+	set_scene_dc_message.header = RD_HEADER_CONFIG_SET_SCENE_SWITCH_SCENE_DC;
 	set_scene_dc_message.button = button;
 	set_scene_dc_message.mode = mode;
 	set_scene_dc_message.sceneId = sceneId;
@@ -2231,7 +2231,7 @@ int BleProtocol::SetSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	set_scene_ac_message.opcodeVendor = RD_OPCODE_CONFIG;
 	set_scene_ac_message.vendorId = RD_VENDOR_ID;
 	set_scene_ac_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	set_scene_ac_message.header = RD_OPCODE_CONFIG_SET_SCENE_SWITCH_SCENE_AC;
+	set_scene_ac_message.header = RD_HEADER_CONFIG_SET_SCENE_SWITCH_SCENE_AC;
 	set_scene_ac_message.button = button;
 	set_scene_ac_message.mode = mode;
 	set_scene_ac_message.sceneId = sceneId;
@@ -2287,7 +2287,7 @@ int BleProtocol::DelSceneSwitchSceneDC(uint16_t devAddr, uint8_t button, uint8_t
 	del_scene_dc_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_scene_dc_message.vendorId = RD_VENDOR_ID;
 	del_scene_dc_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	del_scene_dc_message.header = RD_OPCODE_CONFIG_DEL_SCENE_SWITCH_SCENE_DC;
+	del_scene_dc_message.header = RD_HEADER_CONFIG_DEL_SCENE_SWITCH_SCENE_DC;
 	del_scene_dc_message.button = button;
 	del_scene_dc_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_dc_message, sizeof(del_scene_dc_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneDcHeader, 0, 7);
@@ -2339,7 +2339,7 @@ int BleProtocol::DelSceneSwitchSceneAC(uint16_t devAddr, uint8_t button, uint8_t
 	del_scene_ac_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_scene_ac_message.vendorId = RD_VENDOR_ID;
 	del_scene_ac_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	del_scene_ac_message.header = RD_OPCODE_CONFIG_DEL_SCENE_SWITCH_SCENE_AC;
+	del_scene_ac_message.header = RD_HEADER_CONFIG_DEL_SCENE_SWITCH_SCENE_AC;
 	del_scene_ac_message.button = button;
 	del_scene_ac_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_ac_message, sizeof(del_scene_ac_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneAcHeader, 0, 7);
@@ -2413,7 +2413,7 @@ int BleProtocol::SetScenePirLightSensor(uint16_t devAddr, uint8_t condition, uin
 	scene_light_pir_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_light_pir_message.vendorId = RD_VENDOR_ID;
 	scene_light_pir_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scene_light_pir_message.header = RD_OPCODE_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR;
+	scene_light_pir_message.header = RD_HEADER_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR;
 	scene_light_pir_message.sceneId = scene;
 	scene_light_pir_message.infoScene[0] = (data_scene_pir_light.data >> 24) & 0xFF;
 	scene_light_pir_message.infoScene[1] = (data_scene_pir_light.data >> 16) & 0xFF;
@@ -2469,7 +2469,7 @@ int BleProtocol::DelScenePirLightSensor(uint16_t devAddr, uint16_t scene)
 	scene_light_pir_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_light_pir_message.vendorId = RD_VENDOR_ID;
 	scene_light_pir_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scene_light_pir_message.header = RD_OPCODE_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR;
+	scene_light_pir_message.header = RD_HEADER_CONFIG_DEL_SCENE_PIR_LIGHT_SENSOR;
 	scene_light_pir_message.sceneId = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_light_pir_message, sizeof(scene_light_pir_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, sceneLightPirHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2522,7 +2522,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 	time_action_message.opcodeVendor = RD_OPCODE_CONFIG;
 	time_action_message.vendorId = RD_VENDOR_ID;
 	time_action_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	time_action_message.header = RD_OPCODE_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR;
+	time_action_message.header = RD_HEADER_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR;
 	time_action_message.time = time;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&time_action_message, sizeof(time_action_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeActionHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2537,7 +2537,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 			uint16_t time;
 		} time_action_rsp_message_t;
 		time_action_rsp_message_t *time_action_rsp_message = (time_action_rsp_message_t *)dataRsp;
-		if (time_action_rsp_message->header == 0x0345 && time_action_rsp_message->time == time)
+		if (time_action_rsp_message->header == RD_HEADER_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR && time_action_rsp_message->time == time)
 		{
 			return CODE_OK;
 		}
@@ -2570,7 +2570,7 @@ int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
 	mode_action_message.opcodeVendor = RD_OPCODE_CONFIG;
 	mode_action_message.vendorId = RD_VENDOR_ID;
 	mode_action_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	mode_action_message.header = RD_OPCODE_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR;
+	mode_action_message.header = RD_HEADER_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR;
 	mode_action_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_action_message, sizeof(mode_action_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeActionHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2585,7 +2585,7 @@ int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
 			uint8_t mode;
 		} mode_action_rsp_message_t;
 		mode_action_rsp_message_t *mode_action_rsp_message = (mode_action_rsp_message_t *)dataRsp;
-		if (mode_action_rsp_message->header == 0x0445 && mode_action_rsp_message->mode == mode)
+		if (mode_action_rsp_message->header == RD_HEADER_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR && mode_action_rsp_message->mode == mode)
 		{
 			return CODE_OK;
 		}
@@ -2617,7 +2617,7 @@ int BleProtocol::SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi)
 	sensi_message.opcodeVendor = RD_OPCODE_CONFIG;
 	sensi_message.vendorId = RD_VENDOR_ID;
 	sensi_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	sensi_message.header = RD_OPCODE_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR;
+	sensi_message.header = RD_HEADER_CONFIG_SET_SENSI_PIR_LIGHT_SENSOR;
 	sensi_message.sensi = sensi;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&sensi_message, sizeof(sensi_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sensiHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2651,7 +2651,7 @@ int BleProtocol::SetDistanceSensor(uint16_t devAddr, uint8_t distance)
 	distance_message.opcodeVendor = RD_OPCODE_CONFIG;
 	distance_message.vendorId = RD_VENDOR_ID;
 	distance_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	distance_message.header = RD_OPCODE_CONFIG_SET_DISTANCE_RADA_SENSOR;
+	distance_message.header = RD_HEADER_CONFIG_SET_DISTANCE_RADA_SENSOR;
 	distance_message.distance = distance;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&distance_message, sizeof(distance_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, distanceHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2685,7 +2685,7 @@ int BleProtocol::SetTimeRspSensor(uint16_t devAddr, uint16_t time)
 	timeRsp_message.opcodeVendor = RD_OPCODE_CONFIG;
 	timeRsp_message.vendorId = RD_VENDOR_ID;
 	timeRsp_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	timeRsp_message.header = RD_OPCODE_CONFIG_TIME_RSP_SENSOR;
+	timeRsp_message.header = RD_HEADER_CONFIG_TIME_RSP_SENSOR;
 	timeRsp_message.time = time;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&timeRsp_message, sizeof(timeRsp_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timeRspHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2721,7 +2721,7 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	scene_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_screen_touch_message.vendorId = RD_VENDOR_ID;
 	scene_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scene_screen_touch_message.header = RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH;
+	scene_screen_touch_message.header = RD_HEADER_CONFIG_SET_SCENE_SCREEN_TOUCH;
 	scene_screen_touch_message.sceneId = scene;
 	scene_screen_touch_message.icon = icon;
 	scene_screen_touch_message.type = type;
@@ -2739,7 +2739,7 @@ int BleProtocol::SceneForScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 			uint8_t icon;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SET_SCENE_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
+		if (scene_screen_touch_rsp_message->header == RD_HEADER_CONFIG_SET_SCENE_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
 		{
 			return CODE_OK;
 		}
@@ -2772,7 +2772,7 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 	edit_icon_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	edit_icon_screen_touch_message.vendorId = RD_VENDOR_ID;
 	edit_icon_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	edit_icon_screen_touch_message.header = RD_OPCODE_CONFIG_EDIT_ICON_SCREEN_TOUCH;
+	edit_icon_screen_touch_message.header = RD_HEADER_CONFIG_EDIT_ICON_SCREEN_TOUCH;
 	edit_icon_screen_touch_message.sceneId = scene;
 	edit_icon_screen_touch_message.icon = icon;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&edit_icon_screen_touch_message, sizeof(edit_icon_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, editIconScreenTouchHeader, 0, 7);
@@ -2789,7 +2789,7 @@ int BleProtocol::EditIconScreenTouch(uint16_t devAddr, uint16_t scene, uint8_t i
 			uint8_t icon;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_EDIT_ICON_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
+		if (scene_screen_touch_rsp_message->header == RD_HEADER_CONFIG_EDIT_ICON_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene && scene_screen_touch_rsp_message->icon == icon)
 		{
 			return CODE_OK;
 		}
@@ -2821,7 +2821,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 	del_scene_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_scene_screen_touch_message.vendorId = RD_VENDOR_ID;
 	del_scene_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	del_scene_screen_touch_message.header = RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH;
+	del_scene_screen_touch_message.header = RD_HEADER_CONFIG_DEL_SCENE_SCREEN_TOUCH;
 	del_scene_screen_touch_message.sceneId = scene;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&del_scene_screen_touch_message, sizeof(del_scene_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, delSceneScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -2836,7 +2836,7 @@ int BleProtocol::DelSceneScreenTouch(uint16_t devAddr, uint16_t scene)
 			uint16_t scene;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_DEL_SCENE_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene)
+		if (scene_screen_touch_rsp_message->header == RD_HEADER_CONFIG_DEL_SCENE_SCREEN_TOUCH && scene_screen_touch_rsp_message->scene == scene)
 		{
 			return CODE_OK;
 		}
@@ -2868,7 +2868,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 	del_allscene_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	del_allscene_screen_touch_message.vendorId = RD_VENDOR_ID;
 	del_allscene_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	del_allscene_screen_touch_message.header = RD_OPCODE_CONFIG_DEL_ALL_SCENE;
+	del_allscene_screen_touch_message.header = RD_HEADER_CONFIG_DEL_ALL_SCENE;
 	for (int i = 0; i < 6; i++)
 	{
 		del_allscene_screen_touch_message.check[i] = i;
@@ -2885,7 +2885,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 			uint16_t header;
 		} scene_screen_touch_rsp_message_t;
 		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_DEL_ALL_SCENE)
+		if (scene_screen_touch_rsp_message->header == RD_HEADER_CONFIG_DEL_ALL_SCENE)
 		{
 			return CODE_OK;
 		}
@@ -2918,7 +2918,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 	weather_outdoor_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	weather_outdoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_outdoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	weather_outdoor_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_WEATHER_OUTDOOR;
+	weather_outdoor_screen_touch_message.header = RD_HEADER_CONFIG_SEND_WEATHER_OUTDOOR;
 	weather_outdoor_screen_touch_message.temp = bswap_16(temp);
 	weather_outdoor_screen_touch_message.status = status;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&weather_outdoor_screen_touch_message, sizeof(weather_outdoor_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1500, weatherOutdoorScreenTouchHeader, 0, 7);
@@ -2935,7 +2935,7 @@ int BleProtocol::SendWeatherOutdoor(uint16_t devAddr, uint8_t status, uint16_t t
 			uint8_t status;
 		} weather_outdoor_screen_touch_rsp_message_t;
 		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
-		if (weather_outdoor_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_WEATHER_OUTDOOR && weather_outdoor_screen_touch_rsp_message->temp == bswap_16(temp) && weather_outdoor_screen_touch_rsp_message->status == status)
+		if (weather_outdoor_screen_touch_rsp_message->header == RD_HEADER_CONFIG_SEND_WEATHER_OUTDOOR && weather_outdoor_screen_touch_rsp_message->temp == bswap_16(temp) && weather_outdoor_screen_touch_rsp_message->status == status)
 		{
 			return CODE_OK;
 		}
@@ -2969,7 +2969,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 	weather_indoor_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	weather_indoor_screen_touch_message.vendorId = RD_VENDOR_ID;
 	weather_indoor_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	weather_indoor_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR;
+	weather_indoor_screen_touch_message.header = RD_HEADER_CONFIG_SEND_WEATHER_INDOOR;
 	weather_indoor_screen_touch_message.temp = bswap_16(temp);
 	weather_indoor_screen_touch_message.hum = bswap_16(hum);
 	weather_indoor_screen_touch_message.pm25 = pm25;
@@ -2988,7 +2988,7 @@ int BleProtocol::SendWeatherIndoor(uint16_t devAddr, uint16_t temp, uint16_t hum
 			uint16_t pm25;
 		} weather_outdoor_screen_touch_rsp_message_t;
 		weather_outdoor_screen_touch_rsp_message_t *weather_outdoor_screen_touch_rsp_message = (weather_outdoor_screen_touch_rsp_message_t *)dataRsp;
-		if (weather_outdoor_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_WEATHER_INDOOR && weather_outdoor_screen_touch_rsp_message->temp == bswap_16(temp) && weather_outdoor_screen_touch_rsp_message->hum == bswap_16(hum))
+		if (weather_outdoor_screen_touch_rsp_message->header == RD_HEADER_CONFIG_SEND_WEATHER_INDOOR && weather_outdoor_screen_touch_rsp_message->temp == bswap_16(temp) && weather_outdoor_screen_touch_rsp_message->hum == bswap_16(hum))
 		{
 			return CODE_OK;
 		}
@@ -3023,7 +3023,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 	date_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	date_screen_touch_message.vendorId = RD_VENDOR_ID;
 	date_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	date_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_DATE;
+	date_screen_touch_message.header = RD_HEADER_CONFIG_SEND_DATE;
 	date_screen_touch_message.years = bswap_16(years);
 	date_screen_touch_message.month = month;
 	date_screen_touch_message.date = date;
@@ -3044,7 +3044,7 @@ int BleProtocol::SendDate(uint16_t devAddr, uint16_t years, uint8_t month, uint8
 			uint8_t day;
 		} date_screen_touch_rsp_message_t;
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
-		if (date_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_DATE && date_screen_touch_rsp_message->years == bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
+		if (date_screen_touch_rsp_message->header == RD_HEADER_CONFIG_SEND_DATE && date_screen_touch_rsp_message->years == bswap_16(years) && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->month == month && date_screen_touch_rsp_message->date == date && date_screen_touch_rsp_message->day == day)
 		{
 			return CODE_OK;
 		}
@@ -3077,7 +3077,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 	time_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	time_screen_touch_message.vendorId = RD_VENDOR_ID;
 	time_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	time_screen_touch_message.header = RD_OPCODE_CONFIG_SEND_TIME;
+	time_screen_touch_message.header = RD_HEADER_CONFIG_SEND_TIME;
 	time_screen_touch_message.hours = hours;
 	time_screen_touch_message.minute = minute;
 	time_screen_touch_message.second = second;
@@ -3096,7 +3096,7 @@ int BleProtocol::SendTime(uint16_t devAddr, uint8_t hours, uint8_t minute, uint8
 			uint8_t second;
 		} date_screen_touch_rsp_message_t;
 		date_screen_touch_rsp_message_t *date_screen_touch_rsp_message = (date_screen_touch_rsp_message_t *)dataRsp;
-		if (date_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SEND_TIME && date_screen_touch_rsp_message->hours == hours && date_screen_touch_rsp_message->minute == minute && date_screen_touch_rsp_message->second == second)
+		if (date_screen_touch_rsp_message->header == RD_HEADER_CONFIG_SEND_TIME && date_screen_touch_rsp_message->hours == hours && date_screen_touch_rsp_message->minute == minute && date_screen_touch_rsp_message->second == second)
 		{
 			return CODE_OK;
 		}
@@ -3127,7 +3127,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 	group_screen_touch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	group_screen_touch_message.vendorId = RD_VENDOR_ID;
 	group_screen_touch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	group_screen_touch_message.header = RD_OPCODE_CONFIG_SET_GROUP;
+	group_screen_touch_message.header = RD_HEADER_CONFIG_SET_GROUP;
 	group_screen_touch_message.group = bswap_16(group);
 	int rs = SendMessage(APP_REQ, (uint8_t *)&group_screen_touch_message, sizeof(group_screen_touch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, groupScreenTouchHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3142,7 +3142,7 @@ int BleProtocol::SetGroup(uint16_t devAddr, uint16_t group)
 			uint16_t group;
 		} group_screen_touch_rsp_message_t;
 		group_screen_touch_rsp_message_t *group_screen_touch_rsp_message = (group_screen_touch_rsp_message_t *)dataRsp;
-		if (group_screen_touch_rsp_message->header == RD_OPCODE_CONFIG_SET_GROUP && group_screen_touch_rsp_message->group == bswap_16(group))
+		if (group_screen_touch_rsp_message->header == RD_HEADER_CONFIG_SET_GROUP && group_screen_touch_rsp_message->group == bswap_16(group))
 		{
 			return CODE_OK;
 		}
@@ -3176,7 +3176,7 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 	control_message.opcodeVendor = RD_OPCODE_CONFIG;
 	control_message.vendorId = RD_VENDOR_ID;
 	control_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	control_message.header = RD_OPCODE_CONTROL_OPEN_CLOSE_PAUSE;
+	control_message.header = RD_HEADER_CONTROL_OPEN_CLOSE_PAUSE;
 	control_message.type = type;
 	control_message.percent = percent;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&control_message, sizeof(control_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlHeader, 0, 7);
@@ -3193,7 +3193,7 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 			uint8_t percent;
 		} control_rsp_message_t;
 		control_rsp_message_t *control_rsp_message = (control_rsp_message_t *)dataRsp;
-		if (control_rsp_message->header == RD_OPCODE_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED && control_rsp_message->type == type)
+		if (control_rsp_message->header == RD_HEADER_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED && control_rsp_message->type == type)
 		{
 			if (type == PERCENT)
 			{
@@ -3237,7 +3237,7 @@ int BleProtocol::ConfigMotor(uint16_t devAddr, uint8_t typeMotor)
 	config_message.opcodeVendor = RD_OPCODE_CONFIG;
 	config_message.vendorId = RD_VENDOR_ID;
 	config_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	config_message.header = RD_OPCODE_CONFIG_MOTOR;
+	config_message.header = RD_HEADER_CONFIG_MOTOR;
 	config_message.type = typeMotor;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&config_message, sizeof(config_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, configHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3252,7 +3252,7 @@ int BleProtocol::ConfigMotor(uint16_t devAddr, uint8_t typeMotor)
 			uint8_t type;
 		} config_rsp_message_t;
 		config_rsp_message_t *config_rsp_message = (config_rsp_message_t *)dataRsp;
-		if (config_rsp_message->header == RD_OPCODE_CONFIG_MOTOR && config_rsp_message->type == typeMotor)
+		if (config_rsp_message->header == RD_HEADER_CONFIG_MOTOR && config_rsp_message->type == typeMotor)
 		{
 			return CODE_OK;
 		}
@@ -3284,7 +3284,7 @@ int BleProtocol::CalibCurtain(uint16_t devAddr, uint8_t status)
 	calib_message.opcodeVendor = RD_OPCODE_CONFIG;
 	calib_message.vendorId = RD_VENDOR_ID;
 	calib_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	calib_message.header = RD_OPCODE_CALIB;
+	calib_message.header = RD_HEADER_CALIB;
 	calib_message.status = status;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&calib_message, sizeof(calib_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, calibHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3299,7 +3299,7 @@ int BleProtocol::CalibCurtain(uint16_t devAddr, uint8_t status)
 			uint8_t status;
 		} calib_rsp_message_t;
 		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
-		if (calib_rsp_message->header == RD_OPCODE_CALIB && calib_rsp_message->status == status)
+		if (calib_rsp_message->header == RD_HEADER_CALIB && calib_rsp_message->status == status)
 		{
 			return CODE_OK;
 		}
@@ -3332,7 +3332,7 @@ int BleProtocol::CalibAuto(uint16_t devAddr, uint16_t time)
 	calib_message.opcodeVendor = RD_OPCODE_CONFIG;
 	calib_message.vendorId = RD_VENDOR_ID;
 	calib_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	calib_message.header = RD_OPCODE_CALIBAUTO;
+	calib_message.header = RD_HEADER_CALIBAUTO;
 	calib_message.time = time;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&calib_message, sizeof(calib_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, calibHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3347,7 +3347,7 @@ int BleProtocol::CalibAuto(uint16_t devAddr, uint16_t time)
 			uint16_t time;
 		} calib_rsp_message_t;
 		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
-		if (calib_rsp_message->header == RD_OPCODE_CALIBAUTO && calib_rsp_message->time == time)
+		if (calib_rsp_message->header == RD_HEADER_CALIBAUTO && calib_rsp_message->time == time)
 		{
 			return CODE_OK;
 		}
@@ -3380,7 +3380,7 @@ int BleProtocol::LockDevice(uint16_t devAddr, uint8_t locked)
 	lock_message.opcodeVendor = RD_OPCODE_CONFIG;
 	lock_message.vendorId = RD_VENDOR_ID;
 	lock_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	lock_message.header = RD_OPCODE_LOCK;
+	lock_message.header = RD_HEADER_LOCK;
 	lock_message.lock = locked;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&lock_message, sizeof(lock_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, lockHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3395,7 +3395,7 @@ int BleProtocol::LockDevice(uint16_t devAddr, uint8_t locked)
 			uint8_t lock;
 		} lock_rsp_message_t;
 		lock_rsp_message_t *lock_rsp_message = (lock_rsp_message_t *)dataRsp;
-		if (lock_rsp_message->header == RD_OPCODE_LOCK && lock_rsp_message->lock == locked)
+		if (lock_rsp_message->header == RD_HEADER_LOCK && lock_rsp_message->lock == locked)
 		{
 			return CODE_OK;
 		}
@@ -3428,7 +3428,7 @@ int BleProtocol::SetModeWifi(uint16_t devAddr, uint8_t mode)
 	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
 	mode_message.vendorId = RD_VENDOR_ID;
 	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	mode_message.header = RD_OPCODE_MODE_WIFI;
+	mode_message.header = RD_HEADER_MODE_WIFI;
 	mode_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3443,7 +3443,7 @@ int BleProtocol::SetModeWifi(uint16_t devAddr, uint8_t mode)
 			uint8_t mode;
 		} mode_rsp_message_t;
 		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
-		if (mode_rsp_message->header == RD_OPCODE_MODE_WIFI && mode_rsp_message->mode == mode)
+		if (mode_rsp_message->header == RD_HEADER_MODE_WIFI && mode_rsp_message->mode == mode)
 		{
 			return CODE_OK;
 		}
@@ -3475,7 +3475,7 @@ int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
 	update_message.opcodeVendor = RD_OPCODE_CONFIG;
 	update_message.vendorId = RD_VENDOR_ID;
 	update_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	update_message.header = RD_OPCODE_REQUEST_STATUS_CURTAIN;
+	update_message.header = RD_HEADER_REQUEST_STATUS_CURTAIN;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&update_message, sizeof(update_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, updateHeader, 0, 7);
 	if (rs == CODE_OK)
 	{
@@ -3488,7 +3488,7 @@ int BleProtocol::UpdateStatusCurtain(uint16_t devAddr)
 			uint16_t header;
 		} calib_rsp_message_t;
 		calib_rsp_message_t *calib_rsp_message = (calib_rsp_message_t *)dataRsp;
-		if (calib_rsp_message->header == RD_OPCODE_REQUEST_STATUS_CURTAIN)
+		if (calib_rsp_message->header == RD_HEADER_REQUEST_STATUS_CURTAIN)
 		{
 			return CODE_OK;
 		}
@@ -3521,7 +3521,7 @@ int BleProtocol::ScanStopSeftPowerRemote(uint16_t devAddr, uint8_t status)
 	scan_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scan_message.vendorId = RD_VENDOR_ID;
 	scan_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scan_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SCAN;
+	scan_message.header = RD_HEADER_SEFTPOWER_REMOTE_SCAN;
 	scan_message.status = status;
 	uint16_t timeout = 10000;
 	if (!status)
@@ -3560,7 +3560,7 @@ int BleProtocol::SaveSeftPowerRemote(scan_device_pair_message_t scanMessage, uin
 	save_message.opcodeVendor = RD_OPCODE_CONFIG;
 	save_message.vendorId = RD_VENDOR_ID;
 	save_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	save_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SAVE;
+	save_message.header = RD_HEADER_SEFTPOWER_REMOTE_SAVE;
 	save_message.childDev = childDev;
 	for (int i = 0; i < 4; i++)
 	{
@@ -3613,7 +3613,7 @@ int BleProtocol::SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAdd
 	scene_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_message.vendorId = RD_VENDOR_ID;
 	scene_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scene_message.header = RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE;
+	scene_message.header = RD_HEADER_SEFTPOWER_REMOTE_SET_SCENE;
 	scene_message.childDev = seftPowerAddr;
 	scene_message.button = button;
 	scene_message.mode = mode;
@@ -3632,7 +3632,7 @@ int BleProtocol::SetSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAdd
 			uint8_t status;
 		} scene_rsp_message_t;
 		scene_rsp_message_t *scene_rsp_message = (scene_rsp_message_t *)dataRsp;
-		if (scene_rsp_message->header != RD_OPCODE_SEFTPOWER_REMOTE_SET_SCENE)
+		if (scene_rsp_message->header != RD_HEADER_SEFTPOWER_REMOTE_SET_SCENE)
 			rs = CODE_ERROR;
 	}
 	return rs;
@@ -3663,7 +3663,7 @@ int BleProtocol::DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAdd
 	scene_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_message.vendorId = RD_VENDOR_ID;
 	scene_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scene_message.header = RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE;
+	scene_message.header = RD_HEADER_SEFTPOWER_REMOTE_DEL_SCENE;
 	scene_message.childDev = seftPowerAddr;
 	scene_message.button = button;
 	scene_message.mode = mode;
@@ -3680,7 +3680,7 @@ int BleProtocol::DelSceneSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAdd
 			uint8_t status;
 		} scene_rsp_message_t;
 		scene_rsp_message_t *scene_rsp_message = (scene_rsp_message_t *)dataRsp;
-		if (scene_rsp_message->header != RD_OPCODE_SEFTPOWER_REMOTE_DEL_SCENE)
+		if (scene_rsp_message->header != RD_HEADER_SEFTPOWER_REMOTE_DEL_SCENE)
 			rs = CODE_ERROR;
 	}
 	return rs;
@@ -3709,7 +3709,7 @@ int BleProtocol::ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr)
 	reset_message.opcodeVendor = RD_OPCODE_CONFIG;
 	reset_message.vendorId = RD_VENDOR_ID;
 	reset_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	reset_message.header = RD_OPCODE_SEFTPOWER_REMOTE_RESET;
+	reset_message.header = RD_HEADER_SEFTPOWER_REMOTE_RESET;
 	reset_message.childDev = seftPowerAddr;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&reset_message, sizeof(reset_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dataCompare, 0, 7);
 	if (rs == CODE_OK)
@@ -3725,7 +3725,7 @@ int BleProtocol::ResetSeftPowerRemote(uint16_t devAddr, uint16_t seftPowerAddr)
 			uint8_t status;
 		} reset_rsp_message_t;
 		reset_rsp_message_t *reset_rsp_message = (reset_rsp_message_t *)dataRsp;
-		if (reset_rsp_message->header != RD_OPCODE_SEFTPOWER_REMOTE_RESET)
+		if (reset_rsp_message->header != RD_HEADER_SEFTPOWER_REMOTE_RESET)
 			rs = CODE_ERROR;
 	}
 	return rs;
@@ -3805,7 +3805,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 	controlrgb_switch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	controlrgb_switch_message.vendorId = RD_VENDOR_ID;
 	controlrgb_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	controlrgb_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH;
+	controlrgb_switch_message.header = RD_HEADER_CONFIG_CONTROL_RGB_SWITCH;
 	controlrgb_switch_message.button = button;
 	controlrgb_switch_message.b = b;
 	controlrgb_switch_message.g = g;
@@ -3825,7 +3825,7 @@ int BleProtocol::ControlRgbSwitch(uint16_t devAddr, uint8_t button, uint8_t b, u
 			uint8_t button;
 		} controlrgb_switch_rsp_message_t;
 		controlrgb_switch_rsp_message_t *controlrgb_switch_rsp_message = (controlrgb_switch_rsp_message_t *)dataRsp;
-		if (controlrgb_switch_rsp_message->header == RD_OPCODE_CONFIG_CONTROL_RGB_SWITCH && controlrgb_switch_rsp_message->button == button)
+		if (controlrgb_switch_rsp_message->header == RD_HEADER_CONFIG_CONTROL_RGB_SWITCH && controlrgb_switch_rsp_message->button == button)
 		{
 			return CODE_OK;
 		}
@@ -3862,16 +3862,16 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	{
 	case BLE_SWITCH_1:
 	case BLE_SWITCH_WATER_HEATER:
-		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_1;
+		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_1;
 		break;
 	case BLE_SWITCH_2:
-		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_2;
+		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_2;
 		break;
 	case BLE_SWITCH_3:
-		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_3;
+		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_3;
 		break;
 	default:
-		control_relay_switch_message.header = RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4;
+		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_4;
 		break;
 	}
 	control_relay_switch_message.relay = relay;
@@ -3922,7 +3922,7 @@ int BleProtocol::SetIdCombine(uint16_t devAddr, uint16_t id)
 	set_id_combine_message.opcodeVendor = RD_OPCODE_CONFIG;
 	set_id_combine_message.vendorId = RD_VENDOR_ID;
 	set_id_combine_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	set_id_combine_message.header = RD_OPCODE_CONFIG_SET_ID_COMBINE;
+	set_id_combine_message.header = RD_HEADER_CONFIG_SET_ID_COMBINE;
 	set_id_combine_message.id = id;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_id_combine_message, sizeof(set_id_combine_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, setIdCombineHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -3970,7 +3970,7 @@ int BleProtocol::CountDownSwitch(uint16_t devAddr, uint16_t timer, uint8_t statu
 	timer_message.opcodeVendor = RD_OPCODE_CONFIG;
 	timer_message.vendorId = RD_VENDOR_ID;
 	timer_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	timer_message.header = RD_OPCODE_CONFIG_SET_TIMER;
+	timer_message.header = RD_HEADER_CONFIG_SET_TIMER;
 	timer_message.status = status;
 	timer_message.timer = timer;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&timer_message, sizeof(timer_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
@@ -4004,19 +4004,19 @@ int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type)
 	switch (type)
 	{
 	case BLE_SWITCH_1:
-		header = RD_OPCODE_REQUEST_STATUS_SWITCH_1;
+		header = RD_HEADER_REQUEST_STATUS_SWITCH_1;
 		break;
 	case BLE_SWITCH_2:
-		header = RD_OPCODE_REQUEST_STATUS_SWITCH_2;
+		header = RD_HEADER_REQUEST_STATUS_SWITCH_2;
 		break;
 	case BLE_SWITCH_3:
-		header = RD_OPCODE_REQUEST_STATUS_SWITCH_3;
+		header = RD_HEADER_REQUEST_STATUS_SWITCH_3;
 		break;
 	case BLE_SWITCH_4:
-		header = RD_OPCODE_REQUEST_STATUS_SWITCH_4;
+		header = RD_HEADER_REQUEST_STATUS_SWITCH_4;
 		break;
 	default:
-		header = RD_OPCODE_REQUEST_STATUS_SWITCH;
+		header = RD_HEADER_REQUEST_STATUS_SWITCH;
 	}
 	uint8_t dataRsp[100];
 	int lenRsp;
@@ -4068,7 +4068,7 @@ int BleProtocol::ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uin
 	status_message.opcodeVendor = RD_OPCODE_CONFIG;
 	status_message.vendorId = RD_VENDOR_ID;
 	status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	status_message.header = RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH;
+	status_message.header = RD_HEADER_CONFIG_STATUS_STARTUP_SWITCH;
 	status_message.status = status;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&status_message, sizeof(status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, statusHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -4083,7 +4083,7 @@ int BleProtocol::ConfigStatusStartupSwitch(uint16_t devAddr, uint8_t status, uin
 			uint8_t status;
 		} status_rsp_message_t;
 		status_rsp_message_t *status_rsp_message = (status_rsp_message_t *)dataRsp;
-		if (status_rsp_message->header == RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH && status_rsp_message->status == status)
+		if (status_rsp_message->header == RD_HEADER_CONFIG_STATUS_STARTUP_SWITCH && status_rsp_message->status == status)
 		{
 			return CODE_OK;
 		}
@@ -4115,7 +4115,7 @@ int BleProtocol::ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode)
 	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
 	mode_message.vendorId = RD_VENDOR_ID;
 	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	mode_message.header = RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF;
+	mode_message.header = RD_HEADER_CONFIG_MODE_INPUT_SWITCHONOFF;
 	mode_message.mode = mode;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
 	if (rs == CODE_OK)
@@ -4130,7 +4130,7 @@ int BleProtocol::ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode)
 			uint8_t mode;
 		} mode_rsp_message_t;
 		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
-		if (mode_rsp_message->header == RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF && mode_rsp_message->mode == mode)
+		if (mode_rsp_message->header == RD_HEADER_CONFIG_MODE_INPUT_SWITCHONOFF && mode_rsp_message->mode == mode)
 		{
 			return CODE_OK;
 		}

@@ -1,7 +1,6 @@
 #include "ModuleCountDownSwitch.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -30,9 +29,20 @@ int ModuleCountDownSwitch::InputData(Json::Value &dataValue, Json::Value &jsonVa
 
 int ModuleCountDownSwitch::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0xe3 && data[1] == 0x11 && data[2] == 0x02 && data[3] == 0x0b && data[4] == 0x07)
+	typedef struct __attribute__((packed))
 	{
-		time = data[6] | (data[7] << 8);
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t status;
+		uint16_t time;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP &&
+		data_message->vendorId == RD_VENDOR_ID &&
+		data_message->header == RD_HEADER_CONFIG_SET_TIMER)
+	{
+		time = data_message->time;
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger(jsonValue);
 		return CODE_OK;

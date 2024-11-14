@@ -1,57 +1,53 @@
 #include "ModuleStatusStartup.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
 
 ModuleStatusStartup::ModuleStatusStartup(Device *device, uint32_t addr) : Module(device, addr)
 {
-    status = 0;
+	status = 0;
 }
 
 ModuleStatusStartup::~ModuleStatusStartup()
 {
 }
 
-
 int ModuleStatusStartup::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-    if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_STATUS_STARTUP) && dataValue[KEY_ATTRIBUTE_STATUS_STARTUP].isInt())
-    {
-        status = dataValue[KEY_ATTRIBUTE_STATUS_STARTUP].asInt();
-        BuildTelemetryValue(jsonValue);
-        return CODE_OK;
-    }
-    return CODE_ERROR;
+	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_STATUS_STARTUP) && dataValue[KEY_ATTRIBUTE_STATUS_STARTUP].isInt())
+	{
+		status = dataValue[KEY_ATTRIBUTE_STATUS_STARTUP].asInt();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 int ModuleStatusStartup::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-    if (data[0] == RD_OPCODE_CONFIG_RSP)
-    {
-        typedef struct __attribute__((packed))
-        {
-            uint16_t vendorId;
-            uint16_t header;
-            uint8_t status;
-        } data_message_t;
-        data_message_t *data_message = (data_message_t *)&data[1];
-        if (data_message->header == RD_OPCODE_CONFIG_STATUS_STARTUP_SWITCH)
-        {
-            status = data_message->status;
-            BuildTelemetryValue(jsonValue);
-            CheckTrigger(jsonValue);
-            return CODE_OK;
-        }
-    }
-    return CODE_ERROR;
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t status;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_HEADER_CONFIG_STATUS_STARTUP_SWITCH)
+	{
+		status = data_message->status;
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 bool ModuleStatusStartup::CheckData(Json::Value &dataValue, bool &rs)
 {
-    LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGD("CheckData data: %s", dataValue.toString().c_str());
 
 	if (dataValue.isObject() &&
 		dataValue.isMember(KEY_ATTRIBUTE_STATUS_STARTUP) &&
@@ -81,7 +77,7 @@ bool ModuleStatusStartup::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleStatusStartup::BuildTelemetryValue(Json::Value &jsonValue)
 {
-    jsonValue[KEY_ATTRIBUTE_STATUS_STARTUP] = status;
+	jsonValue[KEY_ATTRIBUTE_STATUS_STARTUP] = status;
 }
 
 int ModuleStatusStartup::Do(Json::Value &dataValue)

@@ -2,7 +2,6 @@
 #include "Log.h"
 #include "Util.h"
 #include "Base64.h"
-#include "BleDefine.h"
 
 #define TABLE_NAME "[DeviceInSceneBle]"
 

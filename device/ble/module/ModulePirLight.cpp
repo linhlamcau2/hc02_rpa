@@ -1,9 +1,9 @@
 #include "ModulePirLight.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 #include "Gateway.h"
 #include "SceneBle.h"
@@ -55,15 +55,18 @@ int ModulePirLight::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x05 && data[2] == 0x00)
+	typedef struct __attribute__((packed))
 	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t pir;
-			uint16_t scene;
-			uint16_t lux;
-		} data_message_t;
-		data_message_t *data_message = (data_message_t *)&data[3];
+		uint8_t opcode;
+		uint16_t header;
+		uint16_t pir;
+		uint16_t scene;
+		uint16_t lux;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP &&
+		data_message->header == RD_HEADER_PIR_SENSOR_MODULE_TYPE)
+	{
 		int temp_pir = data_message->pir;
 		int temp_lux = data_message->lux;
 		if (len == 7)
@@ -118,8 +121,7 @@ int ModulePirLight::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 			CheckTrigger(jsonValue);
 
-			uint16_t sceneId = data[5] | (data[6] << 8);
-			if (sceneId > 0)
+			if (data_message->scene > 0)
 			{
 				SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
 				if (sceneBle)

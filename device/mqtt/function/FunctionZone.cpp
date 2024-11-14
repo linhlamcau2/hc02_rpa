@@ -1,7 +1,6 @@
 #include "FunctionZone.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Gateway.h"

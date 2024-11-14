@@ -6,7 +6,7 @@ using namespace std;
 class ModuleTempWater : public Module
 {
 protected:
-	uint16_t temp;
+	int16_t temp;
 
 public:
 	ModuleTempWater(Device *device, uint16_t addr);

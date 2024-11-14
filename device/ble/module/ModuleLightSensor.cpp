@@ -1,7 +1,6 @@
 #include "ModuleLightSensor.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -60,29 +59,27 @@ static uint16_t CalculateLux(uint16_t rsp_lux)
 
 int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52)
+	typedef struct __attribute__((package))
 	{
-		if (data[1] == 0x04 && (data[2] == 0x00 || data[2] == 0x01))
+		uint8_t opcode;
+		uint16_t header;
+		uint16_t lux;
+		uint16_t scene;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP)
+	{
+		uint16_t tempLux = 0;
+		if (data_message->header == RD_HEADER_LIGHT_SENSOR_MODULE_TYPE ||
+			data_message->header == RD_HEADER_RSP_LIGHT_SENSOR)
 		{
-			typedef struct __attribute__((packed))
+			if (data_message->header == RD_HEADER_LIGHT_SENSOR_MODULE_TYPE)
+				tempLux = CalculateLux(bswap_16(data_message->lux));
+			else if (data_message->header == RD_HEADER_RSP_LIGHT_SENSOR)
+				tempLux = data_message->lux;
+			if (lux != tempLux)
 			{
-				uint16_t lux;
-				uint16_t scene;
-			} data_message_t;
-			data_message_t *data_message = (data_message_t *)&data[3];
-			uint16_t temp_lux = 0;
-			if (data[2] == 0x00)
-			{
-				temp_lux = CalculateLux(bswap_16(data_message->lux));
-			}
-			else if (data[2] == 0x01)
-			{
-				temp_lux = data_message->lux;
-			}
-
-			if (temp_lux != lux)
-			{
-				lux = temp_lux;
+				lux = tempLux;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute();
 #endif

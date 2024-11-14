@@ -1,9 +1,9 @@
 #include "ModuleButtonAll.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "Db.h"
 
 ModuleButtonAll::ModuleButtonAll(Device *device, uint16_t addr, uint32_t index) : Module(device, addr, index)
 {
@@ -55,7 +55,7 @@ int ModuleButtonAll::InputData(uint8_t *data, int len, Json::Value &jsonValue)
     data_message_t *data_message = (data_message_t *)data;
     if (data_message->opcodeVendor == RD_OPCODE_CONFIG_RSP)
     {
-        if (data_message->header == RD_OPCODE_CONFIG_STATUS_ALL_RELAY_SWITCH)
+        if (data_message->header == RD_HEADER_CONFIG_STATUS_ALL_RELAY_SWITCH)
         {
             if (data_message->numBt == index)
             {

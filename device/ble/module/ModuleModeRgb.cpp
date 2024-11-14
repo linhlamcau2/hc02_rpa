@@ -1,9 +1,9 @@
 #include "ModuleModeRgb.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModuleModeRgb::ModuleModeRgb(Device *device, uint16_t addr) : Module(device, addr)

@@ -1,14 +1,13 @@
 #include "ModuleModeInput.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
 
 ModuleModeInput::ModuleModeInput(Device *device, uint32_t addr) : Module(device, addr)
 {
-    mode = 0;
+	mode = 0;
 }
 
 ModuleModeInput::~ModuleModeInput()
@@ -17,40 +16,38 @@ ModuleModeInput::~ModuleModeInput()
 
 int ModuleModeInput::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 {
-    if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_MODE_INPUT) && dataValue[KEY_ATTRIBUTE_MODE_INPUT].isInt())
-    {
-        mode = dataValue[KEY_ATTRIBUTE_MODE_INPUT].asInt();
-        BuildTelemetryValue(jsonValue);
-        return CODE_OK;
-    }
-    return CODE_ERROR;
+	if (dataValue.isObject() && dataValue.isMember(KEY_ATTRIBUTE_MODE_INPUT) && dataValue[KEY_ATTRIBUTE_MODE_INPUT].isInt())
+	{
+		mode = dataValue[KEY_ATTRIBUTE_MODE_INPUT].asInt();
+		BuildTelemetryValue(jsonValue);
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 int ModuleModeInput::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-    if (data[0] == RD_OPCODE_CONFIG_RSP)
-    {
-        typedef struct __attribute__((packed))
-        {
-            uint16_t vendorId;
-            uint16_t header;
-            uint8_t mode;
-        } data_message_t;
-        data_message_t *data_message = (data_message_t *)&data[1];
-        if (data_message->header == RD_OPCODE_CONFIG_MODE_INPUT_SWITCHONOFF)
-        {
-            mode = data_message->mode;
-            BuildTelemetryValue(jsonValue);
-            CheckTrigger(jsonValue);
-            return CODE_OK;
-        }
-    }
-    return CODE_ERROR;
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t mode;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)&data;
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_HEADER_CONFIG_MODE_INPUT_SWITCHONOFF)
+	{
+		mode = data_message->mode;
+		BuildTelemetryValue(jsonValue);
+		CheckTrigger(jsonValue);
+		return CODE_OK;
+	}
+	return CODE_ERROR;
 }
 
 bool ModuleModeInput::CheckData(Json::Value &dataValue, bool &rs)
 {
-    LOGD("CheckData data: %s", dataValue.toString().c_str());
+	LOGD("CheckData data: %s", dataValue.toString().c_str());
 
 	if (dataValue.isObject() &&
 		dataValue.isMember(KEY_ATTRIBUTE_MODE_INPUT) &&
@@ -80,7 +77,7 @@ bool ModuleModeInput::CheckData(Json::Value &dataValue, bool &rs)
 
 void ModuleModeInput::BuildTelemetryValue(Json::Value &jsonValue)
 {
-    jsonValue[KEY_ATTRIBUTE_MODE_INPUT] = mode;
+	jsonValue[KEY_ATTRIBUTE_MODE_INPUT] = mode;
 }
 
 int ModuleModeInput::Do(Json::Value &dataValue)

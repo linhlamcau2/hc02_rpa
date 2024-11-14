@@ -1,9 +1,9 @@
 #include "ModuleCct.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModuleCct::ModuleCct(Device *device, uint16_t addr) : Module(device, addr)
@@ -50,7 +50,7 @@ int ModuleCct::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint16_t cct;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == BLE_MESH_OPCODE_CCT)
+	if (data_message->opcode == LIGHT_CTL_TEMP_STATUS)
 	{
 		int temp_cct;
 		if (len <= 6)

@@ -1,9 +1,9 @@
 #include "ModuleOnOff.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Db.h"
 
 ModuleOnOff::ModuleOnOff(Device *device, uint16_t addr, string onoffKey, uint32_t index) : Module(device, addr, index)
@@ -53,7 +53,7 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			uint8_t onoff;
 		} data_message_t;
 		data_message_t *data_message = (data_message_t *)data;
-		if (data_message->opcode == BLE_MESH_OPCODE_ONOFF)
+		if (data_message->opcode == G_ONOFF_STATUS)
 		{
 			if (len == 3)
 			{
@@ -75,7 +75,7 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			return CODE_OK;
 		}
 	}
-	if (data[0] == RD_OPCODE_CONFIG_RSP)
+	else if (data[0] == RD_OPCODE_CONFIG_RSP)
 	{
 		typedef struct __attribute__((packed))
 		{
@@ -87,7 +87,7 @@ int ModuleOnOff::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		data_message_t *data_message = (data_message_t *)data;
 		if (data_message->vendorId == RD_VENDOR_ID)
 		{
-			if (data_message->header == RD_OPCODE_CONFIG_CONTROL_RELAY_SWITCH_4)
+			if (data_message->header == RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_4)
 			{
 				temp_onoff = data_message->data[index + 1];
 				if (temp_onoff != onoff)

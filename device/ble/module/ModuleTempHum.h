@@ -6,7 +6,7 @@ using namespace std;
 class ModuleTempHum : public Module
 {
 protected:
-	int temp;
+	int16_t temp;
 	int hum;
 
 public:

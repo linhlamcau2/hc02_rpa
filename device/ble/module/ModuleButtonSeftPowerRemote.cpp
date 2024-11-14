@@ -1,7 +1,6 @@
 #include "ModuleButtonSeftPowerRemote.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Gateway.h"
@@ -46,7 +45,7 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
     data_message_t *data_message = (data_message_t *)data;
     if (data_message->opcodeRsp == RD_OPCODE_CONFIG_RSP)
     {
-        if (data_message->header == RD_OPCODE_SEFTPOWER_REMOTE_PRESS)
+        if (data_message->header == RD_HEADER_SEFTPOWER_REMOTE_PRESS)
         {
             if (bt != data_message->mode)
             {

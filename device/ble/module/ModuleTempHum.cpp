@@ -1,7 +1,6 @@
 #include "ModuleTempHum.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -59,9 +58,9 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 
-	if (data_message->opcode == 0x52)
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP)
 	{
-		if (data_message->header == 0x0006)
+		if (data_message->header == RD_HEADER_TEMP_HUM_AIR_STATUS_1)
 		{
 			int temp_temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
 			if (data_message->value1[0] & 0x80)
@@ -88,7 +87,7 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 			Util::SetHumOfScreenTouch(hum);
 			return CODE_OK;
 		}
-		else if (data_message->header == 0x0107 && len >= 9)
+		else if (data_message->header == RD_HEADER_STATUS_TEMP_HUM_OF_PM && len >= 9)
 		{
 			int temp_hum = (data_message->value1[0] << 8) | data_message->value1[1];
 			int temp_temp = (data[7] << 8) | data[8];
@@ -107,6 +106,29 @@ int ModuleTempHum::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 #ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
 #endif
+			}
+			BuildTelemetryValue(jsonValue);
+			CheckTrigger(jsonValue);
+
+			return CODE_OK;
+		}
+		else if (data_message->header == RD_HEADER_TEMP_HUM_AIR_STATUS_2)
+		{
+			int16_t tempValue = (int16_t)((data_message->value1[0] <<8) | data_message->value1[1]);
+			uint16_t humValue = (data_message->value2[0] << 8) | data_message->value2[1];
+			if (tempValue != temp)
+			{
+				temp = tempValue;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_TEMP);
+#endif				
+			}
+			if (humValue != hum)
+			{
+				hum = humValue;
+#ifdef CONFIG_SAVE_ATTRIBUTE
+				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY);
+#endif				
 			}
 			BuildTelemetryValue(jsonValue);
 			CheckTrigger(jsonValue);

@@ -1,9 +1,9 @@
 #include "ModuleNotifyScene.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
+#include "BleOpCode.h"
 #include "Gateway.h"
 #include "SceneBle.h"
 
@@ -26,9 +26,9 @@ int ModuleNotifyScene::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint8_t data[10];
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
-	if (data_message->opcode == 0x52)
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP)
 	{
-		if (data_message->header == SCREEN_TOUCH_MODULE_TYPE)
+		if (data_message->header == RD_HEADER_SCREEN_TOUCH_PRESS)
 		{
 			idScene = data_message->data[1] | (data_message->data[2] << 8);
 		}

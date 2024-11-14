@@ -1,7 +1,6 @@
 #include "ModulePmSensor.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -57,16 +56,17 @@ int ModulePmSensor::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x07 && data[2] == 0x02)
+	typedef struct __attribute__((packed))
 	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t pm25;
-			uint16_t pm10;
-			uint16_t pm1_0;
-		} data_message_t;
-		data_message_t *data_message = (data_message_t *)&data[3];
-
+		uint8_t opcode;
+		uint16_t header;
+		uint16_t pm25;
+		uint16_t pm10;
+		uint16_t pm1_0;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_PM)
+	{
 		int tepm_pm25 = bswap_16(data_message->pm25);
 		int temp_pm10 = bswap_16(data_message->pm10);
 		int temp_pm1_0 = bswap_16(data_message->pm1_0);
@@ -93,7 +93,6 @@ int ModulePmSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		}
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger(jsonValue);
-
 		return CODE_OK;
 	}
 	return CODE_ERROR;

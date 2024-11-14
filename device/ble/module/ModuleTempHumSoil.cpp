@@ -1,7 +1,6 @@
 #include "ModuleTempHumSoil.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -54,29 +53,27 @@ int ModuleTempHumSoil::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		uint8_t opcode;
 		uint16_t header;
-		uint8_t value1[2];
-		uint8_t value2[2];
+		uint16_t temp;
+		uint16_t hum;
 	} data_message_t;
 	data_message_t *data_message = (data_message_t *)data;
 
-	if (data_message->opcode == 0x52)
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP)
 	{
 		if (data_message->header == RD_HEADER_TEMP_SOIL_STATUS)
 		{
-			int temp_temp = (((data_message->value1[0] & 0x7F) << 8) | data_message->value1[1]) & 0x7FFF;
-			if (data_message->value1[0] & 0x80)
-				temp_temp = (-1) * temp_temp;
-			int temp_hum = (data_message->value2[0] << 8) | data_message->value2[1];
-			if (temp_temp != temp)
+			int16_t tempValue = (int16_t)(bswap_16(data_message->temp));
+			uint16_t humValue = bswap_16(data_message->hum);
+			if (tempValue != temp)
 			{
-				temp = temp_temp;
+				temp = tempValue;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_TEMP_SOIL);
 #endif
 			}
-			if (temp_hum != hum)
+			if (humValue != hum)
 			{
-				hum = temp_hum;
+				hum = humValue;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY_SOIL);
 #endif
@@ -86,31 +83,6 @@ int ModuleTempHumSoil::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 
 			Util::SetTempOfScreenTouch(temp);
 			Util::SetHumOfScreenTouch(hum);
-			return CODE_OK;
-		}
-		else if (data_message->header == 0x0107 && len >= 9)
-		{
-			int temp_hum = (data_message->value1[0] << 8) | data_message->value1[1];
-			int temp_temp = (data[7] << 8) | data[8];
-			if (data[5] == 0xff)
-				temp_temp = (-1) * temp_temp;
-			if (temp_temp != temp)
-			{
-				temp = temp_temp;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute(KEY_ATTRIBUTE_TEMP_SOIL);
-#endif
-			}
-			if (temp_hum != hum)
-			{
-				hum = temp_hum;
-#ifdef CONFIG_SAVE_ATTRIBUTE
-				SaveAttribute(KEY_ATTRIBUTE_HUMIDITY_SOIL);
-#endif
-			}
-			BuildTelemetryValue(jsonValue);
-			CheckTrigger(jsonValue);
-
 			return CODE_OK;
 		}
 	}

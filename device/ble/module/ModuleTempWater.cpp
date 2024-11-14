@@ -1,7 +1,6 @@
 #include "ModuleTempWater.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -49,9 +48,9 @@ int ModuleTempWater::InputData(uint8_t *data, int len, Json::Value &jsonValue)
         uint16_t temp;
     } data_message_t;
     data_message_t *data_message = (data_message_t *)data;
-    if (data_message->opcode == 0x52 && data_message->header == RD_HEADER_TEMP_WATER_STATUS)
+    if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_TEMP_WATER_STATUS)
     {
-        uint16_t tp = data_message->temp;
+        int16_t tp = (int16_t)data_message->temp;
         if (temp != tp)
         {
             temp = tp;

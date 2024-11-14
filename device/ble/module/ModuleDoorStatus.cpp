@@ -1,7 +1,6 @@
 #include "ModuleDoorStatus.h"
 #include "Log.h"
 #include "Util.h"
-#include "BleDefine.h"
 #include "Device.h"
 #include "BleProtocol.h"
 #include "Db.h"
@@ -42,11 +41,19 @@ int ModuleDoorStatus::InputData(Json::Value &dataValue, Json::Value &jsonValue)
 
 int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	if (data[0] == 0x52 && data[1] == 0x09 && data[2] == 0x00)
+	typedef struct __attribute__((packed))
 	{
-		if (status != data[3])
+		uint8_t opcode;
+		uint16_t header;
+		uint8_t door;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+
+	if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_DOOR_SENSOR)
+	{
+		if (status != data_message->door)
 		{
-			status = data[3];
+			status == data_message->door;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
