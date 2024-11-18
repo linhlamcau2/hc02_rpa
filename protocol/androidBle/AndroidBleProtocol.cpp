@@ -63,6 +63,7 @@ int AndroidBleProtocol::StartScan()
 	element.append(BLE_SWITCH_ELECTRICAL_1);
 	element.append(BLE_SWITCH_ELECTRICAL_1_V2);
 	element.append(BLE_SWITCH_RGB_SOCKET_1);
+	element.append(BLE_SWITCH_RGB_SOCKET_1_V2);
 	element.append(BLE_SWITCH_ONOFF_V2);
 	element.append(BLE_SWITCH_ONOFF);
 	element.append(BLE_REPEATER);
@@ -111,6 +112,8 @@ int AndroidBleProtocol::StartScan()
 	secondElements.append(BLE_WIFI_SWITCH_2_SQUARE);
 	secondElements.append(BLE_WIFI_SWITCH_ELECTRICAL_2);
 	secondElements.append(BLE_SWITCH_KNOB);
+	secondElements.append(BLE_SWITCH_RGB_SOCKET_2);
+	secondElements.append(BLE_MODULE_INOUT);
 
 	Json::Value thirdElements = Json::arrayValue;
 	thirdElements.append(BLE_LED_DAY_RGB);

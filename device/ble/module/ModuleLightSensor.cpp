@@ -59,7 +59,7 @@ static uint16_t CalculateLux(uint16_t rsp_lux)
 
 int ModuleLightSensor::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-	typedef struct __attribute__((package))
+	typedef struct __attribute__((packed))
 	{
 		uint8_t opcode;
 		uint16_t header;

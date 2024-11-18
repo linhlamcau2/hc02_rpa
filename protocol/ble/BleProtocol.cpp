@@ -269,8 +269,12 @@ static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataValues)
 		dataValues[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
 		if ((data_message->status_mode & 0x0F) == 1)
 		{
-			dataValues[KEY_ATTRIBUTE_DIM] = (data_message->value1 * 100) / 65535;
-			dataValues[KEY_ATTRIBUTE_CCT] = (data_message->value2 - 800) / 192;
+			int dim = (data_message->value1 * 100) / 65535;
+			int cct = (data_message->value2 - 800) / 192;
+			if (dim >= 0 && dim <= 100)
+				dataValues[KEY_ATTRIBUTE_DIM] = dim;
+			if (cct >= 0 && cct <= 100)
+				dataValues[KEY_ATTRIBUTE_CCT] = cct;
 		}
 		else if ((data_message->status_mode & 0x0F) == 0)
 		{
@@ -1294,6 +1298,9 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 		else
 			BleProtocol::GetOnoffLight(devAddr);
 		break;
+	case BLE_LED_HIGHTBAY:
+		BleProtocol::UpdateLights(devAddr);
+		break;
 	case BLE_SWITCH_ONOFF:
 	case BLE_SWITCH_ONOFF_V2:
 		BleProtocol::GetOnoffLight(devAddr);
@@ -1742,6 +1749,53 @@ int BleProtocol::SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, ui
 		}
 	}
 	LOGW("Set dim cct err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetLevelDim(uint16_t devAddr, uint8_t dimMax, uint8_t dimMin)
+{
+	LOGD("Set Level Dim addr: 0x%04X, dimMax: %d, dimMin: %d", devAddr, dimMax, dimMin);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint16_t opcode;
+		uint8_t header;
+		uint16_t magic;
+		uint8_t dimMax;
+		uint8_t dimMin;
+	} dim_message_t;
+	dim_message_t dim_message = {0};
+	memset(&dim_message, 0x00, sizeof(dim_message));
+
+	uint8_t dimHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x52};
+	dim_message.ble_message_header.devAddr = devAddr;
+	dim_message.opcode = LIGHTNESS_LINEAR_SET;
+	dim_message.header = 8;
+	dim_message.dimMax = dimMax;
+	dim_message.dimMin = dimMin;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&dim_message, sizeof(dim_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, dimHeader, 0, 6);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint16_t opcode;
+			uint8_t header;
+			uint16_t magic;
+			uint8_t dimMax;
+			uint8_t dimMin;
+		} dim_rsp_message_t;
+		dim_rsp_message_t *dim_rsp_message = (dim_rsp_message_t *)dataRsp;
+		if (dim_rsp_message->opcode == LIGHTNESS_LINEAR_STATUS && dim_rsp_message->dimMax == dimMax && dim_rsp_message->dimMin == dimMin)
+		{
+			return CODE_OK;
+		}
+		LOGW("dim level resp state not match with input control");
+	}
+	LOGW("Set dim level err");
 	return CODE_ERROR;
 }
 
@@ -4137,6 +4191,162 @@ int BleProtocol::ConfigModeInputSwitchOnoff(uint16_t devAddr, uint8_t mode)
 		LOGW("mode input resp state not match with input control");
 	}
 	LOGW("mode input switch err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigModeInputModuleInOut(uint16_t devAddr, uint8_t index, uint8_t mode)
+{
+	LOGD("ConfigModeInputModuleInOut 0x%04x, index %d, mode %d", devAddr, index, mode);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t modeHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t indexIn;
+		uint8_t mode;
+	} mode_message_t;
+	mode_message_t mode_message = {0};
+	memset(&mode_message, 0x00, sizeof(mode_message));
+	mode_message.ble_message_header.devAddr = devAddr;
+	mode_message.opcodeVendor = RD_OPCODE_CONFIG;
+	mode_message.vendorId = RD_VENDOR_ID;
+	mode_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	mode_message.header = RD_HEADER_CONFIG_MODE_INPUT_MODULE_INOUT;
+	mode_message.indexIn = index;
+	mode_message.mode = mode;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&mode_message, sizeof(mode_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t indexIn;
+			uint8_t mode;
+		} mode_rsp_message_t;
+		mode_rsp_message_t *mode_rsp_message = (mode_rsp_message_t *)dataRsp;
+		if (mode_rsp_message->header == RD_HEADER_CONFIG_MODE_INPUT_MODULE_INOUT && mode_rsp_message->mode == mode)
+		{
+			return CODE_OK;
+		}
+		LOGW("mode input module inout resp state not match with input control");
+	}
+	LOGW("mode input switch err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigCombinInOutModuleInOut(uint16_t devAddr, uint8_t indexIn, uint8_t indexOut)
+{
+	LOGD("ConfigCombinInOutModuleInOut 0x%04x, indexIn %d, indexOut %d", devAddr, indexIn, indexOut);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t combineHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t indexIn;
+		uint8_t indexOut;
+	} combine_message_t;
+	combine_message_t combine_message = {0};
+	memset(&combine_message, 0x00, sizeof(combine_message));
+	combine_message.ble_message_header.devAddr = devAddr;
+	combine_message.opcodeVendor = RD_OPCODE_CONFIG;
+	combine_message.vendorId = RD_VENDOR_ID;
+	combine_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	combine_message.header = RD_HEADER_CONFIG_COMBINE_MODULE_INOUT;
+	combine_message.indexIn = indexIn;
+	combine_message.indexOut = indexOut;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&combine_message, sizeof(combine_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, combineHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t indexIn;
+			uint8_t indexOut;
+		} combine_rsp_message_t;
+		combine_rsp_message_t *combine_rsp_message = (combine_rsp_message_t *)dataRsp;
+		if (combine_rsp_message->header == RD_HEADER_CONFIG_COMBINE_MODULE_INOUT && combine_rsp_message->indexIn == indexIn && combine_rsp_message->indexOut == indexOut)
+		{
+			return CODE_OK;
+		}
+		LOGW("combine module inout resp state not match with input control");
+	}
+	LOGW("ConfigCombinInOutModuleInOut err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t indexIn, uint8_t status, uint16_t sceneId)
+{
+	LOGD("SetSceneModuleInOut 0x%04x, type %d, indexIn %d, status %d, sceneId: %d", devAddr, type, indexIn, status, sceneId);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t sceneHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t type;
+		uint16_t sceneId;
+		uint8_t indexIn;
+		uint8_t status;
+	} scene_message_t;
+	scene_message_t scene_message = {0};
+	memset(&scene_message, 0x00, sizeof(scene_message));
+	scene_message.ble_message_header.devAddr = devAddr;
+	scene_message.opcodeVendor = RD_OPCODE_CONFIG;
+	scene_message.vendorId = RD_VENDOR_ID;
+	scene_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	scene_message.header = RD_HEADER_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR;
+	scene_message.type = type;
+	scene_message.sceneId = sceneId;
+	scene_message.indexIn = indexIn;
+	scene_message.status = status;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&scene_message, sizeof(scene_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, sceneHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t type;
+			uint16_t sceneId;
+			uint8_t indexIn;
+			uint8_t status;
+		} scene_rsp_message_t;
+		scene_rsp_message_t *scene_rsp_message = (scene_rsp_message_t *)dataRsp;
+		if (scene_rsp_message->header == RD_HEADER_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR && scene_rsp_message->type == type && scene_rsp_message->sceneId == sceneId)
+		{
+			return CODE_OK;
+		}
+		LOGW("scene module inout resp state not match with input control");
+	}
+	LOGW("SetSceneModuleInOut err");
 	return CODE_ERROR;
 }
 

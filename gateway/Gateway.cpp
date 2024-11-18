@@ -54,6 +54,8 @@
 #include "DeviceBlePhTempWaterAgriculturalSensor.h"
 #include "DeviceBleOxyTempWaterAgriculturalSensor.h"
 #include "DeviceBleEcSaliTdsWaterAgriculturalSensor.h"
+#include "DeviceBleModuleInOut.h"
+#include "DeviceBleLedHightBay.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -84,7 +86,7 @@ Gateway *gateway = NULL;
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
 				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
 	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, true),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, true),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false),
 	  Udp(8181)
 {
 	this->mac = mac;
@@ -743,13 +745,20 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 	case BLE_LED_DAY_RGB:
 		device = new DeviceBleLightOnoffHslModeRGB(id, name, mac, dataJson, addr, type, version);
 		break;
+	case BLE_LED_HIGHTBAY:
+		device = new DeviceBleLedHightBay(id, name, mac, dataJson, addr, type, version);
+		break;
 	case BLE_SWITCH_ONOFF:
 	case BLE_SWITCH_ONOFF_V2:
 		device = new DeviceBleSwitchOnoff(id, name, mac, dataJson, addr, type, version);
 		break;
 
 	case BLE_SWITCH_RGB_SOCKET_1:
+	case BLE_SWITCH_RGB_SOCKET_1_V2:
 		device = new DeviceBleSocketSwitch(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_SWITCH_RGB_SOCKET_2:
+		device = new DeviceBleSocketSwitch(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
@@ -955,6 +964,9 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_OXY_WATER_AGRICULTURAL_SENSOR:
 		device = new DeviceBleOxyTempWaterAgriculturalSensor(id, name, mac, dataJson, addr, type, version);
+		break;
+	case BLE_MODULE_INOUT:
+		device = new DeviceBleModuleInOut(id, name, mac, dataJson, addr, type, version, 2, 4);
 		break;
 
 #ifndef ESP_PLATFORM

@@ -37,7 +37,6 @@
 #define RD_HEADER_LIGHT_SENSOR_MODULE_TYPE 0x0004
 #define RD_HEADER_PIR_SENSOR_MODULE_TYPE 0x0005
 
-
 #define RD_HEADER_CONFIG_SET_SCENE_SWITCH_SCENE_DC 0x0102
 #define RD_HEADER_CONFIG_DEL_SCENE_SWITCH_SCENE_DC 0x0202
 #define RD_HEADER_CONFIG_SET_SCENE_SWITCH_SCENE_AC 0x0103
@@ -117,6 +116,12 @@
 #define RD_HEADER_STATUS_PM 0x0207
 #define RD_HEADER_STATUS_SMOKE 0x0108
 
+#define RD_HEADER_STATUS_IN_MODULE_INOUT 0x0115
+#define RD_HEADER_STATUS_ADC_MODULE_INOUT 0x0215
+#define RD_HEADER_CONFIG_MODE_INPUT_MODULE_INOUT 0x0315
+#define RD_HEADER_CONFIG_COMBINE_MODULE_INOUT 0x0415
+#define RD_HEADER_SETSCENE_MODULE_INOUT 0x0515
+
 #define TRANSITION_DEFAULT 5
 
 enum
@@ -174,7 +179,7 @@ enum
 };
 
 #define CONNECT_DEVICE_TIMEOUT 40 // seconds
-#define BLE_MAX_ELEMENT 4 
+#define BLE_MAX_ELEMENT 4
 
 using namespace std;
 
@@ -339,6 +344,7 @@ public:
 	int GetHSL(uint16_t devAddr);
 	int SetCctDimLight(uint16_t devAddr, uint16_t cct, uint16_t dim, uint16_t transition, bool ack);
 	int GetCctDimLight(uint16_t devAddr);
+	int SetLevelDim(uint16_t devAddr, uint8_t dimMax, uint8_t dimMin);
 
 	// group light
 	int AddDev2Group(uint16_t devAddr, uint16_t element, uint16_t group);
@@ -400,6 +406,11 @@ public:
 	int CalibAuto(uint16_t devAddr, uint16_t time);
 	int LockDevice(uint16_t devAddr, uint8_t locked);
 	int SetModeWifi(uint16_t devAddr, uint8_t mode);
+
+	// ModuleInOut
+	int ConfigModeInputModuleInOut(uint16_t devAddr, uint8_t index, uint8_t mode);
+	int ConfigCombinInOutModuleInOut(uint16_t devAddr, uint8_t indexIn, uint8_t indexOut);
+	int SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t indexIn, uint8_t status, uint16_t sceneId);
 
 	// Optimize add device to Room
 	// int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);

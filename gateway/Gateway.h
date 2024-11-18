@@ -173,7 +173,9 @@ private:
 
 	int ConfigSceneForRemote(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
 	int ConfigSceneForPirSensor(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
+	int ConfigSceneLedHightBay(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
 	int ConfigSceneForScreenTouch(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
+	int ConfigSceneModuleInOut(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene);
 	int OnCreateSceneController(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelSceneController(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteScene(Json::Value &reqValue, Json::Value &respValue);

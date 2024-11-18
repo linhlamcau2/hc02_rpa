@@ -823,6 +823,55 @@ int Gateway::ConfigSceneForPirSensor(Device *device, Json::Value &data, Json::Va
 	return CODE_OK;
 }
 
+int Gateway::ConfigSceneLedHightBay(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene)
+{
+	if (!device)
+		return CODE_ERROR;
+
+	if (data.isArray() && scene.isObject())
+	{
+		int result = CODE_ERROR;
+		if (scene.isMember("id") && scene["id"].isString())
+		{
+			string sceneBleId = scene["id"].asString();
+			SceneBle *sceneBle = getSceneBleFromId(sceneBleId);
+			if (sceneBle)
+			{
+				if (isAddScene)
+				{
+					int pir = 0;
+					for (auto &dt : data)
+					{
+						if (dt.isObject())
+						{
+							if (dt.isMember("pir") && dt["pir"].isInt())
+							{
+								pir = dt["pir"].asInt();
+								result = bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, pir, 0, 0, sceneBle->GetAddr(), 0);
+							}
+						}
+					}
+				}
+				else
+				{
+					for (auto &dt : data)
+					{
+						if (dt.isMember("pir") && dt["pir"].isInt())
+						{
+							result = bleProtocol->SetScenePirLightSensor(device->GetAddr(), 2, dt["pir"].asInt(), 0, 0, 0, 0);
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+	else
+		LOGW("Data error format");
+		
+	return CODE_ERROR;
+}
+
 int Gateway::ConfigSceneForScreenTouch(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene)
 {
 	if (!device)
@@ -855,6 +904,105 @@ int Gateway::ConfigSceneForScreenTouch(Device *device, Json::Value &data, Json::
 		LOGW("Data error");
 	}
 	return CODE_ERROR;
+}
+
+int Gateway::ConfigSceneModuleInOut(Device *device, Json::Value &data, Json::Value &scene, bool isAddScene)
+{
+	if (!device)
+		return CODE_ERROR;
+
+	int result = CODE_ERROR;
+	if (scene.isObject() && scene.isMember("id") && scene["id"].isString())
+	{
+		string sceneBleId = scene["id"].asString();
+		SceneBle *sceneBle = getSceneBleFromId(sceneBleId);
+		if (sceneBle)
+		{
+			if (isAddScene)
+			{
+				if (data.isArray())
+				{
+					for (auto &dt : data)
+					{
+						if (dt.isObject())
+						{
+							uint8_t status = 0;
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT) && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 1, status, sceneBle->GetAddr());
+							}
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT "2") && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "2"].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "2"].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 2, status, sceneBle->GetAddr());
+							}
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT "3") && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "3"].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "3"].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 3, status, sceneBle->GetAddr());
+							}
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT "4") && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "4"].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "4"].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 4, status, sceneBle->GetAddr());
+							}
+						}
+					}
+				}
+				else
+				{
+					LOGW("Data error");
+				}
+			}
+			else
+			{
+				if (data.isArray())
+				{
+					for (auto &dt : data)
+					{
+						if (dt.isObject())
+						{
+							uint8_t status = 0;
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT) && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 1, status, 0);
+							}
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT "2") && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "2"].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "2"].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 2, status, 0);
+							}
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT "3") && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "3"].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "3"].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 3, status, 0);
+							}
+							if (dt.isMember(KEY_ATTRIBUTE_INPUT_MODULE_INOUT "4") && dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "4"].isInt())
+							{
+								status = dt[KEY_ATTRIBUTE_INPUT_MODULE_INOUT "4"].asInt();
+								result = bleProtocol->SetSceneModuleInOut(device->GetAddr(), 1, 4, status, 0);
+							}
+						}
+					}
+				}
+				else
+				{
+					LOGW("Data error");
+				}
+			}
+		}
+		else
+		{
+			LOGW("Scene %s not found", sceneBleId.c_str());
+		}
+	}
+	else
+	{
+		LOGW("Data error");
+	}
+	return result;
 }
 
 int Gateway::OnCreateSceneController(Json::Value &reqValue, Json::Value &respValue)
@@ -890,6 +1038,14 @@ int Gateway::OnCreateSceneController(Json::Value &reqValue, Json::Value &respVal
 					else if (device->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || device->GetType() == BLE_SWITCH_KNOB)
 					{
 						result = ConfigSceneForScreenTouch(device, propertiesJson, sceneJson, true);
+					}
+					else if (device->GetType() == BLE_MODULE_INOUT)
+					{
+						result = ConfigSceneModuleInOut(device, propertiesJson, sceneJson, true);
+					}
+					else if (device->GetType() == BLE_LED_HIGHTBAY)
+					{
+						result = ConfigSceneLedHightBay(device, propertiesJson, sceneJson, true);
 					}
 				}
 				else

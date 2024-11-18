@@ -416,6 +416,8 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_SOCKET, "", "Ổ cắm đơn");
 	RegisterDeviceModel(BLE_SOCKET_EXTEN, "", "Ổ cắm kéo dài");
 	RegisterDeviceModel(BLE_SWITCH_RGB_SOCKET_1, "", "Ổ cắm công tắc chữ nhật");
+	RegisterDeviceModel(BLE_SWITCH_RGB_SOCKET_1_V2, "", "Ổ cắm công tắc chữ nhật 1 nút");
+	RegisterDeviceModel(BLE_SWITCH_RGB_SOCKET_2, "", "Ổ cắm công tắc chữ nhật 2 nút");
 	RegisterDeviceModel(BLE_LIGHT_SENSOR, "", "Cảm biến ánh sáng");
 
 	RegisterDeviceModel(BLE_PIR_LIGHT_SENSOR_DC, "", "Cảm biến chuyển động");
