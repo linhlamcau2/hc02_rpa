@@ -389,35 +389,30 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
 		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
 		uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
-		LOGE("%02X- %04X- %04X", opcode, header, vendorId);
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
 			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
-				LOGE("tp1");
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_SWITCH)
 			{
-				LOGE("tp2");
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_CURTAIN)
 			{
-				LOGE("tp3");
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateCurtain(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_SEFTPOWER_REMOTE_PRESS)
 			{
-				LOGE("tp4");
 				DeviceBle *deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
 				if (deviceBleChild)
 				{
@@ -426,7 +421,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			}
 			else
 			{
-				LOGE("tp5");
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
 
