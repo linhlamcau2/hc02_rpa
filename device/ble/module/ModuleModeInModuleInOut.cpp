@@ -43,31 +43,31 @@ int ModuleModeInModuleInOut::InputData(Json::Value &dataValue, Json::Value &json
 
 int ModuleModeInModuleInOut::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 {
-    typedef struct __attribute__((packed))
-    {
-        uint8_t opcode;
-        uint16_t vendorId;
-        uint16_t header;
-        uint8_t indexIn;
-        uint8_t mode;
-    }data_message_t;
-    data_message_t * data_message = (data_message_t *)data;
-    if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_CONFIG_MODE_INPUT_MODULE_INOUT)
-    {
-        if (data_message->indexIn == this->index)
-        {
-            if (data_message->mode != mode)
-            {
-                mode = data_message->mode;
+	typedef struct __attribute__((packed))
+	{
+		uint8_t opcode;
+		uint16_t vendorId;
+		uint16_t header;
+		uint8_t indexIn;
+		uint8_t mode;
+	} data_message_t;
+	data_message_t *data_message = (data_message_t *)data;
+	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_HEADER_CONFIG_MODE_INPUT_MODULE_INOUT)
+	{
+		if (data_message->indexIn == this->index + 1)
+		{
+			if (data_message->mode != mode)
+			{
+				mode = data_message->mode;
 #ifdef CONFIG_SAVE_ATTRIBUTE
-                SaveAttribute();
+				SaveAttribute();
 #endif
-            }
-            BuildTelemetryValue(jsonValue);
+			}
+			BuildTelemetryValue(jsonValue);
 			CheckTrigger(jsonValue);
-            return CODE_OK;
-        }
-    }
+			return CODE_OK;
+		}
+	}
 	return CODE_ERROR;
 }
 
@@ -103,20 +103,19 @@ bool ModuleModeInModuleInOut::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleModeInModuleInOut::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[key] = mode;
-	device->UpdatePropertyJsonUpdate(jsonValue);
 }
 
 int ModuleModeInModuleInOut::Do(Json::Value &dataValue)
 {
-    LOGV("ModuleIn ModuleInOut Do data: %s", dataValue.toString().c_str());
-    if (bleProtocol && dataValue.isObject() &&
-        dataValue.isMember(key) && dataValue[key].isInt())
-    {
-        int modeValue = dataValue[key].asInt();
-        if (bleProtocol->ConfigModeInputModuleInOut(addr, this->index, modeValue) == CODE_OK)
-        {
-            return CODE_OK;
-        }
-    }
-    return CODE_ERROR;
+	LOGV("ModuleIn ModuleInOut Do data: %s", dataValue.toString().c_str());
+	if (bleProtocol && dataValue.isObject() &&
+		dataValue.isMember(key) && dataValue[key].isInt())
+	{
+		int modeValue = dataValue[key].asInt();
+		if (bleProtocol->ConfigModeInputModuleInOut(addr, this->index + 1, modeValue) == CODE_OK)
+		{
+			return CODE_OK;
+		}
+	}
+	return CODE_ERROR;
 }

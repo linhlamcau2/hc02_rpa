@@ -389,30 +389,35 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
 		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
 		uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
+		LOGE("%02X- %04X- %04X", opcode, header, vendorId);
 		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
 		if (deviceBle)
 		{
 			deviceBle->UpdateLastTimeActive();
 			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
 			{
+				LOGE("tp1");
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_SWITCH)
 			{
+				LOGE("tp2");
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_CURTAIN)
 			{
+				LOGE("tp3");
 				Json::Value dataValues = Json::objectValue;
 				GetDataUpdateCurtain(data_message->data, message_rsp->len - 6, dataValues);
 				deviceBle->SetPropertyJsonUpdate(dataValues);
 			}
 			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_SEFTPOWER_REMOTE_PRESS)
 			{
+				LOGE("tp4");
 				DeviceBle *deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
 				if (deviceBleChild)
 				{
@@ -421,6 +426,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 			}
 			else
 			{
+				LOGE("tp5");
 				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
 			}
 
@@ -1347,6 +1353,7 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_WIFI_SWITCH_ELECTRICAL_2:
 	case BLE_WIFI_SWITCH_ELECTRICAL_3:
 	case BLE_SWITCH_KNOB:
+	case BLE_MODULE_INOUT:
 		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
 		break;
 	case BLE_SWITCH_CURTAIN:
@@ -4210,6 +4217,7 @@ int BleProtocol::ConfigModeInputModuleInOut(uint16_t devAddr, uint8_t index, uin
 		uint16_t header;
 		uint8_t indexIn;
 		uint8_t mode;
+		uint8_t magic[4];
 	} mode_message_t;
 	mode_message_t mode_message = {0};
 	memset(&mode_message, 0x00, sizeof(mode_message));
@@ -4260,6 +4268,7 @@ int BleProtocol::ConfigCombinInOutModuleInOut(uint16_t devAddr, uint8_t indexIn,
 		uint16_t header;
 		uint8_t indexIn;
 		uint8_t indexOut;
+		uint8_t magic[4];
 	} combine_message_t;
 	combine_message_t combine_message = {0};
 	memset(&combine_message, 0x00, sizeof(combine_message));
@@ -4312,6 +4321,7 @@ int BleProtocol::SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t ind
 		uint16_t sceneId;
 		uint8_t indexIn;
 		uint8_t status;
+		uint8_t magic;
 	} scene_message_t;
 	scene_message_t scene_message = {0};
 	memset(&scene_message, 0x00, sizeof(scene_message));
@@ -4348,6 +4358,54 @@ int BleProtocol::SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t ind
 	}
 	LOGW("SetSceneModuleInOut err");
 	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigDeltaADC(uint16_t devAddr, uint8_t delta)
+{
+	LOGD("ConfigDeltaADC 0x%04x, delta %d", devAddr, delta);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t deltaHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t delta;
+		uint8_t magic[5];
+	} delta_message_t;
+	delta_message_t delta_message = {0};
+	memset(&delta_message, 0x00, sizeof(delta_message));
+	delta_message.ble_message_header.devAddr = devAddr;
+	delta_message.opcodeVendor = RD_OPCODE_CONFIG;
+	delta_message.vendorId = RD_VENDOR_ID;
+	delta_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	delta_message.header = RD_HEADER_CONFIG_DELTA_ADC;
+	delta_message.delta = delta;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&delta_message, sizeof(delta_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, deltaHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t delta;
+		} delta_rsp_message_t;
+		delta_rsp_message_t *delta_rsp_message = (delta_rsp_message_t *)dataRsp;
+		if (delta_rsp_message->header == RD_HEADER_CONFIG_DELTA_ADC && delta_rsp_message->delta == delta)
+		{
+			return CODE_OK;
+		}
+		LOGW("delta module inout resp state not match with input control");
+	}
+	LOGW("ConfigDeltaADC err");
+	return CODE_ERROR;	
 }
 
 int BleProtocol::GetInfogw()

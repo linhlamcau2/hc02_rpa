@@ -16,9 +16,12 @@ DeviceBleModuleInOut::DeviceBleModuleInOut(string id, string name, string mac, J
 	modules.push_back(moduleStatusStartup);
 	moduleCallScene = new ModuleCallScene(this, addr);
 	modules.push_back(moduleCallScene);
-
+	moduleDelta = new ModuleDelta(this, addr);
+	modules.push_back(moduleDelta);
 	moduleADC = new ModuleADC(this, addr);
-	for (int i = 1; i <= numInput; i++)
+	modules.push_back(moduleADC);
+
+	for (int i = 0; i < numInput; i++)
 	{
 		moduleInputModuleInOut = new ModuleInputModuleInOut(this, addr, KEY_ATTRIBUTE_INPUT_MODULE_INOUT, i);
 		modules.push_back(moduleInputModuleInOut);

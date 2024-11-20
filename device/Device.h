@@ -82,6 +82,7 @@
 #define KEY_ATTRIBUTE_INPUT_MODULE_INOUT "in"
 #define KEY_ATTRIBUTE_MODE_MODULE_INOUT "modeIn"
 #define KEY_ATTRIBUTE_LINK_INOUT "outputLink"
+#define KEY_ATTRIBUTE_DELTA "delta"
 
 using namespace std;
 

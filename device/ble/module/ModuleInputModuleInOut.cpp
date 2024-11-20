@@ -54,7 +54,7 @@ int ModuleInputModuleInOut::InputData(uint8_t *data, int len, Json::Value &jsonV
     data_message_t * data_message = (data_message_t *)data;
     if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_IN_MODULE_INOUT)
     {
-        if (data_message->indexIn == this->index)
+        if (data_message->indexIn == this->index + 1)
         {
             if (data_message->status != status)
             {
@@ -103,5 +103,4 @@ bool ModuleInputModuleInOut::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleInputModuleInOut::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[key] = status;
-	device->UpdatePropertyJsonUpdate(jsonValue);
 }
