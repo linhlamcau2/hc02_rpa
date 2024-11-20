@@ -4323,7 +4323,7 @@ int BleProtocol::SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t ind
 	scene_message.opcodeVendor = RD_OPCODE_CONFIG;
 	scene_message.vendorId = RD_VENDOR_ID;
 	scene_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
-	scene_message.header = RD_HEADER_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR;
+	scene_message.header = RD_HEADER_SETSCENE_MODULE_INOUT;
 	scene_message.type = type;
 	scene_message.sceneId = sceneId;
 	scene_message.indexIn = indexIn;
@@ -4344,7 +4344,7 @@ int BleProtocol::SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t ind
 			uint8_t status;
 		} scene_rsp_message_t;
 		scene_rsp_message_t *scene_rsp_message = (scene_rsp_message_t *)dataRsp;
-		if (scene_rsp_message->header == RD_HEADER_CONFIG_SET_SCENE_PIR_LIGHT_SENSOR && scene_rsp_message->type == type && scene_rsp_message->sceneId == sceneId)
+		if (scene_rsp_message->header == RD_HEADER_SETSCENE_MODULE_INOUT && scene_rsp_message->type == type && scene_rsp_message->sceneId == sceneId)
 		{
 			return CODE_OK;
 		}

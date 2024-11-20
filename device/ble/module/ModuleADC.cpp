@@ -51,9 +51,9 @@ int ModuleADC::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_ADC_MODULE_INOUT)
 	{
-		if (data_message->adc != adc)
+		if (adc != bswap_16(data_message->adc))
 		{
-			adc = data_message->adc;
+			adc = bswap_16(data_message->adc);
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
@@ -97,5 +97,4 @@ bool ModuleADC::CheckData(Json::Value &dataValue, bool &rs)
 void ModuleADC::BuildTelemetryValue(Json::Value &jsonValue)
 {
 	jsonValue[KEY_ATTRIBUTE_ADC] = adc;
-	device->UpdatePropertyJsonUpdate(jsonValue);
 }

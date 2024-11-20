@@ -6,7 +6,7 @@
 #include "BleOpCode.h"
 #include "Db.h"
 
-ModuleLinkInOut::ModuleLinkInOut(Device *device, uint16_t addr, string key, uint32_t index) : Module(device, addr)
+ModuleLinkInOut::ModuleLinkInOut(Device *device, uint16_t addr, string key, uint32_t index) : Module(device, addr, index)
 {
     this->indexIn = 0;
     this->key = key + (index ? to_string(index + 1) : "");
@@ -54,7 +54,7 @@ int ModuleLinkInOut::InputData(uint8_t *data, int len, Json::Value &jsonValue)
     data_msg_t *data_msg = (data_msg_t *)data;
     if (data_msg->opcode == RD_OPCODE_CONFIG_RSP && data_msg->header == RD_HEADER_CONFIG_COMBINE_MODULE_INOUT)
     {
-        if (this->index = data_msg->indexOut)
+        if (data_msg->indexOut == (this->index + 1))
         {
             this->indexIn = data_msg->indexIn;
 #ifdef CONFIG_SAVE_ATTRIBUTE
@@ -109,7 +109,7 @@ int ModuleLinkInOut::Do(Json::Value &dataValue)
         dataValue.isMember(key) && dataValue[key].isInt())
     {
         int indexIn = dataValue[key].asInt();
-        if (bleProtocol->ConfigCombinInOutModuleInOut(addr, indexIn, this->index) == CODE_OK)
+        if (bleProtocol->ConfigCombinInOutModuleInOut(addr, indexIn, this->index + 1) == CODE_OK)
         {
             return CODE_OK;
         }
