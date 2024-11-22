@@ -1058,7 +1058,7 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	set_gw_addr_message.opcodeVendor = RD_OPCODE_PROVISION;
 	set_gw_addr_message.vendorId = RD_VENDOR_ID;
 	set_gw_addr_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;
-	set_gw_addr_message.header = RD_OPCODE_PROVISION_SET_GW_ADDR;
+	set_gw_addr_message.header = RD_HEADER_PROVISION_SET_GW_ADDR;
 	set_gw_addr_message.gwAddr = gwAddrSet;
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
 	if (rs == CODE_OK)
@@ -1067,14 +1067,17 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 		{
 			uint16_t devAddr;
 			uint16_t gwAddr;
-			uint8_t opcode[3];
-			uint8_t header[2];
+			uint8_t opcode;
+			uint16_t vendorId;
+			uint16_t header;
 			uint8_t rev[6];
 		} set_gw_addr_rsp_message_t;
 		set_gw_addr_rsp_message_t *set_gw_addr_rsp_message = (set_gw_addr_rsp_message_t *)dataRsp;
 		if (set_gw_addr_rsp_message->devAddr == devAddr)
 		{
-			if (set_gw_addr_rsp_message->opcode[0] == 0xE1 && set_gw_addr_rsp_message->opcode[1] == 0x11 && set_gw_addr_rsp_message->opcode[2] == 0x02 && set_gw_addr_rsp_message->header[0] == 0x02 && set_gw_addr_rsp_message->header[1] == 0x00)
+			if (set_gw_addr_rsp_message->opcode == RD_OPCODE_PROVISION_RSP &&
+				set_gw_addr_rsp_message->vendorId == RD_VENDOR_ID &&
+				set_gw_addr_rsp_message->header == RD_HEADER_PROVISION_SET_GW_ADDR)
 			{
 				LOGD("SetGwAddr OK");
 				return CODE_OK;
@@ -1137,7 +1140,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 	check_type_message.opcodeVendor = RD_OPCODE_PROVISION;
 	check_type_message.vendorId = RD_VENDOR_ID;
 	check_type_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;
-	check_type_message.header = RD_OPCODE_PROVISION_GET_DEV_TYPE;
+	check_type_message.header = RD_HEADER_PROVISION_GET_DEV_TYPE;
 	genSecurityKey(mac, devAddr, &check_type_message.data[0]);
 	int rs = SendMessage(APP_REQ, (uint8_t *)&check_type_message, sizeof(check_type_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, checkTypeHeader, 4, 5);
 	if (rs == CODE_OK)
@@ -1146,8 +1149,9 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 		{
 			uint16_t devAddr;
 			uint16_t gwAddr;
-			uint8_t opcode[3];
-			uint8_t header[2];
+			uint8_t opcode;
+			uint16_t vendorId;
+			uint16_t header;
 			uint8_t deviceType[3];
 			uint8_t magic;
 			uint8_t version[2];
@@ -1155,7 +1159,9 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 		check_type_rsp_message_t *check_type_rsp_message = (check_type_rsp_message_t *)dataRsp;
 		if (check_type_rsp_message->devAddr == devAddr)
 		{
-			if (check_type_rsp_message->opcode[0] == 0xE1 && check_type_rsp_message->opcode[1] == 0x11 && check_type_rsp_message->opcode[2] == 0x02 && check_type_rsp_message->header[0] == 0x03 && check_type_rsp_message->header[1] == 0x00)
+			if (check_type_rsp_message->opcode == RD_OPCODE_PROVISION_RSP &&
+				check_type_rsp_message->vendorId == RD_VENDOR_ID &&
+				check_type_rsp_message->header == RD_HEADER_PROVISION_GET_DEV_TYPE)
 			{
 				deviceType = (check_type_rsp_message->deviceType[0] << 16) | (check_type_rsp_message->deviceType[1] << 8) | check_type_rsp_message->deviceType[2];
 				deviceVersion = (check_type_rsp_message->version[0] << 8) | (check_type_rsp_message->version[1]);
@@ -4399,7 +4405,7 @@ int BleProtocol::ConfigDeltaADC(uint16_t devAddr, uint8_t delta)
 		LOGW("delta module inout resp state not match with input control");
 	}
 	LOGW("ConfigDeltaADC err");
-	return CODE_ERROR;	
+	return CODE_ERROR;
 }
 
 int BleProtocol::GetInfogw()

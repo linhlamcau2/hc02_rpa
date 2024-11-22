@@ -41,7 +41,7 @@ int ModuleTimeActionPir::InputData(uint8_t *data, int len, Json::Value &jsonValu
 		data_message->vendorId == RD_VENDOR_ID &&
 		data_message->header == RD_HEADER_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR)
 	{
-		time = data[5] | (data[6] << 8);
+		time = data_message->time;
 		BuildTelemetryValue(jsonValue);
 		CheckTrigger(jsonValue);
 
