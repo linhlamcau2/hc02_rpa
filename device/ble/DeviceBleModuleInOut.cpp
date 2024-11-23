@@ -27,6 +27,8 @@ DeviceBleModuleInOut::DeviceBleModuleInOut(string id, string name, string mac, J
 		modules.push_back(moduleInputModuleInOut);
 		moduleModeInModuleInOut = new ModuleModeInModuleInOut(this, addr, KEY_ATTRIBUTE_MODE_MODULE_INOUT, i);
 		modules.push_back(moduleModeInModuleInOut);
+		moduleStatusStartupRelay = new ModuleStatusStartupRelay(this, addr, KEY_ATTRIBUTE_STATUS_STARTUP_RELAY, i);
+		modules.push_back(moduleStatusStartupRelay);
 	}
 	powerSource = POWER_AC;
 }

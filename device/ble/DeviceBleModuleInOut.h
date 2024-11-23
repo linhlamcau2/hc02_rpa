@@ -9,6 +9,7 @@
 #include "module/ModuleADC.h"
 #include "module/ModuleLinkInOut.h"
 #include "module/ModuleDelta.h"
+#include "module/ModuleStatusStartupRelay.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ private:
 	ModuleADC *moduleADC;
 	ModuleLinkInOut *moduleLinkInOut;
 	ModuleDelta *moduleDelta;
+	ModuleStatusStartupRelay *moduleStatusStartupRelay;
 
 public:
 	DeviceBleModuleInOut(string id, string name, string mac, Json::Value &dataJson, uint16_t addr, uint32_t type, uint16_t version, uint8_t countElement, uint8_t numInput);

@@ -122,6 +122,7 @@
 #define RD_HEADER_CONFIG_COMBINE_MODULE_INOUT 0x0415
 #define RD_HEADER_SETSCENE_MODULE_INOUT 0x0515
 #define RD_HEADER_CONFIG_DELTA_ADC 0x0715
+#define RD_HEADER_CONFIG_STATUS_STARTUP_RELAY 0x0815
 
 #define TRANSITION_DEFAULT 5
 
@@ -413,6 +414,7 @@ public:
 	int ConfigCombinInOutModuleInOut(uint16_t devAddr, uint8_t indexIn, uint8_t indexOut);
 	int SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t indexIn, uint8_t status, uint16_t sceneId);
 	int ConfigDeltaADC(uint16_t devAddr, uint8_t delta);
+	int ConfigStatusStartupRelay(uint16_t devAddr, uint8_t relayId, uint8_t status);
 
 	// Optimize add device to Room
 	// int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);

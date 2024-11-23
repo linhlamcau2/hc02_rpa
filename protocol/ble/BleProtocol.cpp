@@ -2754,7 +2754,7 @@ int BleProtocol::SetTimeRspSensor(uint16_t devAddr, uint16_t time)
 		return CODE_OK;
 	}
 	else
-		LOGW("Set distance error");
+		LOGW("Set time rsp error");
 	return CODE_ERROR;
 }
 
@@ -4405,6 +4405,57 @@ int BleProtocol::ConfigDeltaADC(uint16_t devAddr, uint8_t delta)
 		LOGW("delta module inout resp state not match with input control");
 	}
 	LOGW("ConfigDeltaADC err");
+	return CODE_ERROR;
+}
+
+int BleProtocol::ConfigStatusStartupRelay(uint16_t devAddr, uint8_t relayId, uint8_t status)
+{
+	LOGD("ConfigStatusStartupRelay 0x%04x, relay %d, status %d", devAddr, relayId, status);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t statusHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t relay;
+		uint8_t status;
+		uint8_t magic[4];
+	} status_message_t;
+	status_message_t status_message = {0};
+	memset(&status_message, 0x00, sizeof(status_message));
+	status_message.ble_message_header.devAddr = devAddr;
+	status_message.opcodeVendor = RD_OPCODE_CONFIG;
+	status_message.vendorId = RD_VENDOR_ID;
+	status_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	status_message.header = RD_HEADER_CONFIG_STATUS_STARTUP_RELAY;
+	status_message.relay = relayId;
+	status_message.status = status;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&status_message, sizeof(status_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, statusHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t relay;
+			uint8_t status;
+		} status_rsp_message_t;
+		status_rsp_message_t *status_rsp_message = (status_rsp_message_t *)dataRsp;
+		if (status_rsp_message->header == RD_HEADER_CONFIG_STATUS_STARTUP_RELAY && status_rsp_message->relay == relayId && status_rsp_message->status == status)
+		{
+			return CODE_OK;
+		}
+		LOGW("status startup relay module inout resp state not match with input control");
+	}
+	LOGW("ConfigStatusStartupRelay err");
 	return CODE_ERROR;
 }
 

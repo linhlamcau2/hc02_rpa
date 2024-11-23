@@ -60,6 +60,7 @@
 #define KEY_ATTRIBUTE_DISTANCE "distance"
 #define KEY_ATTRIBUTE_TIME_RSP "timeRsp"
 #define KEY_ATTRIBUTE_STATUS_STARTUP "statusStartup"
+#define KEY_ATTRIBUTE_STATUS_STARTUP_RELAY "statusStartupRelay"
 #define KEY_ATTRIBUTE_MODE_INPUT "modeInput"
 
 #define KEY_ATTRIBUTE_ZONE_ID "zoneId"
