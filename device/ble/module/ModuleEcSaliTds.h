@@ -27,7 +27,7 @@ public:
 	 * @brief Save parameter value to database
 	 *
 	 */
-	void SaveAttribute();
+	void SaveAttribute(string key);
 #endif
 
 	int InputData(Json::Value &dataValue, Json::Value &jsonValue);

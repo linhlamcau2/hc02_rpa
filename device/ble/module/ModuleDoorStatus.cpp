@@ -53,7 +53,7 @@ int ModuleDoorStatus::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 	{
 		if (status != data_message->door)
 		{
-			status == data_message->door;
+			status = data_message->door;
 #ifdef CONFIG_SAVE_ATTRIBUTE
 			SaveAttribute();
 #endif
