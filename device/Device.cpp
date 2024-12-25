@@ -297,6 +297,9 @@ void Device::InitDeviceModelList()
 
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_HCN] = BLE_SWITCH_CURTAIN_GROUP;
 	bleTypeToGroupIdList[BLE_SWITCH_RGB_CURTAIN_SQUARE_V2] = BLE_SWITCH_CURTAIN_GROUP;
+	bleTypeToGroupIdList[BLE_LED_AT39] = BLE_LED_AT39_GROUP;
+	bleTypeToGroupIdList[BLE_LED_AT40] = BLE_LED_AT40_GROUP;
+	bleTypeToGroupIdList[BLE_LED_AT41] = BLE_LED_AT41_GROUP;
 
 	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_ONOFF] = KEY_ATTRIBUTE_ONOFF;
 	bleAttributeIdToAttributeString[BLE_ATTRIBUTE_DIM] = KEY_ATTRIBUTE_DIM;
@@ -366,6 +369,9 @@ void Device::InitDeviceModelList()
 	RegisterDeviceModel(BLE_LED_TUBE_M16, "", "Đèn tube");
 	RegisterDeviceModel(BLE_DEN_BAN, "", "Đèn bàn");
 	RegisterDeviceModel(BLE_LED_FLOOD, "", "Đèn trang trí");
+	RegisterDeviceModel(BLE_LED_AT39, "", "Đèn trang trí");
+	RegisterDeviceModel(BLE_LED_AT40, "", "Đèn trang trí");
+	RegisterDeviceModel(BLE_LED_AT41, "", "Đèn trang trí");
 	RegisterDeviceModel(BLE_LED_RLT03_06W, "", "Đèn ray LED thanh x/g đổi màu RLT03.BLE.CW 130/6W 48V");
 	RegisterDeviceModel(BLE_LED_RLT02_10W, "", "Đèn ray LED thanh đổi màu RLT02.BLE.CW 370/10W 48V");
 	RegisterDeviceModel(BLE_LED_RLT02_20W, "", "Đèn ray LED thanh đổi màu RTL02.BLE.CW 670/20W 48V");

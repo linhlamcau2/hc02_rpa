@@ -1279,6 +1279,9 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	case BLE_DOWNLIGHT_COB_GOC_RONG:
 	case BLE_DOWNLIGHT_COB_TRANG_TRI:
 	case BLE_LED_FLOOD:
+	case BLE_LED_AT39:
+	case BLE_LED_AT40:
+	case BLE_LED_AT41:
 	case BLE_LED_DAY_LINEAR:
 	case BLE_LED_OP_TRAN:
 	case BLE_LED_OP_TUONG:

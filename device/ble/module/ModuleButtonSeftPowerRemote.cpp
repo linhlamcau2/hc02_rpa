@@ -10,7 +10,7 @@
 ModuleButtonSeftPowerRemote::ModuleButtonSeftPowerRemote(Device *device, uint32_t addr) : Module(device, addr)
 {
     bt = 0;
-    key = KEY_ATTRIBUTE_BUTTON;
+    key = KEY_ATTRIBUTE_MODE_PRESS;
 }
 
 ModuleButtonSeftPowerRemote::~ModuleButtonSeftPowerRemote()
@@ -54,110 +54,101 @@ int ModuleButtonSeftPowerRemote::InputData(uint8_t *data, int len, Json::Value &
                 SaveAttribute();
 #endif
             }
+            bool isDataInValid = false;
             switch (data_message->button)
             {
             case 1:
-                key = KEY_ATTRIBUTE_BUTTON;
+                key = KEY_ATTRIBUTE_MODE_PRESS "1";
                 break;
             case 2:
-                key = KEY_ATTRIBUTE_BUTTON "2";
+                key = KEY_ATTRIBUTE_MODE_PRESS "2";
                 break;
             case 3:
-                key = KEY_ATTRIBUTE_BUTTON;
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "2";
+                key = KEY_ATTRIBUTE_MODE_PRESS "12";
                 break;
             case 4:
-                key = KEY_ATTRIBUTE_BUTTON "3";
+                key = KEY_ATTRIBUTE_MODE_PRESS "3";
                 break;
             case 5:
-                key = KEY_ATTRIBUTE_BUTTON;
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "3";
+                key = KEY_ATTRIBUTE_MODE_PRESS "13";
                 break;
             case 6:
-                key = KEY_ATTRIBUTE_BUTTON "2";
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "3";
+                key = KEY_ATTRIBUTE_MODE_PRESS "23";
                 break;
             case 7:
                 return CODE_ERROR;
                 break;
             case 8:
-                key = KEY_ATTRIBUTE_BUTTON "4";
+                key = KEY_ATTRIBUTE_MODE_PRESS "4";
                 break;
             case 9:
-                key = KEY_ATTRIBUTE_BUTTON;
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "4";
+                key = KEY_ATTRIBUTE_MODE_PRESS "14";
                 break;
             case 10:
-                key = KEY_ATTRIBUTE_BUTTON "2";
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "4";
+                key = KEY_ATTRIBUTE_MODE_PRESS "24";
                 break;
             case 11:
                 return CODE_ERROR;
                 break;
             case 12:
-                key = KEY_ATTRIBUTE_BUTTON "3";
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "4";
+                key = KEY_ATTRIBUTE_MODE_PRESS "34";
                 break;
             case 16:
-                key = KEY_ATTRIBUTE_BUTTON "5";
+                key = KEY_ATTRIBUTE_MODE_PRESS "5";
                 break;
             case 32:
-                key = KEY_ATTRIBUTE_BUTTON "6";
+                key = KEY_ATTRIBUTE_MODE_PRESS "6";
                 break;
             case 24:
-                key = KEY_ATTRIBUTE_BUTTON "4";
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "5";
+                key = KEY_ATTRIBUTE_MODE_PRESS "45";
                 break;
             case 48:
-                key = KEY_ATTRIBUTE_BUTTON "5";
-                BuildTelemetryValue(jsonValue);
-                key = KEY_ATTRIBUTE_BUTTON "6";
+                key = KEY_ATTRIBUTE_MODE_PRESS "56";
                 break;
+            default:
+                isDataInValid = true;
             }
-            BuildTelemetryValue(jsonValue);
-            CheckTrigger(jsonValue);
-            if (data_message->scene > 0)
+
+            if (!isDataInValid)
             {
-                SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
-                if (sceneBle)
+                BuildTelemetryValue(jsonValue);
+                CheckTrigger(jsonValue);
+                if (data_message->scene > 0)
                 {
-                    for (int i = 0; i < sceneBle->deviceList.size(); i++)
+                    SceneBle *sceneBle = gateway->getSceneBleFromAddr(data_message->scene);
+                    if (sceneBle)
                     {
-                        DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
-                        if (dev)
+                        for (int i = 0; i < sceneBle->deviceList.size(); i++)
                         {
-                            if (sceneBle->deviceList[i]->data.isArray())
+                            DeviceBle *dev = (DeviceBle *)sceneBle->deviceList[i]->device;
+                            if (dev)
                             {
-                                for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
+                                if (sceneBle->deviceList[i]->data.isArray())
                                 {
-                                    if (sceneBle->deviceList[i]->data[j].isObject())
+                                    for (Json::ArrayIndex j = 0; j < sceneBle->deviceList[i]->data.size(); j++)
                                     {
-                                        dev->InputData(sceneBle->deviceList[i]->data[j]);
+                                        if (sceneBle->deviceList[i]->data[j].isObject())
+                                        {
+                                            dev->InputData(sceneBle->deviceList[i]->data[j]);
+                                        }
                                     }
                                 }
+                                else if (sceneBle->deviceList[i]->data.isObject())
+                                {
+                                    dev->InputData(sceneBle->deviceList[i]->data);
+                                }
                             }
-                            else if (sceneBle->deviceList[i]->data.isObject())
+                            else
                             {
-                                dev->InputData(sceneBle->deviceList[i]->data);
+                                LOGW("DeviceBle error");
                             }
-                        }
-                        else
-                        {
-                            LOGW("DeviceBle error");
                         }
                     }
+                    else
+                        LOGW("Scene not found");
                 }
-                else
-                    LOGW("Scene not found");
+                return CODE_OK;
             }
-            return CODE_OK;
         }
     }
     return CODE_ERROR;
