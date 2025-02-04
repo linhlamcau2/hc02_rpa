@@ -196,6 +196,7 @@ private:
 	int OnCreateTunnel(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteAllTunnel(Json::Value &reqValue, Json::Value &respValue);
 	int OnOtaHc(Json::Value &reqValue, Json::Value &respValue);
+	int OnOtaHcUrl(Json::Value &reqValue, Json::Value &respValue);
 	int OnSetPasswordMqtt(Json::Value &reqValue, Json::Value &respValue);
 	int OnAutoOta(Json::Value &reqValue, Json::Value &respValue);
 	int OnBackupData(Json::Value &reqValue, Json::Value &respValue);

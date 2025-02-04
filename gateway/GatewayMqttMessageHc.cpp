@@ -41,6 +41,7 @@ void Gateway::InitMqttMessageHc()
 	OnLocalCallbackRegister("resetHc", bind(&Gateway::OnResetHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("versionHc", bind(&Gateway::OnVersionHC, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("otaHC", bind(&Gateway::OnOtaHc, this, placeholders::_1, placeholders::_2));
+	OnLocalCallbackRegister("otaHCUrl", bind(&Gateway::OnOtaHcUrl, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setPasswordMqtt", bind(&Gateway::OnSetPasswordMqtt, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("setAutoOta", bind(&Gateway::OnAutoOta, this, placeholders::_1, placeholders::_2));
 	OnLocalCallbackRegister("hcBackupData", bind(&Gateway::OnBackupData, this, placeholders::_1, placeholders::_2));
@@ -460,6 +461,89 @@ int Gateway::OnOtaHc(Json::Value &reqValue, Json::Value &respValue)
 		}
 #else
 		string url = URL_PRO + reqValue["url"].asString();
+		string sha = reqValue["checksum"].asString();
+		LOGD("info ota url: %s, checksum: %s", url.c_str(), sha.c_str());
+		config->SetUrlOta(url);
+		config->SetCheckSumOta(sha);
+		respValue["data"]["code"] = CODE_OK;
+		return CODE_EXIT;
+#endif
+	}
+	else
+	{
+		LOGW("Data ota error %s", reqValue.toString().c_str());
+	}
+
+	respValue["data"]["code"] = CODE_ERROR;
+	return CODE_ERROR;
+}
+
+int Gateway::OnOtaHcUrl(Json::Value &reqValue, Json::Value &respValue)
+{
+	LOGD("OTA HC URL");
+	respValue["cmd"] = "otaHcUrlRsp";
+	if (reqValue.isMember("url") && reqValue["url"].isString() && reqValue.isMember("checksum") && reqValue["checksum"].isString())
+	{
+#ifndef ESP_PLATFORM
+		string url = URL_PRO + reqValue["url"].asString();
+		string sha = reqValue["checksum"].asString();
+		LOGD("url: %s", url.c_str());
+		LOGD("sha: %s", sha.c_str());
+
+		string cmd = "rm " TMP_FOLDER "rd.tar.gz";
+		LOGD("%s", cmd.c_str());
+		system(cmd.c_str());
+
+		cmd = "rm -r " TMP_FOLDER "rd";
+		LOGD("%s", cmd.c_str());
+		system(cmd.c_str());
+
+		cmd = "wget -P " TMP_FOLDER " " + url;
+		LOGD("%s", cmd.c_str());
+		system(cmd.c_str());
+
+		string folderDownload = TMP_FOLDER "rd.tar.gz";
+		if (Util::calculateSHA256Checksum(folderDownload) != sha)
+		{
+			LOGW("checksum not match");
+			cmd = "rm " TMP_FOLDER "rd.tar.gz";
+			system(cmd.c_str());
+		}
+		else
+		{
+			cmd = "tar -xzf " TMP_FOLDER "rd.tar.gz -C " TMP_FOLDER;
+			LOGD("%s", cmd.c_str());
+			system(cmd.c_str());
+
+			string fileConfigOta = TMP_FOLDER "rd/ota.sh";
+			struct stat st;
+			if (stat(fileConfigOta.c_str(), &st) == 0)
+			{
+				cmd = "chmod +x " TMP_FOLDER "rd/ota.sh";
+				LOGD("%s", cmd.c_str());
+				system(cmd.c_str());
+#ifdef __ANDROID__
+				cmd = "su";
+				LOGD("%s", cmd.c_str());
+				system(cmd.c_str());
+#endif
+				string versionCurrent = STR(VERSION);
+				cmd = TMP_FOLDER "rd/ota.sh " + versionCurrent;
+				LOGD("%s", cmd.c_str());
+				system(cmd.c_str());
+				respValue["data"]["code"] = CODE_OK;
+#ifdef __ANDROID__
+				return CODE_REBOOT;
+#endif
+				return CODE_EXIT;
+			}
+			else
+			{
+				LOGW("Not found ota file");
+			}
+		}
+#else
+		string url = reqValue["url"].asString();
 		string sha = reqValue["checksum"].asString();
 		LOGD("info ota url: %s, checksum: %s", url.c_str(), sha.c_str());
 		config->SetUrlOta(url);

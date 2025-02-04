@@ -91,6 +91,9 @@ int AndroidBleProtocol::StartScan()
 	secondElements.append(BLE_LED_TUBE_M16);
 	secondElements.append(BLE_DEN_BAN);
 	secondElements.append(BLE_LED_FLOOD);
+	secondElements.append(BLE_LED_AT39);
+	secondElements.append(BLE_LED_AT40);
+	secondElements.append(BLE_LED_AT41);
 	secondElements.append(BLE_LED_RLT03_06W);
 	secondElements.append(BLE_LED_RLT02_10W);
 	secondElements.append(BLE_LED_RLT02_20W);
