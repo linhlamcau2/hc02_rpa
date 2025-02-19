@@ -124,6 +124,16 @@
 #define RD_HEADER_CONFIG_DELTA_ADC 0x0715
 #define RD_HEADER_CONFIG_STATUS_STARTUP_RELAY 0x0815
 
+#define RD_HEADER_CONTROL_HEAT_LAMP 0x0014
+#define RD_HEADER_REQUEST_STATUS_HEAT_LAMP 0x0914
+#define RD_HEADER_STATUS_LOAD_HEAT_LAMP 0x0a14
+#define RD_HEADER_RSP_STATUS_HEAT_LAMP 0x0714
+#define RD_HEADER_RSP_STATUS_STARTUP_HEAT_LAMP 0x0814
+#define RD_HEADER_CONFIG_TIMER_OFF_HEAT_LAMP 0x0114
+#define RD_HEADER_CONFIG_TIMER_DRYING 0x0214
+#define RD_HEADER_CONFIG_PERIOD_DRYING 0x0314
+#define RD_HEADER_CONFIG_TIMER_OFF_FAN 0x0B14
+
 #define TRANSITION_DEFAULT 5
 
 enum
@@ -415,6 +425,14 @@ public:
 	int SetSceneModuleInOut(uint16_t devAddr, uint8_t type, uint8_t indexIn, uint8_t status, uint16_t sceneId);
 	int ConfigDeltaADC(uint16_t devAddr, uint8_t delta);
 	int ConfigStatusStartupRelay(uint16_t devAddr, uint8_t relayId, uint8_t status);
+
+	// heatlamp
+	int ControlHeatLamp(uint16_t devAddr, uint8_t mode, uint8_t value);
+	int RequestStatusHeatLamp(uint16_t devAddr);
+	int SetTimeoffHeatLamp(uint16_t devAddr, uint16_t timer);
+	int SetTimeoffFanHeatLamp(uint16_t devAddr, uint16_t timer);
+	int SetTimeDryHeatLamp(uint16_t devAddr, uint16_t timer);
+	int SetPeriodDryHeatLamp(uint16_t devAddr, uint16_t period);
 
 	// Optimize add device to Room
 	// int AddDeviceToRoom(uint16_t devAddr, uint16_t roomAddr);

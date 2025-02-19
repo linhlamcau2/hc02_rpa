@@ -81,8 +81,8 @@ int main(int argc, char *argv[])
 	// zigbeeProtocol->CommissionFormation();
 #endif
 
-	string mac = Wifi::GetMacAddress();
-	// string mac = "11:22:33:44:55:66";
+	// string mac = Wifi::GetMacAddress();
+	string mac = "11:22:33:44:55:66";
 	LOGI("mac: %s", mac.c_str());
 
 	string passMqttLocal = "1";

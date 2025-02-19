@@ -4462,6 +4462,289 @@ int BleProtocol::ConfigStatusStartupRelay(uint16_t devAddr, uint8_t relayId, uin
 	return CODE_ERROR;
 }
 
+int BleProtocol::ControlHeatLamp(uint16_t devAddr, uint8_t mode, uint8_t value)
+{
+	LOGD("ControlHeatLamp %04X mode: %d value: %d", devAddr, mode, value);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t controlHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t mode;
+		uint8_t value;
+		uint8_t magic[4];
+	} control_heat_lamp_t;
+	control_heat_lamp_t control_heat_lamp = {0};
+	memset(&control_heat_lamp, 0x00, sizeof(control_heat_lamp));
+	control_heat_lamp.ble_message_header.devAddr = devAddr;
+	control_heat_lamp.opcodeVendor = RD_OPCODE_CONFIG;
+	control_heat_lamp.vendorId = RD_VENDOR_ID;
+	control_heat_lamp.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	control_heat_lamp.header = RD_HEADER_CONTROL_HEAT_LAMP;
+	control_heat_lamp.mode = mode;
+	control_heat_lamp.value = value;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_heat_lamp, sizeof(control_heat_lamp), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint8_t mode;
+			uint8_t value;
+		} control_rsp_message_t;
+		control_rsp_message_t *control_rsp_message = (control_rsp_message_t *)dataRsp;
+		if (control_rsp_message->header == RD_HEADER_CONTROL_HEAT_LAMP && control_rsp_message->mode == mode && control_rsp_message->value == value)
+		{
+			return CODE_OK;
+		}
+		LOGW("control heatlamp resp state not match with input control");
+	}
+	LOGW("ControlHeatLamp err");
+	return CODE_ERROR;
+}
+int BleProtocol::RequestStatusHeatLamp(uint16_t devAddr)
+{
+	LOGD("RequestStatusHeatLamp %04X", devAddr);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t statusHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t magic[6];
+	} status_heat_lamp_t;
+	status_heat_lamp_t status_heat_lamp = {0};
+	memset(&status_heat_lamp, 0x00, sizeof(status_heat_lamp));
+	status_heat_lamp.ble_message_header.devAddr = devAddr;
+	status_heat_lamp.opcodeVendor = RD_OPCODE_CONFIG;
+	status_heat_lamp.vendorId = RD_VENDOR_ID;
+	status_heat_lamp.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	status_heat_lamp.header = RD_HEADER_REQUEST_STATUS_HEAT_LAMP;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&status_heat_lamp, sizeof(status_heat_lamp), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, statusHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+		} status_rsp_message_t;
+		status_rsp_message_t *status_rsp_message = (status_rsp_message_t *)dataRsp;
+		if (status_rsp_message->header == RD_HEADER_REQUEST_STATUS_HEAT_LAMP)
+		{
+			return CODE_OK;
+		}
+		LOGW("status heatlamp resp state not match with input control");
+	}
+	LOGW("RequestStatusHeatLamp err");
+	return CODE_ERROR;
+}
+int BleProtocol::SetTimeoffHeatLamp(uint16_t devAddr, uint16_t timer)
+{
+	LOGD("SetTimeoffHeatLamp %04X, time %d", devAddr, timer);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t timer;
+		uint8_t magic[4];
+	} timeoff_heat_lamp_t;
+	timeoff_heat_lamp_t timeoff_heat_lamp = {0};
+	memset(&timeoff_heat_lamp, 0x00, sizeof(timeoff_heat_lamp));
+	timeoff_heat_lamp.ble_message_header.devAddr = devAddr;
+	timeoff_heat_lamp.opcodeVendor = RD_OPCODE_CONFIG;
+	timeoff_heat_lamp.vendorId = RD_VENDOR_ID;
+	timeoff_heat_lamp.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	timeoff_heat_lamp.header = RD_HEADER_CONFIG_TIMER_OFF_HEAT_LAMP;
+	timeoff_heat_lamp.timer = timer;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&timeoff_heat_lamp, sizeof(timeoff_heat_lamp), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t timer;
+		} timeoff_rsp_message_t;
+		timeoff_rsp_message_t *timeoff_rsp_message = (timeoff_rsp_message_t *)dataRsp;
+		if (timeoff_rsp_message->header == RD_HEADER_CONFIG_TIMER_OFF_HEAT_LAMP && timeoff_rsp_message->timer == timer)
+		{
+			return CODE_OK;
+		}
+		LOGW("timeoff heatlamp resp state not match with input control");
+	}
+	LOGW("SetTimeoffHeatLamp err");
+	return CODE_ERROR;
+}
+int BleProtocol::SetTimeoffFanHeatLamp(uint16_t devAddr, uint16_t timer)
+{
+	LOGD("SetTimeoffFanHeatLamp %04X, time %d", devAddr, timer);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t timer;
+		uint8_t magic[4];
+	} timeoff_heat_lamp_t;
+	timeoff_heat_lamp_t timeoff_heat_lamp = {0};
+	memset(&timeoff_heat_lamp, 0x00, sizeof(timeoff_heat_lamp));
+	timeoff_heat_lamp.ble_message_header.devAddr = devAddr;
+	timeoff_heat_lamp.opcodeVendor = RD_OPCODE_CONFIG;
+	timeoff_heat_lamp.vendorId = RD_VENDOR_ID;
+	timeoff_heat_lamp.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	timeoff_heat_lamp.header = RD_HEADER_CONFIG_TIMER_OFF_FAN;
+	timeoff_heat_lamp.timer = timer;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&timeoff_heat_lamp, sizeof(timeoff_heat_lamp), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t timer;
+		} timeoff_rsp_message_t;
+		timeoff_rsp_message_t *timeoff_rsp_message = (timeoff_rsp_message_t *)dataRsp;
+		if (timeoff_rsp_message->header == RD_HEADER_CONFIG_TIMER_OFF_FAN && timeoff_rsp_message->timer == timer)
+		{
+			return CODE_OK;
+		}
+		LOGW("timeoff fan heatlamp resp state not match with input control");
+	}
+	LOGW("SetTimeoffFanHeatLamp err");
+	return CODE_ERROR;
+}
+int BleProtocol::SetTimeDryHeatLamp(uint16_t devAddr, uint16_t timer)
+{
+	LOGD("SetTimeDryHeatLamp %04X, time %d", devAddr, timer);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t timerHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t timer;
+		uint8_t magic[4];
+	} timedry_heat_lamp_t;
+	timedry_heat_lamp_t timedry_heat_lamp = {0};
+	memset(&timedry_heat_lamp, 0x00, sizeof(timedry_heat_lamp));
+	timedry_heat_lamp.ble_message_header.devAddr = devAddr;
+	timedry_heat_lamp.opcodeVendor = RD_OPCODE_CONFIG;
+	timedry_heat_lamp.vendorId = RD_VENDOR_ID;
+	timedry_heat_lamp.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	timedry_heat_lamp.header = RD_HEADER_CONFIG_TIMER_DRYING;
+	timedry_heat_lamp.timer = timer;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&timedry_heat_lamp, sizeof(timedry_heat_lamp), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, timerHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t timer;
+		} timedry_rsp_message_t;
+		timedry_rsp_message_t *timedry_rsp_message = (timedry_rsp_message_t *)dataRsp;
+		if (timedry_rsp_message->header == RD_HEADER_CONFIG_TIMER_DRYING && timedry_rsp_message->timer == timer)
+		{
+			return CODE_OK;
+		}
+		LOGW("time dry heatlamp resp state not match with input control");
+	}
+	LOGW("SetTimeDryHeatLamp err");
+	return CODE_ERROR;
+}
+int BleProtocol::SetPeriodDryHeatLamp(uint16_t devAddr, uint16_t period)
+{
+	LOGD("SetPeriodDryHeatLamp %04X, period %d", devAddr, period);
+	uint8_t dataRsp[100];
+	int lenRsp;
+	uint8_t periodHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint16_t period;
+		uint8_t magic[4];
+	} period_heat_lamp_t;
+	period_heat_lamp_t period_heat_lamp = {0};
+	memset(&period_heat_lamp, 0x00, sizeof(period_heat_lamp));
+	period_heat_lamp.ble_message_header.devAddr = devAddr;
+	period_heat_lamp.opcodeVendor = RD_OPCODE_CONFIG;
+	period_heat_lamp.vendorId = RD_VENDOR_ID;
+	period_heat_lamp.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	period_heat_lamp.header = RD_HEADER_CONFIG_PERIOD_DRYING;
+	period_heat_lamp.period = period;
+	int rs = SendMessage(APP_REQ, (uint8_t *)&period_heat_lamp, sizeof(period_heat_lamp), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, periodHeader, 0, 7);
+	if (rs == CODE_OK)
+	{
+		typedef struct __attribute__((packed))
+		{
+			uint16_t devAddr;
+			uint16_t gwAddr;
+			uint8_t opcodeRsp;
+			uint16_t vendorId;
+			uint16_t header;
+			uint16_t period;
+		} period_rsp_message_t;
+		period_rsp_message_t *period_rsp_message = (period_rsp_message_t *)dataRsp;
+		if (period_rsp_message->header == RD_HEADER_CONFIG_PERIOD_DRYING && period_rsp_message->period == period)
+		{
+			return CODE_OK;
+		}
+		LOGW("period heatlamp resp state not match with input control");
+	}
+	LOGW("SetPeriodDryHeatLamp err");
+	return CODE_ERROR;
+}
+
 int BleProtocol::GetInfogw()
 {
 	LOGD("GetInfogw");

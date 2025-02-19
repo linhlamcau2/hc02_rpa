@@ -56,6 +56,7 @@
 #include "DeviceBleEcSaliTdsWaterAgriculturalSensor.h"
 #include "DeviceBleModuleInOut.h"
 #include "DeviceBleLedHightBay.h"
+#include "DeviceBleWifiSocketSwitch.h"
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -762,6 +763,12 @@ Device *Gateway::AddNewDevice(string id, string name, string mac, Json::Value &d
 		break;
 	case BLE_SWITCH_RGB_SOCKET_2:
 		device = new DeviceBleSocketSwitch(id, name, mac, dataJson, addr, type, version, 2);
+		break;
+	case BLE_WIFI_RGB_SOCKET_1:
+		device = new DeviceBleWifiSocketSwitch(id, name, mac, dataJson, addr, type, version, 1);
+		break;
+	case BLE_WIFI_RGB_SOCKET_2:
+		device = new DeviceBleWifiSocketSwitch(id, name, mac, dataJson, addr, type, version, 2);
 		break;
 	case BLE_SWITCH_RGB_1:
 	case BLE_SWITCH_RGB_1_SQUARE:
