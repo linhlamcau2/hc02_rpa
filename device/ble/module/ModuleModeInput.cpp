@@ -34,7 +34,7 @@ int ModuleModeInput::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint16_t header;
 		uint8_t mode;
 	} data_message_t;
-	data_message_t *data_message = (data_message_t *)&data;
+	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == RD_OPCODE_CONFIG_RSP && data_message->header == RD_HEADER_CONFIG_MODE_INPUT_SWITCHONOFF)
 	{
 		mode = data_message->mode;

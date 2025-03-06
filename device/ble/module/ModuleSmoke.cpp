@@ -57,7 +57,7 @@ int ModuleSmoke::InputData(uint8_t *data, int len, Json::Value &jsonValue)
 		uint8_t smoke;
 		uint8_t power;
 	} data_message_t;
-	data_message_t * data_message = (data_message_t*) data;
+	data_message_t *data_message = (data_message_t *)data;
 	if (data_message->opcode == RD_OPCODE_SENSOR_RSP && data_message->header == RD_HEADER_STATUS_SMOKE)
 	{
 		int temp_smoke = (data_message->smoke);
