@@ -19,6 +19,8 @@
 #include "TimerSchedule.h"
 #include "ButtonSignal.h"
 #include "BleProtocol.h"
+#include "QrProtocol.h"
+#include "RelayProtocol.h"
 #include "MqttProtocol.h"
 #include "AndroidBleProtocol.h"
 
@@ -74,6 +76,12 @@ int main(int argc, char *argv[])
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
+	qrProtocol = new QrProtocol((char *)QR_UART_PORT, B115200);
+	qrProtocol->init();
+
+	relayProtocol = new RelayProtocol((char *)RELAY_UART_PORT, B115200);
+	relayProtocol->init();
+
 	Util::LedInternet(false);
 #ifdef CONFIG_ENABLE_ZIGBEE
 	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
@@ -99,10 +107,10 @@ int main(int argc, char *argv[])
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId(), config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
-						  "localhost", 8883, "RD", passMqttLocal, 10);
+						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
-	bleProtocol->InitKey();
+	// bleProtocol->InitKey();
 
 	// mqttProtocol = new MqttProtocol();
 	// mqttProtocol->init();

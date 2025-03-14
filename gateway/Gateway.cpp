@@ -128,8 +128,8 @@ void Gateway::init()
 	Device::InitDeviceModelList();
 	database->GatewayRead();
 	LocalProtocol::init();
-	CloudProtocol::init();
-	Udp::init();
+	// CloudProtocol::init();
+	// Udp::init();
 
 	InitUdpMessage();
 	InitMqttMessageDevice();
@@ -191,7 +191,7 @@ void Gateway::init()
 	}
 
 	LocalConnect();
-	int cloudConnected = CloudConnect();
+	// int cloudConnected = CloudConnect();
 
 #ifdef __ANDROID__
 	if (cloudConnected != MQTT_ERR_SUCCESS)

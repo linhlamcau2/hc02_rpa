@@ -60,7 +60,11 @@ void ButtonSignal::OnRelease()
 	}
 	else if (startProcess)
 	{
-		if (releaseTime - pressTime > 6000 && releaseTime - pressTime < 9000)
+		if (releaseTime - pressTime > 1000 && releaseTime - pressTime < 5000)
+		{
+			bleProtocol->ResetBle();
+		}
+		else if (releaseTime - pressTime > 6000 && releaseTime - pressTime < 9000)
 		{
 			LOGW("set AP mode wifi");
 			Wifi::SetModeApWifi();
