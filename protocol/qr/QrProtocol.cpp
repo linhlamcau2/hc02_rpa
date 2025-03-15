@@ -1,5 +1,4 @@
 #include "QrProtocol.h"
-#include "BleProtocol.h"
 #include <stdlib.h>
 #include <thread>
 #include <functional>
@@ -8,12 +7,13 @@
 #include "Util.h"
 #include <string.h>
 #include <algorithm>
-#include "BleOpCode.h"
 
 QrProtocol *qrProtocol = NULL;
 
 QrProtocol::QrProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
 {
+	this->mac = "";
+	this->startTest = false;
 }
 
 QrProtocol::~QrProtocol()
@@ -61,25 +61,15 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 	LOGD("QrProtocol::OnMessage: %s", s.c_str());
 	if (l > 0)
 	{
-		string mac = extractMac(s);
-		string tailMac = mac.substr(8, 12);
-		uint16_t addr = getLast4HexAsUint16(tailMac) - 0x8000;
-		LOGD("%04X", addr);
-		for (int i = 0; i < 2; i++)
+		if (!this->startTest)
 		{
-			bleProtocol->SetOnOffLight(addr, 0, 5, true);
-			bleProtocol->SetOnOffLight(addr + 1, 0, 5, true);
-			bleProtocol->SetOnOffLight(addr + 2, 0, 5, true);
-			bleProtocol->SetOnOffLight(addr + 3, 0, 5, true);
-			bleProtocol->SetOnOffLight(65535, 1, 5, false);
-			bleProtocol->SetOnOffLight(65535, 0, 5, false);
-			bleProtocol->SetOnOffLight(addr, 1, 5, true);
-			bleProtocol->SetOnOffLight(addr + 1, 1, 5, true);
-			bleProtocol->SetOnOffLight(addr + 2, 1, 5, true);
-			bleProtocol->SetOnOffLight(addr + 3, 1, 5, true);
+			this->mac = extractMac(s);
+			string tailMac = mac.substr(8, 12);
+			this->addr = getLast4HexAsUint16(tailMac) - 0x8000;
+			this->startTest = true;
+			// LOGE("qr:mac %s", this->mac.c_str());
+			// LOGE("qr:addr %d", this->addr);
 		}
-		// bleProtocol->SetOnOffLight(addr, 1, 5, true);
-		// bleProtocol->SetOnOffLight(addr, 0, 5, true);
 	}
 	return l;
 }

@@ -283,6 +283,8 @@ private:
 	int SendMessage(uint16_t opReq, uint8_t *dataReq, int lenReq, uint8_t opRsp, uint8_t *dataRsp, int *lenRsp, uint32_t timeout, uint8_t *compare_data = 0, int compare_position = 0, int compare_len = 0);
 
 public:
+	int rssi;
+	bool isMatchMac;
 	atomic<bool> haveNewMac;
 	atomic<bool> haveGetMacRsp;
 	atomic<bool> isProvisioning;

@@ -235,6 +235,7 @@ public:
 	void CheckAutoOta();
 	int RestartBleGw();
 	int CheckOnlineThread();
+	int TestSwitch();
 
 	void AddDeviceToScanList(Device *scanDevice);
 

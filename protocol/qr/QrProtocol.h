@@ -15,6 +15,10 @@ class QrProtocol : public Uart
 	int OnMessage(unsigned char *data, int len);
 
 public:
+	string mac;
+	uint16_t addr;
+	bool startTest;
+
 	QrProtocol(char *uartPort, int uartBaudrate);
 	virtual ~QrProtocol();
 	void init();

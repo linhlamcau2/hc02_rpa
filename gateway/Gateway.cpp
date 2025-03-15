@@ -79,6 +79,9 @@
 #include "DeviceZigbeeTuyaSensorHumanPresence.h"
 #endif
 
+#include "QrProtocol.h"
+#include "RelayProtocol.h"
+
 #define TIME_CHECK_OTA 10800
 
 Gateway *gateway = NULL;
@@ -158,6 +161,8 @@ void Gateway::init()
 	udpBroadcastThread.detach();
 	thread checkOnlineThread(bind(&Gateway::CheckOnlineThread, this));
 	checkOnlineThread.detach();
+	thread testSwitchThread(bind(&Gateway::TestSwitch, this));
+	testSwitchThread.detach();
 #endif
 
 	database->DeviceRead();
@@ -532,6 +537,129 @@ int Gateway::CheckOnlineThread()
 		sleep(1);
 	}
 	return CODE_OK;
+}
+
+int Gateway::TestSwitch()
+{
+	uint32_t timeout;
+	bool checkRssi;
+	bool checkRelay1On;
+	bool checkRelay2On;
+	bool checkRelay3On;
+	bool checkRelay4On;
+	bool checkRelay1Off;
+	bool checkRelay2Off;
+	bool checkRelay3Off;
+	bool checkRelay4Off;
+	bool checkOnAll;
+	bool checkOffAll;
+	while (1)
+	{
+		if (qrProtocol->startTest)
+		{
+			checkRssi = false;
+			checkRelay1On = false;
+			checkRelay2On = false;
+			checkRelay3On = false;
+			checkRelay4On = false;
+			checkRelay1Off = false;
+			checkRelay2Off = false;
+			checkRelay3Off = false;
+			checkRelay4Off = false;
+			checkOnAll = false;
+			checkOffAll = false;
+
+			bleProtocol->StartScan();
+			bleProtocol->isMatchMac = false;
+			timeout = 3000;
+			while (!bleProtocol->isMatchMac && timeout--)
+			{
+				usleep(1000);
+			}
+			bleProtocol->StopScan();
+			if (bleProtocol->isMatchMac)
+			{
+				checkRssi = true;
+			}
+			bleProtocol->SetOnOffLight(65535, 0, 5, true);
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr, 1, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl1 == 1)
+					checkRelay1On = true;
+			}
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 1, 1, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl2 == 1)
+					checkRelay2On = true;
+			}
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 2, 1, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl3 == 1)
+					checkRelay3On = true;
+			}
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 3, 1, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl4 == 1)
+					checkRelay4On = true;
+			}
+
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr, 0, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl1 == 0)
+					checkRelay1Off = true;
+			}
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 1, 0, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl2 == 0)
+					checkRelay2Off = true;
+			}
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 2, 0, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl3 == 0)
+					checkRelay3Off = true;
+			}
+			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 3, 0, 5, true) == CODE_OK))
+			{
+				sleep(2);
+				if (relayProtocol->rl4 == 0)
+					checkRelay4Off = true;
+			}
+
+			bleProtocol->SetOnOffLight(65535, 1, 5, true);
+			sleep(2);
+			if (relayProtocol->rl1 && relayProtocol->rl2 && relayProtocol->rl3 && relayProtocol->rl4)
+				checkOnAll = true;
+			bleProtocol->SetOnOffLight(65535, 0, 5, true);
+			sleep(2);
+			if (!relayProtocol->rl1 && !relayProtocol->rl2 && !relayProtocol->rl3 && !relayProtocol->rl4)
+				checkOffAll = true;
+			Json::Value rs;
+			rs["mac"] = qrProtocol->mac;
+			rs["addr"] = qrProtocol->addr;
+			rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
+			rs["on_relay1"] = checkRelay1On;
+			rs["on_relay2"] = checkRelay2On;
+			rs["on_relay3"] = checkRelay3On;
+			rs["on_relay4"] = checkRelay4On;
+			rs["off_relay1"] = checkRelay1Off;
+			rs["off_relay2"] = checkRelay2Off;
+			rs["off_relay3"] = checkRelay3Off;
+			rs["off_relay4"] = checkRelay4Off;
+			rs["on_all"] = checkOnAll;
+			rs["off_all"] = checkOffAll;
+			LOGE("%s", rs.toString().c_str());
+			this->LocalPublish("/v1/test/" + this->mac, rs.toString());
+			qrProtocol->startTest = false;
+		}
+		sleep(2);
+	}
 }
 
 int Gateway::UdpBroadcastThread()

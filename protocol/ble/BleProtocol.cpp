@@ -1,4 +1,5 @@
 #include "BleProtocol.h"
+#include "QrProtocol.h"
 #include <stdlib.h>
 #include <thread>
 #include <functional>
@@ -34,6 +35,7 @@ BleProtocol::BleProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate
 	haveGetMacRsp = true;
 	isProvisioning = false;
 	isInitKey = false;
+	isMatchMac = false;
 }
 
 BleProtocol::~BleProtocol()
@@ -105,8 +107,8 @@ void BleProtocol::init()
 		SetLedService(false);
 	}
 #else
-	thread addDeviceThreadThread(AddDeviceThread, this);
-	addDeviceThreadThread.detach();
+	// thread addDeviceThreadThread(AddDeviceThread, this);
+	// addDeviceThreadThread.detach();
 	thread handleOpcodeBleThread(HandleOpcodeBle, this);
 	handleOpcodeBleThread.detach();
 #endif
@@ -363,16 +365,42 @@ int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
 	return rs;
 }
 
+std::string reverseMac(const std::string &mac)
+{
+	if (mac.length() % 2 != 0)
+	{
+		throw std::invalid_argument("Invalid MAC string length");
+	}
+
+	std::string reversedMac;
+	for (size_t i = mac.length(); i > 0; i -= 2)
+	{
+		reversedMac += mac.substr(i - 2, 2);
+	}
+
+	return reversedMac;
+}
+
 void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 {
 	switch (message_rsp->opcode)
 	{
 	case HCI_GATEWAY_CMD_UPDATE_MAC:
-		if (IsProvision() && !haveNewMac)
+		// if (IsProvision() && !haveNewMac)
 		{
 			memcpy(&scanDeviceMessage, message_rsp->data, sizeof(scan_device_message_t));
 			haveNewMac = true;
 			haveGetMacRsp = false;
+			string macGet = Util::ConvertU32ToHexString(&scanDeviceMessage.mac[0], 6);
+			// LOGE("ble:mac %s", macGet.c_str());
+			string macRev = reverseMac(macGet);
+			// LOGE("ble:mac rev %s", macRev.c_str());
+			if (qrProtocol->mac != "" && macRev == qrProtocol->mac)
+			{
+				isMatchMac = true;
+				this->rssi = scanDeviceMessage.rssi;
+				// LOGE("ble:rssi %d", this->rssi);
+			}
 		}
 		break;
 
@@ -441,7 +469,7 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		}
 		else
 		{
-			LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
+			// LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
 		}
 		break;
 	}
@@ -486,87 +514,87 @@ int BleProtocol::OnMessage(unsigned char *data, int len)
 				message_rsp->magic == 0x92 ||
 				message_rsp->magic == 0xfa)
 			{
-				if (haveGetMacRsp || (!haveGetMacRsp && message_rsp->opcode != HCI_GATEWAY_CMD_UPDATE_MAC))
+				// if (haveGetMacRsp || (!haveGetMacRsp && message_rsp->opcode != HCI_GATEWAY_CMD_UPDATE_MAC))
+				// {
+				uint16_t packageLen = message_rsp->len + 2;
+				is_dupplicate = false;
+				if (old_message_rsp && message_rsp->len == old_message_rsp->len)
 				{
-					uint16_t packageLen = message_rsp->len + 2;
-					is_dupplicate = false;
-					if (old_message_rsp && message_rsp->len == old_message_rsp->len)
+					is_dupplicate = true;
+					for (int i = 0; i < message_rsp->len; i++)
 					{
-						is_dupplicate = true;
-						for (int i = 0; i < message_rsp->len; i++)
+						if (message_rsp->data[i] != old_message_rsp->data[i])
 						{
-							if (message_rsp->data[i] != old_message_rsp->data[i])
-							{
-								is_dupplicate = false;
-								break;
-							}
+							is_dupplicate = false;
+							break;
 						}
 					}
-					if (!is_dupplicate)
+				}
+				if (!is_dupplicate)
+				{
+					if (message_rsp->len >= 3 && message_rsp->len <= l - 2)
 					{
-						if (message_rsp->len >= 3 && message_rsp->len <= l - 2)
+						// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
+						for (auto &messageResp : messageRespList)
 						{
-							// LOGD("onMessage opcode: 0x%02X, len: %d", message_rsp->opcode, message_rsp->len);
-							for (auto &messageResp : messageRespList)
+							if (message_rsp->opcode == messageResp->opcode)
 							{
-								if (message_rsp->opcode == messageResp->opcode)
+								match = true;
+								if (messageResp->compare_data)
 								{
-									match = true;
-									if (messageResp->compare_data)
+									for (int i = 0; i < messageResp->compare_len; i++)
 									{
-										for (int i = 0; i < messageResp->compare_len; i++)
-										{
-											if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
-												match = false;
-										}
+										if (message_rsp->data[messageResp->compare_position + i] != messageResp->compare_data[i])
+											match = false;
 									}
-									if (match)
+								}
+								if (match)
+								{
+									messageResp->status = true;
+									if (messageResp->len)
 									{
-										messageResp->status = true;
-										if (messageResp->len)
-										{
-											*(messageResp->len) = message_rsp->len - 2;
-											if (*(messageResp->len) > 0)
-												if (messageResp->data)
-													memcpy(messageResp->data, message_rsp->data, *messageResp->len);
-										}
+										*(messageResp->len) = message_rsp->len - 2;
+										if (*(messageResp->len) > 0)
+											if (messageResp->data)
+												memcpy(messageResp->data, message_rsp->data, *messageResp->len);
 									}
 								}
 							}
-							vectorCheckOpcodeMtx.lock();
-							if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
-							{
+						}
+						vectorCheckOpcodeMtx.lock();
+						if (messageCheckOpcodeList.size() < BLE_CHECK_OPCODE_BUFFER_MAX_SIZE)
+						{
 #ifdef ESP_PLATFORM
-								message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
+							message_rsp_st *messageCheckOpcode = (message_rsp_st *)heap_caps_malloc_prefer(packageLen, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL);
 #else
-								// CheckOpcodeException(message_rsp);
-								message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
+							// CheckOpcodeException(message_rsp);
+							message_rsp_st *messageCheckOpcode = (message_rsp_st *)malloc(packageLen);
 #endif
-								memcpy(messageCheckOpcode, message_rsp, packageLen);
-								messageCheckOpcodeList.push_back(messageCheckOpcode);
-							}
-							vectorCheckOpcodeMtx.unlock();
+							memcpy(messageCheckOpcode, message_rsp, packageLen);
+							messageCheckOpcodeList.push_back(messageCheckOpcode);
 						}
-						else if (message_rsp->len < 3 || message_rsp->len > 36)
-						{
-							LOGW("Wrong uart data");
-							l = 0;
-							break;
-						}
-						else
-						{
-							break;
-						}
+						vectorCheckOpcodeMtx.unlock();
 					}
-					old_message_rsp = message_rsp;
-					l -= packageLen;
-					d += packageLen;
+					else if (message_rsp->len < 3 || message_rsp->len > 36)
+					{
+						LOGW("Wrong uart data");
+						l = 0;
+						break;
+					}
+					else
+					{
+						break;
+					}
 				}
-				else
-				{
-					d++;
-					l--;
-				}
+				old_message_rsp = message_rsp;
+				l -= packageLen;
+				d += packageLen;
+				// }
+				// else
+				// {
+				// 	d++;
+				// 	l--;
+				// }
 			}
 			else
 			{
@@ -1397,25 +1425,17 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 	memset(&onoff_message, 0x00, sizeof(onoff_message));
 	if (ack)
 	{
-		struct __attribute__((packed))
-		{
-			uint16_t devAddr;
-			uint16_t gwAddr;
-			uint16_t opcodeRsp;
-		} turnOnOffHeader = {
-			.devAddr = devAddr,
-			.gwAddr = 0x0001,
-			.opcodeRsp = G_ONOFF_STATUS,
-		};
+		uint8_t turnOnOffHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF)};
 		onoff_message.ble_message_header.devAddr = devAddr;
 		onoff_message.opcode = G_ONOFF_SET;
 		onoff_message.onoff = onoff;
 		onoff_message.rev2 = 0;
 		onoff_message.transition = transition;
 		int rs = 0;
-		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, (uint8_t *)&turnOnOffHeader, 0, sizeof(turnOnOffHeader));
+		rs = SendMessage(APP_REQ, (uint8_t *)&onoff_message, sizeof(onoff_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, turnOnOffHeader, 0, 2);
 		if (rs == CODE_OK)
 		{
+			// LOGE("==========================");
 			typedef struct __attribute__((packed))
 			{
 				uint16_t devAddr;
@@ -1439,6 +1459,7 @@ int BleProtocol::SetOnOffLight(uint16_t devAddr, uint8_t onoff, uint16_t transit
 				LOGW("Onoff resp state not match with input control");
 			}
 		}
+		// LOGE("1=========================");
 	}
 	else
 	{

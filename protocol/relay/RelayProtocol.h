@@ -24,6 +24,11 @@ class RelayProtocol : public Uart
 	int OnMessage(unsigned char *data, int len);
 
 public:
+	int rl1;
+	int rl2;
+	int rl3;
+	int rl4;
+	
 	RelayProtocol(char *uartPort, int uartBaudrate);
 	virtual ~RelayProtocol();
 	void init();
