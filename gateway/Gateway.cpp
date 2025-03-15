@@ -88,7 +88,7 @@ Gateway *gateway = NULL;
 
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
 				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, true),
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, false),
 	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false),
 	  Udp(8181)
 {
@@ -130,8 +130,8 @@ void Gateway::init()
 {
 	Device::InitDeviceModelList();
 	database->GatewayRead();
-	LocalProtocol::init();
-	// CloudProtocol::init();
+	// LocalProtocol::init();
+	CloudProtocol::init();
 	// Udp::init();
 
 	InitUdpMessage();
@@ -195,8 +195,8 @@ void Gateway::init()
 		database->GatewayUpdateVersion(this, firmwareVer);
 	}
 
-	LocalConnect();
-	// int cloudConnected = CloudConnect();
+	// LocalConnect();
+	int cloudConnected = CloudConnect();
 
 #ifdef __ANDROID__
 	if (cloudConnected != MQTT_ERR_SUCCESS)
@@ -654,8 +654,15 @@ int Gateway::TestSwitch()
 			rs["off_relay4"] = checkRelay4Off;
 			rs["on_all"] = checkOnAll;
 			rs["off_all"] = checkOffAll;
-			LOGE("%s", rs.toString().c_str());
-			this->LocalPublish("/v1/test/" + this->mac, rs.toString());
+			Json::Value deviceJson = Json::arrayValue;
+			deviceJson.append(rs);
+
+			Json::Value dataPush;
+			dataPush["cmd"] = "hcReportLog",
+			dataPush["rpi"] = Util::genRandRQI(16),
+			dataPush["device"] = deviceJson;
+			LOGE("%s", dataPush.toString().c_str());
+			this->CloudPublish(dataPush.toString());
 			qrProtocol->startTest = false;
 		}
 		sleep(2);
