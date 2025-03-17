@@ -1091,26 +1091,26 @@ int BleProtocol::SetGwAddr(uint16_t devAddr, uint16_t gwAddrSet)
 	int rs = SendMessage(APP_REQ, (uint8_t *)&set_gw_addr_message, sizeof(set_gw_addr_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, setGwAddrHeader, 4, 5);
 	if (rs == CODE_OK)
 	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t devAddr;
-			uint16_t gwAddr;
-			uint8_t opcode;
-			uint16_t vendorId;
-			uint16_t header;
-			uint8_t rev[6];
-		} set_gw_addr_rsp_message_t;
-		set_gw_addr_rsp_message_t *set_gw_addr_rsp_message = (set_gw_addr_rsp_message_t *)dataRsp;
-		if (set_gw_addr_rsp_message->devAddr == devAddr)
-		{
-			if (set_gw_addr_rsp_message->opcode == RD_OPCODE_PROVISION_RSP &&
-				set_gw_addr_rsp_message->vendorId == RD_VENDOR_ID &&
-				set_gw_addr_rsp_message->header == RD_HEADER_PROVISION_SET_GW_ADDR)
-			{
-				LOGD("SetGwAddr OK");
+		// typedef struct __attribute__((packed))
+		// {
+		// 	uint16_t devAddr;
+		// 	uint16_t gwAddr;
+		// 	uint8_t opcode;
+		// 	uint16_t vendorId;
+		// 	uint16_t header;
+		// 	uint8_t rev[6];
+		// } set_gw_addr_rsp_message_t;
+		// set_gw_addr_rsp_message_t *set_gw_addr_rsp_message = (set_gw_addr_rsp_message_t *)dataRsp;
+		// if (set_gw_addr_rsp_message->devAddr == devAddr)
+		// {
+		// 	if (set_gw_addr_rsp_message->opcode == RD_OPCODE_PROVISION_RSP &&
+		// 		set_gw_addr_rsp_message->vendorId == RD_VENDOR_ID &&
+		// 		set_gw_addr_rsp_message->header == RD_HEADER_PROVISION_SET_GW_ADDR)
+		// 	{
+		// 		LOGD("SetGwAddr OK");
 				return CODE_OK;
-			}
-		}
+			// }
+		// }
 	}
 	LOGW("SetGwAddr err");
 	return CODE_ERROR;
@@ -3925,7 +3925,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	LOGD("ControlRelayOfSwitch 0x%04X, relayid %d, value %d", devAddr, relay, value);
 	uint8_t dataRsp[100];
 	int lenRsp;
-	uint8_t controlRelaySwitchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	uint8_t controlRelaySwitchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF)};
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
@@ -3961,25 +3961,25 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	}
 	control_relay_switch_message.relay = relay;
 	control_relay_switch_message.value = value;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, sizeof(control_relay_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlRelaySwitchHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, sizeof(control_relay_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, controlRelaySwitchHeader, 0, 2);
 	if (rs == CODE_OK)
 	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t devAddr;
-			uint16_t gwAddr;
-			uint8_t opcodeRsp;
-			uint16_t vendorId;
-			uint16_t header;
-			uint8_t relay;
-			uint8_t value;
-		} control_relay_switch_rsp_message_t;
-		control_relay_switch_rsp_message_t *control_relay_switch_rsp_message = (control_relay_switch_rsp_message_t *)dataRsp;
-		if (control_relay_switch_rsp_message->header == 0x000b && control_relay_switch_rsp_message->relay == relay && control_relay_switch_rsp_message->value == value)
-		{
+		// typedef struct __attribute__((packed))
+		// {
+		// 	uint16_t devAddr;
+		// 	uint16_t gwAddr;
+		// 	uint8_t opcodeRsp;
+		// 	uint16_t vendorId;
+		// 	uint16_t header;
+		// 	uint8_t relay;
+		// 	uint8_t value;
+		// } control_relay_switch_rsp_message_t;
+		// control_relay_switch_rsp_message_t *control_relay_switch_rsp_message = (control_relay_switch_rsp_message_t *)dataRsp;
+		// if (control_relay_switch_rsp_message->header == 0x000b && control_relay_switch_rsp_message->relay == relay && control_relay_switch_rsp_message->value == value)
+		// {
 			return CODE_OK;
-		}
-		LOGW("control relay switch resp state not match with input control");
+		// }
+		// LOGW("control relay switch resp state not match with input control");
 	}
 	LOGW("control relay switch err");
 	return CODE_ERROR;

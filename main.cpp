@@ -110,13 +110,13 @@ int main(int argc, char *argv[])
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
-	// bleProtocol->InitKey();
+	bleProtocol->StopScan();
 
 	// mqttProtocol = new MqttProtocol();
 	// mqttProtocol->init();
 
-	androidBleProtocol = new AndroidBleProtocol();
-	androidBleProtocol->init();
+	// androidBleProtocol = new AndroidBleProtocol();
+	// androidBleProtocol->init();
 
 	Util::LedService(true);
 	Util::LedZigbee(false);

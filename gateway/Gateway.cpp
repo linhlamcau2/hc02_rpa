@@ -581,65 +581,66 @@ int Gateway::TestSwitch()
 			{
 				checkRssi = true;
 			}
-			bleProtocol->SetOnOffLight(65535, 0, 5, true);
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr, 1, 5, true) == CODE_OK))
+			// bleProtocol->SetGwAddr(qrProtocol->addr, 0);
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 1, 1) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl1 == 1)
 					checkRelay1On = true;
 			}
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 1, 1, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 2, 1) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl2 == 1)
 					checkRelay2On = true;
 			}
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 2, 1, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 3, 1) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl3 == 1)
 					checkRelay3On = true;
 			}
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 3, 1, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 4, 1) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl4 == 1)
 					checkRelay4On = true;
 			}
 
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr, 0, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 1, 0) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl1 == 0)
 					checkRelay1Off = true;
 			}
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 1, 0, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 2, 0) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl2 == 0)
 					checkRelay2Off = true;
 			}
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 2, 0, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 3, 0) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl3 == 0)
 					checkRelay3Off = true;
 			}
-			if ((bleProtocol->SetOnOffLight(qrProtocol->addr + 3, 0, 5, true) == CODE_OK))
+			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 4, 0) == CODE_OK))
 			{
-				sleep(2);
+				usleep(600000);
 				if (relayProtocol->rl4 == 0)
 					checkRelay4Off = true;
 			}
 
-			bleProtocol->SetOnOffLight(65535, 1, 5, true);
-			sleep(2);
+			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 255, 1);
+			usleep(1500000);
 			if (relayProtocol->rl1 && relayProtocol->rl2 && relayProtocol->rl3 && relayProtocol->rl4)
 				checkOnAll = true;
-			bleProtocol->SetOnOffLight(65535, 0, 5, true);
-			sleep(2);
+			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 255, 0);
+			usleep(1500000);
 			if (!relayProtocol->rl1 && !relayProtocol->rl2 && !relayProtocol->rl3 && !relayProtocol->rl4)
 				checkOffAll = true;
+
 			Json::Value rs;
 			rs["mac"] = qrProtocol->mac;
 			rs["addr"] = qrProtocol->addr;
