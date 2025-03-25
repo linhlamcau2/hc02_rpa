@@ -147,13 +147,18 @@ private:
 	void InitMqttMessageRule();
 	int OnGetRuleList(Json::Value &reqValue, Json::Value &respValue);
 	int OnGetRuleInfo(Json::Value &reqValue, Json::Value &respValue);
+	// Rule V1
 	int OnCreateRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnEditRule(Json::Value &reqValue, Json::Value &respValue);
-	int OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue);
-	int OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue);
 	int OnDeleteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActiveRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRule(Json::Value &reqValue, Json::Value &respValue);
+	// Rule V2
+	int OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue);
+	int OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue);
+	int OnDeleteRuleV2(Json::Value &reqValue, Json::Value &respValue);
+	int OnActiveRuleV2(Json::Value &reqValue, Json::Value &respValue);
+	int OnActionRuleV2(Json::Value &reqValue, Json::Value &respValue);
 	int OnActionRuleCloud(Json::Value &reqValue, Json::Value &respValue);
 	int OnAddFavoriteRule(Json::Value &reqValue, Json::Value &respValue);
 	int OnDelFavoriteRule(Json::Value &reqValue, Json::Value &respValue);

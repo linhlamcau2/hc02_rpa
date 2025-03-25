@@ -6,13 +6,16 @@ void Gateway::InitMqttMessageRule()
 {
 	OnDeviceRpcCallbackRegister("createRule", bind(&Gateway::OnCreateRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("editRule", bind(&Gateway::OnEditRule, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("createRuleV2", bind(&Gateway::OnCreateRuleV2, this, placeholders::_1, placeholders::_2));
-	OnDeviceRpcCallbackRegister("editRuleV2", bind(&Gateway::OnEditRuleV2, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("delRule", bind(&Gateway::OnDeleteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getRuleList", bind(&Gateway::OnGetRuleList, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("getRuleInfo", bind(&Gateway::OnGetRuleInfo, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("activeRule", bind(&Gateway::OnActiveRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("actionRule", bind(&Gateway::OnActionRule, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("createRuleV2", bind(&Gateway::OnCreateRuleV2, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("editRuleV2", bind(&Gateway::OnEditRuleV2, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("delRuleV2", bind(&Gateway::OnDeleteRuleV2, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("activeRuleV2", bind(&Gateway::OnActiveRuleV2, this, placeholders::_1, placeholders::_2));
+	OnDeviceRpcCallbackRegister("actionRuleV2", bind(&Gateway::OnActionRuleV2, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("actionRuleCloud", bind(&Gateway::OnActionRuleCloud, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("addFavoriteRule", bind(&Gateway::OnAddFavoriteRule, this, placeholders::_1, placeholders::_2));
 	OnDeviceRpcCallbackRegister("delFavoriteRule", bind(&Gateway::OnDelFavoriteRule, this, placeholders::_1, placeholders::_2));
@@ -151,74 +154,6 @@ int Gateway::OnEditRule(Json::Value &reqValue, Json::Value &respValue)
 	return CODE_OK;
 }
 
-int Gateway::OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue)
-{
-	Rule *rule = AddRuleV2(reqValue, true);
-	if (rule)
-	{
-		LOGI("Add Rule v2 %s", rule->GetId().c_str());
-		Json::Value deviceList = Json::arrayValue;
-		pushMsgHcCoreToHcApp("createRule", rule->GetId(), rule->GetName(), deviceList, "");
-		// rule->Check();
-		respValue["data"]["code"] = CODE_OK;
-		respValue["data"]["id"] = rule->GetId();
-	}
-	else
-	{
-		respValue["data"]["code"] = CODE_FORMAT_ERROR;
-	}
-	respValue["cmd"] = "createRuleRsp";
-	return CODE_OK;
-}
-
-int Gateway::OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue)
-{
-	int rs = CODE_ERROR;
-	if (reqValue.isMember("id") && reqValue["id"].isString())
-	{
-		string ruleId = reqValue["id"].asString();
-		Rule *rule = getRuleFromId(ruleId);
-		if (!rule)
-		{
-			SceneBle *sceneBle = getSceneBleFromId(ruleId);
-			if (sceneBle)
-			{
-				vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
-				for (auto &deviceInScene : devicesInSceneBle)
-				{
-					sceneBle->DelDevice(deviceInScene->device, true, true);
-				}
-				delSceneBle(sceneBle);
-			}
-		}
-		if (rule)
-		{
-			delRule(rule);
-		}
-		rule = AddRuleV2(reqValue, true);
-		if (rule)
-		{
-			LOGI("Edit Rule v2 %s", rule->GetId().c_str());
-			Json::Value deviceList = Json::arrayValue;
-			pushMsgHcCoreToHcApp("editRule", rule->GetId(), rule->GetName(), deviceList, "");
-			// rule->Check();
-			rs = CODE_OK;
-		}
-		else
-		{
-			rs = CODE_FORMAT_ERROR;
-		}
-		respValue["data"]["id"] = ruleId;
-	}
-	else
-	{
-		rs = CODE_FORMAT_ERROR;
-	}
-	respValue["data"]["code"] = rs;
-	respValue["cmd"] = "editRuleRsp";
-	return CODE_OK;
-}
-
 int Gateway::OnDeleteRule(Json::Value &reqValue, Json::Value &respValue)
 {
 	if (reqValue.isMember("id") && reqValue["id"].isString())
@@ -281,6 +216,139 @@ int Gateway::OnActionRule(Json::Value &reqValue, Json::Value &respValue)
 	}
 	respValue["data"]["code"] = CODE_OK;
 	respValue["cmd"] = "actionRuleRsp";
+	return CODE_OK;
+}
+
+int Gateway::OnCreateRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	Rule *rule = AddRuleV2(reqValue, true);
+	if (rule)
+	{
+		LOGI("Add Rule v2 %s", rule->GetId().c_str());
+		Json::Value deviceList = Json::arrayValue;
+		pushMsgHcCoreToHcApp("createRule", rule->GetId(), rule->GetName(), deviceList, "");
+		// rule->Check();
+		respValue["data"]["code"] = CODE_OK;
+		respValue["data"]["id"] = rule->GetId();
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "createRuleV2Rsp";
+	return CODE_OK;
+}
+
+int Gateway::OnEditRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	int rs = CODE_ERROR;
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string ruleId = reqValue["id"].asString();
+		Rule *rule = getRuleFromId(ruleId);
+		if (!rule)
+		{
+			SceneBle *sceneBle = getSceneBleFromId(ruleId);
+			if (sceneBle)
+			{
+				vector<DeviceInSceneBle *> devicesInSceneBle = sceneBle->deviceList;
+				for (auto &deviceInScene : devicesInSceneBle)
+				{
+					sceneBle->DelDevice(deviceInScene->device, true, true);
+				}
+				delSceneBle(sceneBle);
+			}
+		}
+		if (rule)
+		{
+			delRule(rule);
+		}
+		rule = AddRuleV2(reqValue, true);
+		if (rule)
+		{
+			LOGI("Edit Rule v2 %s", rule->GetId().c_str());
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("editRule", rule->GetId(), rule->GetName(), deviceList, "");
+			// rule->Check();
+			rs = CODE_OK;
+		}
+		else
+		{
+			rs = CODE_FORMAT_ERROR;
+		}
+		respValue["data"]["id"] = ruleId;
+	}
+	else
+	{
+		rs = CODE_FORMAT_ERROR;
+	}
+	respValue["data"]["code"] = rs;
+	respValue["cmd"] = "editRuleV2Rsp";
+	return CODE_OK;
+}
+
+int Gateway::OnActiveRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString() &&
+		reqValue.isMember("status") && reqValue["status"].isInt())
+	{
+		string id = reqValue["id"].asString();
+		int status = reqValue["status"].asInt();
+		Rule *rule = getRuleFromId(id);
+		if (rule)
+		{
+			rule->SetStatus(status);
+			database->RuleUpdateStatus(rule);
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "activeRuleV2Rsp";
+	return CODE_OK;
+}
+
+int Gateway::OnActionRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string id = reqValue["id"].asString();
+		Rule *rule = getRuleFromId(id);
+		if (rule)
+		{
+			rule->RunOutput();
+			respValue["data"]["id"] = rule->GetId();
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("actionRuleRsp", rule->GetId(), rule->GetName(), deviceList, "");
+		}
+	}
+	respValue["data"]["code"] = CODE_OK;
+	respValue["cmd"] = "actionRuleV2Rsp";
+	return CODE_OK;
+}
+
+int Gateway::OnDeleteRuleV2(Json::Value &reqValue, Json::Value &respValue)
+{
+	if (reqValue.isMember("id") && reqValue["id"].isString())
+	{
+		string ruleId = reqValue["id"].asString();
+		Rule *rule = getRuleFromId(ruleId);
+		if (rule)
+		{
+			Json::Value deviceList = Json::arrayValue;
+			pushMsgHcCoreToHcApp("delRule", rule->GetId(), rule->GetName(), deviceList, "");
+			delRule(rule);
+			respValue["data"]["code"] = CODE_OK;
+		}
+		else
+		{
+			respValue["data"]["code"] = CODE_NOT_FOUND_RULE;
+		}
+		respValue["data"]["id"] = ruleId;
+	}
+	else
+	{
+		respValue["data"]["code"] = CODE_FORMAT_ERROR;
+	}
+	respValue["cmd"] = "delRuleV2Rsp";
 	return CODE_OK;
 }
 

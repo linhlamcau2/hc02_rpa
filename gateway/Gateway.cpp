@@ -1245,11 +1245,12 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 		uint16_t addr = 0;
 		Rule *rule = NULL;
 		bool isFullDay = true;
-		int repeat = 255;
+		int timerRepeat = 255;
 
 		if (ruleValue.isMember("time") && ruleValue["time"].isObject())
 		{
 			Json::Value timeRule = ruleValue["time"];
+			int repeat = 255;
 			if (timeRule.isMember("fullDay") && timeRule["fullDay"].isBool())
 			{
 				isFullDay = timeRule["fullDay"].asBool();
@@ -1388,7 +1389,7 @@ Rule *Gateway::AddRuleV2(Json::Value &ruleValue, bool addDatabase)
 				database->RuleAdd(rule, ruleStr, 0);
 
 				bool isFirstStt = false;
-				if (repeat == 0)
+				if (timerRepeat == 0)
 				{
 					isFirstStt = true;
 				}
