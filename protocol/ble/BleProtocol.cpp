@@ -8,11 +8,8 @@
 #include "Util.h"
 #include <string.h>
 #include <algorithm>
-#include "Db.h"
 #include "BleOpCode.h"
 #include "DeviceBle.h"
-#include "DeviceBleSwitchScene6ACRgb.h"
-#include "DeviceBleSeftPowerRemote.h"
 #include "AES.h"
 #ifdef ESP_PLATFORM
 #include "Led.h"
@@ -69,7 +66,7 @@ static void AddDeviceThread(void *data)
 					bleProtocol->SetProvisioning(false);
 					bleProtocol->StopScan();
 					string cmdStop = "{\"cmd\":\"stopScanBle\",\"data\":{\"code\":0}}";
-					gateway->LocalPublish(cmdStop);
+					// gateway->LocalPublish(cmdStop);
 				}
 			}
 		}
@@ -126,15 +123,15 @@ void BleProtocol::InitKey()
 		sleep(4);
 #endif
 	}
-	CheckKeyBle();
+	// CheckKeyBle();
 	isInitKey = true;
 }
 
 void BleProtocol::CheckKeyBle()
 {
-	string bleAppkey = gateway->getBleAppKey();
-	string bleNetkey = gateway->getBleNetKey();
-	string bleDevicekey = gateway->getBleDeviceKey();
+	string bleAppkey = "";
+	string bleNetkey = "";
+	string bleDevicekey = "";
 	srand(time(NULL));
 
 	string netkeyStr = Util::uuidToStr((uint8_t *)netKey);
@@ -161,11 +158,6 @@ void BleProtocol::CheckKeyBle()
 		ResetBle();
 
 		// this->UpdateDeviceKeyGateway(gateway->getBleAddr(), gateway->getBleDeviceKey());
-		map<string, Device *> listDevs = gateway->GetListDevices();
-		for (const auto &[id, device] : listDevs)
-		{
-			this->UpdateDeviceKeyDev(device->GetAddr(), device->GetDeviceKey());
-		}
 
 		if (bleNetkey != "")
 		{
@@ -189,8 +181,6 @@ void BleProtocol::CheckKeyBle()
 			}
 			netkeyStr = Util::uuidToStr((uint8_t *)netKey);
 			bleNetkey = netkeyStr;
-			database->GatewayUpdateNetKey(gateway, bleNetkey);
-			gateway->setBleNetkey(bleNetkey);
 		}
 		LOGD("New ble_netkey: %s", bleNetkey.c_str());
 		SetNetKey();
@@ -216,8 +206,6 @@ void BleProtocol::CheckKeyBle()
 				gwKey[i] = rand() % 256;
 			}
 			bleDevicekey = Util::uuidToStr((uint8_t *)gwKey);
-			database->GatewayUpdateDeviceKey(gateway, bleDevicekey);
-			gateway->setBleDevicekey(bleDevicekey);
 		}
 
 		LOGD("New ble_devicekey: %s", bleDevicekey.c_str());
@@ -245,8 +233,6 @@ void BleProtocol::CheckKeyBle()
 				// appKey[i] = rand() % 256;
 			}
 			bleAppkey = Util::uuidToStr((uint8_t *)appKey);
-			database->GatewayUpdateAppKey(gateway, bleAppkey);
-			gateway->setBleAppkey(bleAppkey);
 		}
 		LOGD("New ble_appkey: %s", bleAppkey.c_str());
 		UpdateAppKey(bleAppkey);
@@ -255,100 +241,14 @@ void BleProtocol::CheckKeyBle()
 
 static void GetDataUpdateLight(uint8_t *data, int len, Json::Value &dataValues)
 {
-	typedef struct __attribute__((packed))
-	{
-		uint16_t opcode;
-		uint8_t header;
-		uint8_t status_mode;
-		uint16_t value1;
-		uint16_t value2;
-		uint16_t value3;
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
-
-	if (data_message->opcode == LIGHTNESS_LINEAR_STATUS && data_message->header == 2)
-	{
-		dataValues[KEY_ATTRIBUTE_ONOFF] = (data_message->status_mode >> 4) & 0x0F;
-		if ((data_message->status_mode & 0x0F) == 1)
-		{
-			int dim = (data_message->value1 * 100) / 65535;
-			int cct = (data_message->value2 - 800) / 192;
-			if (dim >= 0 && dim <= 100)
-				dataValues[KEY_ATTRIBUTE_DIM] = dim;
-			if (cct >= 0 && cct <= 100)
-				dataValues[KEY_ATTRIBUTE_CCT] = cct;
-		}
-		else if ((data_message->status_mode & 0x0F) == 0)
-		{
-			if (data_message->value2 > 0 && data_message->value1 > 0 && data_message->value3 > 0)
-			{
-				dataValues[KEY_ATTRIBUTE_HUE] = data_message->value2;
-				dataValues[KEY_ATTRIBUTE_SATURATION] = data_message->value3;
-				dataValues[KEY_ATTRIBUTE_LUMINANCE] = data_message->value1;
-			}
-		}
-	}
 }
 
 static void GetDataUpdateSwitch(uint8_t *data, int len, Json::Value &dataValues)
 {
-	typedef struct __attribute__((packed))
-	{
-		uint8_t opcode;
-		uint16_t vendorId;
-		uint16_t header;
-		uint8_t element;
-		uint8_t bt;
-		uint8_t bt2;
-		uint8_t bt3;
-		uint8_t bt4;
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
-
-	for (int i = 0; i < data_message->element; i++)
-	{
-		dataValues[KEY_ATTRIBUTE_BUTTON + ((i) ? to_string(i + 1) : "")] = ((uint8_t *)data_message)[i + offsetof(data_message_t, bt)];
-	}
 }
 
 static void GetDataUpdateCurtain(uint8_t *data, int len, Json::Value &dataValues)
 {
-	typedef struct __attribute__((packed))
-	{
-		uint8_t opcode;
-		uint16_t vendorId;
-		uint16_t header;
-		uint8_t type;
-		uint8_t curtain;
-	} data_message_t;
-	data_message_t *data_message = (data_message_t *)data;
-
-	uint8_t temp = data_message->type;
-	switch (temp)
-	{
-	case 1:
-		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 1;
-		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
-		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
-		break;
-	case 0:
-		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 1;
-		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
-		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 0;
-		break;
-	case 2:
-		if (data_message->vendorId == RD_HEADER_REQUEST_STATUS_CURTAIN)
-		{
-			dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
-		}
-		dataValues[KEY_ATTRIBUTE_CURTAIN_PAUSE] = 1;
-		dataValues[KEY_ATTRIBUTE_CURTAIN_OPEN] = 0;
-		dataValues[KEY_ATTRIBUTE_CURTAIN_CLOSE] = 0;
-		break;
-	case 3:
-		dataValues[KEY_ATTRIBUTE_CURTAIN_OPENED] = data_message->curtain;
-		break;
-	}
 }
 
 int BleProtocol::GetOpcodeExceptionMessage(message_rsp_st **data)
@@ -417,61 +317,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 		uint16_t opcode = data_message->data[0] | (data_message->data[1] << 8);
 		uint16_t header = data_message->data[3] | (data_message->data[4] << 8);
 		uint16_t vendorId = data_message->data[1] | (data_message->data[2] << 8);
-		DeviceBle *deviceBle = gateway->getDeviceBleFromAddr(data_message->dev_addr);
-		if (deviceBle)
-		{
-			deviceBle->UpdateLastTimeActive();
-			if (opcode == LIGHTNESS_LINEAR_STATUS && data_message->data[2] == 2)
-			{
-				Json::Value dataValues = Json::objectValue;
-				GetDataUpdateLight(data_message->data, message_rsp->len - 6, dataValues);
-				deviceBle->SetPropertyJsonUpdate(dataValues);
-			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_SWITCH)
-			{
-				Json::Value dataValues = Json::objectValue;
-				GetDataUpdateSwitch(data_message->data, message_rsp->len - 6, dataValues);
-				deviceBle->SetPropertyJsonUpdate(dataValues);
-			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_REQUEST_STATUS_CURTAIN)
-			{
-				Json::Value dataValues = Json::objectValue;
-				GetDataUpdateCurtain(data_message->data, message_rsp->len - 6, dataValues);
-				deviceBle->SetPropertyJsonUpdate(dataValues);
-			}
-			else if (data_message->data[0] == RD_OPCODE_CONFIG_RSP && vendorId == RD_VENDOR_ID && header == RD_HEADER_SEFTPOWER_REMOTE_PRESS)
-			{
-				DeviceBle *deviceBleChild = gateway->getDeviceBleFromAddr(data_message->data[5] | (data_message->data[6] << 8));
-				if (deviceBleChild)
-				{
-					deviceBleChild->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->data[5] | (data_message->data[6] << 8));
-				}
-			}
-			else
-			{
-				deviceBle->DeviceInputData(data_message->data, message_rsp->len - 6, data_message->dev_addr);
-			}
-
-			if (deviceBle->GetType() == BLE_AC_SCENE_SCREEN_TOUCH || deviceBle->GetType() == BLE_SWITCH_KNOB)
-			{
-				if (header == RD_HEADER_SCREEN_TOUCH_REQUEST_TIME)
-				{
-					SendDate(deviceBle->GetAddr(), Util::GetYearsCurrent(), Util::GetMonthsCurrent(), Util::GetDateCurrent(), Util::GetDaysCurrent());
-					SendTime(deviceBle->GetAddr(), Util::GetHoursCurrent(), Util::GetMinutesCurrent(), Util::GetSecondsCurrent());
-				}
-				else if (header == RD_HEADER_SCREEN_TOUCH_REQUEST_TEMP)
-				{
-					SendWeatherOutdoor(deviceBle->GetAddr(), Util::GetStatusWeatherOutdoor(), Util::GetTempWeatherOutdoor());
-					SendWeatherIndoor(deviceBle->GetAddr(), Util::GetTempOfScreenTouch() / 10, Util::GetHumOfScreenTouch() / 10, 0);
-				}
-			}
-			break;
-		}
-		else
-		{
-			// LOGW("Not found device addr: 0x%04X", data_message->dev_addr);
-		}
-		break;
 	}
 
 	case HCI_GATEWAY_CMD_SEND_NODE_INFO:
@@ -490,8 +335,6 @@ void BleProtocol::CheckOpcodeException(message_rsp_st *message_rsp)
 int BleProtocol::OnMessage(unsigned char *data, int len)
 {
 	// LOGD("OnMessage len: %d", len);
-	if (len > 0)
-		gateway->setLastTimePingGwBle(time(NULL));
 	uint8_t *d = data;
 	int l = len;
 	message_rsp_st *message_rsp = NULL;
@@ -730,9 +573,6 @@ int BleProtocol::GetNetKey()
 			nextAddr = pro_net_info.unicast_address;
 			if (nextAddr == 0)
 				nextAddr = 2;
-			uint32_t maxAddr = gateway->GetMaxAddrBle();
-			if (nextAddr <= maxAddr)
-				nextAddr = maxAddr + BLE_MAX_ELEMENT;
 			LOGW("nextAddr: 0x%04X - %d", nextAddr, nextAddr);
 		}
 		else
@@ -773,10 +613,6 @@ int BleProtocol::SetNetKey()
 	}
 	set_netkey_message.magic = 0x44332211;
 	set_netkey_message.addr = 0x01;
-	gateway->setBleAddr(0x01);
-	database->GatewayUpdateUnicast(gateway, 0x01);
-	gateway->setBleIvIndex(bswap_32(set_netkey_message.magic));
-	database->GatewayUpdateIvIndex(gateway, bswap_32(set_netkey_message.magic));
 	return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, sizeof(set_netkey_message_t), HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 }
 
@@ -841,8 +677,6 @@ int BleProtocol::ResetBle()
 int BleProtocol::ResetFactory()
 {
 	LOGD("ResetFactory");
-	InitKey();
-	database->GatewayRead();
 	return CODE_OK;
 }
 
@@ -864,122 +698,7 @@ void BleProtocol::SetProvisioning(bool isProvision)
 
 int BleProtocol::AddDevice(scan_device_message_t *scan_device_message)
 {
-	// TODO: convert to non-blocking func
-	LOGD("AddDevice");
-	// #ifdef ESP_PLATFORM
-	// 	Led::TaskLedService(MODE_BLINK);
-	// #endif
-	uint16_t version = 0;
-	uint32_t deviceType = 0;
-	uuid_t *uuid = (uuid_t *)scan_device_message->uuid;
-	string mac = Util::ConvertU32ToHexString(scan_device_message->mac, sizeof(scan_device_message->mac));
-	LOGI("Scan device mac 0x%s, rssi: %i", mac.c_str(), scan_device_message->rssi);
-	int rs = CODE_ERROR;
-	if (IsProvision() && !SelectMac(scan_device_message->mac))
-	{
-		if (IsProvision() && !GetNetKey())
-		{
-			if (IsProvision() && !Provision(nextAddr))
-			{
-				if (IsProvision() && !BindingAll())
-				{
-					if (IsProvision() && !SetGwAddr(nextAddr, gateway->getBleAddr()))
-					{
-						if (IsProvision() && !GetDeviceType(scan_device_message->mac, nextAddr, deviceType, version))
-						{
-							deviceType = convertDeviceType(deviceType);
-							Json::Value dataJson;
-							dataJson["devicekey"] = Util::uuidToStr((uint8_t *)deviceKey);
-							Device *device = gateway->AddNewDevice(Util::uuidToStr(uuid->uuid), Util::setString(Device::ConvertDeviceTypeToName(deviceType)), mac, dataJson, nextAddr, deviceType, version, true);
-							if (device)
-							{
-								gateway->AddDeviceToScanList(device);
-								rs = CODE_OK;
-							}
-						}
-					}
-				}
-				if (rs != CODE_OK)
-				{
-					ResetDev(nextAddr);
-				}
-			}
-		}
-	}
-
-	if (IsProvision())
-	{
-		sleep(1);
-		if (IsProvision())
-			StartScan();
-	}
-
-	// #ifdef ESP_PLATFORM
-	// 	Led::SetModeLedService(MODE_ON);
-	// 	Led::SetLedService(MODE_ON);
-	// #endif
-
-	return rs;
-}
-
-int BleProtocol::AddPairDevice(uint32_t parentAddr, uint32_t childAddr)
-{
-	if (ScanStopSeftPowerRemote(parentAddr, 1) == CODE_OK)
-	{
-		uint16_t adrMax = gateway->GetMaxAddrBle() + BLE_MAX_ELEMENT;
-		LOGW("Max address is %d", adrMax);
-		if (SaveSeftPowerRemote(scanDevicePairMessage, adrMax) == CODE_OK)
-		{
-			uint16_t version = 0;
-			uint32_t deviceType = 0;
-			char tempId[100] = {0};
-			sprintf((char *)tempId, "%02x%02x%02x%02x-0000-0000-0000-000000000000", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
-			tempId[36] = '\0';
-			std::string uuid(tempId);
-
-			char tempMac[100] = {0};
-			sprintf((char *)tempMac, "%02x%02x%02x%02x0000", scanDevicePairMessage.mac[0], scanDevicePairMessage.mac[1], scanDevicePairMessage.mac[2], scanDevicePairMessage.mac[3]);
-			tempMac[12] = '\0';
-			std::string mac(tempMac);
-
-			Json::Value dataJson = Json::objectValue;
-			switch (scanDevicePairMessage.type)
-			{
-			case 1:
-				deviceType = BLE_SEFTPOWER_REMOTE_1;
-				break;
-			case 2:
-				deviceType = BLE_SEFTPOWER_REMOTE_2;
-				break;
-			case 3:
-				deviceType = BLE_SEFTPOWER_REMOTE_3;
-				break;
-			case 6:
-				deviceType = BLE_SEFTPOWER_REMOTE_6;
-				break;
-			}
-			Device *device = gateway->AddNewDevice(uuid, "", mac, dataJson, childAddr, deviceType, 257, true);
-			if (device)
-			{
-				Device *parent = gateway->getDeviceBleFromAddr(parentAddr);
-				DeviceBleSeftPowerRemote *deviceBleSeftPowerRemote = dynamic_cast<DeviceBleSeftPowerRemote *>(device);
-				if (parent && deviceBleSeftPowerRemote)
-				{
-					deviceBleSeftPowerRemote->SetParentDev(parent);
-				}
-				if (deviceBleSeftPowerRemote->GetParent())
-				{
-					gateway->AddDeviceToScanList(device);
-					database->DeviceBleChildAdd(deviceBleSeftPowerRemote, parent, "");
-				}
-			}
-		}
-		// else
-		// ScanStopSeftPowerRemote(parentAddr, 0);
-	}
-	else
-		ScanStopSeftPowerRemote(parentAddr, 0);
-	return CODE_OK;
+	return CODE_ERROR;
 }
 
 int BleProtocol::SelectMac(uint8_t *mac)
@@ -1295,116 +1014,6 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 
 int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t version)
 {
-	// LOGV("SendOnlineCheck addr: 0x%04X", devAddr);
-	// #ifndef CONFIG_SAVE_ATTRIBUTE
-	switch (typeDev)
-	{
-	case BLE_LED_CHIEU_TRANH:
-	case BLE_LED_CHIEU_GUONG:
-	case BLE_DEN_BAN:
-	case BLE_DOWNLIGHT_SMT:
-	case BLE_DOWNLIGHT_COB_GOC_HEP:
-	case BLE_DOWNLIGHT_COB_GOC_RONG:
-	case BLE_DOWNLIGHT_COB_TRANG_TRI:
-	case BLE_LED_FLOOD:
-	case BLE_LED_AT39:
-	case BLE_LED_AT40:
-	case BLE_LED_AT41:
-	case BLE_LED_DAY_LINEAR:
-	case BLE_LED_OP_TRAN:
-	case BLE_LED_OP_TUONG:
-	case BLE_LED_OP_TRAN_LOA:
-	case BLE_PANEL_TRON:
-	case BLE_PANEL_VUONG:
-	case BLE_TRACKLIGHT:
-	case BLE_LED_THA_TRAN:
-	case BLE_LED_TUBE_M16:
-	case BLE_LED_RLT03_06W:
-	case BLE_LED_RLT02_10W:
-	case BLE_LED_RLT02_20W:
-	case BLE_LED_RLT01_10W:
-	case BLE_LED_TRL08_20W:
-	case BLE_LED_TRL08_10W:
-	case BLE_LED_RLT03_12W:
-	case BLE_DOWNLIGHT_RGBCW:
-	case BLE_LED_DAY_RGBCW:
-	case BLE_LED_BULB:
-	case BLE_LED_DAY_RGB:
-		if (version > 256)
-			BleProtocol::UpdateLights(devAddr);
-		else
-			BleProtocol::GetOnoffLight(devAddr);
-		break;
-	case BLE_LED_HIGHTBAY:
-		BleProtocol::UpdateLights(devAddr);
-		break;
-	case BLE_SWITCH_ONOFF:
-	case BLE_SWITCH_ONOFF_V2:
-		BleProtocol::GetOnoffLight(devAddr);
-		break;
-	case BLE_SWITCH_RGB_1:
-	case BLE_SWITCH_RGB_1_SQUARE:
-	case BLE_SWITCH_RGB_WATER_HEATER:
-	case BLE_SWITCH_RGB_2:
-	case BLE_SWITCH_RGB_2_SQUARE:
-	case BLE_SWITCH_RGB_3:
-	case BLE_SWITCH_RGB_3_SQUARE:
-	case BLE_SWITCH_RGB_4:
-	case BLE_SWITCH_RGB_4_SQUARE:
-	case BLE_SWITCH_RGB_1_V2:
-	case BLE_SWITCH_RGB_2_V2:
-	case BLE_SWITCH_RGB_3_V2:
-	case BLE_SWITCH_RGB_4_V2:
-	case BLE_SWITCH_RGB_1_SQUARE_V2:
-	case BLE_SWITCH_RGB_2_SQUARE_V2:
-	case BLE_SWITCH_RGB_3_SQUARE_V2:
-	case BLE_SWITCH_RGB_4_SQUARE_V2:
-	case BLE_SWITCH_ELECTRICAL_1:
-	case BLE_SWITCH_ELECTRICAL_2:
-	case BLE_SWITCH_ELECTRICAL_3:
-	case BLE_SWITCH_ELECTRICAL_4:
-	case BLE_SWITCH_ELECTRICAL_WATER_HEATER:
-	case BLE_SWITCH_ELECTRICAL_1_V2:
-	case BLE_SWITCH_ELECTRICAL_2_V2:
-	case BLE_SWITCH_ELECTRICAL_3_V2:
-	case BLE_SWITCH_1:
-	case BLE_SWITCH_WATER_HEATER:
-	case BLE_SWITCH_2:
-	case BLE_SWITCH_3:
-	case BLE_SWITCH_4:
-	case BLE_WIFI_SWITCH_1:
-	case BLE_WIFI_SWITCH_2:
-	case BLE_WIFI_SWITCH_3:
-	case BLE_WIFI_SWITCH_4:
-	case BLE_WIFI_SWITCH_1_SQUARE:
-	case BLE_WIFI_SWITCH_2_SQUARE:
-	case BLE_WIFI_SWITCH_3_SQUARE:
-	case BLE_WIFI_SWITCH_4_SQUARE:
-	case BLE_WIFI_SWITCH_ELECTRICAL_1:
-	case BLE_WIFI_SWITCH_ELECTRICAL_2:
-	case BLE_WIFI_SWITCH_ELECTRICAL_3:
-	case BLE_SWITCH_KNOB:
-	case BLE_MODULE_INOUT:
-		BleProtocol::UpdateStatusRelaySwitch(devAddr, typeDev);
-		break;
-	case BLE_SWITCH_CURTAIN:
-	case BLE_SWITCH_RGB_CURTAIN:
-	case BLE_SWITCH_RGB_CURTAIN_SQUARE:
-	case BLE_SWITCH_RGB_CURTAIN_HCN:
-	case BLE_SWITCH_RGB_CURTAIN_SQUARE_V2:
-	case BLE_SWITCH_ROOLING_DOOR:
-	case BLE_SWITCH_ROOLING_DOOR_V2:
-	case BLE_SWITCH_ROOLING_DOOR_SQUARE:
-	case BLE_WIFI_SWITCH_CURTAIN:
-	case BLE_WIFI_SWITCH_CURTAIN_SQUARE:
-	case BLE_WIFI_SWITCH_ROOLING_DOOR:
-	case BLE_WIFI_SWITCH_ROOLING_DOOR_SQUARE:
-		BleProtocol::UpdateStatusCurtain(devAddr);
-		break;
-	default:
-		BleProtocol::GetTTL(devAddr);
-		break;
-	}
 	return CODE_OK;
 }
 
@@ -3945,14 +3554,14 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	control_relay_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	switch (type)
 	{
-	case BLE_SWITCH_1:
-	case BLE_SWITCH_WATER_HEATER:
+	case 1:
+	case 2:
 		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_1;
 		break;
-	case BLE_SWITCH_2:
+	case 3:
 		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_2;
 		break;
-	case BLE_SWITCH_3:
+	case 4:
 		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_3;
 		break;
 	default:
@@ -4088,16 +3697,16 @@ int BleProtocol::UpdateStatusRelaySwitch(uint16_t devAddr, uint32_t type)
 	uint16_t header;
 	switch (type)
 	{
-	case BLE_SWITCH_1:
+	case 1:
 		header = RD_HEADER_REQUEST_STATUS_SWITCH_1;
 		break;
-	case BLE_SWITCH_2:
+	case 2:
 		header = RD_HEADER_REQUEST_STATUS_SWITCH_2;
 		break;
-	case BLE_SWITCH_3:
+	case 3:
 		header = RD_HEADER_REQUEST_STATUS_SWITCH_3;
 		break;
-	case BLE_SWITCH_4:
+	case 4:
 		header = RD_HEADER_REQUEST_STATUS_SWITCH_4;
 		break;
 	default:
@@ -4588,8 +4197,6 @@ int BleProtocol::UpdateNetKey(uint16_t gwAddr, string netKey, uint32_t indexId)
 		set_netkey_message.index = bswap_32(indexId);
 		set_netkey_message.addGw = gwAddr;
 		uint16_t adrGw = gwAddr;
-		gateway->setBleAddr(adrGw);
-		database->GatewayUpdateUnicast(gateway, adrGw);
 		return SendMessage(SYSTEM_REQ, (uint8_t *)&set_netkey_message, sizeof(set_netkey_message_t), HCI_GATEWAY_CMD_SEND_IVI, 0, 0, 1000);
 	}
 	else

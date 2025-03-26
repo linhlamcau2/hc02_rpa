@@ -18,8 +18,11 @@ public:
 	string mac;
 	uint16_t addr;
 	bool startTest;
-
+#ifdef ESP_PLATFORM
+	QrProtocol(uart_port_t num, int txPin, int rxPin, int baudrate);
+#else
 	QrProtocol(char *uartPort, int uartBaudrate);
+#endif
 	virtual ~QrProtocol();
 	void init();
 };

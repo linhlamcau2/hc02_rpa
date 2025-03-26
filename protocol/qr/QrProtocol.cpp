@@ -10,7 +10,11 @@
 
 QrProtocol *qrProtocol = NULL;
 
+#ifdef ESP_PLATFORM
+QrProtocol::QrProtocol(uart_port_t num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
+#else
 QrProtocol::QrProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
+#endif
 {
 	this->mac = "";
 	this->startTest = false;

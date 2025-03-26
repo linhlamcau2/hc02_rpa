@@ -28,8 +28,12 @@ public:
 	int rl2;
 	int rl3;
 	int rl4;
-	
+
+#ifdef ESP_PLATFORM
+	RelayProtocol(uart_port_t num, int txPin, int rxPin, int baudrate);
+#else
 	RelayProtocol(char *uartPort, int uartBaudrate);
+#endif
 	virtual ~RelayProtocol();
 	void init();
 };

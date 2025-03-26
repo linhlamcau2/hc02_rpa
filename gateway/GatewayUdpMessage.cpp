@@ -1,7 +1,6 @@
 #include "Gateway.h"
 #include "Log.h"
 #include "Wifi.h"
-#include "Db.h"
 #include <algorithm>
 
 #ifdef ESP_PLATFORM
@@ -14,7 +13,7 @@ void Gateway::InitUdpMessage()
 	UdpCmdCallbackRegister("SCAN_HC", bind(&Gateway::OnUdpScanHc, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("HC_SCAN_WIFI", bind(&Gateway::OnUdpHcScanWifi, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("SETUP_HC", bind(&Gateway::OnUdpHcSetup, this, placeholders::_1, placeholders::_2));
-	UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
+	// UdpCmdCallbackRegister("HC_CONNECT_TO_CLOUD", bind(&Gateway::OnUdpHcConnectCloud, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("SET_PASSWD_MQTT_ONLINE", bind(&Gateway::OnRpcSetPwMqttOnline, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("aiHubBroadCast", bind(&Gateway::OnUdpHcInfo, this, placeholders::_1, placeholders::_2));
 	UdpCmdCallbackRegister("scanIpHc", bind(&Gateway::OnScanIpHc, this, placeholders::_1, placeholders::_2));
@@ -102,7 +101,6 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 				Json::Value fromRsp;
 				Json::Value toRsp;
 				Json::Value dataRsp;
-				StopUdpBroadcast();
 				respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
 				respValue["REQUEST_ID"] = rqi;
 				respValue["TIME"] = Util::GetCurrentTimeStr();
@@ -133,7 +131,6 @@ int Gateway::OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue)
 		Json::Value fromRsp;
 		Json::Value toRsp;
 		Json::Value dataRsp;
-		StopUdpBroadcast();
 		respValue["CMD"] = "HC_SCAN_WIFI_RESPONSE";
 		respValue["REQUEST_ID"] = rqi;
 		respValue["TIME"] = Util::GetCurrentTimeStr();
@@ -205,7 +202,6 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 				if (data.isMember("DORMITORY_ID") && data["DORMITORY_ID"].isString())
 				{
 					dormitoryId = data["DORMITORY_ID"].asString();
-					database->GatewayUpdateDormitory(gateway, dormitoryId);
 					Json::Value jsonData;
 					jsonData["data"] = Json::objectValue;
 					gateway->pushStartAddHc(jsonData);
@@ -217,7 +213,6 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 						fromRsp["IP"] = Wifi::GetIP();
 						fromRsp["DORMITORY_ID"] = dormitoryId;
 						respValue["FROM"] = fromRsp;
-						GatewayConnectToCloudNotice();
 						return CODE_OK;
 					}
 					else
@@ -253,7 +248,6 @@ int Gateway::OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue)
 #ifdef ESP_PLATFORM
 								SetLedInternet(false);
 #endif
-								GatewayConnectToCloudNotice();
 								Json::Value jsonData;
 								jsonData["data"] = Json::objectValue;
 								gateway->pushStopAddHc(jsonData);

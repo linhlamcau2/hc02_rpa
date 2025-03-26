@@ -13,20 +13,12 @@
 #include "Config.h"
 #include "Gateway.h"
 #include "Device.h"
-#include "Db.h"
 #include "Util.h"
 #include "Wifi.h"
-#include "TimerSchedule.h"
 #include "ButtonSignal.h"
 #include "BleProtocol.h"
 #include "QrProtocol.h"
 #include "RelayProtocol.h"
-#include "MqttProtocol.h"
-#include "AndroidBleProtocol.h"
-
-#ifdef CONFIG_ENABLE_ZIGBEE
-#include "ZigbeeProtocol.h"
-#endif
 
 #define TAG "MAIN"
 
@@ -48,9 +40,6 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-#ifndef __ANDROID__
-	log_set_level(LOG_VERBOSE);
-#endif
 	LOGI("Start ver " STR(VERSION));
 
 	buttonSignal = new ButtonSignal();
@@ -64,15 +53,6 @@ int main(int argc, char *argv[])
 	config = new Config();
 	config->ReadConfig();
 
-	timerSchedule = new TimerSchedule();
-	timerSchedule->init();
-#ifndef ESP_PLATFORM
-	timerSchedule->RegisterTimer(1, checkLogFile);
-#endif
-
-	database = new Db();
-	database->init();
-
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
@@ -83,11 +63,6 @@ int main(int argc, char *argv[])
 	relayProtocol->init();
 
 	Util::LedInternet(false);
-#ifdef CONFIG_ENABLE_ZIGBEE
-	zigbeeProtocol = new ZigbeeProtocol((char *)ZIGBEE_UART_PORT, B115200);
-	zigbeeProtocol->init();
-	// zigbeeProtocol->CommissionFormation();
-#endif
 
 	string mac = Wifi::GetMacAddress();
 	// string mac = "11:22:33:44:55:66";
@@ -112,23 +87,8 @@ int main(int argc, char *argv[])
 
 	bleProtocol->StopScan();
 
-	// mqttProtocol = new MqttProtocol();
-	// mqttProtocol->init();
-
-	// androidBleProtocol = new AndroidBleProtocol();
-	// androidBleProtocol->init();
-
 	Util::LedService(true);
 	Util::LedZigbee(false);
-
-	// fileTransfer = new FileTransfer();
-	// fileTransfer->init();
-	// fileTransfer->uploadFile(".", "smh.sqlite");
-	// fileTransfer->uploadFile(".", "readme.txt");
-	// thread sendFile1(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot1.rar"));
-	// sendFile1.detach();
-	// thread sendFile2(bind(&FileTransfer::uploadFile, fileTransfer, ".", "osiot2.rar"));
-	// sendFile2.detach();
 
 	while (1)
 	{

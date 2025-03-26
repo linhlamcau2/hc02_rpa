@@ -9,59 +9,25 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations -MD
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES 		= -I. -Ibutton -Iconfig -Idatabase -Iobject -Idevice -Idevice/ble -Idevice/mqtt -Igateway -Igroup -Iroom -Ijson -Ilog -Imqtt -Ihttp -Iprotocol/ble -Iprotocol/qr -Iprotocol/relay -Iprotocol/mqtt -Iprotocol/androidBle -Irule -IsceneBle -Iuart -Iutil -Iwifi -Itimer -Iota -Inoti
-# DEFINES 	+= -DCONFIG_SAVE_ATTRIBUTE
-# DEFINES 	+= -D__OPENWRT__
+INCLUDES 		= -I. -Ibutton -Iconfig -Iobject -Idevice -Idevice/ble -Igateway -Ijson -Ilog -Imqtt -Iprotocol/ble -Iprotocol/qr -Iprotocol/relay -Iuart -Iutil -Iwifi
 LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -lssl -lcrypto
-
-ifeq ($(ZIGBEE),ON)
-	INCLUDES 	+= -Idevice/zigbee -Iprotocol/zigbee
-	DEFINES 	+= -DCONFIG_ENABLE_ZIGBEE=1
-
-	DEVICESRC += $(wildcard protocol/zigbee/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/basic/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/basic/attribute/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/onoff/attribute/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/temperature/attribute/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/humidity/attribute/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/illuminance/*.cpp)
-	DEVICESRC += $(wildcard device/zigbee/cluster/illuminance/attribute/*.cpp)
-endif
 
 DEVICESRC += $(wildcard button/*.cpp)
 DEVICESRC += $(wildcard config/*.cpp)
 DEVICESRC += $(wildcard object/*.cpp)
-DEVICESRC += $(wildcard database/*.cpp)
 DEVICESRC += $(wildcard device/*.cpp)
 DEVICESRC += $(wildcard device/ble/*.cpp)
 DEVICESRC += $(wildcard device/ble/module/*.cpp)
-DEVICESRC += $(wildcard device/mqtt/*.cpp)
-DEVICESRC += $(wildcard device/mqtt/function/*.cpp)
-DEVICESRC += $(wildcard noti/*.cpp)
 DEVICESRC += $(wildcard gateway/*.cpp)
-DEVICESRC += $(wildcard room/*.cpp)
-DEVICESRC += $(wildcard group/*.cpp)
 DEVICESRC += $(wildcard json/*.cpp)
 DEVICESRC += $(wildcard log/*.cpp)
 DEVICESRC += $(wildcard mqtt/*.cpp)
-DEVICESRC += $(wildcard http/*.cpp)
 DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard protocol/relay/*.cpp)
 DEVICESRC += $(wildcard protocol/qr/*.cpp)
-DEVICESRC += $(wildcard protocol/mqtt/*.cpp)
-DEVICESRC += $(wildcard protocol/androidBle/*.cpp)
-DEVICESRC += $(wildcard rule/*.cpp)
-DEVICESRC += $(wildcard sceneBle/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)
 DEVICESRC += $(wildcard wifi/*.cpp)
-DEVICESRC += $(wildcard timer/*.cpp)
-DEVICESRC += $(wildcard ota/*.cpp)
 
 CPPSRC = $(wildcard *.cpp) $(DEVICESRC)
 CPPOBJ = $(CPPSRC:.cpp=$(OBJEXT))

@@ -1,15 +1,5 @@
 
-/*
- * Khai báo các Opcode của các khung dữ liệu trao đổi giữa thiết bị với gateway
- */
-
-#ifndef GATEWAYMANAGER_OPCODE_H_
-#define GATEWAYMANAGER_OPCODE_H_
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#pragma once
 
 /*
  * rsp cmd part
@@ -356,9 +346,3 @@ extern "C"
 	// extern uint8_t OUTMESSAGE_BindingALl[22];
 
 	// extern bool check_add_or_del_group;
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif

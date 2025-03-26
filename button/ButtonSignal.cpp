@@ -5,7 +5,6 @@
 #include "Util.h"
 #include "Wifi.h"
 #include "Gateway.h"
-#include "Db.h"
 
 #define DOUBLE_CLICK_TIME 400
 #define AP_MODE_WIFI 5
@@ -73,7 +72,6 @@ void ButtonSignal::OnRelease()
 		{
 			LOGW("Reset Dormitory");
 			gateway->setDormitory("");
-			database->GatewayUpdateDormitory(gateway,"");
 		}
 		else if (releaseTime - pressTime > 20000 && releaseTime - pressTime < 23000)
 		{

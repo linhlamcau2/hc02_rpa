@@ -11,7 +11,11 @@
 
 RelayProtocol *relayProtocol = NULL;
 
-RelayProtocol::RelayProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 100000)
+#ifdef ESP_PLATFORM
+RelayProtocol::RelayProtocol(uart_port_t num, int txPin, int rxPin, int baudrate) : Uart(num, txPin, rxPin, baudrate)
+#else
+RelayProtocol::RelayProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 10000)
+#endif
 {
 	this->rl1 = 0;
 	this->rl2 = 0;
