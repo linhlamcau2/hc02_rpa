@@ -20,7 +20,8 @@
 #endif
 
 #include "QrProtocol.h"
-#include "RelayProtocol.h"
+#include "gpioProtocol.h"
+// #include "RelayProtocol.h"
 
 Gateway *gateway = NULL;
 
@@ -156,120 +157,91 @@ int Gateway::TestSwitch()
 {
 	uint32_t timeout;
 	bool checkRssi;
-	bool checkRelay1On;
-	bool checkRelay2On;
-	bool checkRelay3On;
-	bool checkRelay4On;
-	bool checkRelay1Off;
-	bool checkRelay2Off;
-	bool checkRelay3Off;
-	bool checkRelay4Off;
+	bool checkRelayOn[4] = {false};
+	bool checkRelayOff[4] = {false};
 	bool checkOnAll;
 	bool checkOffAll;
+	bool check_proc_success = true;
 	while (1)
 	{
 		if (qrProtocol->startTest)
 		{
+			gpioProtocol->reset_led_in_proc();
 			checkRssi = false;
-			checkRelay1On = false;
-			checkRelay2On = false;
-			checkRelay3On = false;
-			checkRelay4On = false;
-			checkRelay1Off = false;
-			checkRelay2Off = false;
-			checkRelay3Off = false;
-			checkRelay4Off = false;
 			checkOnAll = false;
 			checkOffAll = false;
 
-			bleProtocol->StartScan();
+			bleProtocol->StartScan(); // Buoc 1: bat dau quet
 			bleProtocol->isMatchMac = false;
 			timeout = 3000;
 			while (!bleProtocol->isMatchMac && timeout--)
 			{
-				usleep(1000);
+				SLEEP_MS(1);
 			}
 			bleProtocol->StopScan();
 			if (bleProtocol->isMatchMac)
 			{
 				checkRssi = true;
 			}
+			else
+			{
+				goto noti_fail;
+			}
+			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
 			// bleProtocol->SetGwAddr(qrProtocol->addr, 0);
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 1, 1) == CODE_OK))
+			SLEEP_MS(1000);
+			bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
+			SLEEP_MS(1000);
+			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
+			SLEEP_MS(1000);
+			for (int i = 0; i < 4; i++) // Buoc 3: diueu khien chu trinh 2 lan
 			{
-				usleep(600000);
-				if (relayProtocol->rl1 == 1)
-					checkRelay1On = true;
+				if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 1) == CODE_OK)
+				{
+					SLEEP_MS(1000);
+					checkRelayOn[i] = (gpioProtocol->gpio_get(i)) ? true : false;
+					if (!checkRelayOn[i])
+						check_proc_success = false;
+				}
 			}
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 2, 1) == CODE_OK))
+			for (int i = 0; i < 4; i++)
 			{
-				usleep(600000);
-				if (relayProtocol->rl2 == 1)
-					checkRelay2On = true;
+				if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 0) == CODE_OK)
+				{
+					SLEEP_MS(1000);
+					checkRelayOff[i] = (!gpioProtocol->gpio_get(i)) ? true : false;
+					if (!checkRelayOff[i])
+						check_proc_success = false;
+				}
 			}
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 3, 1) == CODE_OK))
-			{
-				usleep(600000);
-				if (relayProtocol->rl3 == 1)
-					checkRelay3On = true;
-			}
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 4, 1) == CODE_OK))
-			{
-				usleep(600000);
-				if (relayProtocol->rl4 == 1)
-					checkRelay4On = true;
-			}
-
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 1, 0) == CODE_OK))
-			{
-				usleep(600000);
-				if (relayProtocol->rl1 == 0)
-					checkRelay1Off = true;
-			}
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 2, 0) == CODE_OK))
-			{
-				usleep(600000);
-				if (relayProtocol->rl2 == 0)
-					checkRelay2Off = true;
-			}
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 3, 0) == CODE_OK))
-			{
-				usleep(600000);
-				if (relayProtocol->rl3 == 0)
-					checkRelay3Off = true;
-			}
-			if ((bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 4, 0) == CODE_OK))
-			{
-				usleep(600000);
-				if (relayProtocol->rl4 == 0)
-					checkRelay4Off = true;
-			}
-
-			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 255, 1);
-			usleep(1500000);
-			if (relayProtocol->rl1 && relayProtocol->rl2 && relayProtocol->rl3 && relayProtocol->rl4)
-				checkOnAll = true;
-			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 1, 255, 0);
-			usleep(1500000);
-			if (!relayProtocol->rl1 && !relayProtocol->rl2 && !relayProtocol->rl3 && !relayProtocol->rl4)
-				checkOffAll = true;
+			LOGE("tp1");
+			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
+			SLEEP_MS(3000);
+			LOGE("tp2");
+			checkOnAll = ((gpioProtocol->gpio_get(0) && gpioProtocol->gpio_get(1) && gpioProtocol->gpio_get(2) && gpioProtocol->gpio_get(3))) ? true : false;
+			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
+			SLEEP_MS(3000);
+			LOGE("tp3");
+			checkOffAll = (!gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(1) && !gpioProtocol->gpio_get(2) && !gpioProtocol->gpio_get(3)) ? true : false;
+			LOGE("tp4");
 
 			Json::Value rs;
 			rs["mac"] = qrProtocol->mac;
 			rs["addr"] = qrProtocol->addr;
 			rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
-			rs["on_relay1"] = checkRelay1On;
-			rs["on_relay2"] = checkRelay2On;
-			rs["on_relay3"] = checkRelay3On;
-			rs["on_relay4"] = checkRelay4On;
-			rs["off_relay1"] = checkRelay1Off;
-			rs["off_relay2"] = checkRelay2Off;
-			rs["off_relay3"] = checkRelay3Off;
-			rs["off_relay4"] = checkRelay4Off;
+			rs["on_relay1"] = checkRelayOn[0];
+			rs["on_relay2"] = checkRelayOn[1];
+			rs["on_relay3"] = checkRelayOn[2];
+			rs["on_relay4"] = checkRelayOn[3];
+			rs["off_relay1"] = checkRelayOff[0];
+			rs["off_relay2"] = checkRelayOff[1];
+			rs["off_relay3"] = checkRelayOff[2];
+			rs["off_relay4"] = checkRelayOff[3];
 			rs["on_all"] = checkOnAll;
 			rs["off_all"] = checkOffAll;
 			Json::Value deviceJson = Json::arrayValue;
 			deviceJson.append(rs);
+			LOGE("tp5");
 
 			Json::Value dataPush;
 			dataPush["cmd"] = "hcReportLog",
@@ -277,9 +249,52 @@ int Gateway::TestSwitch()
 			dataPush["device"] = deviceJson;
 			LOGE("%s", dataPush.toString().c_str());
 			this->CloudPublish(dataPush.toString());
+
+			if (!(check_proc_success && checkOnAll && checkOffAll))
+			{
+				goto noti_fail;
+			}
+			LOGE("tp6");
+
+
+			// if (qrProtocol->isMac_k9b)
+			if(1)
+			{
+				bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 2);
+				SLEEP_MS(2000);
+
+				gpioProtocol->gpio_supply_power_k9b();
+				// SLEEP_MS(500);
+				// gpioProtocol->gpio_supply_power_k9b();
+
+				SLEEP_MS(1000);
+
+				gpioProtocol->gpio_supply_power_k9b();
+				SLEEP_MS(1000);
+
+				gpioProtocol->gpio_supply_power_k9b();
+				// SLEEP_MS(3000);
+
+				// gpioProtocol->gpio_supply_power_k9b();
+				SLEEP_MS(1000);
+
+			}
+			LOGE("tp7");
+
+			gpioProtocol->set_led_success();
+			SetGpioResetGwBle();
 			qrProtocol->startTest = false;
 		}
-		sleep(2);
+	noti_fail:
+		if (qrProtocol->startTest)
+		{
+			LOGI("process fail");
+			qrProtocol->startTest = false;
+			gpioProtocol->set_led_fail();
+			check_proc_success = true;
+			LOGE("tp8");
+		}
+		SLEEP_MS(2000);
 	}
 }
 

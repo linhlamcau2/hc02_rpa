@@ -7,6 +7,7 @@
 #include "Util.h"
 #include <string.h>
 #include <algorithm>
+#include "Config.h"
 
 QrProtocol *qrProtocol = NULL;
 
@@ -18,6 +19,10 @@ QrProtocol::QrProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 
 {
 	this->mac = "";
 	this->startTest = false;
+	this->mac_k9b = config->GetMacK9B();
+	this->mac_k9b_int = strtoul(this->mac_k9b.c_str(), NULL, 16);
+	LOGI("K9B MAC int: %X", this->mac_k9b_int);
+	this->isMac_k9b = false;
 }
 
 QrProtocol::~QrProtocol()
@@ -57,6 +62,19 @@ uint16_t getLast4HexAsUint16(const std::string &mac)
 	return addr;
 }
 
+int countHyphens(const std::string &str)
+{
+	int count = 0;
+	for (char c : str)
+	{
+		if (c == '-')
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
 int QrProtocol::OnMessage(unsigned char *data, int len)
 {
 	uint8_t *d = data;
@@ -65,14 +83,47 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 	LOGD("QrProtocol::OnMessage: %s", s.c_str());
 	if (l > 0)
 	{
-		if (!this->startTest)
+		string prefix = s.substr(0, 8);
+		if (prefix == "CTCU.BLE")
 		{
-			this->mac = extractMac(s);
-			string tailMac = mac.substr(8, 12);
-			this->addr = getLast4HexAsUint16(tailMac) - 0x8000;
-			this->startTest = true;
-			// LOGE("qr:mac %s", this->mac.c_str());
-			// LOGE("qr:addr %d", this->addr);
+			if (countHyphens(s) == 4)
+			{
+				if (!this->startTest)
+				{
+					string p = extractMac(s);
+					// if((this->mac).compare(p) !=0)
+					if(1)
+					{
+						this->mac = p;
+						string tailMac = mac.substr(8, 12);
+						this->addr = getLast4HexAsUint16(tailMac) - 0x8000;
+						this->startTest = true;
+					}
+					// LOGE("qr:mac %s", this->mac.c_str());
+					// LOGE("qr:addr %d", this->addr);
+				}
+			}
+		}
+		else if (prefix == "KDKP.BLE")
+		{
+			size_t pos = s.find("MAC");
+			if (pos != string::npos)
+			{
+				string macAddress = s.substr(pos + 3);
+				if(macAddress.size() >= 8)
+				{
+					macAddress = macAddress.substr(0, 8);
+					this->mac_k9b = macAddress;
+					config->SetMacK9B(macAddress);
+					this->mac_k9b_int = strtoul(macAddress.c_str(), NULL, 16);
+					LOGI("QrProtocol::OnMessage: K9B MAC int: %X", this->mac_k9b_int);
+					this->isMac_k9b = true;
+				}
+			}
+		}
+		else
+		{
+			LOGE("QrProtocol::OnMessage: Invalid QR code");
 		}
 	}
 	return l;

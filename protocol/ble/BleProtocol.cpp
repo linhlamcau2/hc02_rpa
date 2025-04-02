@@ -3554,16 +3554,16 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	control_relay_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
 	switch (type)
 	{
-	case 1:
-	case 2:
-		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_1;
-		break;
-	case 3:
-		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_2;
-		break;
-	case 4:
-		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_3;
-		break;
+	// case 1:
+	// case 2:
+	// 	control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_1;
+	// 	break;
+	// case 3:
+	// 	control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_2;
+	// 	break;
+	// case 4:
+	// 	control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_3;
+	// 	break;
 	default:
 		control_relay_switch_message.header = RD_HEADER_CONFIG_CONTROL_RELAY_SWITCH_4;
 		break;
@@ -4282,4 +4282,58 @@ int BleProtocol::UpdateMaxAddr(uint16_t addr)
 	memcpy(&provision_message.data.netKey[0], &pro_net_info.netKey[0], sizeof(pro_net_info_t));
 	provision_message.data.unicast_address = addr;
 	return SendMessage(SYSTEM_REQ, (uint8_t *)&provision_message, sizeof(provision_message_t), HCI_GATEWAY_CMD_PROVISION_EVT, dataRsp, &lenRsp, 15000);
+}
+
+int BleProtocol :: Request_Training(uint8_t enable, uint16_t addr)
+{
+	LOGD("BleProtocol ::Request_Training");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t relay;
+		uint8_t value;
+	} req_training_message_t;
+	req_training_message_t req_training_message = {0};
+	memset(&req_training_message, 0x00, sizeof(req_training_message));
+	req_training_message.ble_message_header.devAddr = addr;
+	req_training_message.opcodeVendor = RD_OPCODE_TRAINING;
+	req_training_message.vendorId = RD_VENDOR_ID;
+	req_training_message.header = enable ? 0x0101 : 0x0202;
+	return SendMessage(APP_REQ, (uint8_t *)&req_training_message, sizeof(req_training_message_t), 0, dataRsp, &lenRsp, 1000);
+}
+
+int BleProtocol :: Request_Pair_K9B(uint16_t addr,uint8_t button_id, uint32_t mac_k9b, uint8_t key_k9b)
+{
+	LOGD("BleProtocol ::Request_Pair_K9B");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint32_t mac_k9b;
+		uint8_t key_k9b;
+		uint8_t button_id;
+	} req_training_message_t;
+	req_training_message_t req_training_message = {0};
+	memset(&req_training_message, 0x00, sizeof(req_training_message));
+	req_training_message.ble_message_header.devAddr = 0xffff;
+	req_training_message.opcodeVendor = RD_OPCODE_CONFIG;
+	req_training_message.vendorId = RD_VENDOR_ID;
+	req_training_message.header = 0x150b;
+	req_training_message.mac_k9b = __builtin_bswap32(mac_k9b);
+	req_training_message.key_k9b = key_k9b;
+	req_training_message.button_id = button_id;
+	return SendMessage(APP_REQ, (uint8_t *)&req_training_message, sizeof(req_training_message_t), 0, dataRsp, &lenRsp, 1000);
 }

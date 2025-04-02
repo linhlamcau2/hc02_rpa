@@ -17,6 +17,9 @@ class QrProtocol : public Uart
 public:
 	string mac;
 	uint16_t addr;
+	string mac_k9b;
+	uint32_t mac_k9b_int;
+	bool isMac_k9b;
 	bool startTest;
 #ifdef ESP_PLATFORM
 	QrProtocol(uart_port_t num, int txPin, int rxPin, int baudrate);

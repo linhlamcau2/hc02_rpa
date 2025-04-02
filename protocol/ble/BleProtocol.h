@@ -24,6 +24,7 @@
 #define RD_OPCODE_PROVISION_RSP 0xE1
 #define RD_OPCODE_CONFIG 0xE2
 #define RD_OPCODE_CONFIG_RSP 0xE3
+#define RD_OPCODE_TRAINING 0xFE
 
 #define RD_HEADER_PROVISION_SET_GW_ADDR 0x0002
 #define RD_HEADER_PROVISION_GET_DEV_TYPE 0x0003
@@ -430,6 +431,9 @@ public:
 	int UpdateDevKey(uint16_t gwAddr, string devKey);
 	int UpdateAppKey(string appKey);
 	int UpdateMaxAddr(uint16_t addr);
+
+	int Request_Training(uint8_t enable, uint16_t addr);
+	int Request_Pair_K9B(uint16_t addr,uint8_t button_id, uint32_t mac_k9b, uint8_t key_k9b);
 };
 
 extern BleProtocol *bleProtocol;

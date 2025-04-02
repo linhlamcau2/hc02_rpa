@@ -25,10 +25,10 @@ int Gateway::OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue)
 	if (reqValue.isMember("DORMITORY_ID") && reqValue["DORMITORY_ID"].isString())
 	{
 		string dormitoryId = reqValue["DORMITORY_ID"].asString();
-		if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
-		{
-			return CODE_ERROR;
-		}
+		// if (this->dormitoryId != "" && this->dormitoryId != dormitoryId)
+		// {
+		// 	return CODE_ERROR;
+		// }
 		string macGw = mac;
 		string hostName = "";
 		macGw.erase(remove_if(macGw.begin(), macGw.end(), [](char c)
