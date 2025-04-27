@@ -4328,12 +4328,15 @@ int BleProtocol :: Request_Pair_K9B(uint16_t addr,uint8_t button_id, uint32_t ma
 	} req_training_message_t;
 	req_training_message_t req_training_message = {0};
 	memset(&req_training_message, 0x00, sizeof(req_training_message));
-	req_training_message.ble_message_header.devAddr = 0xffff;
+	req_training_message.ble_message_header.devAddr = addr;
 	req_training_message.opcodeVendor = RD_OPCODE_CONFIG;
 	req_training_message.vendorId = RD_VENDOR_ID;
 	req_training_message.header = 0x150b;
 	req_training_message.mac_k9b = __builtin_bswap32(mac_k9b);
 	req_training_message.key_k9b = key_k9b;
 	req_training_message.button_id = button_id;
-	return SendMessage(APP_REQ, (uint8_t *)&req_training_message, sizeof(req_training_message_t), 0, dataRsp, &lenRsp, 1000);
+
+	uint8_t devAddr_check[] = {(uint8_t)(addr & 0xFF), (uint8_t)((addr >> 8) & 0xFF)};
+	return SendMessage(APP_REQ, (uint8_t *)&req_training_message, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000,devAddr_check,0,2);
+
 }

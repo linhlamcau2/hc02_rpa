@@ -30,6 +30,7 @@ public:
     void set_led_fail();
     void set_led_warning(uint8_t stt);
     void reset_led_in_proc();
+    void set_mode_input();
 };
 
 extern GPIOProtocol *gpioProtocol;

@@ -192,8 +192,19 @@ string Util::ConvertU32ToHexString(uint8_t *data, int len)
 
 int Util::ConvertStringToHex(string str, uint8_t *data, int len)
 {
-	LOGE("Bo sung code");
-	return 0;
+	if (str.length() < len * 2 || data == nullptr)
+    {
+        return -1; 
+    }
+
+    for (int i = 0; i < len; ++i)
+    {
+        if (sscanf(str.c_str() + i * 2, "%2hhx", &data[i]) != 1)
+        {
+            return -2; 
+        }
+    }
+    return 0; // thành công
 }
 
 int Util::CheckDayInWeek(int day, int repeater)

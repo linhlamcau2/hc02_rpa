@@ -4,14 +4,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "Log.h"
-
+#include "Gateway.h"
 gpio_num_t gpio_arr[] = {GPIO_NUM_27, GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14};
 gpio_num_t  pin_pow_k9b = GPIO_NUM_25;
 gpio_num_t  pin_down_k9b = GPIO_NUM_26;
 gpio_num_t  pin_up_k9b = GPIO_NUM_33;
 
-gpio_num_t  led_success = GPIO_NUM_18;
-gpio_num_t  led_fail = GPIO_NUM_32;
+gpio_num_t  led_success = GPIO_NUM_32;
+gpio_num_t  led_fail = GPIO_NUM_18;
 gpio_num_t  led_warning = GPIO_NUM_19;
 
 GPIOProtocol *gpioProtocol = NULL;
@@ -52,6 +52,8 @@ int GPIOProtocol :: dectect_gpio(int index)
             this -> count[index] = 0;
             state_gpio[index] = stt;
             LOGI("GPIO %d: %d", index, stt);
+            // if(gateway != NULL)
+            //     gateway->CloudPublish("relay: " + to_string(index+1) + " "+ to_string(stt));
             return 1;
         }
     }
@@ -83,6 +85,8 @@ void GPIOProtocol :: on_gpio()
         // gpio_supply_power_k9b();
         // LOGI("gpio_supply_power_k9b");
         SLEEP_MS(5);
+        // gpioProtocol->gpio_supply_power_k9b();
+        // SLEEP_MS(2000);
     }
     vTaskDelete(NULL);
 }
@@ -112,6 +116,10 @@ void GPIOProtocol :: gpio_init()
     gpio_set_level(led_fail, 1);
     gpio_set_direction(led_warning, GPIO_MODE_OUTPUT);  
     gpio_set_level(led_warning, 1);
+
+    // SLEEP_MS(2000);
+
+    // gpio_set_level(led_warning, 0);
 
     if (xTaskCreate(gpio_task, "gpio_task", 2048, this, 10, NULL) != pdPASS)
 	{
@@ -157,5 +165,15 @@ void GPIOProtocol :: reset_led_in_proc()
 {
     gpio_set_level(led_success, 0);
     gpio_set_level(led_fail, 0);
-    gpio_set_level(led_fail, 0);
+    // gpio_set_level(led_warning, 0);
+}
+
+void GPIOProtocol :: set_mode_input()
+{
+    for (int i = 0; i < num; i++)
+    {
+        gpio_reset_pin(gpio_arr[i]);
+        gpio_set_direction(gpio_arr[i], GPIO_MODE_INPUT);
+        gpio_set_pull_mode(gpio_arr[i], GPIO_PULLUP_ONLY); 
+    }
 }

@@ -7,7 +7,7 @@
 #include <atomic>
 #include <functional>
 #include <mutex>
-
+#include <atomic>
 using namespace std;
 
 class QrProtocol : public Uart
