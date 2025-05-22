@@ -45,6 +45,14 @@ std::string extractMac(const std::string &input)
 	return "Not found";
 }
 
+std::string extractCnNumber(const std::string& input) {
+    size_t pos = input.find("CN.");
+    if (pos != std::string::npos && pos + 5 <= input.length()) {
+        return input.substr(pos + 4, 1); // Lấy 2 ký tự sau "CN."
+    }
+    return ""; // Trả về chuỗi rỗng nếu không tìm thấy
+}
+
 uint16_t getLast4HexAsUint16(const std::string &mac)
 {
 	if (mac.length() < 4)
@@ -92,11 +100,16 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 				{
 					string p = extractMac(s);
 					// if((this->mac).compare(p) !=0)
+					string type = extractCnNumber(s);
+					LOGI("Type scan","%s", type.c_str());
 					if(1)
 					{
 						this->mac = p;
 						string tailMac = mac.substr(8, 12);
-						this->addr = getLast4HexAsUint16(tailMac) - 0x8000;
+						LOGI("Check", "OnMessage: %s", tailMac.c_str());
+						uint16_t mac_tail = getLast4HexAsUint16(tailMac);
+						this->addr = (mac_tail > 0x8000 ) ? (mac_tail - 0x8000) : mac_tail ;
+						this->type_dev = std::stoi(type);
 						this->startTest = true;
 					}
 					// LOGE("qr:mac %s", this->mac.c_str());

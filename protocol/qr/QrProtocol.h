@@ -21,6 +21,7 @@ public:
 	uint32_t mac_k9b_int;
 	bool isMac_k9b;
 	bool startTest;
+	uint32_t type_dev;
 #ifdef ESP_PLATFORM
 	QrProtocol(uart_port_t num, int txPin, int rxPin, int baudrate);
 #else

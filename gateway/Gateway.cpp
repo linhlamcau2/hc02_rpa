@@ -159,23 +159,188 @@ int Gateway::RestartBleGw()
 	return CODE_OK;
 }
 
+uint32_t timeout;
+bool checkRssi = false;
+bool checkRelayOn[4] = {false};
+bool checkRelayOff[4] = {false};
+bool checkOnAll = false;
+bool checkOffAll = false;
+bool check_proc_success = true;
+bool check_pair_k9b = false;
+bool check_stt_last = false;
+bool check_all_process = false;
+bool begin = false;
+
+uint32_t deviceType = 0;
+uint16_t deviceVersion = 0;
+bool check_res_on[4] = {false};
+bool check_res_off[4] = {false};
+
+typedef(void) (*handle_t)(uint8_t num_ele);
+typedef struct
+{
+	uint32_t devType;
+	uint8_t num_ele;
+	handle_t handle;
+} process_t;
+
+process_t process[] = {
+	{DEVICE_TYPE_CTCU1, 1, NULL},
+	{DEVICE_TYPE_CTCU1, 2, NULL},
+	{DEVICE_TYPE_CTCU1, 3, NULL},
+	{DEVICE_TYPE_CTCU1, 4, NULL},
+};
+
+uint8_t process_test_ctcu(uint8_t num_ele)
+{
+	uint8_t err = 1;
+
+	uint8_t dev_mac[6] = {0};
+	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
+	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
+
+	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
+	SLEEP_MS(1000);
+	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
+	SLEEP_MS(1500);
+
+	for (int i = 0; i < num_ele; i++) // Buoc 3: diueu khien chu trinh 2 lan
+	{
+		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 1) == CODE_OK)
+		{
+			check_res_on[i] = true;
+		}
+	}
+
+	SLEEP_MS(1500);
+	for (int i = 0; i < num_ele; i++)
+	{
+		checkRelayOn[i] = (check_res_on[i] && gpioProtocol->gpio_get(i)) ? true : false;
+		if(!checkRelayOn[i]) err = 0;
+	}
+
+	for (int i = 0; i < num_ele; i++)
+	{
+		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 0) == CODE_OK)
+		{
+			check_res_off[i] = true;
+		}
+	}
+
+	SLEEP_MS(1500);
+	for (int i = 0; i < num_ele; i++)
+	{
+		checkRelayOff[i] = (!(gpioProtocol->gpio_get(i)) && check_res_off[i]) ? true : false;
+		if(!checkRelayOff[i]) err = 0;
+	}
+
+	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
+	SLEEP_MS(1500);
+
+	checkOnAll = true;
+	for (int i = 0; i < num_ele; i++)
+	{
+		if (gpioProtocol->gpio_get(i) == 0)
+		{
+			checkOnAll = false;
+			err = 0;;
+			break;
+		}
+	}
+
+	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
+	SLEEP_MS(1500);
+
+	checkOffAll = true;
+	for (int i = 0; i < num_ele; i++)
+	{
+		if (gpioProtocol->gpio_get(i) == 1)
+		{
+			checkOffAll = false;
+			err = 0;;
+			break;
+		}
+	}
+
+	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 2) == CODE_OK)
+	{
+		SLEEP_MS(1500);
+		gpioProtocol->gpio_supply_power_k9b();
+		SLEEP_MS(1000);
+		check_pair_k9b = true;
+	}
+	else	err = 0;
+
+	check_stt_last = true;
+	for (int i = 0; i < num_ele; i++)
+	{
+		if (gpioProtocol->gpio_get(i) == 0)
+		{
+			check_stt_last = false;
+			err = 0;
+			break;
+		}
+	}
+
+	return err;
+}
+
+void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
+{
+	Json::Value rs;
+	rs["mac"] = qrProtocol->mac;
+	rs["addr"] = qrProtocol->addr;
+	rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
+	rs["on_relay1"] = checkRelayOn[0];
+	rs["off_relay1"] = checkRelayOff[0];
+	if(num_ele > 1)
+	{
+		rs["on_relay2"] = checkRelayOn[1];
+		rs["off_relay2"] = checkRelayOff[1];
+	}
+	if(num_ele > 2)
+	{
+		rs["on_relay3"] = checkRelayOn[2];
+		rs["off_relay3"] = checkRelayOff[2];
+	}
+	if(num_ele > 3)
+	{
+		rs["on_relay4"] = checkRelayOn[3];
+		rs["off_relay4"] = checkRelayOff[3];
+	}
+
+	rs["on_all"] = checkOnAll;
+	rs["off_all"] = checkOffAll;
+	rs["remote_learn"] = check_pair_k9b;
+	rs["remote_control"] = check_stt_last;
+	rs["version"] = to_string(deviceVersion);
+	Json::Value deviceJson = Json::arrayValue;
+	deviceJson.append(rs);
+	Json::Value dataPush;
+	Json::Value devJson;
+	devJson["device"] = deviceJson;
+	dataPush["cmd"] = "hcReportLog";
+	dataPush["rqi"] = Util::genRandRQI(16);
+	dataPush["data"] = devJson;
+	dataPush["deviceType"]= deviceType;
+	LOGE("%s", dataPush.toString().c_str());
+	this->CloudPublish(dataPush.toString());
+	if (!err)
+	{
+		gpioProtocol->set_led_fail();
+	}
+	else
+	{
+		gpioProtocol->set_led_success();
+	}
+	SetGpioResetGwBle();
+
+	SLEEP_MS(10000);			
+}
+
 int Gateway::TestSwitch()
 {
-	uint32_t timeout;
-	bool checkRssi = false;
-	bool checkRelayOn[4] = {false};
-	bool checkRelayOff[4] = {false};
-	bool checkOnAll = false;;
-	bool checkOffAll = false;;
-	bool check_proc_success = true;
-	bool check_pair_k9b = false;
-	bool check_stt_last = false;
-	bool check_all_process = false;
-	bool begin = false;
 
-	uint32_t deviceType = 0;
-	uint16_t deviceVersion = 0;
-	// int count = 0;
 	while (1)
 	{
 		if (check_connect_cloud && qrProtocol->startTest == 0)
@@ -205,6 +370,8 @@ int Gateway::TestSwitch()
 			{
 				checkRelayOn[i] = false;
 				checkRelayOff[i] = false;
+				check_res_on[i] = false;
+				check_res_on[i] = false;
 			}
 			bleProtocol->StartScan(); // Buoc 1: bat dau quet
 			bleProtocol->isMatchMac = false;
@@ -214,139 +381,14 @@ int Gateway::TestSwitch()
 				SLEEP_MS(1);
 			}
 			bleProtocol->StopScan();
+			uint8_t err = 0;
 			if (bleProtocol->isMatchMac)
 			{
 				checkRssi = true;
+				uint8_t num_ele = 1;
+				err = process_test_ctcu(num_ele);
 			}
-			else
-			{
-				goto end;
-			}
-
-			uint8_t dev_mac[6] = {0};
-			Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
-			;
-			bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-			bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
-			SLEEP_MS(1000);
-			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-			SLEEP_MS(1000);
-
-			uint8_t check_res[4] = {0};
-			for (int i = 0; i < 4; i++) // Buoc 3: diueu khien chu trinh 2 lan
-			{
-				if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 1) == CODE_OK)
-				{
-					check_res[i] = 1;
-				}
-			}
-
-			SLEEP_MS(800);
-			for (int i = 0; i < 4; i++)
-			{
-				checkRelayOn[i] = (gpioProtocol->gpio_get(i) && check_res[i]) ? true : false;
-				if (!checkRelayOn[i])
-					check_proc_success = false;
-				check_res[i] = 0;
-			}
-
-			for (int i = 0; i < 4; i++)
-			{
-				if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 0) == CODE_OK)
-				{
-					check_res[i] = 1;
-				}
-			}
-
-			SLEEP_MS(800);
-			for (int i = 0; i < 4; i++)
-			{
-				checkRelayOff[i] = (!(gpioProtocol->gpio_get(i)) && check_res[i]) ? true : false;
-				if (!checkRelayOff[i])
-					check_proc_success = false;
-				check_res[i] = 0;
-			}
-
-			if(check_proc_success == false)
-			{
-				goto end;
-			}
-
-			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
-			SLEEP_MS(800);
-
-			checkOnAll = ((gpioProtocol->gpio_get(0) && gpioProtocol->gpio_get(1) && gpioProtocol->gpio_get(2) && gpioProtocol->gpio_get(3))) ? true : false;
-
-			if(!checkOnAll)	
-			{
-				goto end;
-			}
-			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-			SLEEP_MS(800);
-
-			checkOffAll = (!gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(1) && !gpioProtocol->gpio_get(2) && !gpioProtocol->gpio_get(3)) ? true : false;
-
-			if(!checkOffAll)
-			{
-				goto end;
-			}
-			if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 2) == CODE_OK)
-			{
-				SLEEP_MS(1200);
-				gpioProtocol->gpio_supply_power_k9b();
-				SLEEP_MS(1000);
-				check_pair_k9b = true;
-			}
-
-			else
-			{
-				goto end;
-			}
-			check_stt_last = (!gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(1) && !gpioProtocol->gpio_get(2) && !gpioProtocol->gpio_get(3)) ? false : true;
-		}
-	end:
-		if (qrProtocol->startTest && check_connect_cloud && begin)
-		{
-			Json::Value rs;
-			rs["mac"] = qrProtocol->mac;
-			rs["addr"] = qrProtocol->addr;
-			rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
-			rs["on_relay1"] = checkRelayOn[0];
-			rs["on_relay2"] = checkRelayOn[1];
-			rs["on_relay3"] = checkRelayOn[2];
-			rs["on_relay4"] = checkRelayOn[3];
-			rs["off_relay1"] = checkRelayOff[0];
-			rs["off_relay2"] = checkRelayOff[1];
-			rs["off_relay3"] = checkRelayOff[2];
-			rs["off_relay4"] = checkRelayOff[3];
-			rs["on_all"] = checkOnAll;
-			rs["off_all"] = checkOffAll;
-			rs["remote_learn"] = check_pair_k9b;
-			rs["remote_control"] = check_stt_last;
-			rs["version"] = to_string(deviceVersion);
-			Json::Value deviceJson = Json::arrayValue;
-			deviceJson.append(rs);
-			Json::Value dataPush;
-			Json::Value devJson;
-			devJson["device"] = deviceJson;
-			dataPush["cmd"] = "hcReportLog";
-			dataPush["rqi"] = Util::genRandRQI(16);
-			dataPush["data"] = devJson;
-			LOGE("%s", dataPush.toString().c_str());
-			this->CloudPublish(dataPush.toString());
-			if(!check_stt_last)
-			{
-				gpioProtocol->set_led_fail();
-			}
-			else
-			{
-				gpioProtocol->set_led_success();
-			}
-			SetGpioResetGwBle();
-			
-			SLEEP_MS(10000);
-			qrProtocol->startTest = false;
-			begin = false ;
+			rd_reporting_proc_ctcu(num_ele, err);
 			tick_count_qr_scan = xTaskGetTickCount();
 		}
 		SLEEP_MS(1000);
