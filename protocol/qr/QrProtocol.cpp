@@ -96,7 +96,8 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 					{
 						this->mac = p;
 						string tailMac = mac.substr(8, 12);
-						this->addr = getLast4HexAsUint16(tailMac) - 0x8000;
+						uint16_t addr = getLast4HexAsUint16(tailMac);
+						this->addr = (addr > 0x8000 ) ? (addr - 0x8000) :  addr;
 						this->startTest = true;
 					}
 					// LOGE("qr:mac %s", this->mac.c_str());

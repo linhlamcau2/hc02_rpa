@@ -230,7 +230,7 @@ int Gateway::TestSwitch()
 			bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
 			SLEEP_MS(1000);
 			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-			SLEEP_MS(1000);
+			SLEEP_MS(1500);
 
 			uint8_t check_res[4] = {0};
 			for (int i = 0; i < 4; i++) // Buoc 3: diueu khien chu trinh 2 lan
@@ -241,7 +241,7 @@ int Gateway::TestSwitch()
 				}
 			}
 
-			SLEEP_MS(800);
+			SLEEP_MS(1500);
 			for (int i = 0; i < 4; i++)
 			{
 				checkRelayOn[i] = (gpioProtocol->gpio_get(i) && check_res[i]) ? true : false;
@@ -258,7 +258,7 @@ int Gateway::TestSwitch()
 				}
 			}
 
-			SLEEP_MS(800);
+			SLEEP_MS(1500);
 			for (int i = 0; i < 4; i++)
 			{
 				checkRelayOff[i] = (!(gpioProtocol->gpio_get(i)) && check_res[i]) ? true : false;
@@ -273,7 +273,7 @@ int Gateway::TestSwitch()
 			}
 
 			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
-			SLEEP_MS(800);
+			SLEEP_MS(1500);
 
 			checkOnAll = ((gpioProtocol->gpio_get(0) && gpioProtocol->gpio_get(1) && gpioProtocol->gpio_get(2) && gpioProtocol->gpio_get(3))) ? true : false;
 
@@ -282,7 +282,7 @@ int Gateway::TestSwitch()
 				goto end;
 			}
 			bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-			SLEEP_MS(800);
+			SLEEP_MS(1500);
 
 			checkOffAll = (!gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(1) && !gpioProtocol->gpio_get(2) && !gpioProtocol->gpio_get(3)) ? true : false;
 
@@ -292,7 +292,7 @@ int Gateway::TestSwitch()
 			}
 			if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 2) == CODE_OK)
 			{
-				SLEEP_MS(1200);
+				SLEEP_MS(1500);
 				gpioProtocol->gpio_supply_power_k9b();
 				SLEEP_MS(1000);
 				check_pair_k9b = true;
@@ -342,9 +342,11 @@ int Gateway::TestSwitch()
 			{
 				gpioProtocol->set_led_success();
 			}
+			bleProtocol->ResetBle();
+			SLEEP_MS(5000);
 			SetGpioResetGwBle();
 			
-			SLEEP_MS(10000);
+			SLEEP_MS(5000);
 			qrProtocol->startTest = false;
 			begin = false ;
 			tick_count_qr_scan = xTaskGetTickCount();
