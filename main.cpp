@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
 	config = new Config();
 	config->ReadConfig();
 
+	Util::ExecuteCMD("echo 0 > /sys/class/gpio/export");
+	
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
