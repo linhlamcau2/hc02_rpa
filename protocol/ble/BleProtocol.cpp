@@ -3549,6 +3549,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	control_relay_switch_message_t control_relay_switch_message = {0};
 	memset(&control_relay_switch_message, 0x00, sizeof(control_relay_switch_message));
 	control_relay_switch_message.ble_message_header.devAddr = devAddr;
+	control_relay_switch_message.ble_message_header.retryCnt = 2;
 	control_relay_switch_message.opcodeVendor = RD_OPCODE_CONFIG;
 	control_relay_switch_message.vendorId = RD_VENDOR_ID;
 	control_relay_switch_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
@@ -3570,7 +3571,7 @@ int BleProtocol::ControlRelayOfSwitch(uint16_t devAddr, uint16_t type, uint8_t r
 	}
 	control_relay_switch_message.relay = relay;
 	control_relay_switch_message.value = value;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, sizeof(control_relay_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 800, controlRelaySwitchHeader, 0, 2);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_relay_switch_message, sizeof(control_relay_switch_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1200, controlRelaySwitchHeader, 0, 2);
 	if (rs == CODE_OK)
 	{
 		// typedef struct __attribute__((packed))

@@ -101,7 +101,7 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 					string p = extractMac(s);
 					// if((this->mac).compare(p) !=0)
 					string type = extractCnNumber(s);
-					LOGI("Type scan","%s", type.c_str());
+					LOGI("Type scan %s", type.c_str());
 					if(1)
 					{
 						this->mac = p;

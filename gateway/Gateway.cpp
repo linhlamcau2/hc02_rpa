@@ -176,21 +176,7 @@ uint16_t deviceVersion = 0;
 bool check_res_on[4] = {false};
 bool check_res_off[4] = {false};
 
-typedef(void) (*handle_t)(uint8_t num_ele);
-typedef struct
-{
-	uint32_t devType;
-	uint8_t num_ele;
-	handle_t handle;
-} process_t;
-
-process_t process[] = {
-	{DEVICE_TYPE_CTCU1, 1, NULL},
-	{DEVICE_TYPE_CTCU1, 2, NULL},
-	{DEVICE_TYPE_CTCU1, 3, NULL},
-	{DEVICE_TYPE_CTCU1, 4, NULL},
-};
-
+int type_ctcu_arr[4] = {22026,22028,22030,22032};
 uint8_t process_test_ctcu(uint8_t num_ele)
 {
 	uint8_t err = 1;
@@ -269,7 +255,7 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 		SLEEP_MS(1000);
 		check_pair_k9b = true;
 	}
-	else	err = 0;
+	else	return 0;
 
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
@@ -314,17 +300,19 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
 	rs["remote_learn"] = check_pair_k9b;
 	rs["remote_control"] = check_stt_last;
 	rs["version"] = to_string(deviceVersion);
+	rs["deviceType"]= to_string(type_ctcu_arr[num_ele-1]);
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
 	Json::Value dataPush;
 	Json::Value devJson;
+	
 	devJson["device"] = deviceJson;
 	dataPush["cmd"] = "hcReportLog";
 	dataPush["rqi"] = Util::genRandRQI(16);
 	dataPush["data"] = devJson;
-	dataPush["deviceType"]= deviceType;
+	
 	LOGE("%s", dataPush.toString().c_str());
-	this->CloudPublish(dataPush.toString());
+	gateway->CloudPublish(dataPush.toString());
 	if (!err)
 	{
 		gpioProtocol->set_led_fail();
@@ -354,7 +342,6 @@ int Gateway::TestSwitch()
 		}
 		if (qrProtocol->startTest && check_connect_cloud)
 		{
-			begin = true;
 			gpioProtocol->reset_led_in_proc();
 			checkRssi = false;
 			checkOnAll = false;
@@ -375,21 +362,26 @@ int Gateway::TestSwitch()
 			}
 			bleProtocol->StartScan(); // Buoc 1: bat dau quet
 			bleProtocol->isMatchMac = false;
-			timeout = 5000;
+			timeout = 50;
 			while (!bleProtocol->isMatchMac && timeout--)
 			{
-				SLEEP_MS(1);
+				SLEEP_MS(100);
 			}
 			bleProtocol->StopScan();
 			uint8_t err = 0;
+			uint8_t num_ele = 0;
+			num_ele = qrProtocol->type_dev;
 			if (bleProtocol->isMatchMac)
 			{
 				checkRssi = true;
-				uint8_t num_ele = 1;
-				err = process_test_ctcu(num_ele);
+				
+				if(num_ele > 0 && num_ele <=4)
+					err = process_test_ctcu(num_ele);
 			}
-			rd_reporting_proc_ctcu(num_ele, err);
+			if(num_ele > 0 && num_ele <=4)
+				rd_reporting_proc_ctcu(num_ele, err);
 			tick_count_qr_scan = xTaskGetTickCount();
+			qrProtocol->startTest = false;
 		}
 		SLEEP_MS(1000);
 	}
