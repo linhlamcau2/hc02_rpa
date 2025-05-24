@@ -141,6 +141,11 @@ void Config::ReadConfig()
 	else
 		keepAlive = KEEP_ALIVE_DEFAULT;
 
+	if (get_str_config_entry(jsonData, MAC_KB9_KEY, value_temp))
+		mac_kb9 = value_temp;
+	else
+		mac_kb9 = MAC_KB9_DEFAULT;
+
 	Print();
 }
 
@@ -227,6 +232,11 @@ int Config::GetLocalKeepAlive()
 	return localKeepAlive;
 }
 
+string Config::GetMacK9B()
+{
+	return mac_kb9;
+}
+
 bool Config::SetHost(string host)
 {
 	Json::Value jsonData;
@@ -310,4 +320,20 @@ bool Config::SetPassword(string password)
 bool Config::SetKeepAlive(int keepAlive)
 {
 	return true;
+}
+
+bool Config::SetMacK9B(string mac_kb9)
+{
+	Json::Value jsonData;
+	if (OpenFile(CONFIG_FILE_NAME, jsonData))
+	{
+		if (set_str_config_entry(jsonData, MAC_KB9_KEY, mac_kb9))
+		{
+			Write2File(CONFIG_FILE_NAME, jsonData);
+			return true;
+		}
+	}
+	else
+		LOGW("OpenFile failed");
+	return false;
 }

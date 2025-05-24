@@ -19,6 +19,8 @@
 #define PASSWORD_DEFAULT "ABC123456"
 #define KEEP_ALIVE_KEY "keep_alive"
 #define KEEP_ALIVE_DEFAULT 10
+#define MAC_KB9_KEY "mac_kb9"
+#define MAC_KB9_DEFAULT ""
 
 using namespace std;
 
@@ -32,6 +34,7 @@ private:
 	string username;
 	string password;
 	int keepAlive;
+	string mac_kb9;
 
 	// local
 	string localHost;
@@ -60,6 +63,7 @@ public:
 	string GetLocalUsername();
 	string GetLocalPassword();
 	int GetLocalKeepAlive();
+	string GetMacK9B();
 
 	bool SetHost(string host);
 	bool SetPort(int port);
@@ -74,6 +78,7 @@ public:
 	bool SetLocalUsername(string localUsername);
 	bool SetLocalPassword(string localPassword);
 	bool SetLocalKeepAlive(int keepAlive);
+	bool SetMacK9B(string mac_kb9);
 };
 
 extern Config *config;

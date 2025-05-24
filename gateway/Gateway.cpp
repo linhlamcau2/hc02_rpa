@@ -96,7 +96,9 @@ void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
 	if (isConnected)
 	{
 		check_connect_cloud = true;
+#ifdef ESP_PLATFORM
 		tick_count_qr_scan = xTaskGetTickCount();
+#endif
 		Util::LedInternet(true);
 		gpioProtocol->set_led_warning(0);
 #ifdef ESP_PLATFORM
@@ -176,7 +178,7 @@ uint16_t deviceVersion = 0;
 bool check_res_on[4] = {false};
 bool check_res_off[4] = {false};
 
-int type_ctcu_arr[4] = {22026,22028,22030,22032};
+int type_ctcu_arr[4] = {22026, 22028, 22030, 22032};
 uint8_t process_test_ctcu(uint8_t num_ele)
 {
 	uint8_t err = 1;
@@ -202,7 +204,8 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 	for (int i = 0; i < num_ele; i++)
 	{
 		checkRelayOn[i] = (check_res_on[i] && gpioProtocol->gpio_get(i)) ? true : false;
-		if(!checkRelayOn[i]) err = 0;
+		if (!checkRelayOn[i])
+			err = 0;
 	}
 
 	for (int i = 0; i < num_ele; i++)
@@ -217,7 +220,8 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 	for (int i = 0; i < num_ele; i++)
 	{
 		checkRelayOff[i] = (!(gpioProtocol->gpio_get(i)) && check_res_off[i]) ? true : false;
-		if(!checkRelayOff[i]) err = 0;
+		if (!checkRelayOff[i])
+			err = 0;
 	}
 
 	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
@@ -229,7 +233,8 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 		if (gpioProtocol->gpio_get(i) == 0)
 		{
 			checkOnAll = false;
-			err = 0;;
+			err = 0;
+			;
 			break;
 		}
 	}
@@ -243,7 +248,8 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 		if (gpioProtocol->gpio_get(i) == 1)
 		{
 			checkOffAll = false;
-			err = 0;;
+			err = 0;
+			;
 			break;
 		}
 	}
@@ -255,7 +261,8 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 		SLEEP_MS(1000);
 		check_pair_k9b = true;
 	}
-	else	return 0;
+	else
+		return 0;
 
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
@@ -279,17 +286,17 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
 	rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
 	rs["on_relay1"] = checkRelayOn[0];
 	rs["off_relay1"] = checkRelayOff[0];
-	if(num_ele > 1)
+	if (num_ele > 1)
 	{
 		rs["on_relay2"] = checkRelayOn[1];
 		rs["off_relay2"] = checkRelayOff[1];
 	}
-	if(num_ele > 2)
+	if (num_ele > 2)
 	{
 		rs["on_relay3"] = checkRelayOn[2];
 		rs["off_relay3"] = checkRelayOff[2];
 	}
-	if(num_ele > 3)
+	if (num_ele > 3)
 	{
 		rs["on_relay4"] = checkRelayOn[3];
 		rs["off_relay4"] = checkRelayOff[3];
@@ -300,17 +307,17 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
 	rs["remote_learn"] = check_pair_k9b;
 	rs["remote_control"] = check_stt_last;
 	rs["version"] = to_string(deviceVersion);
-	rs["deviceType"]= to_string(type_ctcu_arr[num_ele-1]);
+	rs["deviceType"] = to_string(type_ctcu_arr[num_ele - 1]);
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
 	Json::Value dataPush;
 	Json::Value devJson;
-	
+
 	devJson["device"] = deviceJson;
 	dataPush["cmd"] = "hcReportLog";
 	dataPush["rqi"] = Util::genRandRQI(16);
 	dataPush["data"] = devJson;
-	
+
 	LOGE("%s", dataPush.toString().c_str());
 	gateway->CloudPublish(dataPush.toString());
 	if (!err)
@@ -321,9 +328,9 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
 	{
 		gpioProtocol->set_led_success();
 	}
-	SetGpioResetGwBle();
+	gateway->RestartBleGw();
 
-	SLEEP_MS(10000);			
+	SLEEP_MS(10000);
 }
 
 int Gateway::TestSwitch()
@@ -333,12 +340,12 @@ int Gateway::TestSwitch()
 	{
 		if (check_connect_cloud && qrProtocol->startTest == 0)
 		{
-			if (xTaskGetTickCount() - tick_count_qr_scan > 1000 * 10 / portTICK_PERIOD_MS)
-			{
-				string a = "QR_SCAN FAILED";
-				this->CloudPublish(a);
-				tick_count_qr_scan = xTaskGetTickCount();
-			}
+			// if (xTaskGetTickCount() - tick_count_qr_scan > 1000 * 10 / portTICK_PERIOD_MS)
+			// {
+			// 	string a = "QR_SCAN FAILED";
+			// 	this->CloudPublish(a);
+			// 	tick_count_qr_scan = xTaskGetTickCount();
+			// }
 		}
 		if (qrProtocol->startTest && check_connect_cloud)
 		{
@@ -374,13 +381,15 @@ int Gateway::TestSwitch()
 			if (bleProtocol->isMatchMac)
 			{
 				checkRssi = true;
-				
-				if(num_ele > 0 && num_ele <=4)
+
+				if (num_ele > 0 && num_ele <= 4)
 					err = process_test_ctcu(num_ele);
 			}
-			if(num_ele > 0 && num_ele <=4)
+			if (num_ele > 0 && num_ele <= 4)
 				rd_reporting_proc_ctcu(num_ele, err);
+#ifdef ESP_PLATFORM
 			tick_count_qr_scan = xTaskGetTickCount();
+#endif
 			qrProtocol->startTest = false;
 		}
 		SLEEP_MS(1000);

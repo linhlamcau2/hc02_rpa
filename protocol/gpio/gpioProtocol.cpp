@@ -1,44 +1,41 @@
 #include "gpioProtocol.h"
-#include "driver/gpio.h"
-#include "util.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "Util.h"
 #include "Log.h"
 #include "Gateway.h"
 
 #ifdef ESP_PLATFORM
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 gpio_num_t gpio_arr[] = {GPIO_NUM_27, GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14};
-gpio_num_t  pin_pow_k9b = GPIO_NUM_25;
-gpio_num_t  pin_down_k9b = GPIO_NUM_26;
-gpio_num_t  pin_up_k9b = GPIO_NUM_33;
+gpio_num_t pin_pow_k9b = GPIO_NUM_25;
+gpio_num_t pin_down_k9b = GPIO_NUM_26;
+gpio_num_t pin_up_k9b = GPIO_NUM_33;
 
-gpio_num_t  led_success = GPIO_NUM_32;
-gpio_num_t  led_fail = GPIO_NUM_18;
-gpio_num_t  led_warning = GPIO_NUM_19;
-
-#else
+gpio_num_t led_success = GPIO_NUM_32;
+gpio_num_t led_fail = GPIO_NUM_18;
+gpio_num_t led_warning = GPIO_NUM_19;
 gpio_num_t gpio_arr[] = {0, 1, 2, 3};
+#else
+int gpio_arr[] = {0, 1, 2, 3};
 
-int  pin_pow_k9b = 19;
-int  pin_down_k9b = 18;
-int  pin_up_k9b = 17;
+int pin_pow_k9b = 19;
+int pin_down_k9b = 18;
+int pin_up_k9b = 17;
 
-int  led_success = 16;
-int  led_fail = 15;
-int  led_warning = 14;
+int led_success = 16;
+int led_fail = 15;
+int led_warning = 14;
 
 #endif
 GPIOProtocol *gpioProtocol = NULL;
 
-
-
-
-
-int GPIOProtocol :: gpio_get(int index)
+int GPIOProtocol ::gpio_get(int index)
 {
 #ifndef ESP_PLATFORM
-    string cmd = "cat /sys/class/gpio/gpio" + index.to_str() + "/value";
-    return (Util::ExecuteCMD(cmd.c_str())).stoi();
+    string cmd = "cat /sys/class/gpio/gpio" + to_string(index) + "/value";
+    return std::stoi(Util::ExecuteCMD(cmd.c_str()));
 #else
     if (index < 0 || index > num)
     {
@@ -48,7 +45,7 @@ int GPIOProtocol :: gpio_get(int index)
 #endif
 }
 
-int GPIOProtocol :: gpio_read(int index)
+int GPIOProtocol ::gpio_read(int index)
 {
 #ifdef ESP_PLATFORM
     if (index < 0 || index > num)
@@ -56,21 +53,21 @@ int GPIOProtocol :: gpio_read(int index)
         return -1;
     }
     return gpio_get_level(gpio_arr[index]);
-#else 
+#else
     return 0;
 #endif
 }
 
-int GPIOProtocol :: dectect_gpio(int index)
+int GPIOProtocol ::dectect_gpio(int index)
 {
 #ifdef ESP_PLATFORM
-    int stt = !(this ->gpio_read(index));
+    int stt = !(this->gpio_read(index));
     if (stt != state_gpio[index])
     {
-        this -> count[index] ++;
-        if (this -> count[index] >= CYCLE_ACTIVE)
+        this->count[index]++;
+        if (this->count[index] >= CYCLE_ACTIVE)
         {
-            this -> count[index] = 0;
+            this->count[index] = 0;
             state_gpio[index] = stt;
             LOGI("GPIO %d: %d", index, stt);
             // if(gateway != NULL)
@@ -78,28 +75,28 @@ int GPIOProtocol :: dectect_gpio(int index)
             return 1;
         }
     }
-#else 
+#else
 
 #endif
     return 0;
 }
 
-int GPIOProtocol :: handle_gpio(int index)
+int GPIOProtocol ::handle_gpio(int index)
 {
     return 0;
 }
 
-static void gpio_task(void * pvParameters)
+static void gpio_task(void *pvParameters)
 {
 #ifdef ESP_PLATFORM
     GPIOProtocol *gpioProtocol = (GPIOProtocol *)pvParameters;
     gpioProtocol->on_gpio();
-#else 
+#else
 
 #endif
 }
 
-void GPIOProtocol :: on_gpio()
+void GPIOProtocol ::on_gpio()
 {
 #ifdef ESP_PLATFORM
     while (1)
@@ -114,16 +111,16 @@ void GPIOProtocol :: on_gpio()
         SLEEP_MS(5);
     }
     vTaskDelete(NULL);
-#else 
+#else
 
 #endif
 }
 
-void GPIOProtocol :: gpio_init()
+void GPIOProtocol ::gpio_init()
 {
     num = sizeof(gpio_arr) / sizeof(gpio_arr[0]);
-    state_gpio.resize(num,0);
-    count.resize(num,0);
+    state_gpio.resize(num, 0);
+    count.resize(num, 0);
 #ifdef ESP_PLATFORM
     for (int i = 0; i < num; i++)
     {
@@ -136,15 +133,15 @@ void GPIOProtocol :: gpio_init()
     gpio_set_direction(pin_down_k9b, GPIO_MODE_OUTPUT);
     // gpio_pulldown_en(pin_down_k9b);
     gpio_set_level(pin_down_k9b, 1);
-    gpio_set_direction(pin_up_k9b, GPIO_MODE_OUTPUT);   
+    gpio_set_direction(pin_up_k9b, GPIO_MODE_OUTPUT);
     // gpio_pulldown_en(pin_up_k9b);
     gpio_set_level(pin_up_k9b, 1);
 
-    gpio_set_direction(led_success, GPIO_MODE_OUTPUT);    //led_warning
+    gpio_set_direction(led_success, GPIO_MODE_OUTPUT); // led_warning
     gpio_set_level(led_success, 1);
-    gpio_set_direction(led_fail, GPIO_MODE_OUTPUT);  
+    gpio_set_direction(led_fail, GPIO_MODE_OUTPUT);
     gpio_set_level(led_fail, 1);
-    gpio_set_direction(led_warning, GPIO_MODE_OUTPUT);  
+    gpio_set_direction(led_warning, GPIO_MODE_OUTPUT);
     gpio_set_level(led_warning, 1);
 
     // SLEEP_MS(2000);
@@ -152,10 +149,10 @@ void GPIOProtocol :: gpio_init()
     // gpio_set_level(led_warning, 0);
 
     if (xTaskCreate(gpio_task, "gpio_task", 2048, this, 10, NULL) != pdPASS)
-	{
-		LOGE("Failed to create gpio_task ");
-	}
-#else 
+    {
+        LOGE("Failed to create gpio_task ");
+    }
+#else
     Util::ExecuteCMD("echo 0 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo in > /sys/class/gpio/gpio0/direction");
 
@@ -188,7 +185,7 @@ void GPIOProtocol :: gpio_init()
 #endif
 }
 
-void GPIOProtocol :: gpio_supply_power_k9b()
+void GPIOProtocol ::gpio_supply_power_k9b()
 {
 #ifdef ESP_PLATFORM
     gpio_set_level(pin_pow_k9b, 0);
@@ -202,89 +199,89 @@ void GPIOProtocol :: gpio_supply_power_k9b()
     gpio_set_level(pin_up_k9b, 0);
     SLEEP_MS(600);
     gpio_set_level(pin_pow_k9b, 1);
-#else 
-    string cmd = "echo 0 > /sys/class/gpio/gpio" + pin_pow_k9b.to_str() + "/value";
+#else
+    string cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
-    cmd = "echo 0 > /sys/class/gpio/gpio" + pin_up_k9b.to_str() + "/value";
+    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_up_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
-    string cmd = "echo 1 > /sys/class/gpio/gpio" + pin_down_k9b.to_str() + "/value";
-    Util::ExecuteCMD(cmd.c_str());
-
-    SLEEP_MS(70);
-    cmd = "echo 0 > /sys/class/gpio/gpio" + pin_down_k9b.to_str() + "/value";
+    cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_down_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 
     SLEEP_MS(70);
-    string cmd = "echo 1 > /sys/class/gpio/gpio" + pin_up_k9b.to_str() + "/value";
+    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_down_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 
     SLEEP_MS(70);
-    cmd = "echo 0 > /sys/class/gpio/gpio" + pin_up_k9b.to_str() + "/value";
+    cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_up_k9b) + "/value";
+    Util::ExecuteCMD(cmd.c_str());
+
+    SLEEP_MS(70);
+    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_up_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 
     SLEEP_MS(600);
-    cmd = "echo 1 > /sys/class/gpio/gpio" + pin_pow_k9b.to_str() + "/value";
+    cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 #endif
 }
 
-void GPIOProtocol :: set_led_success()
+void GPIOProtocol ::set_led_success()
 {
 #ifdef ESP_PLATFORM
     gpio_set_level(led_success, 1);
     gpio_set_level(led_fail, 0);
 #else
-    string cmd = "echo 1 > /sys/class/gpio/gpio" + led_success.to_str() + "/value";
-    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + led_fail.to_str() + "/value";
-    Util::ExecuteCMD(cmd);
-    Util::ExecuteCMD(cmd1);
+    string cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + to_string(led_fail) + "/value";
+    Util::ExecuteCMD(cmd.c_str());
+    Util::ExecuteCMD(cmd1.c_str());
 #endif
 }
 
-void GPIOProtocol :: set_led_fail()
+void GPIOProtocol ::set_led_fail()
 {
 #ifdef ESP_PLATFORM
     gpio_set_level(led_success, 0);
     gpio_set_level(led_fail, 1);
 #else
-    string cmd = "echo 1 > /sys/class/gpio/gpio" + led_fail.to_str() + "/value";
-    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + led_success.to_str() + "/value";
-    Util::ExecuteCMD(cmd);
-    Util::ExecuteCMD(cmd1);
+    string cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(led_fail) + "/value";
+    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    Util::ExecuteCMD(cmd.c_str());
+    Util::ExecuteCMD(cmd1.c_str());
 #endif
 }
 
-void GPIOProtocol :: set_led_warning(uint8_t stt)
+void GPIOProtocol ::set_led_warning(uint8_t stt)
 {
 #ifdef ESP_PLATFORM
     gpio_set_level(led_warning, stt);
 #else
-    string cmd1 = "echo " + stt.to_str() + " > /sys/class/gpio/gpio" + led_warning.to_str() + "/value";
-    Util::ExecuteCMD(cmd);
+    string cmd1 = "echo " + to_string(stt) + " > /sys/class/gpio/gpio" + to_string(led_warning) + "/value";
+    Util::ExecuteCMD(cmd1.c_str());
 #endif
 }
 
-void GPIOProtocol :: reset_led_in_proc()
+void GPIOProtocol ::reset_led_in_proc()
 {
 #ifdef ESP_PLATFORM
     gpio_set_level(led_success, 0);
     gpio_set_level(led_fail, 0);
-#else 
-    string cmd = "echo 0 > /sys/class/gpio/gpio" + led_fail.to_str() + "/value";
-    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + led_success.to_str() + "/value";
-    Util::ExecuteCMD(cmd);
-    Util::ExecuteCMD(cmd1);
+#else
+    string cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(led_fail) + "/value";
+    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    Util::ExecuteCMD(cmd.c_str());
+    Util::ExecuteCMD(cmd1.c_str());
 #endif
 }
 
-void GPIOProtocol :: set_mode_input()
+void GPIOProtocol ::set_mode_input()
 {
 #ifdef ESP_PLATFORM
     for (int i = 0; i < num; i++)
     {
         gpio_reset_pin(gpio_arr[i]);
         gpio_set_direction(gpio_arr[i], GPIO_MODE_INPUT);
-        gpio_set_pull_mode(gpio_arr[i], GPIO_PULLUP_ONLY); 
+        gpio_set_pull_mode(gpio_arr[i], GPIO_PULLUP_ONLY);
     }
 #else
 
