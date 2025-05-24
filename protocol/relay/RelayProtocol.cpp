@@ -33,6 +33,24 @@ void RelayProtocol::init()
 	SLEEP_MS(100); // wait for thread start
 }
 
+int RelayProtocol::GetStatusRelay(int index)
+{
+	switch (index)
+	{
+		case 0:
+			return rl1;
+		case 1:
+			return rl2;
+		case 2:
+			return rl3;
+		case 3:
+			return rl4;
+		default:
+			break;
+	}
+	return CODE_ERROR;
+}
+
 int RelayProtocol::OnMessage(unsigned char *data, int len)
 {
 	uint8_t *d = data;

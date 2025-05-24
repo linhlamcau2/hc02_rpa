@@ -21,7 +21,7 @@
 
 #include "QrProtocol.h"
 #include "gpioProtocol.h"
-// #include "RelayProtocol.h"
+#include "RelayProtocol.h"
 
 Gateway *gateway = NULL;
 static bool check_connect_cloud = false;

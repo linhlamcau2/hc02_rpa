@@ -67,6 +67,7 @@
         "bitset": "cpp",
         "list": "cpp",
         "unordered_set": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "variant": "cpp"
     }
 }

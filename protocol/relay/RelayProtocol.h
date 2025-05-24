@@ -35,6 +35,7 @@ public:
 	RelayProtocol(char *uartPort, int uartBaudrate);
 #endif
 	virtual ~RelayProtocol();
+	int GetStatusRelay(int index);
 	void init();
 };
 
