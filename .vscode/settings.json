@@ -68,6 +68,11 @@
         "list": "cpp",
         "unordered_set": "cpp",
         "shared_mutex": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "charconv": "cpp",
+        "optional": "cpp",
+        "regex": "cpp",
+        "format": "cpp",
+        "span": "cpp"
     }
 }

@@ -112,8 +112,9 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 						this->type_dev = std::stoi(type);
 						this->startTest = true;
 					}
-					// LOGE("qr:mac %s", this->mac.c_str());
-					// LOGE("qr:addr %d", this->addr);
+					LOGE("qr:mac %s", this->mac.c_str());
+					LOGE("qr:addr %d", this->addr);
+					LOGE("qr:type %d", this->type_dev);
 				}
 			}
 		}

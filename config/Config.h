@@ -8,9 +8,9 @@
 // #define CONFIG_ENV_LOCAL "smh.@local[0]."
 
 #define HOST_KEY "host"
-#define HOST_DEFAULT "mqtt.rangdong.com.vn"
+#define HOST_DEFAULT "210.211.96.132"
 #define PORT_KEY "port"
-#define PORT_DEFAULT 8883
+#define PORT_DEFAULT 1884
 #define CLIENT_ID_KEY "client_id"
 #define CLIENT_ID_DEFAULT "hc"
 #define USERNAME_KEY "username"
