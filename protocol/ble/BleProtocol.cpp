@@ -638,7 +638,7 @@ int BleProtocol::SetGwKey()
 
 int BleProtocol::StartScan()
 {
-	LOGD("StartScan BLE");
+	LOGE("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
 	// SetProvisioning(true);
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 0);

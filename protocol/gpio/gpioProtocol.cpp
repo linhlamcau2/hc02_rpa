@@ -18,15 +18,11 @@ gpio_num_t led_fail = GPIO_NUM_18;
 gpio_num_t led_warning = GPIO_NUM_19;
 gpio_num_t gpio_arr[] = {0, 1, 2, 3};
 #else
-int gpio_arr[] = {0, 37, 10, 9};
+int gpio_arr[] = {0, 37, 3, 2};
 
 int pin_pow_k9b = 14;
-int pin_down_k9b = 15;
-int pin_up_k9b = 16;
 
-int led_success = 16;
-int led_fail = 15;
-int led_warning = 14;
+int led_success = 17;
 
 #endif
 GPIOProtocol *gpioProtocol = NULL;
@@ -35,7 +31,9 @@ int GPIOProtocol ::gpio_get(int index)
 {
 #ifndef ESP_PLATFORM
     string cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr[index]) + "/value";
-    return std::stoi(Util::ExecuteCMD(cmd.c_str()));
+    int status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
+    LOGE("CMD: %s; status: %d", cmd.c_str(), status);
+    return status;
 #else
     if (index < 0 || index > num)
     {
@@ -159,11 +157,11 @@ void GPIOProtocol ::gpio_init()
     Util::ExecuteCMD("echo 37 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo in > /sys/class/gpio/gpio37/direction");
 
-    Util::ExecuteCMD("echo 10 > /sys/class/gpio/export");
-    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio10/direction");
+    Util::ExecuteCMD("echo 3 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio3/direction");
 
-    Util::ExecuteCMD("echo 9 > /sys/class/gpio/export");
-    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio9/direction");
+    Util::ExecuteCMD("echo 2 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio2/direction");
 
     Util::ExecuteCMD("echo 19 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo out > /sys/class/gpio/gpio19/direction");
@@ -173,12 +171,6 @@ void GPIOProtocol ::gpio_init()
 
     Util::ExecuteCMD("echo 17 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo out > /sys/class/gpio/gpio17/direction");
-
-    Util::ExecuteCMD("echo 16 > /sys/class/gpio/export");
-    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio16/direction");
-
-    Util::ExecuteCMD("echo 15 > /sys/class/gpio/export");
-    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio15/direction");
 
     Util::ExecuteCMD("echo 14 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo out > /sys/class/gpio/gpio14/direction");
@@ -200,27 +192,27 @@ void GPIOProtocol ::gpio_supply_power_k9b()
     SLEEP_MS(600);
     gpio_set_level(pin_pow_k9b, 1);
 #else
-    string cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
+    string cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
-    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_up_k9b) + "/value";
+    cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness";
     Util::ExecuteCMD(cmd.c_str());
-    cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_down_k9b) + "/value";
-    Util::ExecuteCMD(cmd.c_str());
-
-    SLEEP_MS(70);
-    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_down_k9b) + "/value";
+    cmd = "echo 0 > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness";
     Util::ExecuteCMD(cmd.c_str());
 
     SLEEP_MS(70);
-    cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_up_k9b) + "/value";
+    cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness";
     Util::ExecuteCMD(cmd.c_str());
 
     SLEEP_MS(70);
-    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_up_k9b) + "/value";
+    cmd = "echo 0 > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness";
+    Util::ExecuteCMD(cmd.c_str());
+
+    SLEEP_MS(70);
+    cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness";
     Util::ExecuteCMD(cmd.c_str());
 
     SLEEP_MS(600);
-    cmd = "echo 1 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
+    cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 #endif
 }
@@ -232,7 +224,7 @@ void GPIOProtocol ::set_led_success()
     gpio_set_level(led_fail, 0);
 #else
     string cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:internet/brightness";
-    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    string cmd1 = "echo 1 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
     Util::ExecuteCMD(cmd.c_str());
     Util::ExecuteCMD(cmd1.c_str());
 #endif
@@ -245,7 +237,7 @@ void GPIOProtocol ::set_led_fail()
     gpio_set_level(led_fail, 1);
 #else
     string cmd = "echo 0 > /sys/class/leds/linkit-smart-7688:orange:internet/brightness";
-    string cmd1 = "echo 1 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
     Util::ExecuteCMD(cmd.c_str());
     Util::ExecuteCMD(cmd1.c_str());
 #endif
@@ -268,7 +260,7 @@ void GPIOProtocol ::reset_led_in_proc()
     gpio_set_level(led_fail, 0);
 #else
     string cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:internet/brightness";
-    string cmd1 = "echo 1 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    string cmd1 = "echo 0 > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
     Util::ExecuteCMD(cmd.c_str());
     Util::ExecuteCMD(cmd1.c_str());
 #endif
