@@ -149,7 +149,7 @@ int Gateway::RestartBleGw()
 	Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio100/value");
 	Util::ExecuteCMD("echo 100 > /sys/class/gpio/unexport");
 #elif defined(__OPENWRT__)
-	bleProtocol->ResetBle();
+	// bleProtocol->ResetBle();
 	Util::ExecuteCMD("echo '0' > /sys/class/gpio/gpio1/value");
 	sleep(1);
 	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");
