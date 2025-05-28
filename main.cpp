@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
 
-	qrProtocol = new QrProtocol((char *)QR_UART_PORT, B115200);
-	qrProtocol->init();
+	// qrProtocol = new QrProtocol((char *)QR_UART_PORT, B115200);
+	// qrProtocol->init();
 
 	relayProtocol = new RelayProtocol((char *)RELAY_UART_PORT, B115200);
 	relayProtocol->init();

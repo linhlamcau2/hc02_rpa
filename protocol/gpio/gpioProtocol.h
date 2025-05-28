@@ -31,6 +31,7 @@ public:
     void set_led_warning(uint8_t stt);
     void reset_led_in_proc();
     void set_mode_input();
+    void k9b_press(int id_but);
 };
 
 extern GPIOProtocol *gpioProtocol;

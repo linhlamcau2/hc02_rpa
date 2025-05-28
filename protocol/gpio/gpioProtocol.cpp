@@ -47,6 +47,7 @@ typedef void (*ButtonHandler_t)(int mode);
 
 typedef struct
 {
+    int stt;
     int button_id;
     int count_stt;
     ButtonHandler_t handler;
@@ -56,14 +57,14 @@ int pin_pow_k9b = 14;
 
 int led_success = 17;
 
-int button_start = 12;
-int button_pause = 13;
+int button_start = 37;
+int button_pause = 12;
 
 int k9b_at58_but1 = 0;
 int k9b_at58_but2 = 2;
 int k9b_at58_but3 = 3;
 
-int k9b_at58_but[3] = {0, 2, 3};
+int k9b_at58_but[3] = {3, 2, 0};
 
 GPIOProtocol *gpioProtocol = NULL;
 
@@ -76,19 +77,19 @@ bool reset_requested = false;
 
 static void led_success_wr(int stt)
 {
-    std::string cmd = "echo " +to_string(!stt) + " > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
+    std::string cmd = "echo " +to_string(stt) + " > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 }
 
 static void led_running_wr(int stt)
 {
-    std::string cmd = "echo " + to_string(!stt) + " > /sys/class/leds/linkit-smart-7688:orange:service/brightness"; // chan 18
+    std::string cmd = "echo " + to_string(!stt) + " > /sys/class/leds/linkit-smart-7688:orange:service/brightness"; // chan 18 //vang
     Util::ExecuteCMD(cmd.c_str());
 }
 
 static void led_pause_wr(int stt)
 {
-    std::string cmd = "echo "+ to_string(!stt)+" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness"; //chan 19
+    std::string cmd = "echo "+ to_string(!stt)+" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness"; //chan 19  // do
     Util::ExecuteCMD(cmd.c_str());
 }
 
@@ -132,7 +133,7 @@ static void gpio_supply_power_k9b()
     cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness";
     Util::ExecuteCMD(cmd.c_str());
 
-    SLEEP_MS(70);
+    SLEEP_MS(200);
     cmd = "echo 0 > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness";
     Util::ExecuteCMD(cmd.c_str());
 
@@ -140,7 +141,7 @@ static void gpio_supply_power_k9b()
     cmd = "echo 1 > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness";
     Util::ExecuteCMD(cmd.c_str());
 
-    SLEEP_MS(600);
+    SLEEP_MS(1000);
     cmd = "echo 0 > /sys/class/gpio/gpio" + to_string(pin_pow_k9b) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 #endif
@@ -152,19 +153,22 @@ void set_but_k9b(int id, int stt)
     {
         if (id & (1 << i)) 
         {
+            // LOGI("Button %d pressed %d", i,stt);
             std::string cmd = "echo "+to_string(stt) +" > /sys/class/gpio/gpio" + to_string(k9b_at58_but[i]) + "/value";
             Util::ExecuteCMD(cmd.c_str());
         }
     }
 }
 
-void k9b_press(int id_but)
+void GPIOProtocol::k9b_press(int id_but)
 {
     set_but_k9b(id_but, 0);
+    SLEEP_MS(50);
     gpio_supply_power_k9b();
+    SLEEP_MS(50);
     set_but_k9b(id_but, 1);
-    SLEEP_MS(1000);
-    LOGI("Button %d pressed", id_but);
+    SLEEP_MS(500);
+    // LOGI("Button %d pressed", id_but);
 }
 
 void at58_power_on()
@@ -192,7 +196,7 @@ void at58_pair_k9b()
     for (int i = 0; i < 5; i++)
     {
         // nhan nut 2+3
-        k9b_press(0b110);
+        gpioProtocol->k9b_press(0b110);
         SLEEP_MS(2000);
     }
 }
@@ -202,7 +206,7 @@ void at58_del_k9b()
     for (int i = 0; i < 5; i++)
     {
         // nhan nut 1+2
-        k9b_press(0b011);
+        gpioProtocol->k9b_press(0b011);
         SLEEP_MS(2000);
     }
 }
@@ -212,7 +216,7 @@ void at58_handle_repeat(int id_but)
     for (int i = 0; i < 3; i++)
     {
         // nhan nut id_but
-        k9b_press(1<< id_but);
+        gpioProtocol->k9b_press(1<< id_but);
         SLEEP_MS(5000);
     }
 }
@@ -231,6 +235,7 @@ void at58_reset_power()
 
 void execute_state(int state)
 {
+    LOGI("Staging  %d", state);
     switch (state)
     {
     case STEP_1_POWER_ON_PAIR:
@@ -265,7 +270,7 @@ void execute_state(int state)
 
     case STEP_11_DIM_0:
         // Nhấn đồng th ời nút 1 + 3: DIM 0%
-        k9b_press(0b101);
+        gpioProtocol->k9b_press(0b101);
         SLEEP_MS(2000);
         break;
 
@@ -297,7 +302,7 @@ void execute_state(int state)
 
     case STEP_16_PRESS_1_FINAL:
         // Nhấn nút 1: đèn chuyển sang màu trắng 100%
-        k9b_press(0b100);
+        // k9b_press(0b100);
         SLEEP_MS(2000);
         break;
 
@@ -392,27 +397,22 @@ int read_button_value(int id_but)
 }
 
 static ButtonMap_t ButMap[] = {
-    {button_start, 0, button_start_handler},
-    {button_pause, 0, button_pause_handler},
+    {0,button_start, 0, button_start_handler},
+    {0,button_pause, 0, button_pause_handler},
 };
 
 int detect_button(int index)
 {
-    if (read_button_value(ButMap[index].button_id))
+    int stt = read_button_value(ButMap[index].button_id);
+    if (ButMap[index].stt!=stt)
     {
         ButMap[index].count_stt++;
         if (ButMap[index].count_stt == COUNT_PRESS)
         {
-            return BUTTON_PRESS; // Button pressed
-        }
-        else if (ButMap[index].count_stt == COUNT_HOLD)
-        {
-            return BUTTON_HOLD; // Button held
-        }
-        else if (ButMap[index].count_stt > COUNT_HOLD)
-        {
-            ButMap[index].count_stt = COUNT_HOLD + 1;
-            return BUTTON_NULL; // Button not pressed or held
+            ButMap[index].stt = stt;
+            ButMap[index].count_stt = 0;
+            if(stt ==1 )
+                return BUTTON_PRESS; // Button pressed
         }
     }
     else
@@ -465,7 +465,12 @@ void GPIOProtocol ::gpio_init()
     Util::ExecuteCMD("echo out > /sys/class/gpio/gpio17/direction");
 
 
+    set_but_k9b(1, 1);
+    set_but_k9b(2, 1);
+    set_but_k9b(4, 1);
     rpa_stop_display();
+
+    // Util::ExecuteCMD("echo out > /sys/class/gpio/gpio17/direction");
     thread proc_rpa(bind(&GPIOProtocol ::process_rpa, this));
     proc_rpa.detach();
 
