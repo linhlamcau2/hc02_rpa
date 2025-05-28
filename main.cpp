@@ -19,6 +19,7 @@
 #include "BleProtocol.h"
 #include "QrProtocol.h"
 #include "RelayProtocol.h"
+#include "gpioProtocol.h"
 
 #define TAG "MAIN"
 
@@ -52,8 +53,6 @@ int main(int argc, char *argv[])
 
 	config = new Config();
 	config->ReadConfig();
-
-	Util::ExecuteCMD("echo 0 > /sys/class/gpio/export");
 	
 	bleProtocol = new BleProtocol((char *)BLE_UART_PORT, B115200);
 	bleProtocol->init();
@@ -83,6 +82,8 @@ int main(int argc, char *argv[])
 	}
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
+
+	gpioProtocol->gpio_init();
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId(), config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();

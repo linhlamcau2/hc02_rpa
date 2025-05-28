@@ -351,11 +351,11 @@ void Util::LedService(bool value)
 #ifdef __OPENWRT__
 	if (value)
 	{
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
 	}
 	else
 	{
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
 	}
 #endif
 }
@@ -366,11 +366,11 @@ void Util::LedZigbee(bool value)
 #ifdef __OPENWRT__
 	if (value)
 	{
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
 	else
 	{
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
 #endif
 }
@@ -381,11 +381,11 @@ void Util::LedBle(bool value)
 #ifdef __OPENWRT__
 	if (value)
 	{
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
 	}
 	else
 	{
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
 	}
 #endif
 }
@@ -395,17 +395,17 @@ void Util::LedAll(bool value)
 #ifdef __OPENWRT__
 	if (value)
 	{
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
-		ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+		// ExecuteCMD("/bin/echo \"1\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
 	else
 	{
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
-		ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:internet/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:service/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble1/brightness");
+		// ExecuteCMD("/bin/echo \"0\" > /sys/class/leds/linkit-smart-7688:orange:ble2/brightness");
 	}
 #endif
 }

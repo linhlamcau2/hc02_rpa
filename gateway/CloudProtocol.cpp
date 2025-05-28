@@ -29,6 +29,9 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 	subBinRespTopic = "v2/bin/resp/server/" + mac + "/+/+";
 	pubBinReqTopic = "v2/bin/req/" + mac + "/server/";
 
+	subSerialRespTopic = "/v2/server/hc/" + mac + "/serial_resp";
+	pubSerialReqTopic = "/v2/server/hc/" + mac + "/serial_req";
+
 	// willset
 	Json::Value jsonValue;
 	Json::Value datanValue;

@@ -638,7 +638,7 @@ int BleProtocol::SetGwKey()
 
 int BleProtocol::StartScan()
 {
-	LOGD("StartScan BLE");
+	LOGE("StartScan BLE");
 	uint8_t d = HCI_GATEWAY_CMD_START;
 	// SetProvisioning(true);
 	int rs = SendMessage(SYSTEM_REQ, &d, 1, 0, 0, 0, 0);
@@ -884,6 +884,7 @@ int BleProtocol::GetDeviceType(uint8_t *mac, uint16_t devAddr, uint32_t &deviceT
 	check_type_message_t check_type_message;
 	memset(&check_type_message, 0x00, sizeof(check_type_message));
 	check_type_message.ble_message_header.devAddr = devAddr;
+	check_type_message.ble_message_header.retryCnt = 2;
 	check_type_message.opcodeVendor = RD_OPCODE_PROVISION;
 	check_type_message.vendorId = RD_VENDOR_ID;
 	check_type_message.opcodeRsp = RD_OPCODE_PROVISION_RSP;

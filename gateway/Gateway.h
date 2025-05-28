@@ -10,7 +10,6 @@
 #include "ErrorCode.h"
 #include "CloudProtocol.h"
 #include "LocalProtocol.h"
-#include "Udp.h"
 #include "Device.h"
 #include "DeviceBle.h"
 #include "Util.h"
@@ -20,7 +19,7 @@
 
 using namespace std;
 
-class Gateway : public CloudProtocol, public LocalProtocol, public Udp
+class Gateway : public CloudProtocol, public LocalProtocol
 {
 private:
 	string id;
@@ -34,21 +33,9 @@ private:
 	string dormitoryId;
 	string refresh_token;
 	string data;
-	thread *udpBroadcastThread;
-	atomic<bool> isUdpBroadcasting;
-
 
 	void OnCloudConnect(bool isConnected, bool isReconnect);
 	void OnLocalConnect(bool isConnected, bool isReconnect);
-
-	// Udp message handle
-	void InitUdpMessage();
-	int OnUdpScanHc(Json::Value &reqValue, Json::Value &respValue);
-	int OnUdpHcScanWifi(Json::Value &reqValue, Json::Value &respValue);
-	int OnUdpHcSetup(Json::Value &reqValue, Json::Value &respValue);
-	int OnUdpHcInfo(Json::Value &reqValue, Json::Value &respValue);
-	int OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue);
-	int OnScanIpHc(Json::Value &reqValue, Json::Value &respValue);
 
 public:
 	Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive, string localAddress = "localhost", int localPort = 1883, string localUsername = "", string localPassword = "", int localKeepalive = 10);

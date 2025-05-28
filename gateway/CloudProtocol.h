@@ -40,6 +40,9 @@ private:
 	string subBinRespTopic;
 	string pubBinReqTopic;
 
+	string subSerialRespTopic;
+	string pubSerialReqTopic;
+
 	string mac;
 	atomic<bool> isBusy;
 	mutex mtx;

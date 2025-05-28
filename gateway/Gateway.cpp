@@ -29,8 +29,7 @@ static uint32_t tick_count_qr_scan = 0;
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
 				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
 	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, false),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false),
-	  Udp(8181)
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false)
 {
 	this->mac = mac;
 	this->id = "";
@@ -63,9 +62,7 @@ void Gateway::init()
 	// Device::InitDeviceModelList();
 	LocalProtocol::init();
 	CloudProtocol::init();
-	Udp::init();
 
-	InitUdpMessage();
 	// InitMqttMessageDevice();
 	// InitMqttMessageGroup();
 	// InitMqttMessageRoom();
@@ -152,6 +149,7 @@ int Gateway::RestartBleGw()
 	Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio100/value");
 	Util::ExecuteCMD("echo 100 > /sys/class/gpio/unexport");
 #elif defined(__OPENWRT__)
+	// bleProtocol->ResetBle();
 	Util::ExecuteCMD("echo '0' > /sys/class/gpio/gpio1/value");
 	sleep(1);
 	Util::ExecuteCMD("echo '1' > /sys/class/gpio/gpio1/value");
@@ -203,7 +201,7 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 	SLEEP_MS(1500);
 	for (int i = 0; i < num_ele; i++)
 	{
-		checkRelayOn[i] = (check_res_on[i] && gpioProtocol->gpio_get(i)) ? true : false;
+		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(i)) ? true : false;
 		if (!checkRelayOn[i])
 			err = 0;
 	}
@@ -216,21 +214,21 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 		}
 	}
 
-	SLEEP_MS(1500);
+	SLEEP_MS(500);
 	for (int i = 0; i < num_ele; i++)
 	{
-		checkRelayOff[i] = (!(gpioProtocol->gpio_get(i)) && check_res_off[i]) ? true : false;
+		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(i)) && check_res_off[i]) ? true : false;
 		if (!checkRelayOff[i])
 			err = 0;
 	}
 
 	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
-	SLEEP_MS(1500);
+	SLEEP_MS(500);
 
 	checkOnAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (gpioProtocol->gpio_get(i) == 0)
+		if (!gpioProtocol->gpio_get(i) == 0)
 		{
 			checkOnAll = false;
 			err = 0;
@@ -240,12 +238,12 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 	}
 
 	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-	SLEEP_MS(1500);
+	SLEEP_MS(500);
 
 	checkOffAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (gpioProtocol->gpio_get(i) == 1)
+		if (!gpioProtocol->gpio_get(i) == 1)
 		{
 			checkOffAll = false;
 			err = 0;
@@ -267,13 +265,14 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (gpioProtocol->gpio_get(i) == 0)
+		if (!gpioProtocol->gpio_get(i) == 0)
 		{
 			check_stt_last = false;
 			err = 0;
 			break;
 		}
 	}
+
 
 	return err;
 }
@@ -511,62 +510,6 @@ void Gateway::setVersion(string version)
 
 void Gateway::setName(string name)
 {
-}
-
-int Gateway::OnRpcSetPwMqttOnline(Json::Value &reqValue, Json::Value &respValue)
-{
-	if (reqValue.isMember("DATA") && reqValue["DATA"].isObject())
-	{
-		respValue["CMD"] = "SET_PASSWD_MQTT_ONLINE";
-		Json::Value dataJsonRsp = Json::objectValue;
-		int status = 0;
-		Json::Value dataValue = reqValue["DATA"];
-		if (dataValue.isMember("PASSWD") && dataValue["PASSWD"].isString())
-		{
-			string password = dataValue["PASSWD"].asString();
-			string user = "";
-
-#ifdef ESP_PLATFORM
-			user = "minihub-" + mac;
-#else
-			user = "hc-" + mac;
-#endif
-
-			if (config->SetClientId(user))
-			{
-				if (config->SetUsername(user))
-				{
-					if (config->SetPort(8883))
-					{
-						if (config->SetPassword(password))
-						{
-							status = 1;
-						}
-						else
-						{
-							status = 0;
-						}
-					}
-					else
-					{
-						status = 0;
-					}
-				}
-				else
-				{
-					status = 0;
-				}
-			}
-			else
-			{
-				status = 0;
-			}
-			dataJsonRsp["STATUS"] = status;
-			respValue["DATA"] = dataJsonRsp;
-			return CODE_EXIT;
-		}
-	}
-	return CODE_ERROR;
 }
 
 int Gateway::pushDeviceUpdateLocal(Json::Value &dataValue)
