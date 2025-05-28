@@ -195,10 +195,11 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 1) == CODE_OK)
 		{
 			check_res_on[i] = true;
+			SLEEP_MS(500);
 		}
 	}
 
-	SLEEP_MS(1500);
+	SLEEP_MS(500);
 	for (int i = 0; i < num_ele; i++)
 	{
 		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(i)) ? true : false;
@@ -211,6 +212,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 -pos, 0) == CODE_OK)
 		{
 			check_res_off[i] = true;
+			SLEEP_MS(500);
 		}
 	}
 
@@ -232,7 +234,6 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		{
 			checkOnAll = false;
 			err = 0;
-			;
 			break;
 		}
 	}
@@ -247,12 +248,11 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		{
 			checkOffAll = false;
 			err = 0;
-			;
 			break;
 		}
 	}
 
-	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 2) == CODE_OK)
+	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
 	{
 		SLEEP_MS(1500);
 		gpioProtocol->gpio_supply_power_k9b();
@@ -282,8 +282,8 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
 	// rs["mac"] = qrProtocol->mac;
 	// rs["addr"] = qrProtocol->addr;
 	rs["version"] = to_string(deviceVersion);
-	rs["deviceType"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial;
-	rs["serial"] = dev_type;
+	rs["serial"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial;
+	rs["deviceType"] = dev_type;
 	rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
 
 	rs["on_relay1"] = checkRelayOn[0];

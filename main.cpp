@@ -42,6 +42,7 @@ static void signal_handler(int sig)
 int main(int argc, char *argv[])
 {
 	LOGI("Start ver " STR(VERSION));
+	log_set_level(LOG_VERBOSE);
 
 	buttonSignal = new ButtonSignal();
 	signal(SIGUSR1, signal_handler);
@@ -88,7 +89,9 @@ int main(int argc, char *argv[])
 						  "localhost", 1883, "RD", passMqttLocal, 10);
 	gateway->init();
 
+	
 	bleProtocol->StopScan();
+	bleProtocol->ResetBle();
 
 	Util::LedService(true);
 	Util::LedZigbee(false);

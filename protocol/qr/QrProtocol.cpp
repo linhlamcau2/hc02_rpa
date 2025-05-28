@@ -87,12 +87,14 @@ int countHyphens(const std::string &str)
 }
 
 bool parseQRCode(const std::string& code, std::string& prod_num, std::string& prod_code, std::string& serial, std::string& mac) {
+	LOGD("QrProtocol::len: %d", code.length());
     if (code.length() != 43) return false;  // check length
 
     prod_num   = code.substr(0, 13);
     prod_code   = code.substr(13, 8);
     serial = code.substr(21, 9);
 
+	LOGD("QrProtocol::code 30: %c", code[30]);
     if (code[30] != '-') return false;  // check char '-'
 
     mac = code.substr(31, 12);
@@ -104,8 +106,12 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 	if (this->startTest)
 		return len; // ignore messages after test started
 
+	if(data[len - 1] != 0x0D)
+	{
+		return len; // ignore messages without 0x0D at the end
+	}
 	uint8_t *d = data;
-	int l = len;
+	int l = len -1 ;
 	std::string s(reinterpret_cast<char *>(d), l);
 	LOGD("QrProtocol::OnMessage: %s", s.c_str());
 	if (l > 0)
