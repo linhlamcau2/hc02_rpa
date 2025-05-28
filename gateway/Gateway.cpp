@@ -177,7 +177,7 @@ uint16_t deviceVersion = 0;
 bool check_res_on[4] = {false};
 bool check_res_off[4] = {false};
 
-uint8_t process_test_ctcu(uint8_t num_ele)
+uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 {
 	uint8_t err = 1;
 
@@ -192,7 +192,7 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 
 	for (int i = 0; i < num_ele; i++) // Buoc 3: diueu khien chu trinh 2 lan
 	{
-		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 1) == CODE_OK)
+		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 1) == CODE_OK)
 		{
 			check_res_on[i] = true;
 		}
@@ -208,7 +208,7 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1, 0) == CODE_OK)
+		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 -pos, 0) == CODE_OK)
 		{
 			check_res_off[i] = true;
 		}
@@ -382,13 +382,19 @@ int Gateway::TestSwitch()
 				case CTCU_BLE_CN_O3T:
 				case CTCU_BLE_CN_O2T:
 				case CTCU_BLE_CN_O1T:
+				{
+					uint8_t num_ele = prod.num_ele;
+					uint8_t err = process_test_ctcu(num_ele, 0);
+					rd_reporting_proc_ctcu(num_ele, err, prod.dev_type);
+					break;
+				}
 				case CTCU_WF_CN_01T_2W_SP:
 				case CTCU_WF_CN_02T_2W_SP:
 				case CTCU_WF_CN_03T_2W_SP:
 				case CTCU_WF_CN_04T_2W_SP:
 				{
 					uint8_t num_ele = prod.num_ele;
-					uint8_t err = process_test_ctcu(num_ele);
+					uint8_t err = process_test_ctcu(num_ele,1);
 					rd_reporting_proc_ctcu(num_ele, err, prod.dev_type);
 					break;
 				}
