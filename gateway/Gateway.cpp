@@ -22,6 +22,7 @@
 #include "QrProtocol.h"
 #include "gpioProtocol.h"
 #include "RelayProtocol.h"
+#include "Product.h"
 
 Gateway *gateway = NULL;
 static bool check_connect_cloud = false;
@@ -176,7 +177,6 @@ uint16_t deviceVersion = 0;
 bool check_res_on[4] = {false};
 bool check_res_off[4] = {false};
 
-int type_ctcu_arr[4] = {22026, 22028, 22030, 22032};
 uint8_t process_test_ctcu(uint8_t num_ele)
 {
 	uint8_t err = 1;
@@ -273,16 +273,19 @@ uint8_t process_test_ctcu(uint8_t num_ele)
 		}
 	}
 
-
 	return err;
 }
 
-void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
+void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
 {
 	Json::Value rs;
-	rs["mac"] = qrProtocol->mac;
-	rs["addr"] = qrProtocol->addr;
+	// rs["mac"] = qrProtocol->mac;
+	// rs["addr"] = qrProtocol->addr;
+	rs["version"] = to_string(deviceVersion);
+	rs["deviceType"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial;
+	rs["serial"] = dev_type;
 	rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
+
 	rs["on_relay1"] = checkRelayOn[0];
 	rs["off_relay1"] = checkRelayOff[0];
 	if (num_ele > 1)
@@ -305,8 +308,7 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
 	rs["off_all"] = checkOffAll;
 	rs["remote_learn"] = check_pair_k9b;
 	rs["remote_control"] = check_stt_last;
-	rs["version"] = to_string(deviceVersion);
-	rs["deviceType"] = to_string(type_ctcu_arr[num_ele - 1]);
+
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
 	Json::Value dataPush;
@@ -332,6 +334,28 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err)
 	SLEEP_MS(10000);
 }
 
+void start_process()
+{
+	gpioProtocol->reset_led_in_proc();
+	checkRssi = false;
+	checkOnAll = false;
+	checkOffAll = false;
+
+	check_proc_success = true;
+	check_pair_k9b = false;
+	check_stt_last = false;
+
+	deviceType = 0;
+	deviceVersion = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		checkRelayOn[i] = false;
+		checkRelayOff[i] = false;
+		check_res_on[i] = false;
+		check_res_on[i] = false;
+	}
+}
+
 int Gateway::TestSwitch()
 {
 
@@ -348,44 +372,31 @@ int Gateway::TestSwitch()
 		}
 		if (qrProtocol->startTest && check_connect_cloud)
 		{
-			gpioProtocol->reset_led_in_proc();
-			checkRssi = false;
-			checkOnAll = false;
-			checkOffAll = false;
-
-			check_proc_success = true;
-			check_pair_k9b = false;
-			check_stt_last = false;
-
-			deviceType = 0;
-			deviceVersion = 0;
-			for (int i = 0; i < 4; i++)
+			start_process();
+			ProductInfo prod;
+			if (is_product_exist(qrProtocol->prod_code, prod))
 			{
-				checkRelayOn[i] = false;
-				checkRelayOff[i] = false;
-				check_res_on[i] = false;
-				check_res_on[i] = false;
+				switch (prod.type)
+				{
+				case CTCU_BLE_CN_O4T:
+				case CTCU_BLE_CN_O3T:
+				case CTCU_BLE_CN_O2T:
+				case CTCU_BLE_CN_O1T:
+				case CTCU_WF_CN_01T_2W_SP:
+				case CTCU_WF_CN_02T_2W_SP:
+				case CTCU_WF_CN_03T_2W_SP:
+				case CTCU_WF_CN_04T_2W_SP:
+				{
+					uint8_t num_ele = prod.num_ele;
+					uint8_t err = process_test_ctcu(num_ele);
+					rd_reporting_proc_ctcu(num_ele, err, prod.dev_type);
+					break;
+				}
+				default:
+					break;
+				}
 			}
-			bleProtocol->StartScan(); // Buoc 1: bat dau quet
-			bleProtocol->isMatchMac = false;
-			timeout = 50;
-			while (!bleProtocol->isMatchMac && timeout--)
-			{
-				SLEEP_MS(100);
-			}
-			bleProtocol->StopScan();
-			uint8_t err = 0;
-			uint8_t num_ele = 0;
-			num_ele = qrProtocol->type_dev;
-			if (bleProtocol->isMatchMac)
-			{
-				checkRssi = true;
 
-				if (num_ele > 0 && num_ele <= 4)
-					err = process_test_ctcu(num_ele);
-			}
-			if (num_ele > 0 && num_ele <= 4)
-				rd_reporting_proc_ctcu(num_ele, err);
 #ifdef ESP_PLATFORM
 			tick_count_qr_scan = xTaskGetTickCount();
 #endif

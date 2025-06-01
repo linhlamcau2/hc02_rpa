@@ -18,6 +18,9 @@ QrProtocol::QrProtocol(char *uartPort, int baudrate) : Uart(uartPort, baudrate, 
 #endif
 {
 	this->mac = "";
+	this->prod_code = "";
+	this->prod_num = "";
+	this->serial = "";
 	this->startTest = false;
 	this->mac_k9b = config->GetMacK9B();
 	this->mac_k9b_int = strtoul(this->mac_k9b.c_str(), NULL, 16);
@@ -83,57 +86,86 @@ int countHyphens(const std::string &str)
 	return count;
 }
 
+bool parseQRCode(const std::string& code, std::string& prod_num, std::string& prod_code, std::string& serial, std::string& mac) {
+    if (code.length() != 43) return false;  // check length
+
+    prod_num   = code.substr(0, 13);
+    prod_code   = code.substr(13, 8);
+    serial = code.substr(21, 9);
+
+    if (code[30] != '-') return false;  // check char '-'
+
+    mac = code.substr(31, 12);
+    return true;
+}
+
 int QrProtocol::OnMessage(unsigned char *data, int len)
 {
+	if (this->startTest)
+		return len; // ignore messages after test started
+
 	uint8_t *d = data;
 	int l = len;
 	std::string s(reinterpret_cast<char *>(d), l);
 	LOGD("QrProtocol::OnMessage: %s", s.c_str());
 	if (l > 0)
 	{
-		string prefix = s.substr(0, 8);
-		if (prefix == "CTCU.BLE")
+		// string prefix = s.substr(0, 8);
+		// if (prefix == "CTCU.BLE")
+		// {
+		// 	if (countHyphens(s) == 4)
+		// 	{
+		// 		if (!this->startTest)
+		// 		{
+		// 			string p = extractMac(s);
+		// 			// if((this->mac).compare(p) !=0)
+		// 			string type = extractCnNumber(s);
+		// 			LOGI("Type scan %s", type.c_str());
+		// 			if(1)
+		// 			{
+		// 				this->mac = p;
+		// 				string tailMac = mac.substr(8, 12);
+		// 				LOGI("Check", "OnMessage: %s", tailMac.c_str());
+		// 				uint16_t mac_tail = getLast4HexAsUint16(tailMac);
+		// 				this->addr = (mac_tail > 0x8000 ) ? (mac_tail - 0x8000) : mac_tail ;
+		// 				this->type_dev = std::stoi(type);
+		// 				this->startTest = true;
+		// 			}
+		// 			LOGE("qr:mac %s", this->mac.c_str());
+		// 			LOGE("qr:addr %d", this->addr);
+		// 			LOGE("qr:type %d", this->type_dev);
+		// 		}
+		// 	}
+		// }
+		// else if (prefix == "KDKP.BLE")
+		// {
+		// 	size_t pos = s.find("MAC");
+		// 	if (pos != string::npos)
+		// 	{
+		// 		string macAddress = s.substr(pos + 3);
+		// 		if(macAddress.size() >= 8)
+		// 		{
+		// 			macAddress = macAddress.substr(0, 8);
+		// 			this->mac_k9b = macAddress;
+		// 			config->SetMacK9B(macAddress);
+		// 			this->mac_k9b_int = strtoul(macAddress.c_str(), NULL, 16);
+		// 			LOGI("QrProtocol::OnMessage: K9B MAC int: %X", this->mac_k9b_int);
+		// 			this->isMac_k9b = true;
+		// 		}
+		// 	}
+		// }
+		if(parseQRCode(s, this->prod_num, this->prod_code, this->serial, this->mac))
 		{
-			if (countHyphens(s) == 4)
-			{
-				if (!this->startTest)
-				{
-					string p = extractMac(s);
-					// if((this->mac).compare(p) !=0)
-					string type = extractCnNumber(s);
-					LOGI("Type scan %s", type.c_str());
-					if(1)
-					{
-						this->mac = p;
-						string tailMac = mac.substr(8, 12);
-						LOGI("Check", "OnMessage: %s", tailMac.c_str());
-						uint16_t mac_tail = getLast4HexAsUint16(tailMac);
-						this->addr = (mac_tail > 0x8000 ) ? (mac_tail - 0x8000) : mac_tail ;
-						this->type_dev = std::stoi(type);
-						this->startTest = true;
-					}
-					LOGE("qr:mac %s", this->mac.c_str());
-					LOGE("qr:addr %d", this->addr);
-					LOGE("qr:type %d", this->type_dev);
-				}
-			}
-		}
-		else if (prefix == "KDKP.BLE")
-		{
-			size_t pos = s.find("MAC");
-			if (pos != string::npos)
-			{
-				string macAddress = s.substr(pos + 3);
-				if(macAddress.size() >= 8)
-				{
-					macAddress = macAddress.substr(0, 8);
-					this->mac_k9b = macAddress;
-					config->SetMacK9B(macAddress);
-					this->mac_k9b_int = strtoul(macAddress.c_str(), NULL, 16);
-					LOGI("QrProtocol::OnMessage: K9B MAC int: %X", this->mac_k9b_int);
-					this->isMac_k9b = true;
-				}
-			}
+			LOGI("QrProtocol::OnMessage: Product Number: %s", this->prod_num.c_str());
+			LOGI("QrProtocol::OnMessage: Product Code: %s", this->prod_code.c_str());
+			LOGI("QrProtocol::OnMessage: Serial: %s", this->serial.c_str());
+			LOGI("QrProtocol::OnMessage: MAC: %s", this->mac.c_str());
+
+			
+			uint16_t mac_tail = getLast4HexAsUint16(this->mac);
+			this->addr = (mac_tail > 0x8000 ) ? (mac_tail - 0x8000) : mac_tail;
+			this->startTest = true;
+
 		}
 		else
 		{
