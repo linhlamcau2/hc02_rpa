@@ -184,7 +184,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	uint8_t dev_mac[6] = {0};
 	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
 	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-
+	SLEEP_MS(500);
 	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
 	SLEEP_MS(1000);
 	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
@@ -195,11 +195,14 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 1) == CODE_OK)
 		{
 			check_res_on[i] = true;
+			LOGD("nut on %d: %d", i + 1 - pos,gpioProtocol->gpio_get(i));
 			SLEEP_MS(500);
 		}
 	}
 
+	
 	SLEEP_MS(500);
+
 	for (int i = 0; i < num_ele; i++)
 	{
 		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(i)) ? true : false;
@@ -212,10 +215,12 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 -pos, 0) == CODE_OK)
 		{
 			check_res_off[i] = true;
+			LOGD("nut off %d: %d", i + 1 - pos,gpioProtocol->gpio_get(i));
 			SLEEP_MS(500);
 		}
 	}
 
+	
 	SLEEP_MS(500);
 	for (int i = 0; i < num_ele; i++)
 	{
@@ -254,6 +259,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 
 	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
 	{
+		LOGD("resp req succ k9b");
 		SLEEP_MS(1500);
 		gpioProtocol->gpio_supply_power_k9b();
 		SLEEP_MS(1000);
@@ -282,7 +288,7 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
 	// rs["mac"] = qrProtocol->mac;
 	// rs["addr"] = qrProtocol->addr;
 	rs["version"] = to_string(deviceVersion);
-	rs["serial"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial;
+	rs["serial"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial + "-" + qrProtocol->mac;
 	rs["deviceType"] = dev_type;
 	rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
 
