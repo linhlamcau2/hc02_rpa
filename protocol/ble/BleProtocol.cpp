@@ -4342,3 +4342,32 @@ int BleProtocol :: Request_Pair_K9B(uint16_t addr,uint8_t button_id, uint32_t ma
 	return SendMessage(APP_REQ, (uint8_t *)&req_training_message, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000,devAddr_check,0,2);
 
 }
+
+int BleProtocol :: resetWifiCTCU(uint16_t addr)
+{
+	LOGD("BleProtocol ::Request_Pair_K9B");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint32_t mac_k9b;
+		uint8_t key_k9b;
+		uint8_t button_id;
+	} req_training_message_t;
+	req_training_message_t req_reset_wf = {0};
+	memset(&req_reset_wf, 0x00, sizeof(req_reset_wf));
+	req_reset_wf.ble_message_header.devAddr = addr;
+	req_reset_wf.opcodeVendor = 0xE0;
+	req_reset_wf.vendorId = RD_VENDOR_ID;
+	req_reset_wf.header = 0xfffe;
+
+	uint8_t devAddr_check[] = {(uint8_t)(addr & 0xFF), (uint8_t)((addr >> 8) & 0xFF)};
+	return SendMessage(APP_REQ, (uint8_t *)&req_reset_wf, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000,devAddr_check,0,2);
+
+}

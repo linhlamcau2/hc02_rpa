@@ -201,7 +201,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 
 	
-	SLEEP_MS(500);
+	SLEEP_MS(1000);
 
 	for (int i = 0; i < num_ele; i++)
 	{
@@ -221,7 +221,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 
 	
-	SLEEP_MS(500);
+	SLEEP_MS(1000);
 	for (int i = 0; i < num_ele; i++)
 	{
 		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(i)) && check_res_off[i]) ? true : false;
@@ -230,7 +230,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 
 	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
-	SLEEP_MS(500);
+	SLEEP_MS(1000);
 
 	checkOnAll = true;
 	for (int i = 0; i < num_ele; i++)
@@ -244,7 +244,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 
 	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-	SLEEP_MS(500);
+	SLEEP_MS(1000);
 
 	checkOffAll = true;
 	for (int i = 0; i < num_ele; i++)
@@ -266,7 +266,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		check_pair_k9b = true;
 	}
 	else
+	{
+		// bleProtocol->resetWifiCTCU(qrProtocol->addr);
 		return 0;
+	}
 
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
@@ -279,6 +282,8 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		}
 	}
 
+
+	// bleProtocol->resetWifiCTCU(qrProtocol->addr);
 	return err;
 }
 

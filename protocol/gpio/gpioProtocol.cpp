@@ -174,6 +174,11 @@ void GPIOProtocol ::gpio_init()
 
     Util::ExecuteCMD("echo 14 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo out > /sys/class/gpio/gpio14/direction");
+
+    Util::ExecuteCMD("echo 1 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio1/direction");
+
+    Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio1/value");
 #endif
 }
 
