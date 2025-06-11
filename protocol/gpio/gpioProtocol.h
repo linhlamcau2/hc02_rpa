@@ -18,7 +18,8 @@ private:
     int gpio_read(int index);
     int dectect_gpio(int index);
     int handle_gpio(int index);
-    
+    void process_rpa();
+    void detect_button();
 public:
     // GPIOProtocol();
     // ~GPIOProtocol();
