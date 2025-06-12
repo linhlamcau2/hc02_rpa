@@ -25,6 +25,31 @@ static bool get_str_config_entry(Json::Value &jsonData, string key, string &valu
 		return false;
 	}
 }
+static bool get_arr_config_entry(Json::Value &jsonData, string key,vector<int> &value)
+{
+	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isArray())
+	{
+		Json::Value arr = jsonData[key];
+		for (Json::Value::ArrayIndex i = 0; i < arr.size(); ++i)
+		{
+			if (arr[i].isInt())
+			{
+				value.push_back(arr[i].asInt());
+			}
+			else
+			{
+				LOGW("Json data error: %s", jsonData.toString().c_str());
+				return false;
+			}
+		}
+		return true;
+	}
+	else
+	{
+		LOGW("Json data error: %s", jsonData.toString().c_str());
+		return false;
+	}
+}
 
 static bool get_int_config_entry(Json::Value &jsonData, string key, int &value)
 {
@@ -101,6 +126,13 @@ static bool Write2File(string file, Json::Value &jsonData)
 Config::Config()
 {
 }
+void fix_addr_ctcu(vector<int> &ctcu_addr)
+{
+	for(int i=0; i < ctcu_addr.size(); i++)
+	{
+		ctcu_addr[i] = (ctcu_addr[i] > 0x8000) ? (ctcu_addr[i] - 0x8000) : ctcu_addr[i];
+	}
+}
 
 void Config::ReadConfig()
 {
@@ -146,6 +178,17 @@ void Config::ReadConfig()
 	else
 		mac_kb9 = MAC_KB9_DEFAULT;
 
+
+
+	vector<int> ctcu_addr_temp;
+	if (get_arr_config_entry(jsonData, ADDR_CTCU, ctcu_addr_temp))
+	{
+		ctcu_addr = ctcu_addr_temp;
+		fix_addr_ctcu(ctcu_addr);
+	}	
+	else
+		ctcu_addr = ctcu_addr_temp;
+
 	Print();
 }
 
@@ -170,6 +213,10 @@ void Config::Print()
 	LOGI("Local keepAlive: %d", localKeepAlive);
 }
 
+vector<int> Config::GetCtcudAddr()
+{
+	return ctcu_addr;
+}
 // Get info server
 string Config::GetHost()
 {

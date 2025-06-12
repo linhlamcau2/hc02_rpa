@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
-
+#include <vector>
 #define STRING_VALUE_MAX_SIZE 128
 // #define CONFIG_ENV "smh.@server[0]."
 // #define CONFIG_ENV_LOCAL "smh.@local[0]."
@@ -22,6 +22,9 @@
 #define MAC_KB9_KEY "mac_kb9"
 #define MAC_KB9_DEFAULT ""
 
+#define ADDR_CTCU "addr_ctcu"
+#define ADDR_CTCU_DEFAULT ""
+
 using namespace std;
 
 class Config
@@ -35,7 +38,7 @@ private:
 	string password;
 	int keepAlive;
 	string mac_kb9;
-
+	vector<int> ctcu_addr;
 	// local
 	string localHost;
 	int localPort;
@@ -64,6 +67,7 @@ public:
 	string GetLocalPassword();
 	int GetLocalKeepAlive();
 	string GetMacK9B();
+	vector<int> GetCtcudAddr();
 
 	bool SetHost(string host);
 	bool SetPort(int port);

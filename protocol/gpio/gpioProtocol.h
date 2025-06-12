@@ -19,14 +19,13 @@ private:
     int dectect_gpio(int index);
     int handle_gpio(int index);
     void process_rpa();
-    void detect_button();
+    void button_thread_func();
 public:
     // GPIOProtocol();
     // ~GPIOProtocol();
     void gpio_init();
     int gpio_get(int index);
     void on_gpio();
-    void gpio_supply_power_k9b();
     void set_led_success();
     void set_led_fail();
     void set_led_warning(uint8_t stt);
