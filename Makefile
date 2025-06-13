@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
 INCLUDES 		= -I. -Ibutton -Iconfig -Iobject -Idevice -Idevice/ble -Igateway -Ijson -Ilog -Imqtt -Iprotocol/ble -Iprotocol/qr -Iprotocol/gpio -Iprotocol/relay -Iuart -Iutil -Iwifi
-LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -lssl -lcrypto
+LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -lssl -lcrypto -lcunit 
 
 DEVICESRC += $(wildcard button/*.cpp)
 DEVICESRC += $(wildcard config/*.cpp)
@@ -30,7 +30,7 @@ DEVICESRC += $(wildcard uart/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)
 DEVICESRC += $(wildcard wifi/*.cpp)
 
-CPPSRC = $(wildcard *.cpp) $(DEVICESRC)
+CPPSRC = $(wildcard main_test.cpp) $(DEVICESRC)
 CPPOBJ = $(CPPSRC:.cpp=$(OBJEXT))
 BUILTOBJ = $(addprefix $(BUILD_PATH)/,$(CPPOBJ))
 
