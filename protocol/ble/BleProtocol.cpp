@@ -155,7 +155,7 @@ void BleProtocol::CheckKeyBle()
 
 	if (bleAppkey == "" || bleDevicekey == "" || bleNetkey == "" || bleNetkey != netkeyStr)
 	{
-		ResetBle();
+		// ResetBle();
 
 		// this->UpdateDeviceKeyGateway(gateway->getBleAddr(), gateway->getBleDeviceKey());
 

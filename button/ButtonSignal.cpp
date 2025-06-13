@@ -61,7 +61,7 @@ void ButtonSignal::OnRelease()
 	{
 		if (releaseTime - pressTime > 1000 && releaseTime - pressTime < 5000)
 		{
-			bleProtocol->ResetBle();
+			// bleProtocol->ResetBle();
 		}
 		else if (releaseTime - pressTime > 6000 && releaseTime - pressTime < 9000)
 		{

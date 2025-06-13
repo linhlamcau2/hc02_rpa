@@ -64,14 +64,14 @@ int k9b_at58_but1 = 0;
 int k9b_at58_but2 = 2;
 int k9b_at58_but3 = 3;
 
-int k9b_at58_but[3] = {3, 2, 0};
+int k9b_at58_but[3] = {0, 2, 3};
 
 GPIOProtocol *gpioProtocol = NULL;
 
 std::mutex mtx;
 std::condition_variable cv;
 
-bool running = true;
+bool running = false;
 bool paused = false;
 bool reset_requested = false;
 
@@ -163,32 +163,31 @@ void set_but_k9b(int id, int stt)
 void GPIOProtocol::k9b_press(int id_but)
 {
     set_but_k9b(id_but, 0);
-    SLEEP_MS(50);
+    SLEEP_MS(20);
     gpio_supply_power_k9b();
-    SLEEP_MS(50);
+    SLEEP_MS(20);
     set_but_k9b(id_but, 1);
-    SLEEP_MS(500);
     // LOGI("Button %d pressed", id_but);
 }
 
 void at58_power_on()
 {
+    LOGI("at58_power_on");
     vector<int> addr_ctcu = config->GetCtcudAddr();
     for(int i = 0; i < addr_ctcu.size(); i++)
     {
-        bleProtocol->ControlRelayOfSwitch(addr_ctcu[i], 4,0, 1);
+        bleProtocol->ControlRelayOfSwitch(addr_ctcu[i], 4,0xff, 1);
     }
-    SLEEP_MS(2000);
 }
 
 void at58_power_off()
 {
+    LOGI("at58_power_off");
     vector<int> addr_ctcu = config->GetCtcudAddr();
     for(int i = 0; i < addr_ctcu.size(); i++)
     {
-        bleProtocol->ControlRelayOfSwitch(addr_ctcu[i], 4,0, 0);
+        bleProtocol->ControlRelayOfSwitch(addr_ctcu[i], 4,0xff, 0);
     }
-    SLEEP_MS(2000);
 }
 
 void at58_pair_k9b()
@@ -197,13 +196,13 @@ void at58_pair_k9b()
     {
         // nhan nut 2+3
         gpioProtocol->k9b_press(0b110);
-        SLEEP_MS(2000);
+        SLEEP_MS(3000);
     }
 }
 
 void at58_del_k9b()
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
     {
         // nhan nut 1+2
         gpioProtocol->k9b_press(0b011);
@@ -213,12 +212,8 @@ void at58_del_k9b()
 
 void at58_handle_repeat(int id_but)
 {
-    for (int i = 0; i < 3; i++)
-    {
-        // nhan nut id_but
-        gpioProtocol->k9b_press(1<< id_but);
-        SLEEP_MS(5000);
-    }
+    gpioProtocol->k9b_press(1<< id_but);
+    SLEEP_MS(3000);
 }
 
 void at58_reset_power()
@@ -227,9 +222,9 @@ void at58_reset_power()
     {
         // bat den
         at58_power_on();
-        SLEEP_MS(3000);
+        SLEEP_MS(2500);
         at58_power_off();
-        SLEEP_MS(1000);
+        SLEEP_MS(2000);
     }
 }
 
@@ -242,7 +237,7 @@ void execute_state(int state)
 
         // Cấp nguồn cho đèn. Nhấn nút 2 và 3 mỗi nút 5 lần để ghép nối
         at58_power_on();
-        SLEEP_MS(2000);
+        SLEEP_MS(2500);
         at58_pair_k9b();
         break;
 
@@ -277,7 +272,7 @@ void execute_state(int state)
     case STEP_12_POWER_OFF_SHORT:
         //Ngắt nguồn 0.5s
         at58_power_off();
-        SLEEP_MS(1000);
+        SLEEP_MS(2000);
         break;
 
     case STEP_13_POWER_CYCLE:
@@ -288,22 +283,22 @@ void execute_state(int state)
     case STEP_14_POWER_6S:
         // Cấp nguồn 6s - đèn sáng trắng 100%%
         at58_power_on();
-        SLEEP_MS(6000);
+        SLEEP_MS(7000);
         at58_power_off();
-        SLEEP_MS(1000);
+        SLEEP_MS(2000);
         break;
 
     case STEP_15_DELETE_PAIRING:
         //Cấp nguồn lại. Nhấn nút 1 + 2 năm laanf dee xoa ghep noi
         at58_power_on();
-        SLEEP_MS(2000);
+        SLEEP_MS(1500);
         at58_del_k9b();
         break;
 
     case STEP_16_PRESS_1_FINAL:
         // Nhấn nút 1: đèn chuyển sang màu trắng 100%
         // k9b_press(0b100);
-        SLEEP_MS(2000);
+        SLEEP_MS(1000);
         break;
 
     case STEP_DONE:
@@ -339,7 +334,7 @@ void GPIOProtocol ::process_rpa()
             std::lock_guard<std::mutex> lock(mtx);
             if (paused)
             {
-                running = false;
+                running = false;               
             }
             if (reset_requested)
                 continue;
@@ -349,9 +344,10 @@ void GPIOProtocol ::process_rpa()
 
         if (current_step >= STEP_DONE)
         {
+            current_step = STEP_1_POWER_ON_PAIR;
             running = false;
             rpa_stop_display();
-            break;
+            continue;
         }
     }
 }
@@ -361,6 +357,7 @@ void button_start_handler(int mode)
     if (mode == BUTTON_PRESS)
     {
         {
+            LOGI("but start press");
             std::lock_guard<std::mutex> lock(mtx);
             paused = false;
             running = true;
@@ -457,8 +454,8 @@ void GPIOProtocol ::gpio_init()
     Util::ExecuteCMD("echo 12 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo in > /sys/class/gpio/gpio12/direction");
 
-    Util::ExecuteCMD("echo 13 > /sys/class/gpio/export");
-    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio13/direction");
+    Util::ExecuteCMD("echo 37 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio37/direction");
 
     // led
     Util::ExecuteCMD("echo 17 > /sys/class/gpio/export");
@@ -470,7 +467,7 @@ void GPIOProtocol ::gpio_init()
     set_but_k9b(4, 1);
     rpa_stop_display();
 
-    // Util::ExecuteCMD("echo out > /sys/class/gpio/gpio17/direction");
+    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio17/direction");
     thread proc_rpa(bind(&GPIOProtocol ::process_rpa, this));
     proc_rpa.detach();
 

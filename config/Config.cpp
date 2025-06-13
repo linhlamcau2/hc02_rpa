@@ -30,16 +30,12 @@ static bool get_arr_config_entry(Json::Value &jsonData, string key,vector<int> &
 	if (jsonData.isObject() && jsonData.isMember(key) && jsonData[key].isArray())
 	{
 		Json::Value arr = jsonData[key];
-		for (Json::Value::ArrayIndex i = 0; i < arr.size(); ++i)
+		for (Json::Value::ArrayIndex i = 0; i < arr.size(); i++)
 		{
 			if (arr[i].isInt())
 			{
 				value.push_back(arr[i].asInt());
-			}
-			else
-			{
-				LOGW("Json data error: %s", jsonData.toString().c_str());
-				return false;
+				LOGI("ele: %d",arr[i].asInt());
 			}
 		}
 		return true;
@@ -185,6 +181,10 @@ void Config::ReadConfig()
 	{
 		ctcu_addr = ctcu_addr_temp;
 		fix_addr_ctcu(ctcu_addr);
+		for(int i =0; i<ctcu_addr.size(); i++)
+		{
+			LOGI("CTCU ADDR %d: %d",i,ctcu_addr[i]);
+		}
 	}	
 	else
 		ctcu_addr = ctcu_addr_temp;
@@ -211,6 +211,7 @@ void Config::Print()
 	LOGI("Local username: %s", localUsername.c_str());
 	LOGI("Local password: %s", localPassword.c_str());
 	LOGI("Local keepAlive: %d", localKeepAlive);
+	LOGI("CTCU ADDR: %d", ctcu_addr[0]);
 }
 
 vector<int> Config::GetCtcudAddr()

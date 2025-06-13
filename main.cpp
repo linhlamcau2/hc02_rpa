@@ -39,6 +39,7 @@ static void signal_handler(int sig)
 	signal(sig, signal_handler);
 }
 
+
 int main(int argc, char *argv[])
 {
 	LOGI("Start ver " STR(VERSION));
@@ -64,7 +65,6 @@ int main(int argc, char *argv[])
 	relayProtocol = new RelayProtocol((char *)RELAY_UART_PORT, B115200);
 	relayProtocol->init();
 
-	Util::LedInternet(false);
 
 	string mac = Wifi::GetMacAddress();
 	// string mac = "11:22:33:44:55:66";
@@ -91,14 +91,10 @@ int main(int argc, char *argv[])
 
 	
 	bleProtocol->StopScan();
-	bleProtocol->ResetBle();
-
-	Util::LedService(true);
-	Util::LedZigbee(false);
 
 	while (1)
 	{
-		sleep(10);
+		sleep(5);
 	}
 	LOGI("exit main");
 	return 0;
