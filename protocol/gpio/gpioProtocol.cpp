@@ -192,11 +192,11 @@ void at58_power_off()
 
 void at58_pair_k9b()
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
     {
         // nhan nut 2+3
         gpioProtocol->k9b_press(0b110);
-        SLEEP_MS(3000);
+        SLEEP_MS(1200);
     }
 }
 
@@ -218,13 +218,13 @@ void at58_handle_repeat(int id_but)
 
 void at58_reset_power()
 {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 5; i++)
     {
         // bat den
         at58_power_on();
-        SLEEP_MS(2500);
+        SLEEP_MS(3500);
         at58_power_off();
-        SLEEP_MS(2000);
+        SLEEP_MS(3000);
     }
 }
 
@@ -272,7 +272,7 @@ void execute_state(int state)
     case STEP_12_POWER_OFF_SHORT:
         //Ngắt nguồn 0.5s
         at58_power_off();
-        SLEEP_MS(2000);
+        SLEEP_MS(3000);
         break;
 
     case STEP_13_POWER_CYCLE:
@@ -285,7 +285,7 @@ void execute_state(int state)
         at58_power_on();
         SLEEP_MS(7000);
         at58_power_off();
-        SLEEP_MS(2000);
+        SLEEP_MS(3000);
         break;
 
     case STEP_15_DELETE_PAIRING:
