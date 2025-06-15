@@ -31,7 +31,6 @@ enum
     STEP_13_POWER_CYCLE,
     STEP_14_POWER_6S,
     STEP_15_DELETE_PAIRING,
-    STEP_16_PRESS_1_FINAL,
 
     STEP_DONE
 };
@@ -75,13 +74,13 @@ bool running = false;
 bool paused = false;
 bool reset_requested = false;
 
-static void led_success_wr(int stt)
+static void led_running_wr(int stt)
 {
     std::string cmd = "echo " +to_string(stt) + " > /sys/class/gpio/gpio" + to_string(led_success) + "/value";
     Util::ExecuteCMD(cmd.c_str());
 }
 
-static void led_running_wr(int stt)
+static void led_success_wr(int stt) 
 {
     std::string cmd = "echo " + to_string(!stt) + " > /sys/class/leds/linkit-smart-7688:orange:service/brightness"; // chan 18 //vang
     Util::ExecuteCMD(cmd.c_str());
@@ -106,6 +105,7 @@ void rpa_stop_display()
 {
     led_running_wr(0);
     led_pause_wr(0);
+    led_success_wr(0);
 }
 static void gpio_supply_power_k9b()
 {
@@ -206,7 +206,7 @@ void at58_del_k9b()
     {
         // nhan nut 1+2
         gpioProtocol->k9b_press(0b011);
-        SLEEP_MS(2000);
+        SLEEP_MS(1200);
     }
 }
 
@@ -236,6 +236,8 @@ void execute_state(int state)
     case STEP_1_POWER_ON_PAIR:
 
         // Cấp nguồn cho đèn. Nhấn nút 2 và 3 mỗi nút 5 lần để ghép nối
+        at58_power_off();
+        SLEEP_MS(3000);
         at58_power_on();
         SLEEP_MS(2500);
         at58_pair_k9b();
@@ -291,21 +293,13 @@ void execute_state(int state)
     case STEP_15_DELETE_PAIRING:
         //Cấp nguồn lại. Nhấn nút 1 + 2 năm laanf dee xoa ghep noi
         at58_power_on();
-        SLEEP_MS(1500);
+        SLEEP_MS(4000);
         at58_del_k9b();
         break;
 
-    case STEP_16_PRESS_1_FINAL:
-        // Nhấn nút 1: đèn chuyển sang màu trắng 100%
-        // k9b_press(0b100);
-        SLEEP_MS(1000);
-        break;
-
     case STEP_DONE:
-        // Hoàn tất quy trình
         break;
     default:
-        // Trạng thái không hợp lệ
         break;
     }
 }
