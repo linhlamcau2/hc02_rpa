@@ -388,8 +388,8 @@ int read_button_value(int id_but)
 }
 
 static ButtonMap_t ButMap[] = {
-    {0,button_start, 0, button_start_handler},
-    {0,button_pause, 0, button_pause_handler},
+    {1,button_start, 0, button_start_handler},
+    {1,button_pause, 0, button_pause_handler},
 };
 
 int detect_button(int index)
@@ -461,7 +461,6 @@ void GPIOProtocol ::gpio_init()
     set_but_k9b(4, 1);
     rpa_stop_display();
 
-    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio17/direction");
     thread proc_rpa(bind(&GPIOProtocol ::process_rpa, this));
     proc_rpa.detach();
 
