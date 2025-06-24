@@ -267,7 +267,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 	else
 	{
-		// bleProtocol->resetWifiCTCU(qrProtocol->addr);
+		bleProtocol->resetWifiCTCU(qrProtocol->addr);
 		return 0;
 	}
 
@@ -283,7 +283,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 
 
-	// bleProtocol->resetWifiCTCU(qrProtocol->addr);
+	bleProtocol->resetWifiCTCU(qrProtocol->addr);
 	return err;
 }
 
