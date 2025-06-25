@@ -28,9 +28,9 @@ Gateway *gateway = NULL;
 static bool check_connect_cloud = false;
 static uint32_t tick_count_qr_scan = 0;
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
-				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, false),
-	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false)
+								 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+		: CloudProtocol(mac, address, port, clientId, username, password, keepalive, false),
+			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false)
 {
 	this->mac = mac;
 	this->id = "";
@@ -195,12 +195,11 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 1) == CODE_OK)
 		{
 			check_res_on[i] = true;
-			LOGD("nut on %d: %d", i + 1 - pos,gpioProtocol->gpio_get(i));
+			LOGD("nut on %d: %d", i + 1 - pos, gpioProtocol->gpio_get(i));
 			SLEEP_MS(500);
 		}
 	}
 
-	
 	SLEEP_MS(1000);
 
 	for (int i = 0; i < num_ele; i++)
@@ -212,15 +211,14 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 -pos, 0) == CODE_OK)
+		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 0) == CODE_OK)
 		{
 			check_res_off[i] = true;
-			LOGD("nut off %d: %d", i + 1 - pos,gpioProtocol->gpio_get(i));
+			LOGD("nut off %d: %d", i + 1 - pos, gpioProtocol->gpio_get(i));
 			SLEEP_MS(500);
 		}
 	}
 
-	
 	SLEEP_MS(1000);
 	for (int i = 0; i < num_ele; i++)
 	{
@@ -282,7 +280,6 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		}
 	}
 
-
 	bleProtocol->resetWifiCTCU(qrProtocol->addr);
 	return err;
 }
@@ -319,6 +316,108 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
 	rs["off_all"] = checkOffAll;
 	rs["remote_learn"] = check_pair_k9b;
 	rs["remote_control"] = check_stt_last;
+
+	Json::Value deviceJson = Json::arrayValue;
+	deviceJson.append(rs);
+	Json::Value dataPush;
+	Json::Value devJson;
+
+	devJson["device"] = deviceJson;
+	dataPush["cmd"] = "hcReportLog";
+	dataPush["rqi"] = Util::genRandRQI(16);
+	dataPush["data"] = devJson;
+
+	LOGE("%s", dataPush.toString().c_str());
+	gateway->CloudPublish(dataPush.toString());
+	if (!err)
+	{
+		gpioProtocol->set_led_fail();
+	}
+	else
+	{
+		gpioProtocol->set_led_success();
+	}
+	gateway->RestartBleGw();
+
+	SLEEP_MS(10000);
+}
+
+bool stt[3] = {false};
+bool stt_k9b[3] = {false};
+
+int test_ctcc_and_ctr()
+{
+	uint8_t err = 1;
+
+	uint8_t dev_mac[6] = {0};
+	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
+	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
+	SLEEP_MS(500);
+	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
+
+	for (int i = 0; i < 3; i++) // Buoc 3: diueu khien chu trinh 2 lan
+	{
+		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i, 1) == CODE_OK)
+		{
+			int count = 20;
+			while (count && !gpioProtocol->gpio_get(i))
+			{
+				count--;
+				SLEEP_MS(10);
+			}
+			stt[i] = (count > 0) ? true : false;
+			if(!stt[i])	err =  0;
+			SLEEP_MS(500);
+		}
+	}
+
+	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
+	{
+		check_pair_k9b = true;
+	}
+	else
+	{
+		// bleProtocol->resetWifiCTCU(qrProtocol->addr);
+		return 0;
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		// dieu khien tung nut
+		int count = 20;
+		while (count && !gpioProtocol->gpio_get(i))
+		{
+			count--;
+			SLEEP_MS(10);
+		}
+		stt_k9b[i] = (count > 0) ? true : false;
+		if(!stt_k9b[i])	err =  0;
+		SLEEP_MS(1000);
+	}
+
+	// bleProtocol->resetWifiCTCU(qrProtocol->addr);
+	return err;
+}
+
+
+void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
+{
+	Json::Value rs;
+	// rs["mac"] = qrProtocol->mac;
+	// rs["addr"] = qrProtocol->addr;
+	rs["version"] = to_string(deviceVersion);
+	rs["serial"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial + "-" + qrProtocol->mac;
+	rs["deviceType"] = dev_type;
+	// rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
+
+	rs["open"] = stt[0];
+	rs["close"] = stt[1];
+	rs["stop"] = stt[2];
+
+	rs["remote_learn"] = check_pair_k9b;
+	rs["remote_control_open"] = stt_k9b[0];
+	rs["remote_control_close"] = stt_k9b[1];
+	rs["remote_control_stop"] = stt_k9b[2];
 
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
@@ -405,8 +504,27 @@ int Gateway::TestSwitch()
 				case CTCU_WF_CN_04T_2W_SP:
 				{
 					uint8_t num_ele = prod.num_ele;
-					uint8_t err = process_test_ctcu(num_ele,1);
+					uint8_t err = process_test_ctcu(num_ele, 1);
 					rd_reporting_proc_ctcu(num_ele, err, prod.dev_type);
+					break;
+				}
+
+				case CTR_BLE_CN:
+				case CTR_BLE_CN_MN:
+				case CTR_BLE_V:
+				case CTR_BLE_V_MN:
+				case CTR_BLE_WF_CN:
+				case CTR_BLE_WF_CN_MN:
+				case CTR_BLE_WF_V:
+				case CTR_BLE_WF_V_MN:
+				case CTCC_BLE_CN:
+				case CTCC_BLE_V:
+				case CTCC_BLE_WF_CN:
+				case CTCC_BLE_WF_V:
+				{
+					uint8_t num_ele = prod.num_ele;
+					uint8_t err = test_ctcc_and_ctr();
+					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
 					break;
 				}
 				default:

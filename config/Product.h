@@ -53,8 +53,24 @@ enum
     CTCU_WF_V_03T_2W_SP_MN,
     CTCU_WF_V_04T_2W_SP_MN,
 
-    DOWNLOAD_AT58_90_10W,
-    DOWNLOAD_AT58_110_12W,
+    DOWNLIGHT_AT58_90_10W,
+    DOWNLIGHT_AT58_110_12W,
+
+    CTR_BLE_CN,
+    CTR_BLE_CN_MN,
+    CTR_BLE_V,
+    CTR_BLE_V_MN,
+
+    CTR_BLE_WF_CN,
+    CTR_BLE_WF_CN_MN,
+    CTR_BLE_WF_V,
+    CTR_BLE_WF_V_MN,
+
+    CTCC_BLE_CN,
+    CTCC_BLE_V,
+
+    CTCC_BLE_WF_CN,
+    CTCC_BLE_WF_V
 };
 
 typedef struct
