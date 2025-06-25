@@ -464,6 +464,11 @@ void start_process()
 		check_res_on[i] = false;
 		check_res_on[i] = false;
 	}
+	for(int i =0; i<3; i++)
+	{
+		stt[i] = false;
+		stt_k9b[i] = false;
+	}
 }
 
 int Gateway::TestSwitch()
