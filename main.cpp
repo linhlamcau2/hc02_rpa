@@ -84,6 +84,7 @@ int main(int argc, char *argv[])
 	LOGI("Passsword: %s", passMqttLocal.c_str());
 #endif
 
+	gpioProtocol = new GPIOProtocol();
 	gpioProtocol->gpio_init();
 	gateway = new Gateway(mac, config->GetHost(), config->GetPort(), config->GetClientId(), config->GetUsername(), config->GetPassword(), config->GetKeepAlive(),
 						  "localhost", 1883, "RD", passMqttLocal, 10);
