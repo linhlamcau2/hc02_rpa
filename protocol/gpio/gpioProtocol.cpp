@@ -328,6 +328,7 @@ void GPIOProtocol ::process_rpa()
             std::lock_guard<std::mutex> lock(mtx);
             if (paused)
             {
+                at58_power_off();
                 running = false;               
             }
             if (reset_requested)
@@ -353,10 +354,16 @@ void button_start_handler(int mode)
         {
             LOGI("but start press");
             std::lock_guard<std::mutex> lock(mtx);
-            paused = false;
+            if(paused) 
+            {
+                at58_power_on();
+                paused = false;
+                SLEEP_MS(1000);
+            }
             running = true;
             rpa_running_display();
         }
+        
         cv.notify_one();
     }
     else if (mode == BUTTON_HOLD && running)
