@@ -91,7 +91,7 @@ bool parseQRCode(const std::string& code, std::string& prod_num, std::string& pr
 	LOGD("QrProtocol::len: %d", qrLength);
     if (qrLength != 123) return false;  // check length
 
-	prod_num   = code.substr(qrLength-42, 13);
+	prod_num   = code.substr(qrLength-43, 13);
 	prod_code   = code.substr(qrLength-30, 8);
 	serial = code.substr(qrLength-22, 9);
 
