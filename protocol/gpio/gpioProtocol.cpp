@@ -409,8 +409,7 @@ int detect_button(int index)
         {
             ButMap[index].stt = stt;
             ButMap[index].count_stt = 0;
-            if(stt ==1 )
-                return BUTTON_PRESS; // Button pressed
+            return BUTTON_PRESS; // Button pressed
         }
     }
     else
@@ -467,6 +466,9 @@ void GPIOProtocol ::gpio_init()
     set_but_k9b(2, 1);
     set_but_k9b(4, 1);
     rpa_stop_display();
+
+    ButMap[0].stt=read_button_value(ButMap[0].button_id);
+    ButMap[1].stt=read_button_value(ButMap[1].button_id);
 
     thread proc_rpa(bind(&GPIOProtocol ::process_rpa, this));
     proc_rpa.detach();
