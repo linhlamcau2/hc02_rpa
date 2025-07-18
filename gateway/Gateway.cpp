@@ -202,9 +202,12 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 
 	SLEEP_MS(1000);
 
+	int j =0;
 	for (int i = 0; i < num_ele; i++)
 	{
-		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(i)) ? true : false;
+		if(num_ele == 1) j = 3;
+		else j=i;
+		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(j)) ? true : false;
 		if (!checkRelayOn[i])
 			err = 0;
 	}
@@ -222,7 +225,9 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	SLEEP_MS(1000);
 	for (int i = 0; i < num_ele; i++)
 	{
-		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(i)) && check_res_off[i]) ? true : false;
+		if(num_ele == 1) j = 3;
+		else j=i;
+		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(j)) && check_res_off[i]) ? true : false;
 		if (!checkRelayOff[i])
 			err = 0;
 	}
@@ -233,7 +238,9 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	checkOnAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (!gpioProtocol->gpio_get(i) == 0)
+		if(num_ele == 1) j = 3;
+		else j=i;
+		if (!gpioProtocol->gpio_get(j) == 0)
 		{
 			checkOnAll = false;
 			err = 0;
@@ -247,7 +254,9 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	checkOffAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (!gpioProtocol->gpio_get(i) == 1)
+		if(num_ele == 1) j = 3;
+		else j=i;
+		if (!gpioProtocol->gpio_get(j) == 1)
 		{
 			checkOffAll = false;
 			err = 0;
@@ -276,7 +285,9 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if (!gpioProtocol->gpio_get(i) == 0)
+		if(num_ele == 1) j = 3;
+		else j=i;
+		if (!gpioProtocol->gpio_get(j) == 0)
 		{
 			check_stt_last = false;
 			err = 0;
@@ -505,6 +516,22 @@ int Gateway::TestSwitch()
 				case CTCU_BLE_CN_O3T:
 				case CTCU_BLE_CN_O2T:
 				case CTCU_BLE_CN_O1T:
+				case CTCU_BLE_CN_O4T_MN:
+				case CTCU_BLE_CN_O3T_MN:
+				case CTCU_BLE_CN_O2T_MN:
+				case CTCU_BLE_CN_O1T_MN:
+				case CTCU_BLE_CN_REMT:
+				case CTCU_BLE_CN_REMT_MN:
+				case CTCU_BLE_V_O4T:
+				case CTCU_BLE_V_O3T:
+				case CTCU_BLE_V_O2T:
+				case CTCU_BLE_V_O1T:
+				case CTCU_BLE_V_O4T_MN:
+				case CTCU_BLE_V_O3T_MN:
+				case CTCU_BLE_V_O2T_MN:
+				case CTCU_BLE_V_O1T_MN:
+				case CTCU_BLE_V_REMT:
+				case CTCU_BLE_V_REMT_MN:
 				{
 					uint8_t num_ele = prod.num_ele;
 					uint8_t err = process_test_ctcu(num_ele, 0);
@@ -515,6 +542,18 @@ int Gateway::TestSwitch()
 				case CTCU_WF_CN_02T_2W_SP:
 				case CTCU_WF_CN_03T_2W_SP:
 				case CTCU_WF_CN_04T_2W_SP:
+				case CTCU_WF_CN_01T_2W_SP_MN:
+				case CTCU_WF_CN_02T_2W_SP_MN:
+				case CTCU_WF_CN_03T_2W_SP_MN:
+				case CTCU_WF_CN_04T_2W_SP_MN:
+				case CTCU_WF_V_01T_2W_SP:
+				case CTCU_WF_V_02T_2W_SP:
+				case CTCU_WF_V_03T_2W_SP:
+				case CTCU_WF_V_04T_2W_SP:
+				case CTCU_WF_V_01T_2W_SP_MN:
+				case CTCU_WF_V_02T_2W_SP_MN:
+				case CTCU_WF_V_03T_2W_SP_MN:
+				case CTCU_WF_V_04T_2W_SP_MN:
 				{
 					uint8_t num_ele = prod.num_ele;
 					uint8_t err = process_test_ctcu(num_ele, 1);
