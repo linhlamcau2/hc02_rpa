@@ -70,6 +70,7 @@
 
 #define QR_UART_PORT "/dev/ttyS0"
 #define RELAY_UART_PORT "/dev/ttyS2"
+#define UART_DEBUG_PORT "/dev/ttyS2"
 
 #ifdef CONFIG_ENABLE_ZIGBEE
 #include "ZigbeeProtocol.h"

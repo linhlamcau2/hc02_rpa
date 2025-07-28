@@ -22,6 +22,7 @@
 #include "QrProtocol.h"
 #include "gpioProtocol.h"
 #include "RelayProtocol.h"
+#include "UartDebugProtocol.h"
 #include "Product.h"
 
 Gateway *gateway = NULL;
@@ -374,19 +375,54 @@ int test_ctcc_and_ctr()
 	SLEEP_MS(500);
 	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
 
+	bleProtocol->SetGwAddr(qrProtocol->addr, 0);
+
 	for (int i = 0; i < 3; i++) // Buoc 3: diueu khien chu trinh 2 lan
 	{
-		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i, 1) == CODE_OK)
+		if (bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0) == CODE_OK)
 		{
 			int count = 20;
-			while (count && !gpioProtocol->gpio_get(i))
+			switch (i)
 			{
-				count--;
-				SLEEP_MS(10);
-			}
-			stt[i] = (count > 0) ? true : false;
-			if(!stt[i])	err =  0;
-			SLEEP_MS(500);
+				case 0:
+				{
+					while (count && gpioProtocol->gpio_get(3))
+					{
+						count--;
+						SLEEP_MS(10);
+					}
+					stt[i] = (count > 0) ? true : false;
+					if(!stt[i])	err =  0;
+					SLEEP_MS(500);
+					break;
+				}
+				case 1:
+				{
+					while (count && gpioProtocol->gpio_get(0))
+					{
+						count--;
+						SLEEP_MS(10);
+					}
+					stt[i] = (count > 0) ? true : false;
+					if(!stt[i])	err =  0;
+					SLEEP_MS(500);
+					break;
+				}
+				case 2:
+				{
+					while (count && !gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(3))
+					{
+						count--;
+						SLEEP_MS(10);
+					}
+					stt[i] = (count > 0) ? true : false;
+					if(!stt[i])	err =  0;
+					SLEEP_MS(500);
+					break;
+				}				
+				default:
+				break;
+			}			
 		}
 	}
 
@@ -400,10 +436,13 @@ int test_ctcc_and_ctr()
 		return 0;
 	}
 
+	SLEEP_MS(2000);
+
 	for (int i = 0; i < 3; i++)
 	{
 		// dieu khien tung nut
 		int count = 20;
+		uartDebugProtocol->SetValueButton(i);
 		while (count && !gpioProtocol->gpio_get(i))
 		{
 			count--;

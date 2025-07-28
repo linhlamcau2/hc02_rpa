@@ -2852,7 +2852,7 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 	LOGD("ControlOpenClosePausePercent 0x%04x, type %d, percent %d", devAddr, type, percent);
 	uint8_t dataRsp[100];
 	int lenRsp;
-	uint8_t controlHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
+	uint8_t controlHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF)};
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
@@ -2870,11 +2870,11 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 	control_message.ble_message_header.devAddr = devAddr;
 	control_message.opcodeVendor = RD_OPCODE_CONFIG;
 	control_message.vendorId = RD_VENDOR_ID;
-	control_message.opcodeRsp = RD_OPCODE_CONFIG_RSP;
+	control_message.opcodeRsp = 0x52;
 	control_message.header = RD_HEADER_CONTROL_OPEN_CLOSE_PAUSE;
 	control_message.type = type;
 	control_message.percent = percent;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&control_message, sizeof(control_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, controlHeader, 0, 7);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_message, sizeof(control_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, controlHeader, 0, 2);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))
@@ -2882,27 +2882,15 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 			uint16_t devAddr;
 			uint16_t gwAddr;
 			uint8_t opcodeRsp;
-			uint16_t vendorId;
 			uint16_t header;
 			uint8_t type;
 			uint8_t percent;
 		} control_rsp_message_t;
 		control_rsp_message_t *control_rsp_message = (control_rsp_message_t *)dataRsp;
-		if (control_rsp_message->header == RD_HEADER_RSP_CONTROL_OPEN_CLOSE_PAUSE_OPENED && control_rsp_message->type == type)
+		LOGD("control_rsp_message header: 0x%04x, type: %d, percent: %d", control_rsp_message->header, control_rsp_message->type, control_rsp_message->percent);	
+		if (control_rsp_message->opcodeRsp == 0x52 && control_rsp_message->header == RD_HEADER_PRESS_BUTTON_CURTAN_DOOR_ROOLING)
 		{
-			if (type == PERCENT)
-			{
-				if (control_rsp_message->percent == percent)
-				{
-					return CODE_OK;
-				}
-				LOGW("control resp opened error");
-				return CODE_ERROR;
-			}
-			else
-			{
-				return CODE_OK;
-			}
+			return CODE_OK;
 		}
 		LOGW("control resp state not match with input control");
 	}

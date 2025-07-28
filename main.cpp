@@ -20,6 +20,7 @@
 #include "QrProtocol.h"
 #include "RelayProtocol.h"
 #include "gpioProtocol.h"
+#include "UartDebugProtocol.h"
 
 #define TAG "MAIN"
 
@@ -61,8 +62,11 @@ int main(int argc, char *argv[])
 	qrProtocol = new QrProtocol((char *)QR_UART_PORT, B115200);
 	qrProtocol->init();
 
-	relayProtocol = new RelayProtocol((char *)RELAY_UART_PORT, B115200);
-	relayProtocol->init();
+	uartDebugProtocol = new UartDebugProtocol((char *)UART_DEBUG_PORT, B115200);
+	uartDebugProtocol->init();
+
+	// relayProtocol = new RelayProtocol((char *)RELAY_UART_PORT, B115200);
+	// relayProtocol->init();
 
 	Util::LedInternet(false);
 

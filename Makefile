@@ -9,7 +9,7 @@ CFLAGS = -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -Os -ff
 CXXFLAGS = -std=c++17 -Os -ffunction-sections -fdata-sections -Wno-unused-result -Wno-deprecated-declarations -MD
 LDFLAGS = -Wl,--gc-sections -Os -ffunction-sections -fdata-sections
 
-INCLUDES 		= -I. -Ibutton -Iconfig -Iobject -Idevice -Idevice/ble -Igateway -Ijson -Ilog -Imqtt -Iprotocol/ble -Iprotocol/qr -Iprotocol/gpio -Iprotocol/relay -Iuart -Iutil -Iwifi
+INCLUDES 		= -I. -Ibutton -Iconfig -Iobject -Idevice -Idevice/ble -Igateway -Ijson -Ilog -Imqtt -Iprotocol/ble -Iprotocol/qr -Iprotocol/gpio -Iprotocol/relay -Iprotocol/uartdebug -Iuart -Iutil -Iwifi
 LINKEDLIBS 	= -lmosquittopp -lsqlite3 -pthread -lcurl -lssl -lcrypto
 
 DEVICESRC += $(wildcard button/*.cpp)
@@ -25,6 +25,7 @@ DEVICESRC += $(wildcard mqtt/*.cpp)
 DEVICESRC += $(wildcard protocol/ble/*.cpp)
 DEVICESRC += $(wildcard protocol/relay/*.cpp)
 DEVICESRC += $(wildcard protocol/qr/*.cpp)
+DEVICESRC += $(wildcard protocol/uartdebug/*.cpp)
 DEVICESRC += $(wildcard protocol/gpio/*.cpp)
 DEVICESRC += $(wildcard uart/*.cpp)
 DEVICESRC += $(wildcard util/*.cpp)
