@@ -2874,7 +2874,7 @@ int BleProtocol::ControlOpenClosePausePercent(uint16_t devAddr, uint8_t type, ui
 	control_message.header = RD_HEADER_CONTROL_OPEN_CLOSE_PAUSE;
 	control_message.type = type;
 	control_message.percent = percent;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&control_message, sizeof(control_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 5000, controlHeader, 0, 2);
+	int rs = SendMessage(APP_REQ, (uint8_t *)&control_message, sizeof(control_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 2000, controlHeader, 0, 2);
 	if (rs == CODE_OK)
 	{
 		typedef struct __attribute__((packed))

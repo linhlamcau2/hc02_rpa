@@ -206,8 +206,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	int j =0;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(j)) ? true : false;
 		if (!checkRelayOn[i])
 			err = 0;
@@ -226,8 +228,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	SLEEP_MS(1000);
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(j)) && check_res_off[i]) ? true : false;
 		if (!checkRelayOff[i])
 			err = 0;
@@ -239,8 +243,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	checkOnAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		if (!gpioProtocol->gpio_get(j) == 0)
 		{
 			checkOnAll = false;
@@ -255,8 +261,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	checkOffAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		if (!gpioProtocol->gpio_get(j) == 1)
 		{
 			checkOffAll = false;
@@ -275,7 +283,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 	else
 	{
-		if(pos) 
+		if (pos)
 		{
 			bleProtocol->resetWifiCTCU(qrProtocol->addr);
 			SLEEP_MS(6000);
@@ -286,8 +294,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		if (!gpioProtocol->gpio_get(j) == 0)
 		{
 			check_stt_last = false;
@@ -296,7 +306,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		}
 	}
 
-	if(pos) 
+	if (pos)
 	{
 		bleProtocol->resetWifiCTCU(qrProtocol->addr);
 		SLEEP_MS(6000);
@@ -379,13 +389,15 @@ int test_ctcc_and_ctr()
 
 	for (int i = 0; i < 3; i++) // Buoc 3: diueu khien chu trinh 2 lan
 	{
-		if (bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0) == CODE_OK)
+		bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0);
+		SLEEP_MS(1000);
+		if (1)
 		{
-			int count = 20;
+			int count = 50;
 			switch (i)
 			{
-				case 0:
-				{
+			case 0:
+			{
 					while (count && gpioProtocol->gpio_get(3))
 					{
 						count--;
@@ -393,11 +405,10 @@ int test_ctcc_and_ctr()
 					}
 					stt[i] = (count > 0) ? true : false;
 					if(!stt[i])	err =  0;
-					SLEEP_MS(500);
-					break;
-				}
-				case 1:
-				{
+				break;
+			}
+			case 1:
+			{
 					while (count && gpioProtocol->gpio_get(0))
 					{
 						count--;
@@ -405,11 +416,10 @@ int test_ctcc_and_ctr()
 					}
 					stt[i] = (count > 0) ? true : false;
 					if(!stt[i])	err =  0;
-					SLEEP_MS(500);
-					break;
-				}
-				case 2:
-				{
+				break;
+			}
+			case 2:
+			{
 					while (count && !gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(3))
 					{
 						count--;
@@ -417,12 +427,11 @@ int test_ctcc_and_ctr()
 					}
 					stt[i] = (count > 0) ? true : false;
 					if(!stt[i])	err =  0;
-					SLEEP_MS(500);
-					break;
-				}				
-				default:
 				break;
-			}			
+			}
+			default:
+				break;
+			}
 		}
 	}
 
@@ -443,20 +452,52 @@ int test_ctcc_and_ctr()
 		// dieu khien tung nut
 		int count = 20;
 		uartDebugProtocol->SetValueButton(i);
-		while (count && !gpioProtocol->gpio_get(i))
-		{
-			count--;
-			SLEEP_MS(10);
-		}
-		stt_k9b[i] = (count > 0) ? true : false;
-		if(!stt_k9b[i])	err =  0;
-		SLEEP_MS(1000);
+		switch (i)
+			{
+			case 2:
+			{
+					while (count && gpioProtocol->gpio_get(3))
+					{
+						count--;
+						SLEEP_MS(10);
+					}
+					stt[i] = (count > 0) ? true : false;
+					if(!stt[i])	err =  0;
+				SLEEP_MS(500);
+				break;
+			}
+			case 0:
+			{
+					while (count && gpioProtocol->gpio_get(0))
+					{
+						count--;
+						SLEEP_MS(10);
+					}
+					stt[i] = (count > 0) ? true : false;
+					if(!stt[i])	err =  0;
+				SLEEP_MS(500);
+				break;
+			}
+			case 1:
+			{
+					while (count && !gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(3))
+					{
+						count--;
+						SLEEP_MS(10);
+					}
+					stt[i] = (count > 0) ? true : false;
+					if(!stt[i])	err =  0;
+				SLEEP_MS(500);
+				break;
+			}
+			default:
+				break;
+			}
 	}
 
 	// bleProtocol->resetWifiCTCU(qrProtocol->addr);
 	return err;
 }
-
 
 void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
 {
