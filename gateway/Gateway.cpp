@@ -7,11 +7,17 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <chrono>
+#include <future>
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
 #include "json.h"
 #include "Util.h"
 #include "Wifi.h"
 #include "Base64.h"
 #include "Config.h"
+#include <poll.h>
 
 #ifdef ESP_PLATFORM
 #include "Config.h"
@@ -376,25 +382,56 @@ bool stt[3] = {false};
 bool stt_k9b[3] = {false};
 bool check_res = false;
 
-void rpa_read_gpio(int i,int idx, bool* stt)
-{
-    const int max_retry = 600;
-    int count = max_retry;
+void prepare_gpio(int gpio, const std::string& edge_type = "both") {
+    std::ofstream export_file("/sys/class/gpio/export");
+    export_file << gpio;
+    export_file.close();
 
-		int temp = 1;
-    while (count > 0 && temp) {
-				temp = (idx != 2) ? gpioProtocol->gpio_get(idx) : (!gpioProtocol->gpio_get(idx));
-        count--;
-        SLEEP_MS(5);
-    }
+    std::string base = "/sys/class/gpio/gpio" + std::to_string(gpio);
+    std::ofstream dir_file(base + "/direction");
+    dir_file << "in";
+    dir_file.close();
 
-    stt[i] = (count > 0);
+    std::ofstream edge_file(base + "/edge");
+    edge_file << edge_type;
+    edge_file.close();
 }
 
-void start_rpa_read_gpio_thread(int i,int idx, bool* stt)
-{
-    std::thread gpioThread(rpa_read_gpio,i, idx, stt);
-    gpioThread.detach();
+bool wait_for_gpio_edge(int gpio, int timeout_ms = 2000) {
+    std::string value_path = "/sys/class/gpio/gpio" + std::to_string(gpio) + "/value";
+
+    int fd = open(value_path.c_str(), O_RDONLY | O_NONBLOCK);
+    if (fd < 0) {
+        std::cerr << "erro" << value_path << "\n";
+        return false;
+    }
+
+    char buf;
+    lseek(fd, 0, SEEK_SET);
+    read(fd, &buf, 1);  // clear edge
+
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLPRI | POLLERR;
+
+    int ret = poll(&pfd, 1, timeout_ms);
+
+    if (ret > 0) {
+        lseek(fd, 0, SEEK_SET);
+        read(fd, &buf, 1);
+        close(fd);
+        return true;
+    }
+
+    close(fd);
+    return false;
+}
+
+// Hàm trả về future<bool> để chạy song song
+std::future<bool> detect_pulse_async(int gpio) {
+    return std::async(std::launch::async, [gpio]() {
+        return wait_for_gpio_edge(gpio, 2000);
+    });
 }
 
 int test_ctcc_and_ctr()
@@ -411,6 +448,9 @@ int test_ctcc_and_ctr()
 
 	bleProtocol->ConfigMotor(qrProtocol->addr,1);    // loai 4 day DC
 	SLEEP_MS(2000);
+	prepare_gpio(3);  // GPIO3: xung 1 → 0
+	prepare_gpio(0);  // GPIO0: xung 1 → 0
+	prepare_gpio(2);   // GPIO2: xung 0 → 1
 
 	for (int j = 0; j < 3; j++) // Buoc 3: diueu khien chu trinh 2 lan
 	{
@@ -419,23 +459,27 @@ int test_ctcc_and_ctr()
 		if(j == 0)
 		{
 			i = 1; // nut 1   // mo 
-			idx = 3;
+			idx = 0;
 		}
 		else if(j == 1)
 		{
 			i = 2; // nut 2   // dung
-			idx = 2;
+			idx = 3;
 		}
 		else
 		{
 			i = 0; // nut 3  // dong
-			idx = 0;
+			idx = 2;
 		}
 		if (1)   // i: dong -> mo -> dung
 		{
-			start_rpa_read_gpio_thread(i,idx, stt);
-			SLEEP_MS(500);
+			auto future = detect_pulse_async(idx);
 			bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0);
+			stt[i] = future.get();
+			if (stt[i])
+			cout << "co xung" << endl;
+			else
+				cout << "khong co xung" << endl;
 			SLEEP_MS(3000);
 		}
 	}
@@ -455,18 +499,19 @@ int test_ctcc_and_ctr()
 	for (int i = 0; i < 3; i++)
 	{
 		int idx = 0;
-		if(i == 0)	idx = 3;
-		else if(i ==1 ) idx= 2;
-		else if(i == 2) idx = 0;
+		if(i == 0)	idx = 0;
+		else if(i ==1 ) idx= 3;
+		else if(i == 2) idx = 2;
 
-		start_rpa_read_gpio_thread(i,idx, stt_k9b);
-		SLEEP_MS(500);
-
-		uartDebugProtocol->SetValueButton(i);     // i : mo -> dung -> dong
+		auto future = detect_pulse_async(idx);
+		uartDebugProtocol->SetValueButton(i);
+		stt_k9b[i] = future.get();
+		if (stt_k9b[i])
+			cout << "co xung" << endl;
+		else
+			cout << "khong co xung" << endl;
 		SLEEP_MS(2000);
 	}
-
-	uartDebugProtocol->SetValueButton(1); 
 	SLEEP_MS(3000);
 	bleProtocol->resetWifiCTCU(qrProtocol->addr);
 	
