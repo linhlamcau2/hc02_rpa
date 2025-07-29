@@ -19,7 +19,7 @@ gpio_num_t led_warning = GPIO_NUM_19;
 gpio_num_t gpio_arr[] = {0, 1, 2, 3};
 #else
 int gpio_arr[] = {0, 37, 3, 2};
-
+int stt_pin[4] ={0};
 int pin_pow_k9b = 14;
 
 int led_success = 17;
@@ -32,7 +32,12 @@ int GPIOProtocol ::gpio_get(int index)
 #ifndef ESP_PLATFORM
     string cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr[index]) + "/value";
     int status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
-    LOGE("CMD: %s; status: %d", cmd.c_str(), status);
+    
+    if(stt_pin[index] != status)
+    {
+        stt_pin[index] = status;
+        LOGE("CMD: %s; status: %d", cmd.c_str(), status);
+    }
     return status;
 #else
     if (index < 0 || index > num)

@@ -59,6 +59,7 @@
   "files.associations": {
     "new": "cpp",
     "atomic": "cpp",
-    "ratio": "cpp"
+    "ratio": "cpp",
+    "functional": "cpp"
   }
 }

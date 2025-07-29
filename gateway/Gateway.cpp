@@ -203,11 +203,13 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 
 	SLEEP_MS(1000);
 
-	int j =0;
+	int j = 0;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(j)) ? true : false;
 		if (!checkRelayOn[i])
 			err = 0;
@@ -226,8 +228,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	SLEEP_MS(1000);
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(j)) && check_res_off[i]) ? true : false;
 		if (!checkRelayOff[i])
 			err = 0;
@@ -239,8 +243,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	checkOnAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		if (!gpioProtocol->gpio_get(j) == 0)
 		{
 			checkOnAll = false;
@@ -255,8 +261,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	checkOffAll = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		if (!gpioProtocol->gpio_get(j) == 1)
 		{
 			checkOffAll = false;
@@ -275,7 +283,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	}
 	else
 	{
-		if(pos) 
+		if (pos)
 		{
 			bleProtocol->resetWifiCTCU(qrProtocol->addr);
 			SLEEP_MS(6000);
@@ -286,8 +294,10 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	check_stt_last = true;
 	for (int i = 0; i < num_ele; i++)
 	{
-		if(num_ele == 1) j = 3;
-		else j=i;
+		if (num_ele == 1)
+			j = 3;
+		else
+			j = i;
 		if (!gpioProtocol->gpio_get(j) == 0)
 		{
 			check_stt_last = false;
@@ -296,7 +306,7 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 		}
 	}
 
-	if(pos) 
+	if (pos)
 	{
 		bleProtocol->resetWifiCTCU(qrProtocol->addr);
 		SLEEP_MS(6000);
@@ -364,6 +374,28 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
 
 bool stt[3] = {false};
 bool stt_k9b[3] = {false};
+bool check_res = false;
+
+void rpa_read_gpio(int i,int idx, bool* stt)
+{
+    const int max_retry = 600;
+    int count = max_retry;
+
+		int temp = 1;
+    while (count > 0 && temp) {
+				temp = (idx != 2) ? gpioProtocol->gpio_get(idx) : (!gpioProtocol->gpio_get(idx));
+        count--;
+        SLEEP_MS(5);
+    }
+
+    stt[i] = (count > 0);
+}
+
+void start_rpa_read_gpio_thread(int i,int idx, bool* stt)
+{
+    std::thread gpioThread(rpa_read_gpio,i, idx, stt);
+    gpioThread.detach();
+}
 
 int test_ctcc_and_ctr()
 {
@@ -377,52 +409,34 @@ int test_ctcc_and_ctr()
 
 	bleProtocol->SetGwAddr(qrProtocol->addr, 0);
 
-	for (int i = 0; i < 3; i++) // Buoc 3: diueu khien chu trinh 2 lan
+	bleProtocol->ConfigMotor(qrProtocol->addr,1);    // loai 4 day DC
+	SLEEP_MS(2000);
+
+	for (int j = 0; j < 3; j++) // Buoc 3: diueu khien chu trinh 2 lan
 	{
-		if (bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0) == CODE_OK)
+		int i = 0;
+		int idx= 0;
+		if(j == 0)
 		{
-			int count = 20;
-			switch (i)
-			{
-				case 0:
-				{
-					while (count && gpioProtocol->gpio_get(3))
-					{
-						count--;
-						SLEEP_MS(10);
-					}
-					stt[i] = (count > 0) ? true : false;
-					if(!stt[i])	err =  0;
-					SLEEP_MS(500);
-					break;
-				}
-				case 1:
-				{
-					while (count && gpioProtocol->gpio_get(0))
-					{
-						count--;
-						SLEEP_MS(10);
-					}
-					stt[i] = (count > 0) ? true : false;
-					if(!stt[i])	err =  0;
-					SLEEP_MS(500);
-					break;
-				}
-				case 2:
-				{
-					while (count && !gpioProtocol->gpio_get(0) && !gpioProtocol->gpio_get(3))
-					{
-						count--;
-						SLEEP_MS(10);
-					}
-					stt[i] = (count > 0) ? true : false;
-					if(!stt[i])	err =  0;
-					SLEEP_MS(500);
-					break;
-				}				
-				default:
-				break;
-			}			
+			i = 1; // nut 1   // mo 
+			idx = 3;
+		}
+		else if(j == 1)
+		{
+			i = 2; // nut 2   // dung
+			idx = 2;
+		}
+		else
+		{
+			i = 0; // nut 3  // dong
+			idx = 0;
+		}
+		if (1)   // i: dong -> mo -> dung
+		{
+			start_rpa_read_gpio_thread(i,idx, stt);
+			SLEEP_MS(500);
+			bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0);
+			SLEEP_MS(3000);
 		}
 	}
 
@@ -432,7 +446,7 @@ int test_ctcc_and_ctr()
 	}
 	else
 	{
-		// bleProtocol->resetWifiCTCU(qrProtocol->addr);
+		bleProtocol->resetWifiCTCU(qrProtocol->addr);
 		return 0;
 	}
 
@@ -440,23 +454,24 @@ int test_ctcc_and_ctr()
 
 	for (int i = 0; i < 3; i++)
 	{
-		// dieu khien tung nut
-		int count = 20;
-		uartDebugProtocol->SetValueButton(i);
-		while (count && !gpioProtocol->gpio_get(i))
-		{
-			count--;
-			SLEEP_MS(10);
-		}
-		stt_k9b[i] = (count > 0) ? true : false;
-		if(!stt_k9b[i])	err =  0;
-		SLEEP_MS(1000);
+		int idx = 0;
+		if(i == 0)	idx = 3;
+		else if(i ==1 ) idx= 2;
+		else if(i == 2) idx = 0;
+
+		start_rpa_read_gpio_thread(i,idx, stt_k9b);
+		SLEEP_MS(500);
+
+		uartDebugProtocol->SetValueButton(i);     // i : mo -> dung -> dong
+		SLEEP_MS(2000);
 	}
 
-	// bleProtocol->resetWifiCTCU(qrProtocol->addr);
+	uartDebugProtocol->SetValueButton(1); 
+	SLEEP_MS(3000);
+	bleProtocol->resetWifiCTCU(qrProtocol->addr);
+	
 	return err;
 }
-
 
 void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
 {
@@ -468,15 +483,16 @@ void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
 	rs["deviceType"] = dev_type;
 	// rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
 
-	rs["open"] = stt[0];
-	rs["close"] = stt[1];
+	rs["open"] = stt[1];
+	rs["close"] = stt[0];
 	rs["stop"] = stt[2];
 
 	rs["remote_learn"] = check_pair_k9b;
 	rs["remote_control_open"] = stt_k9b[0];
-	rs["remote_control_close"] = stt_k9b[1];
-	rs["remote_control_stop"] = stt_k9b[2];
+	rs["remote_control_close"] = stt_k9b[2];
+	rs["remote_control_stop"] = stt_k9b[1];
 
+	err = (stt[0] && stt[1] && stt[2] && stt_k9b[0] && stt_k9b[1] && stt_k9b[2] && check_pair_k9b) ? 1 : 0;
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
 	Json::Value dataPush;
@@ -522,7 +538,7 @@ void start_process()
 		check_res_on[i] = false;
 		check_res_on[i] = false;
 	}
-	for(int i =0; i<3; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		stt[i] = false;
 		stt_k9b[i] = false;
