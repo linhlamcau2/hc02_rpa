@@ -35,9 +35,9 @@ Gateway *gateway = NULL;
 static bool check_connect_cloud = false;
 static uint32_t tick_count_qr_scan = 0;
 Gateway::Gateway(string mac, string address, int port, string clientId, string username, string password, int keepalive,
-								 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
-		: CloudProtocol(mac, address, port, clientId, username, password, keepalive, false),
-			LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false)
+				 string localAddress, int localPort, string localUsername, string localPassword, int localKeepalive)
+	: CloudProtocol(mac, address, port, clientId, username, password, keepalive, false),
+	  LocalProtocol(mac, localAddress, localPort, mac, localUsername, localPassword, localKeepalive, false)
 {
 	this->mac = mac;
 	this->id = "";
@@ -382,56 +382,60 @@ bool stt[3] = {false};
 bool stt_k9b[3] = {false};
 bool check_res = false;
 
-void prepare_gpio(int gpio, const std::string& edge_type = "both") {
-    std::ofstream export_file("/sys/class/gpio/export");
-    export_file << gpio;
-    export_file.close();
+void prepare_gpio(int gpio, const std::string &edge_type = "both")
+{
+	std::ofstream export_file("/sys/class/gpio/export");
+	export_file << gpio;
+	export_file.close();
 
-    std::string base = "/sys/class/gpio/gpio" + std::to_string(gpio);
-    std::ofstream dir_file(base + "/direction");
-    dir_file << "in";
-    dir_file.close();
+	std::string base = "/sys/class/gpio/gpio" + std::to_string(gpio);
+	std::ofstream dir_file(base + "/direction");
+	dir_file << "in";
+	dir_file.close();
 
-    std::ofstream edge_file(base + "/edge");
-    edge_file << edge_type;
-    edge_file.close();
+	std::ofstream edge_file(base + "/edge");
+	edge_file << edge_type;
+	edge_file.close();
 }
 
-bool wait_for_gpio_edge(int gpio, int timeout_ms = 2000) {
-    std::string value_path = "/sys/class/gpio/gpio" + std::to_string(gpio) + "/value";
+bool wait_for_gpio_edge(int gpio, int timeout_ms = 2000)
+{
+	std::string value_path = "/sys/class/gpio/gpio" + std::to_string(gpio) + "/value";
+	int fd = open(value_path.c_str(), O_RDONLY | O_NONBLOCK);
+	if (fd < 0)
+	{
+		std::cerr << "erro" << value_path << "\n";
+		return false;
+	}
+	char buf;
+	// Clear edge lần đầu
+	lseek(fd, 0, SEEK_SET);
+	read(fd, &buf, 1);
+	usleep(10000);  // Chờ cho kernel xử lý (10ms)
 
-    int fd = open(value_path.c_str(), O_RDONLY | O_NONBLOCK);
-    if (fd < 0) {
-        std::cerr << "erro" << value_path << "\n";
-        return false;
-    }
+	struct pollfd pfd;
+	pfd.fd = fd;
+	pfd.events = POLLPRI | POLLERR;
 
-    char buf;
-    lseek(fd, 0, SEEK_SET);
-    read(fd, &buf, 1);  // clear edge
+	int ret = poll(&pfd, 1, timeout_ms);
 
-    struct pollfd pfd;
-    pfd.fd = fd;
-    pfd.events = POLLPRI | POLLERR;
+	if (ret > 0)
+	{
+		lseek(fd, 0, SEEK_SET);
+		read(fd, &buf, 1);
+		close(fd);
+		return true;
+	}
 
-    int ret = poll(&pfd, 1, timeout_ms);
-
-    if (ret > 0) {
-        lseek(fd, 0, SEEK_SET);
-        read(fd, &buf, 1);
-        close(fd);
-        return true;
-    }
-
-    close(fd);
-    return false;
+	close(fd);
+	return false;
 }
 
 // Hàm trả về future<bool> để chạy song song
-std::future<bool> detect_pulse_async(int gpio) {
-    return std::async(std::launch::async, [gpio]() {
-        return wait_for_gpio_edge(gpio, 2000);
-    });
+std::future<bool> detect_pulse_async(int gpio)
+{
+	return std::async(std::launch::async, [gpio]()
+					  { return wait_for_gpio_edge(gpio, 2000); });
 }
 
 int test_ctcc_and_ctr()
@@ -446,38 +450,39 @@ int test_ctcc_and_ctr()
 
 	bleProtocol->SetGwAddr(qrProtocol->addr, 0);
 
-	bleProtocol->ConfigMotor(qrProtocol->addr,1);    // loai 4 day DC
+	bleProtocol->ConfigMotor(qrProtocol->addr, 1); // loai 4 day DC
 	SLEEP_MS(2000);
 	prepare_gpio(3);  // GPIO3: xung 1 → 0
 	prepare_gpio(0);  // GPIO0: xung 1 → 0
-	prepare_gpio(2);   // GPIO2: xung 0 → 1
+	prepare_gpio(2);  // GPIO2: xung 0 → 1
+	prepare_gpio(37); // GPIO37: xung 1 → 0
 
 	for (int j = 0; j < 3; j++) // Buoc 3: diueu khien chu trinh 2 lan
 	{
 		int i = 0;
-		int idx= 0;
-		if(j == 0)
+		int idx = 0;
+		if (j == 0)
 		{
-			i = 1; // nut 1   // mo 
+			i = 1; // nut 1   // mo
 			idx = 0;
 		}
-		else if(j == 1)
+		else if (j == 1)
 		{
 			i = 2; // nut 2   // dung
-			idx = 3;
+			idx = 3; // nc
 		}
 		else
 		{
 			i = 0; // nut 3  // dong
 			idx = 2;
 		}
-		if (1)   // i: dong -> mo -> dung
+		if (1) // i: dong -> mo -> dung
 		{
 			auto future = detect_pulse_async(idx);
 			bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0);
 			stt[i] = future.get();
 			if (stt[i])
-			cout << "co xung" << endl;
+				cout << "co xung" << endl;
 			else
 				cout << "khong co xung" << endl;
 			SLEEP_MS(3000);
@@ -499,9 +504,12 @@ int test_ctcc_and_ctr()
 	for (int i = 0; i < 3; i++)
 	{
 		int idx = 0;
-		if(i == 0)	idx = 0;
-		else if(i ==1 ) idx= 3;
-		else if(i == 2) idx = 2;
+		if (i == 0)
+			idx = 0;
+		else if (i == 1)
+			idx = 3; // no
+		else if (i == 2)
+			idx = 2;
 
 		auto future = detect_pulse_async(idx);
 		uartDebugProtocol->SetValueButton(i);
@@ -510,11 +518,12 @@ int test_ctcc_and_ctr()
 			cout << "co xung" << endl;
 		else
 			cout << "khong co xung" << endl;
-		SLEEP_MS(2000);
+		SLEEP_MS(3000);
 	}
+	bleProtocol->ConfigMotor(qrProtocol->addr, 3); // loai 3 day AC
 	SLEEP_MS(3000);
 	bleProtocol->resetWifiCTCU(qrProtocol->addr);
-	
+
 	return err;
 }
 
