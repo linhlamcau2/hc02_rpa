@@ -283,7 +283,8 @@ uint8_t process_test_ctcu(uint8_t num_ele, int pos)
 	{
 		LOGD("resp req succ k9b");
 		SLEEP_MS(1500);
-		gpioProtocol->gpio_supply_power_k9b();
+		uartDebugProtocol->SetValueButton(2);
+		// gpioProtocol->gpio_supply_power_k9b();
 		SLEEP_MS(1000);
 		check_pair_k9b = true;
 	}
@@ -683,6 +684,7 @@ int Gateway::TestSwitch()
 				case CTCC_BLE_WF_CN:
 				case CTCC_BLE_WF_V:
 				{
+					SLEEP_MS(1500);
 					uint8_t num_ele = prod.num_ele;
 					uint8_t err = test_ctcc_and_ctr();
 					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
