@@ -116,50 +116,6 @@ int QrProtocol::OnMessage(unsigned char *data, int len)
 	LOGD("QrProtocol::OnMessage: %s", s.c_str());
 	if (l > 0)
 	{
-		// string prefix = s.substr(0, 8);
-		// if (prefix == "CTCU.BLE")
-		// {
-		// 	if (countHyphens(s) == 4)
-		// 	{
-		// 		if (!this->startTest)
-		// 		{
-		// 			string p = extractMac(s);
-		// 			// if((this->mac).compare(p) !=0)
-		// 			string type = extractCnNumber(s);
-		// 			LOGI("Type scan %s", type.c_str());
-		// 			if(1)
-		// 			{
-		// 				this->mac = p;
-		// 				string tailMac = mac.substr(8, 12);
-		// 				LOGI("Check", "OnMessage: %s", tailMac.c_str());
-		// 				uint16_t mac_tail = getLast4HexAsUint16(tailMac);
-		// 				this->addr = (mac_tail > 0x8000 ) ? (mac_tail - 0x8000) : mac_tail ;
-		// 				this->type_dev = std::stoi(type);
-		// 				this->startTest = true;
-		// 			}
-		// 			LOGE("qr:mac %s", this->mac.c_str());
-		// 			LOGE("qr:addr %d", this->addr);
-		// 			LOGE("qr:type %d", this->type_dev);
-		// 		}
-		// 	}
-		// }
-		// else if (prefix == "KDKP.BLE")
-		// {
-		// 	size_t pos = s.find("MAC");
-		// 	if (pos != string::npos)
-		// 	{
-		// 		string macAddress = s.substr(pos + 3);
-		// 		if(macAddress.size() >= 8)
-		// 		{
-		// 			macAddress = macAddress.substr(0, 8);
-		// 			this->mac_k9b = macAddress;
-		// 			config->SetMacK9B(macAddress);
-		// 			this->mac_k9b_int = strtoul(macAddress.c_str(), NULL, 16);
-		// 			LOGI("QrProtocol::OnMessage: K9B MAC int: %X", this->mac_k9b_int);
-		// 			this->isMac_k9b = true;
-		// 		}
-		// 	}
-		// }
 		if(parseQRCode(s, this->prod_num, this->prod_code, this->serial, this->mac))
 		{
 			LOGI("QrProtocol::OnMessage: Product Number: %s", this->prod_num.c_str());

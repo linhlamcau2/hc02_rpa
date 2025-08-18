@@ -36,6 +36,7 @@ static ProductMap product_map = {
         // {"00065850", {CTCU_WF_CN_04T_2W_SP,4,"22043"}},
         
         {"00065849", {CTCU_WF_CN_03T_2W_SP_MN,3,"22042"}},
+        {"00065844", {CTCU_WF_CN_03T_2W_SP_MN,3,"22042"}},
         // {"00065849", {CTCU_WF_CN_03T_2W_SP,3,"22042"}},
 
         {"00065848", {CTCU_WF_CN_02T_2W_SP_MN,2,"22041"}},
