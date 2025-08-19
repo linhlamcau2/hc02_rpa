@@ -61,8 +61,8 @@ static void TestSwitchThread(void *data)
 void Gateway::init()
 {
 	// Device::InitDeviceModelList();
-	LocalProtocol::init();
-	CloudProtocol::init();
+	// LocalProtocol::init();
+	// CloudProtocol::init();
 
 	// InitMqttMessageDevice();
 	// InitMqttMessageGroup();
@@ -83,8 +83,8 @@ void Gateway::init()
 	thread testSwitchThread(bind(&Gateway::TestSwitch, this));
 	testSwitchThread.detach();
 #endif
-	LocalConnect();
-	CloudConnect();
+	// LocalConnect();
+	// CloudConnect();
 }
 
 void Gateway::OnCloudConnect(bool isConnected, bool isReconnect)
