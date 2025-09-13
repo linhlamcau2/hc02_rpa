@@ -89,7 +89,7 @@ int countHyphens(const std::string &str)
 bool parseQRCode(const std::string& code, std::string& prod_num, std::string& prod_code, std::string& serial, std::string& mac) {
 	int qrLength = code.length();
 	LOGD("QrProtocol::len: %d", qrLength);
-    if (qrLength != 123) return false;  // check length
+    // if (qrLength != 123) return false;  // check length
 
 	prod_num   = code.substr(qrLength-43, 13);
 	prod_code   = code.substr(qrLength-30, 8);

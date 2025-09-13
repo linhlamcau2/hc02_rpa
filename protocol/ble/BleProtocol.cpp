@@ -4333,7 +4333,7 @@ int BleProtocol :: Request_Pair_K9B(uint16_t addr,uint8_t button_id, uint32_t ma
 
 int BleProtocol :: resetWifiCTCU(uint16_t addr)
 {
-	LOGD("BleProtocol ::Request_Pair_K9B");
+	LOGD("BleProtocol ::resetWifiCTCU");
 	uint8_t dataRsp[100];
 	int lenRsp;
 	typedef struct __attribute__((packed))

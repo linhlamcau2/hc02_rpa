@@ -60,6 +60,8 @@
     "new": "cpp",
     "atomic": "cpp",
     "ratio": "cpp",
-    "functional": "cpp"
+    "functional": "cpp",
+    "future": "cpp",
+    "ostream": "cpp"
   }
 }
