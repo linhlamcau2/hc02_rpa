@@ -490,9 +490,9 @@ int test_ctcc_and_ctr()
 		}
 	}
 
-	// SLEEP_MS(1000);
-	// bleProtocol->ConfigMotor(qrProtocol->addr, 3); // loai 3 day AC
-	// SLEEP_MS(3000);
+	SLEEP_MS(1000);
+	bleProtocol->ConfigMotor(qrProtocol->addr, 3); // loai 3 day AC
+	SLEEP_MS(3000);
 
 	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
 	{
@@ -577,7 +577,7 @@ void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
 	SLEEP_MS(10000);
 }
 
-int process_test_ctcc()
+int process_test_ctcc_ble_wf()
 {
 	//0: begin
 	uint8_t err = 1;
@@ -609,17 +609,18 @@ int process_test_ctcc()
 		cout << "co xung open" << endl;
 	else
 		cout << "khong co xung open" << endl;
-	SLEEP_MS(2000);
+	SLEEP_MS(1500);
 
 	//4: Ve Stop khi het 3s calib
 
+	prepare_gpio(3);
 	future = detect_pulse_async(3);
 	stt[2] = future.get();
 	if (stt[2])
 		cout << "co xung stop" << endl;
 	else
 		cout << "khong co xung stop" << endl;
-	SLEEP_MS(1000);
+	SLEEP_MS(3000);
 
 	//5: Dieu khien Close 
 
@@ -630,7 +631,7 @@ int process_test_ctcc()
 		cout << "co xung close" << endl;
 	else
 		cout << "khong co xung close" << endl;
-	SLEEP_MS(1000);
+	SLEEP_MS(3000);
 	//6: Khoa cam ung 
 
 	bleProtocol->LockDevice(qrProtocol->addr,1);
@@ -658,9 +659,21 @@ int process_test_ctcc()
 		cout << "co xung open" << endl;
 	else
 		cout << "khong co xung open" << endl;
-	SLEEP_MS(3000);
+	SLEEP_MS(2000);
 
-	//9: Dieu khien Close
+	//9: Dieu khien Stop 
+
+	prepare_gpio(3);
+	future = detect_pulse_async(3);
+	uartDebugProtocol->SetValueButton(1);
+	stt_k9b[1] = future.get();
+	if (stt_k9b[1])
+		cout << "co xung stop" << endl;
+	else
+		cout << "khong co xung stop" << endl;
+	SLEEP_MS(2000);
+
+	//10: Dieu khien Close
 
 	future = detect_pulse_async(2);
 	uartDebugProtocol->SetValueButton(2);
@@ -670,7 +683,88 @@ int process_test_ctcc()
 	else
 		cout << "khong co xung close" << endl;
 	SLEEP_MS(3000);
-	//10: Dieu khien Stop 
+	//11: Calib 120s s
+
+	bleProtocol->CalibAuto(qrProtocol->addr,120);
+	return err;
+}
+
+int process_test_ctcc_ble()
+{
+	cout << "process_test_ctcc_ble" << endl;
+	//0: begin
+	uint8_t err = 1;
+
+	uint8_t dev_mac[6] = {0};
+	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
+	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
+	SLEEP_MS(500);
+	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
+
+	SLEEP_MS(2000);
+	prepare_gpio(3);  // GPIO3: xung 1 → 0
+	prepare_gpio(0);  // GPIO0: xung 1 → 0
+	prepare_gpio(2);  // GPIO2: xung 0 → 1
+	prepare_gpio(37); // GPIO37: xung 1 → 0
+	//1: Dieu khien Open 
+
+	auto future = detect_pulse_async(0);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 1, 0);   // 100%
+	stt[1] = future.get();
+	if (stt[1])
+		cout << "co xung open" << endl;
+	else
+		cout << "khong co xung open" << endl;
+	SLEEP_MS(3000);
+
+	//2: Dieu khien Stop
+
+	future = detect_pulse_async(3);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
+	stt[2] = future.get();
+	if (stt[2])
+		cout << "co xung stop" << endl;
+	else
+		cout << "khong co xung stop" << endl;
+	SLEEP_MS(3000);
+
+	//3: Dieu khien Close 
+
+	future = detect_pulse_async(2);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
+	stt[0] = future.get();
+	if (stt[0])
+		cout << "co xung close" << endl;
+	else
+		cout << "khong co xung close" << endl;
+	SLEEP_MS(3000);
+
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
+	SLEEP_MS(1000);
+	//4: Hoc lenh K9B
+
+	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
+	{
+		check_pair_k9b = true;
+	}
+	else
+	{
+		return 0;
+	}
+
+	SLEEP_MS(2000);
+	//5: Dieu khien Open 
+
+	future = detect_pulse_async(0);
+	uartDebugProtocol->SetValueButton(0);
+	stt_k9b[0] = future.get();
+	if (stt_k9b[0])
+		cout << "co xung open" << endl;
+	else
+		cout << "khong co xung open" << endl;
+	SLEEP_MS(3000);
+
+	//7: Dieu khien Stop 
 
 	future = detect_pulse_async(3);
 	uartDebugProtocol->SetValueButton(1);
@@ -682,9 +776,21 @@ int process_test_ctcc()
 	SLEEP_MS(3000);
 	//11: Calib 120s s
 
-	bleProtocol->CalibAuto(qrProtocol->addr,120);
-	//12: Reset Cai dat 
+	//6: Dieu khien Close
+
+	future = detect_pulse_async(2);
+	uartDebugProtocol->SetValueButton(2);
+	stt_k9b[2] = future.get();
+	if (stt_k9b[2])
+		cout << "co xung close" << endl;
+	else
+		cout << "khong co xung close" << endl;
+	SLEEP_MS(3000);
+	
+	return err;
 }
+
+
 void start_process()
 {
 	gpioProtocol->reset_led_in_proc();
@@ -798,12 +904,17 @@ int Gateway::TestSwitch()
 					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
 					break;
 				}
-				case CTCC_BLE_CN:
-				case CTCC_BLE_V:
 				case CTCC_BLE_WF_CN:
 				case CTCC_BLE_WF_V:
 				{
-					uint8_t err = process_test_ctcc();
+					uint8_t err = process_test_ctcc_ble_wf();
+					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
+					break;
+				}
+				case CTCC_BLE_CN:
+				case CTCC_BLE_V:
+				{
+					uint8_t err = process_test_ctcc_ble();
 					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
 					break;
 				}
