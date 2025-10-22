@@ -544,12 +544,12 @@ void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
 
 	rs["open"] = stt[1];
 	rs["close"] = stt[0];
-	rs["stop"] = stt[2];
+	rs["stop_nc"] = stt[2];
 
 	rs["remote_learn"] = check_pair_k9b;
 	rs["remote_control_open"] = stt_k9b[0];
 	rs["remote_control_close"] = stt_k9b[2];
-	rs["remote_control_stop"] = stt_k9b[1];
+	rs["remote_control_stop_no"] = stt_k9b[1];
 
 	err = (stt[0] && stt[1] && stt[2] && stt_k9b[0] && stt_k9b[1] && stt_k9b[2] && check_pair_k9b) ? 1 : 0;
 	Json::Value deviceJson = Json::arrayValue;
@@ -644,7 +644,7 @@ int process_test_ctr_ble()
 		cout << "khong co xung open" << endl;
 	SLEEP_MS(3000);
 
-	//4: Ve Stop khi het 3s calib
+	//4: Stop
 
 	runCheckGpioScript(3);
 	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
@@ -655,7 +655,7 @@ int process_test_ctr_ble()
 		cout << "khong co xung stop" << endl;
 	SLEEP_MS(3000);
 
-	//5: Dieu khien Close 
+	//5: Close 
 
 	runCheckGpioScript(2);
 	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
@@ -694,7 +694,7 @@ int process_test_ctr_ble()
 
 	//9: Dieu khien Stop 
 
-	runCheckGpioScript(3);
+	runCheckGpioScript(37);
 	uartDebugProtocol->SetValueButton(1);
 	stt_k9b[1] = waitForResult();
 	if (stt_k9b[1])
