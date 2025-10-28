@@ -439,8 +439,55 @@ std::future<bool> detect_pulse_async(int gpio)
 					  { return wait_for_gpio_edge(gpio, 2000); });
 }
 
+// void runCheckGpioScript(int gpioNum) {
+// 		string resultFile = "rpa.txt";
+//     string cmd = "/root/rpa_test.sh " + to_string(gpioNum) + " " + resultFile + " &";
+//     cout << "Run: " << cmd << endl;
+//     Util::ExecuteCMD(cmd.c_str());
+		
+// }
+
+void runCheckGpioScript(int gpioNum, int timeoutSec = 2) {
+    std::thread([gpioNum,timeoutSec]() {
+        string resultFile = "/root/rpa.txt";
+        string cmd = "/root/rpa_test.sh " + to_string(gpioNum) + " " + resultFile + " " + to_string(timeoutSec) + " &";
+        cout << "Run: " << cmd << endl;
+        Util::ExecuteCMD(cmd.c_str());
+    }).detach();
+
+	SLEEP_MS(500); 
+}
+
+int waitForResult(int timeoutSec = 2) {
+		SLEEP_MS(1500); 
+		string resultFile = "/root/rpa.txt";
+    time_t start = time(nullptr);
+    string val;
+
+    while (difftime(time(nullptr), start) < timeoutSec) {
+        std::ifstream ifs(resultFile);
+        if (ifs.good()) {
+            ifs >> val;
+            if (!val.empty()) {
+                if (val == "1") {
+                    cout << "resp ok\n";
+                    return 1;
+                } else {
+                    cout <<val<< "resp fail\n";
+                    return 0;
+                }
+            }
+        }
+        usleep(10000); // 10ms
+    }
+
+    cout << "not detected\n";
+    return 0;
+}
+
 int process_test_ctr_ble_wf()
 {
+	cout<<"process_test_ctr_ble_wf"<<endl;
 	uint8_t err = 1;
 
 	uint8_t dev_mac[6] = {0};
@@ -453,46 +500,43 @@ int process_test_ctr_ble_wf()
 
 	bleProtocol->ConfigMotor(qrProtocol->addr, 1); // loai 4 day DC
 	SLEEP_MS(2000);
-	prepare_gpio(3);  // GPIO3: xung 1 → 0
-	prepare_gpio(0);  // GPIO0: xung 1 → 0
-	prepare_gpio(2);  // GPIO2: xung 0 → 1
-	prepare_gpio(37); // GPIO37: xung 1 → 0
-
-	for (int j = 0; j < 3; j++) // Buoc 3: diueu khien chu trinh 2 lan
-	{
-		int i = 0;
-		int idx = 0;
-		if (j == 0)
-		{
-			i = 1; // nut 1   // mo
-			idx = 0;
-		}
-		else if (j == 1)
-		{
-			i = 2; // nut 2   // dung
-			idx = 3; // nc
-		}
-		else
-		{
-			i = 0; // nut 3  // dong
-			idx = 2;
-		}
-		if (1) // i: mo -> dung -> dong
-		{
-			auto future = detect_pulse_async(idx);
-			bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, i, 0);
-			stt[i] = future.get();
-			if (stt[i])
-				cout << "co xung" << endl;
-			else
-				cout << "khong co xung" << endl;
-			SLEEP_MS(3000);
-		}
-	}
-
+	
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);      // close 
+	SLEEP_MS(2000);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);			// stop
 	SLEEP_MS(1000);
-	bleProtocol->ConfigMotor(qrProtocol->addr, 3); // loai 3 day AC
+	//1: test open
+	runCheckGpioScript(0);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 1, 100);   // 100%
+	stt[1] = waitForResult();
+	if (stt[1])
+		cout << "co xung open" << endl;
+	else
+		cout << "khong co xung open" << endl;
 	SLEEP_MS(3000);
+
+	//2: test stop
+	runCheckGpioScript(3);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
+	stt[2] = waitForResult();
+	if (stt[2])
+		cout << "co xung stop" << endl;
+	else
+		cout << "khong co xung stop" << endl;
+	SLEEP_MS(3000);
+
+	//3: test close
+	runCheckGpioScript(2);
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
+	stt[0] = waitForResult();
+	if (stt[0])
+		cout << "co xung close" << endl;
+	else
+		cout << "khong co xung close" << endl;
+	SLEEP_MS(3000);
+	
+	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
+	SLEEP_MS(1000);
 
 	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
 	{
@@ -506,27 +550,41 @@ int process_test_ctr_ble_wf()
 
 	SLEEP_MS(2000);
 
-	for (int i = 0; i < 3; i++)
-	{
-		int idx = 0;
-		if (i == 0)
-			idx = 0;
-		else if (i == 1)
-			idx = 3; // no
-		else if (i == 2)
-			idx = 2;
+	//4: Dieu khien Open 
 
-		auto future = detect_pulse_async(idx);
-		uartDebugProtocol->SetValueButton(i);
-		stt_k9b[i] = future.get();
-		if (stt_k9b[i])
-			cout << "co xung" << endl;
-		else
-			cout << "khong co xung" << endl;
-		SLEEP_MS(3000);
-	}
+	runCheckGpioScript(0);
+	uartDebugProtocol->SetValueButton(0);
+	stt_k9b[0] = waitForResult();
+	if (stt_k9b[0])
+		cout << "co xung open" << endl;
+	else
+		cout << "khong co xung open" << endl;
+	SLEEP_MS(2000);
+
+	//5: Dieu khien Stop 
+
+	runCheckGpioScript(37);
+	uartDebugProtocol->SetValueButton(1);
+	stt_k9b[1] = waitForResult();
+	if (stt_k9b[1])
+		cout << "co xung stop" << endl;
+	else
+		cout << "khong co xung stop" << endl;
+	SLEEP_MS(2000);
+
+	//6: Dieu khien Close
+
+	runCheckGpioScript(2);
+	uartDebugProtocol->SetValueButton(2);
+	stt_k9b[2] = waitForResult();
+	if (stt_k9b[2])
+		cout << "co xung close" << endl;
+	else
+		cout << "khong co xung close" << endl;
+	SLEEP_MS(3000);
 	
-	SLEEP_MS(1000);
+	bleProtocol->ConfigMotor(qrProtocol->addr, 3); // loai 3 day AC
+	SLEEP_MS(3000);
 	bleProtocol->resetWifiCTCU(qrProtocol->addr);
 
 	return err;
@@ -577,51 +635,7 @@ void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
 	SLEEP_MS(10000);
 }
 
-// void runCheckGpioScript(int gpioNum) {
-// 		string resultFile = "rpa.txt";
-//     string cmd = "/root/rpa_test.sh " + to_string(gpioNum) + " " + resultFile + " &";
-//     cout << "Run: " << cmd << endl;
-//     Util::ExecuteCMD(cmd.c_str());
-		
-// }
 
-void runCheckGpioScript(int gpioNum, int timeoutSec = 2) {
-    std::thread([gpioNum,timeoutSec]() {
-        string resultFile = "/root/rpa.txt";
-        string cmd = "/root/rpa_test.sh " + to_string(gpioNum) + " " + resultFile + " " + to_string(timeoutSec) + " &";
-        cout << "Run: " << cmd << endl;
-        Util::ExecuteCMD(cmd.c_str());
-    }).detach();
-
-	SLEEP_MS(500); 
-}
-
-int waitForResult(int timeoutSec = 2) {
-		SLEEP_MS(1500); 
-		string resultFile = "/root/rpa.txt";
-    time_t start = time(nullptr);
-    string val;
-
-    while (difftime(time(nullptr), start) < timeoutSec) {
-        std::ifstream ifs(resultFile);
-        if (ifs.good()) {
-            ifs >> val;
-            if (!val.empty()) {
-                if (val == "1") {
-                    cout << "resp ok\n";
-                    return 1;
-                } else {
-                    cout <<val<< "resp fail\n";
-                    return 0;
-                }
-            }
-        }
-        usleep(10000); // 10ms
-    }
-
-    cout << "not detected\n";
-    return 0;
-}
 int process_test_ctr_ble()
 {
 	//0: begin
