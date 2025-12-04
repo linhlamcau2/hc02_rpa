@@ -93,3 +93,5 @@ public:
 };
 
 extern Gateway *gateway;
+
+void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv);

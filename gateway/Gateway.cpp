@@ -68,7 +68,7 @@ static void TestSwitchThread(void *data)
 void Gateway::init()
 {
 	// Device::InitDeviceModelList();
-	LocalProtocol::init();
+	// LocalProtocol::init();
 	CloudProtocol::init();
 
 	// InitMqttMessageDevice();
@@ -90,7 +90,7 @@ void Gateway::init()
 	thread testSwitchThread(bind(&Gateway::TestSwitch, this));
 	testSwitchThread.detach();
 #endif
-	LocalConnect();
+	// LocalConnect();
 	CloudConnect();
 }
 
@@ -167,192 +167,73 @@ int Gateway::RestartBleGw()
 	return CODE_OK;
 }
 
-uint32_t timeout;
-bool checkRssi = false;
-bool checkRelayOn[4] = {false};
-bool checkRelayOff[4] = {false};
-bool checkOnAll = false;
-bool checkOffAll = false;
-bool check_proc_success = true;
-bool check_pair_k9b = false;
-bool check_stt_last = false;
-bool check_all_process = false;
-bool begin = false;
 
-uint32_t deviceType = 0;
-uint16_t deviceVersion = 0;
-bool check_res_on[4] = {false};
-bool check_res_off[4] = {false};
 
-uint8_t process_test_ctcu(uint8_t num_ele, int pos)
+enum
 {
-	uint8_t err = 1;
+	RELAY_LIGHTING = 0,
+	RELAY_EXHAUST_FAN,
+	RELAY_COOL_FAN,
+	RELAY_HEATING_LOW,
+	RELAY_HEATING_HIGH,
+	RELAY_MAX_ID
+};
 
-	uint8_t dev_mac[6] = {0};
-	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
-	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-	SLEEP_MS(500);
-	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
-	SLEEP_MS(1000);
-	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-	SLEEP_MS(1500);
+static bool id_relay_check[RELAY_MAX_ID] = {0};
+string rqi;
+string serial;
+string version;
+bool is_ready_test_pcba = false;
 
-	for (int i = 0; i < num_ele; i++) // Buoc 3: diueu khien chu trinh 2 lan
+void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv)
+{
+	if(!is_ready_test_pcba)
 	{
-		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 1) == CODE_OK)
-		{
-			check_res_on[i] = true;
-			LOGD("nut on %d: %d", i + 1 - pos, gpioProtocol->gpio_get(i));
-			SLEEP_MS(500);
-		}
+		rqi = rqi_recv;
+		serial = serial_recv;
+		version = ver_recv;
+		is_ready_test_pcba = true;
+	}
+}
+auto get_sub_string = [](const std::string &s){
+	size_t pos = s.find('-');
+	return (pos != std::string::npos)? s.substr(pos +1) : std::string{};
+};
+
+void process_test_dhpt()
+{
+	string mac = get_sub_string(serial);
+	uint16_t addr = getLast4HexAsUint16(mac);
+	addr = (addr > 0x8000 ) ? (addr - 0x8000) : addr;
+	memset(id_relay_check,1,sizeof(id_relay_check));
+	for(int i =0; i< RELAY_MAX_ID; ++i)
+	{
+		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,1);
+		SLEEP_MS(2000);
+		if(!gpioProtocol -> gpio_get(i)) id_relay_check[i] = 0;
 	}
 
-	SLEEP_MS(1000);
-
-	int j = 0;
-	for (int i = 0; i < num_ele; i++)
+	for(int i = RELAY_MAX_ID-1; i>=0; --i)
 	{
-		if (num_ele == 1)
-			j = 3;
-		else
-			j = i;
-		checkRelayOn[i] = (check_res_on[i] && !gpioProtocol->gpio_get(j)) ? true : false;
-		if (!checkRelayOn[i])
-			err = 0;
+		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,0);
+		SLEEP_MS(2000);
+		if(gpioProtocol -> gpio_get(i)) id_relay_check[i] = 0;
 	}
-
-	for (int i = 0; i < num_ele; i++)
-	{
-		if (bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, i + 1 - pos, 0) == CODE_OK)
-		{
-			check_res_off[i] = true;
-			LOGD("nut off %d: %d", i + 1 - pos, gpioProtocol->gpio_get(i));
-			SLEEP_MS(500);
-		}
-	}
-
-	SLEEP_MS(1000);
-	for (int i = 0; i < num_ele; i++)
-	{
-		if (num_ele == 1)
-			j = 3;
-		else
-			j = i;
-		checkRelayOff[i] = (!(!gpioProtocol->gpio_get(j)) && check_res_off[i]) ? true : false;
-		if (!checkRelayOff[i])
-			err = 0;
-	}
-
-	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 1);
-	SLEEP_MS(1000);
-
-	checkOnAll = true;
-	for (int i = 0; i < num_ele; i++)
-	{
-		if (num_ele == 1)
-			j = 3;
-		else
-			j = i;
-		if (!gpioProtocol->gpio_get(j) == 0)
-		{
-			checkOnAll = false;
-			err = 0;
-			break;
-		}
-	}
-
-	bleProtocol->ControlRelayOfSwitch(qrProtocol->addr, 4, 255, 0);
-	SLEEP_MS(1000);
-
-	checkOffAll = true;
-	for (int i = 0; i < num_ele; i++)
-	{
-		if (num_ele == 1)
-			j = 3;
-		else
-			j = i;
-		if (!gpioProtocol->gpio_get(j) == 1)
-		{
-			checkOffAll = false;
-			err = 0;
-			break;
-		}
-	}
-
-	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
-	{
-		LOGD("resp req succ k9b");
-		SLEEP_MS(1500);
-		uartDebugProtocol->SetValueButton(2);
-		// gpioProtocol->gpio_supply_power_k9b();
-		SLEEP_MS(1000);
-		check_pair_k9b = true;
-	}
-	else
-	{
-		if (pos)
-		{
-			bleProtocol->resetWifiCTCU(qrProtocol->addr);
-			SLEEP_MS(6000);
-		}
-		return 0;
-	}
-
-	check_stt_last = true;
-	for (int i = 0; i < num_ele; i++)
-	{
-		if (num_ele == 1)
-			j = 3;
-		else
-			j = i;
-		if (!gpioProtocol->gpio_get(j) == 0)
-		{
-			check_stt_last = false;
-			err = 0;
-			break;
-		}
-	}
-
-	if (pos)
-	{
-		bleProtocol->resetWifiCTCU(qrProtocol->addr);
-		SLEEP_MS(6000);
-	}
-	return err;
 }
 
-void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
+void report_to_server()
 {
-	Json::Value rs;
+Json::Value rs;
 	// rs["mac"] = qrProtocol->mac;
 	// rs["addr"] = qrProtocol->addr;
-	rs["version"] = to_string(deviceVersion);
-	rs["serial"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial + "-" + qrProtocol->mac;
-	rs["deviceType"] = dev_type;
-	rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
-
-	rs["on_relay1"] = checkRelayOn[0];
-	rs["off_relay1"] = checkRelayOff[0];
-	if (num_ele > 1)
-	{
-		rs["on_relay2"] = checkRelayOn[1];
-		rs["off_relay2"] = checkRelayOff[1];
-	}
-	if (num_ele > 2)
-	{
-		rs["on_relay3"] = checkRelayOn[2];
-		rs["off_relay3"] = checkRelayOff[2];
-	}
-	if (num_ele > 3)
-	{
-		rs["on_relay4"] = checkRelayOn[3];
-		rs["off_relay4"] = checkRelayOff[3];
-	}
-
-	rs["on_all"] = checkOnAll;
-	rs["off_all"] = checkOffAll;
-	rs["remote_learn"] = check_pair_k9b;
-	rs["remote_control"] = check_stt_last;
+	rs["version"] = version;
+	rs["serial"] = serial;
+	rs["deviceType"] = "none";
+	rs["rlCoolingFanPcbaTc"] = (id_relay_check[RELAY_COOL_FAN]) ;
+	rs["rlExhaustFanPcbaTc"] = (id_relay_check[RELAY_EXHAUST_FAN]) ;
+	rs["rlLightPcbaTc"] = (id_relay_check[RELAY_LIGHTING]) ;
+	rs["rlHeatLowPcbaTc"] = (id_relay_check[RELAY_HEATING_LOW]) ;
+	rs["rlHeatHighPcbaTc"] = (id_relay_check[RELAY_HEATING_HIGH]) ;
 
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
@@ -360,736 +241,26 @@ void rd_reporting_proc_ctcu(uint8_t num_ele, uint8_t err, string dev_type)
 	Json::Value devJson;
 
 	devJson["device"] = deviceJson;
-	dataPush["cmd"] = "hcReportLog";
-	dataPush["rqi"] = Util::genRandRQI(16);
+	dataPush["cmd"] = "hcReportLogPcbaTcAirConditionLight";
+	// dataPush["rqi"] = Util::genRandRQI(16);
+	dataPush["rqi"] = rqi;
 	dataPush["data"] = devJson;
 
 	LOGE("%s", dataPush.toString().c_str());
 	gateway->CloudPublish(dataPush.toString());
-	if (!err)
-	{
-		gpioProtocol->set_led_fail();
-	}
-	else
-	{
-		gpioProtocol->set_led_success();
-	}
-	gateway->RestartBleGw();
-
-	SLEEP_MS(10000);
-}
-
-bool stt[3] = {false};
-bool stt_k9b[3] = {false};
-bool check_res = false;
-
-void prepare_gpio(int gpio, const std::string &edge_type = "both")
-{
-	std::ofstream export_file("/sys/class/gpio/export");
-	export_file << gpio;
-	export_file.close();
-
-	std::string base = "/sys/class/gpio/gpio" + std::to_string(gpio);
-	std::ofstream dir_file(base + "/direction");
-	dir_file << "in";
-	dir_file.close();
-
-	std::ofstream edge_file(base + "/edge");
-	edge_file << edge_type;
-	edge_file.close();
-}
-
-bool wait_for_gpio_edge(int gpio, int timeout_ms = 2000)
-{
-	std::string value_path = "/sys/class/gpio/gpio" + std::to_string(gpio) + "/value";
-	int fd = open(value_path.c_str(), O_RDONLY | O_NONBLOCK);
-	if (fd < 0)
-	{
-		std::cerr << "erro" << value_path << "\n";
-		return false;
-	}
-	char buf;
-	// Clear edge lần đầu
-	lseek(fd, 0, SEEK_SET);
-	read(fd, &buf, 1);
-	usleep(10000);  // Chờ cho kernel xử lý (10ms)
-
-	struct pollfd pfd;
-	pfd.fd = fd;
-	pfd.events = POLLPRI | POLLERR;
-
-	int ret = poll(&pfd, 1, timeout_ms);
-
-	if (ret > 0)
-	{
-		lseek(fd, 0, SEEK_SET);
-		read(fd, &buf, 1);
-		close(fd);
-		return true;
-	}
-
-	close(fd);
-	return false;
-}
-
-// Hàm trả về future<bool> để chạy song song
-std::future<bool> detect_pulse_async(int gpio)
-{
-	return std::async(std::launch::async, [gpio]()
-					  { return wait_for_gpio_edge(gpio, 2000); });
-}
-
-// void runCheckGpioScript(int gpioNum) {
-// 		string resultFile = "rpa.txt";
-//     string cmd = "/root/rpa_test.sh " + to_string(gpioNum) + " " + resultFile + " &";
-//     cout << "Run: " << cmd << endl;
-//     Util::ExecuteCMD(cmd.c_str());
-		
-// }
-
-void runCheckGpioScript(int gpioNum, int timeoutSec = 2) {
-    std::thread([gpioNum,timeoutSec]() {
-        string resultFile = "/root/rpa.txt";
-        string cmd = "/root/rpa_test.sh " + to_string(gpioNum) + " " + resultFile + " " + to_string(timeoutSec) + " &";
-        cout << "Run: " << cmd << endl;
-        Util::ExecuteCMD(cmd.c_str());
-    }).detach();
-
-	SLEEP_MS(500); 
-}
-
-int waitForResult(int timeoutSec = 2) {
-		SLEEP_MS(1500); 
-		string resultFile = "/root/rpa.txt";
-    time_t start = time(nullptr);
-    string val;
-
-    while (difftime(time(nullptr), start) < timeoutSec) {
-        std::ifstream ifs(resultFile);
-        if (ifs.good()) {
-            ifs >> val;
-            if (!val.empty()) {
-                if (val == "1") {
-                    cout << "resp ok\n";
-                    return 1;
-                } else {
-                    cout <<val<< "resp fail\n";
-                    return 0;
-                }
-            }
-        }
-        usleep(10000); // 10ms
-    }
-
-    cout << "not detected\n";
-    return 0;
-}
-
-int process_test_ctr_ble_wf()
-{
-	cout<<"process_test_ctr_ble_wf"<<endl;
-	uint8_t err = 1;
-
-	uint8_t dev_mac[6] = {0};
-	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
-	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-	SLEEP_MS(500);
-	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
-
-	bleProtocol->SetGwAddr(qrProtocol->addr, 0);
-
-	bleProtocol->ConfigMotor(qrProtocol->addr, 1); // loai 4 day DC
-	SLEEP_MS(2000);
-	
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);      // close 
-	SLEEP_MS(2000);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);			// stop
-	SLEEP_MS(1000);
-	//1: test open
-	runCheckGpioScript(0);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 1, 100);   // 100%
-	stt[1] = waitForResult();
-	if (stt[1])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(3000);
-
-	//2: test stop
-	runCheckGpioScript(3);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
-	stt[2] = waitForResult();
-	if (stt[2])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(3000);
-
-	//3: test close
-	runCheckGpioScript(2);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
-	stt[0] = waitForResult();
-	if (stt[0])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-	
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
-	SLEEP_MS(1000);
-
-	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
-	{
-		check_pair_k9b = true;
-	}
-	else
-	{
-		bleProtocol->resetWifiCTCU(qrProtocol->addr);
-		return 0;
-	}
-
-	SLEEP_MS(2000);
-
-	//4: Dieu khien Open 
-
-	runCheckGpioScript(0);
-	uartDebugProtocol->SetValueButton(0);
-	stt_k9b[0] = waitForResult();
-	if (stt_k9b[0])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(2000);
-
-	//5: Dieu khien Stop 
-
-	runCheckGpioScript(37);
-	uartDebugProtocol->SetValueButton(1);
-	stt_k9b[1] = waitForResult();
-	if (stt_k9b[1])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(2000);
-
-	//6: Dieu khien Close
-
-	runCheckGpioScript(2);
-	uartDebugProtocol->SetValueButton(2);
-	stt_k9b[2] = waitForResult();
-	if (stt_k9b[2])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-	
-	bleProtocol->ConfigMotor(qrProtocol->addr, 3); // loai 3 day AC
-	SLEEP_MS(3000);
-	bleProtocol->resetWifiCTCU(qrProtocol->addr);
-
-	return err;
-}
-
-void rd_reporting_proc_ctcc_and_ctr(uint8_t err, string dev_type)
-{
-	Json::Value rs;
-	// rs["mac"] = qrProtocol->mac;
-	// rs["addr"] = qrProtocol->addr;
-	rs["version"] = to_string(deviceVersion);
-	rs["serial"] = qrProtocol->prod_num + qrProtocol->prod_code + qrProtocol->serial + "-" + qrProtocol->mac;
-	rs["deviceType"] = dev_type;
-	// rs["rssi"] = checkRssi ? bleProtocol->rssi : 0;
-
-	rs["open"] = stt[1];
-	rs["close"] = stt[0];
-	rs["stop_nc"] = stt[2];
-
-	rs["remote_learn"] = check_pair_k9b;
-	rs["remote_control_open"] = stt_k9b[0];
-	rs["remote_control_close"] = stt_k9b[2];
-	rs["remote_control_stop_no"] = stt_k9b[1];
-
-	err = (stt[0] && stt[1] && stt[2] && stt_k9b[0] && stt_k9b[1] && stt_k9b[2] && check_pair_k9b) ? 1 : 0;
-	Json::Value deviceJson = Json::arrayValue;
-	deviceJson.append(rs);
-	Json::Value dataPush;
-	Json::Value devJson;
-
-	devJson["device"] = deviceJson;
-	dataPush["cmd"] = "hcReportLog";
-	dataPush["rqi"] = Util::genRandRQI(16);
-	dataPush["data"] = devJson;
-
-	LOGE("%s", dataPush.toString().c_str());
-	gateway->CloudPublish(dataPush.toString());
-	if (!err)
-	{
-		gpioProtocol->set_led_fail();
-	}
-	else
-	{
-		gpioProtocol->set_led_success();
-	}
-	gateway->RestartBleGw();
-
-	SLEEP_MS(10000);
-}
-
-
-int process_test_ctr_ble()
-{
-	//0: begin
-	cout<<"process_test_ctr_ble"<<endl;
-	uint8_t err = 1;
-
-	uint8_t dev_mac[6] = {0};
-	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
-	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-	SLEEP_MS(500);
-	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
-
-	SLEEP_MS(2000);
-	runCheckGpioScript(0);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 1, 100);   // 100%
-	stt[1] = waitForResult();
-	if (stt[1])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(3000);
-
-	//4: Stop
-
-	runCheckGpioScript(3);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
-	stt[2] = waitForResult();
-	if (stt[2])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(3000);
-
-	//5: Close 
-
-	runCheckGpioScript(2);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
-	stt[0] = waitForResult();
-	if (stt[0])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-	
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
-	SLEEP_MS(1000);
-	//7: Hoc lenh K9B
-
-	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
-	{
-		check_pair_k9b = true;
-	}
-	else
-	{
-		bleProtocol->CalibAuto(qrProtocol->addr,120);
-		return 0;
-	}
-
-	SLEEP_MS(2000);
-	//8: Dieu khien Open 
-
-	runCheckGpioScript(0);
-	uartDebugProtocol->SetValueButton(0);
-	stt_k9b[0] = waitForResult();
-	if (stt_k9b[0])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(2000);
-
-	//9: Dieu khien Stop 
-
-	runCheckGpioScript(37);
-	uartDebugProtocol->SetValueButton(1);
-	stt_k9b[1] = waitForResult();
-	if (stt_k9b[1])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(2000);
-
-	//10: Dieu khien Close
-
-	runCheckGpioScript(2);
-	uartDebugProtocol->SetValueButton(2);
-	stt_k9b[2] = waitForResult();
-	if (stt_k9b[2])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-
-	return err;
-}
-
-int process_test_ctcc_ble_wf()
-{
-	//0: begin
-	uint8_t err = 1;
-
-	uint8_t dev_mac[6] = {0};
-	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
-	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-	SLEEP_MS(500);
-	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
-
-	bleProtocol->SetGwAddr(qrProtocol->addr, 0);
-
-	//1: Mo khoa cam ung
-	bleProtocol->LockDevice(qrProtocol->addr,0);
-	//2: Calib tu dong 3s
-	bleProtocol->CalibAuto(qrProtocol->addr,3);
-
-	SLEEP_MS(2000);
-	prepare_gpio(3);  // GPIO3: xung 1 → 0
-	prepare_gpio(0);  // GPIO0: xung 1 → 0
-	prepare_gpio(2);  // GPIO2: xung 0 → 1
-	prepare_gpio(37); // GPIO37: xung 1 → 0
-	//3: Dieu khien Open 100%
-
-	// auto future = detect_pulse_async(0);
-	runCheckGpioScript(0);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 1, 100);   // 100%
-	stt[1] = waitForResult();
-	if (stt[1])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(1500);
-
-	//4: Ve Stop khi het 3s calib
-
-	runCheckGpioScript(3);
-	stt[2] = waitForResult();
-	if (stt[2])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(3000);
-
-	//5: Dieu khien Close 
-
-	runCheckGpioScript(2);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
-	stt[0] = waitForResult();
-	if (stt[0])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-	//6: Khoa cam ung 
-
-	bleProtocol->LockDevice(qrProtocol->addr,1);
-	SLEEP_MS(1500);
-
-	//7: Hoc lenh K9B
-
-	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
-	{
-		check_pair_k9b = true;
-	}
-	else
-	{
-		bleProtocol->CalibAuto(qrProtocol->addr,120);
-		return 0;
-	}
-
-	SLEEP_MS(2000);
-	//8: Dieu khien Open 
-
-	runCheckGpioScript(0);
-	uartDebugProtocol->SetValueButton(0);
-	stt_k9b[0] = waitForResult();
-	if (stt_k9b[0])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(2000);
-
-	//9: Dieu khien Stop 
-
-	runCheckGpioScript(3);
-	uartDebugProtocol->SetValueButton(1);
-	stt_k9b[1] = waitForResult();
-	if (stt_k9b[1])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(2000);
-
-	//10: Dieu khien Close
-
-	runCheckGpioScript(2);
-	uartDebugProtocol->SetValueButton(2);
-	stt_k9b[2] = waitForResult();
-	if (stt_k9b[2])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-	//11: Calib 120s s
-
-	bleProtocol->CalibAuto(qrProtocol->addr,120);
-	return err;
-}
-
-int process_test_ctcc_ble()
-{
-	cout << "process_test_ctcc_ble" << endl;
-	//0: begin
-	uint8_t err = 1;
-
-	uint8_t dev_mac[6] = {0};
-	Util::ConvertStringToHex(qrProtocol->mac, dev_mac, 6);
-	bleProtocol->GetDeviceType(dev_mac, qrProtocol->addr, deviceType, deviceVersion);
-	SLEEP_MS(500);
-	bleProtocol->Request_Training(0, qrProtocol->addr); // Buoc 2: dung test luyen, chuan bi test tinh nang
-
-	SLEEP_MS(2000);
-
-	runCheckGpioScript(0,3);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 1, 0);   // 100%
-	SLEEP_MS(1000);
-	stt[1] = waitForResult();
-	if (stt[1])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(3000);
-
-	//2: Dieu khien Stop
-
-	runCheckGpioScript(3,3);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
-	SLEEP_MS(1000);
-	stt[2] = waitForResult();
-	if (stt[2])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(3000);
-
-	//3: Dieu khien Close 
-
-	runCheckGpioScript(2,3);
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 0, 0);
-	SLEEP_MS(1000);
-	stt[0] = waitForResult();
-	if (stt[0])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-
-	bleProtocol->ControlOpenClosePausePercent(qrProtocol->addr, 2, 0);
-	SLEEP_MS(1000);
-	//4: Hoc lenh K9B
-
-	if (bleProtocol->Request_Pair_K9B(qrProtocol->addr, 0xff, qrProtocol->mac_k9b_int, 1) == CODE_OK)
-	{
-		check_pair_k9b = true;
-	}
-	else
-	{
-		return 0;
-	}
-
-	SLEEP_MS(2000);
-	//5: Dieu khien Open 
-
-	runCheckGpioScript(0,3);
-	uartDebugProtocol->SetValueButton(0);
-	SLEEP_MS(1000);
-	stt_k9b[0] = waitForResult();
-	if (stt_k9b[0])
-		cout << "co xung open" << endl;
-	else
-		cout << "khong co xung open" << endl;
-	SLEEP_MS(3000);
-
-	//7: Dieu khien Stop 
-
-	runCheckGpioScript(3,3);
-	uartDebugProtocol->SetValueButton(1);
-	SLEEP_MS(1000);
-	stt_k9b[1] = waitForResult();
-	if (stt_k9b[1])
-		cout << "co xung stop" << endl;
-	else
-		cout << "khong co xung stop" << endl;
-	SLEEP_MS(3000);
-	//11: Calib 120s s
-
-	//6: Dieu khien Close
-
-	runCheckGpioScript(2,3);
-	uartDebugProtocol->SetValueButton(2);
-	SLEEP_MS(1000);
-	stt_k9b[2] = waitForResult();
-	if (stt_k9b[2])
-		cout << "co xung close" << endl;
-	else
-		cout << "khong co xung close" << endl;
-	SLEEP_MS(3000);
-	
-	return err;
-}
-
-
-void start_process()
-{
-	gpioProtocol->reset_led_in_proc();
-	checkRssi = false;
-	checkOnAll = false;
-	checkOffAll = false;
-
-	check_proc_success = true;
-	check_pair_k9b = false;
-	check_stt_last = false;
-
-	deviceType = 0;
-	deviceVersion = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		checkRelayOn[i] = false;
-		checkRelayOff[i] = false;
-		check_res_on[i] = false;
-		check_res_on[i] = false;
-	}
-	for (int i = 0; i < 3; i++)
-	{
-		stt[i] = false;
-		stt_k9b[i] = false;
-	}
 }
 
 int Gateway::TestSwitch()
 {
-
 	while (1)
 	{
-		if (check_connect_cloud && qrProtocol->startTest == 0)
+		if(is_ready_test_pcba)
 		{
-			// if (xTaskGetTickCount() - tick_count_qr_scan > 1000 * 10 / portTICK_PERIOD_MS)
-			// {
-			// 	string a = "QR_SCAN FAILED";
-			// 	this->CloudPublish(a);
-			// 	tick_count_qr_scan = xTaskGetTickCount();
-			// }
+			process_test_dhpt();
+			report_to_server();
+			is_ready_test_pcba = false;	
 		}
-		if (qrProtocol->startTest && check_connect_cloud)
-		{
-			start_process();
-			ProductInfo prod;
-			if (is_product_exist(qrProtocol->prod_code, prod))
-			{
-				switch (prod.type)
-				{
-				case CTCU_BLE_CN_O4T:
-				case CTCU_BLE_CN_O3T:
-				case CTCU_BLE_CN_O2T:
-				case CTCU_BLE_CN_O1T:
-				case CTCU_BLE_CN_O4T_MN:
-				case CTCU_BLE_CN_O3T_MN:
-				case CTCU_BLE_CN_O2T_MN:
-				case CTCU_BLE_CN_O1T_MN:
-				case CTCU_BLE_CN_REMT:
-				case CTCU_BLE_CN_REMT_MN:
-				case CTCU_BLE_V_O4T:
-				case CTCU_BLE_V_O3T:
-				case CTCU_BLE_V_O2T:
-				case CTCU_BLE_V_O1T:
-				case CTCU_BLE_V_O4T_MN:
-				case CTCU_BLE_V_O3T_MN:
-				case CTCU_BLE_V_O2T_MN:
-				case CTCU_BLE_V_O1T_MN:
-				case CTCU_BLE_V_REMT:
-				case CTCU_BLE_V_REMT_MN:
-				{
-					uint8_t num_ele = prod.num_ele;
-					uint8_t err = process_test_ctcu(num_ele, 0);
-					rd_reporting_proc_ctcu(num_ele, err, prod.dev_type);
-					break;
-				}
-				case CTCU_WF_CN_01T_2W_SP:
-				case CTCU_WF_CN_02T_2W_SP:
-				case CTCU_WF_CN_03T_2W_SP:
-				case CTCU_WF_CN_04T_2W_SP:
-				case CTCU_WF_CN_01T_2W_SP_MN:
-				case CTCU_WF_CN_02T_2W_SP_MN:
-				case CTCU_WF_CN_03T_2W_SP_MN:
-				case CTCU_WF_CN_04T_2W_SP_MN:
-				case CTCU_WF_V_01T_2W_SP:
-				case CTCU_WF_V_02T_2W_SP:
-				case CTCU_WF_V_03T_2W_SP:
-				case CTCU_WF_V_04T_2W_SP:
-				case CTCU_WF_V_01T_2W_SP_MN:
-				case CTCU_WF_V_02T_2W_SP_MN:
-				case CTCU_WF_V_03T_2W_SP_MN:
-				case CTCU_WF_V_04T_2W_SP_MN:
-				{
-					uint8_t num_ele = prod.num_ele;
-					uint8_t err = process_test_ctcu(num_ele, 1);
-					rd_reporting_proc_ctcu(num_ele, err, prod.dev_type);
-					break;
-				}
-
-				case CTR_BLE_CN:
-				case CTR_BLE_CN_MN:
-				case CTR_BLE_V:
-				case CTR_BLE_V_MN:
-				{
-					SLEEP_MS(1500);
-					uint8_t num_ele = prod.num_ele;
-					uint8_t err = process_test_ctr_ble();
-					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
-					break;
-				}
-				case CTR_BLE_WF_CN:
-				case CTR_BLE_WF_CN_MN:
-				case CTR_BLE_WF_V:
-				case CTR_BLE_WF_V_MN:
-				{
-					SLEEP_MS(1500);
-					uint8_t num_ele = prod.num_ele;
-					uint8_t err = process_test_ctr_ble_wf();
-					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
-					break;
-				}
-				case CTCC_BLE_WF_CN:
-				case CTCC_BLE_WF_V:
-				{
-					uint8_t err = process_test_ctcc_ble_wf();
-					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
-					break;
-				}
-				case CTCC_BLE_CN:
-				case CTCC_BLE_V:
-				{
-					uint8_t err = process_test_ctcc_ble();
-					rd_reporting_proc_ctcc_and_ctr(err, prod.dev_type);
-					break;
-				}
-				default:
-					break;
-				}
-			}
-
-#ifdef ESP_PLATFORM
-			tick_count_qr_scan = xTaskGetTickCount();
-#endif
-			qrProtocol->startTest = false;
-		}
-		SLEEP_MS(1000);
+		SLEEP_MS(2000);
 	}
 }
 

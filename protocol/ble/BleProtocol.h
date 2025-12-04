@@ -443,6 +443,7 @@ public:
 	int Request_Training(uint8_t enable, uint16_t addr);
 	int Request_Pair_K9B(uint16_t addr,uint8_t button_id, uint32_t mac_k9b, uint8_t key_k9b);
 	int resetWifiCTCU(uint16_t addr);
+	int Ctrl_Relay_DHPT(uint16_t addr, uint8_t id_relay, uint8_t stt);
 };
 
 extern BleProtocol *bleProtocol;

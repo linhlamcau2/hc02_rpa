@@ -43,6 +43,7 @@ private:
 	string subSerialRespTopic;
 	string pubSerialReqTopic;
 
+	string hc_request_topic;
 	string mac;
 	atomic<bool> isBusy;
 	mutex mtx;
@@ -57,6 +58,7 @@ private:
 	void OnMobileReq(string &topic, string &payload);
 	void OnMobileResp(string &topic, string &payload);
 	void OnServerBinResp(string &topic, char *payload, int payloadLen);
+	void OnServerTestHC(string &topic, string &payload);
 
 public:
 	CloudProtocol(string mac, string address, int port, string clientId, string username, string password, int keepalive, bool useTls);

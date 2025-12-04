@@ -32,6 +32,8 @@ CloudProtocol::CloudProtocol(string mac, string address, int port, string client
 	subSerialRespTopic = "/v2/server/hc/" + mac + "/serial_resp";
 	pubSerialReqTopic = "/v2/server/hc/" + mac + "/serial_req";
 
+	hc_request_topic = "/v2/hc/" + mac + "/hc/json_req";
+
 	// willset
 	Json::Value jsonValue;
 	Json::Value datanValue;
@@ -56,6 +58,8 @@ void CloudProtocol::init()
 	addActionCallback(bind(&CloudProtocol::OnServerResp, this, placeholders::_1, placeholders::_2), subServerRespTopic);
 	addActionCallback(bind(&CloudProtocol::OnMobileResp, this, placeholders::_1, placeholders::_2), subMobileRespTopic);
 	addActionCallback(bind(&CloudProtocol::OnServerBinResp, this, placeholders::_1, placeholders::_2, placeholders::_3), subBinRespTopic);
+
+	addActionCallback(bind(&CloudProtocol::OnServerTestHC, this, placeholders::_1, placeholders::_2), hc_request_topic);
 }
 
 void CloudProtocol::cloudAddActionCallback(ActionCallbackFuncType1 actionCallbackFuncType1, string topic)
@@ -358,6 +362,63 @@ void CloudProtocol::OnMobileResp(string &topic, string &payload)
 	Util::LedInternet(true);
 	Util::LedServiceUnlock();
 }
+
+void CloudProtocol::OnServerTestHC(std::string &topic, std::string &payload)
+{
+		std::cout <<"OnServerTestHC"<<std::endl;
+    Json::Value payloadJson;
+
+    if (!payloadJson.parse(payload) || !payloadJson.isObject()) {
+        std::cout << "Invalid JSON: " << payload << std::endl;
+        return;
+    }
+
+    if (!payloadJson.isMember("cmd") || !payloadJson["cmd"].isString()) {
+        std::cout << "Missing or invalid cmd" << std::endl;
+        return;
+    }
+
+    if (!payloadJson.isMember("rqi") || !payloadJson["rqi"].isString()) {
+        std::cout << "Missing or invalid rqi" << std::endl;
+        return;
+    }
+
+    std::string cmd = payloadJson["cmd"].asString();
+    std::string rqi = payloadJson["rqi"].asString();
+
+    if (cmd != "startTestPCBASmt" && cmd != "startTestPCBATc") {
+        std::cout << "Unknown cmd: " << cmd << std::endl;
+        return;
+    }
+
+    if (!payloadJson.isMember("data") || !payloadJson["data"].isArray()) {
+        std::cout << "Missing or invalid data (must be array)" << std::endl;
+        return;
+    }
+
+    const Json::Value &dataJson = payloadJson["data"];
+
+    std::cout << "CMD OK: " << cmd << std::endl;
+    std::cout << "Rqi: " << rqi << std::endl;
+
+    for (const auto &item : dataJson) {
+        if (!item.isMember("serial") || !item["serial"].isString() ||
+            !item.isMember("version") || !item["version"].isString())
+        {
+            std::cout << "Invalid item in data array" << std::endl;
+            continue;
+        }
+
+        std::string serial  = item["serial"].asString();
+        std::string version = item["version"].asString();
+
+				active_test_pcba_dhpt(rqi,serial,version);
+        std::cout << "Serial: " <<serial<< ", Version: " << version << std::endl;
+				break;
+    }
+}
+
+
 
 int CloudProtocol::OnDeviceRpcCallbackRegister(string cmd, OnRpcCallbackFunc onRpcCallbackFunc)
 {

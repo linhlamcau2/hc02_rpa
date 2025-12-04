@@ -35,3 +35,5 @@ public:
 };
 
 extern QrProtocol *qrProtocol;
+
+uint16_t getLast4HexAsUint16(const std::string &mac);

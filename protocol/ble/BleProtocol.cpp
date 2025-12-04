@@ -4359,3 +4359,32 @@ int BleProtocol :: resetWifiCTCU(uint16_t addr)
 	return SendMessage(APP_REQ, (uint8_t *)&req_reset_wf, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000,devAddr_check,0,2);
 
 }
+
+int BleProtocol :: Ctrl_Relay_DHPT(uint16_t addr, uint8_t id_relay, uint8_t stt)
+{
+	LOGD("BleProtocol ::Ctrl_Relay_DHPT");
+	uint8_t dataRsp[100];
+	int lenRsp;
+	typedef struct __attribute__((packed))
+	{
+		ble_message_header_t ble_message_header;
+		uint8_t opcodeVendor;
+		uint16_t vendorId;
+		uint8_t opcodeRsp;
+		uint8_t tidPos;
+		uint16_t header;
+		uint8_t id_relay;
+		uint8_t stt;
+		uint32_t none;
+	} req_training_message_t;
+	req_training_message_t ctrl_dhpt_msg = {0};
+	memset(&ctrl_dhpt_msg, 0x00, sizeof(ctrl_dhpt_msg));
+	ctrl_dhpt_msg.ble_message_header.devAddr = addr;
+	ctrl_dhpt_msg.opcodeVendor = 0xE2;
+	ctrl_dhpt_msg.vendorId = RD_VENDOR_ID;
+	ctrl_dhpt_msg.header = 0x0c14;
+	ctrl_dhpt_msg.id_relay = id_relay;
+	ctrl_dhpt_msg.stt = stt;
+	return SendMessage(APP_REQ, (uint8_t *)&ctrl_dhpt_msg, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000);
+
+}
