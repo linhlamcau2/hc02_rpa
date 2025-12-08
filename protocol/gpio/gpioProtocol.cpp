@@ -9,14 +9,33 @@ int pin_pow_k9b = 14;
 
 int led_success = 17;
 
-int gpio_arr_dhpt[] = {14,37,3,2,0};
+int gpio_arr_dhpt_test_tc[] = {14,37,3,2,0};
+int gpio_arr_dhpt_test_smt[] = {19,18,17,16,15};
 
 GPIOProtocol *gpioProtocol = NULL;
 
 int GPIOProtocol ::gpio_get(int index)
 {
-    string cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt[index]) + "/value";
+    string cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_tc[index]) + "/value";
     int status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
+    LOGE("CMD: %s; status: %d", cmd.c_str(), status);
+    return status;
+}
+
+int GPIOProtocol ::gpio_get_pin_test_dhpt(int index, uint8_t type)
+{
+    string cmd;
+    int status;
+    if(type)    
+    {
+        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_smt[index]) + "/value";
+        status = !(std::stoi(Util::ExecuteCMD(cmd.c_str())));
+    }
+    else 
+    {
+        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_tc[index]) + "/value";
+        status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
+    }
     LOGE("CMD: %s; status: %d", cmd.c_str(), status);
     return status;
 }
@@ -108,6 +127,21 @@ void GPIOProtocol ::gpio_init()
 
     Util::ExecuteCMD("echo 14 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo in > /sys/class/gpio/gpio14/direction");
+
+    Util::ExecuteCMD("echo 15 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio15/direction");
+
+    Util::ExecuteCMD("echo 16 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio16/direction");
+
+    Util::ExecuteCMD("echo 17 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio17/direction");
+
+    Util::ExecuteCMD("echo 18 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio18/direction");
+
+    Util::ExecuteCMD("echo 19 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo in > /sys/class/gpio/gpio19/direction");
 
     Util::ExecuteCMD("echo 1 > /sys/class/gpio/export");
     Util::ExecuteCMD("echo out > /sys/class/gpio/gpio1/direction");

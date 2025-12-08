@@ -412,7 +412,7 @@ void CloudProtocol::OnServerTestHC(std::string &topic, std::string &payload)
         std::string serial  = item["serial"].asString();
         std::string version = item["version"].asString();
 
-				active_test_pcba_dhpt(rqi,serial,version);
+				active_test_pcba_dhpt(rqi,serial,version,cmd);
         std::cout << "Serial: " <<serial<< ", Version: " << version << std::endl;
 				break;
     }

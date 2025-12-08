@@ -4385,6 +4385,6 @@ int BleProtocol :: Ctrl_Relay_DHPT(uint16_t addr, uint8_t id_relay, uint8_t stt)
 	ctrl_dhpt_msg.header = 0x0c14;
 	ctrl_dhpt_msg.id_relay = id_relay;
 	ctrl_dhpt_msg.stt = stt;
-	return SendMessage(APP_REQ, (uint8_t *)&ctrl_dhpt_msg, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000);
+	return SendMessage(APP_REQ, (uint8_t *)&ctrl_dhpt_msg, sizeof(req_training_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 500);
 
 }

@@ -24,6 +24,7 @@ public:
     // ~GPIOProtocol();
     void gpio_init();
     int gpio_get(int index);
+    int gpio_get_pin_test_dhpt(int index, uint8_t type);
     void on_gpio();
     void gpio_supply_power_k9b();
     void set_led_success();

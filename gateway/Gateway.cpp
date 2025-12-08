@@ -179,16 +179,25 @@ enum
 	RELAY_MAX_ID
 };
 
+enum 
+{
+	PCBA_TEST_TC =0,
+	PCBA_TEST_SMT ,
+};
+
 static bool id_relay_check[RELAY_MAX_ID] = {0};
 string rqi;
 string serial;
 string version;
+uint8_t type_test_pcba_dhpt = PCBA_TEST_TC;
 bool is_ready_test_pcba = false;
 
-void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv)
+void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv,const string& cmd)
 {
 	if(!is_ready_test_pcba)
 	{
+		if (cmd == "startTestPCBASmt") type_test_pcba_dhpt = PCBA_TEST_SMT;
+		else type_test_pcba_dhpt = PCBA_TEST_TC;
 		rqi = rqi_recv;
 		serial = serial_recv;
 		version = ver_recv;
@@ -209,15 +218,23 @@ void process_test_dhpt()
 	for(int i =0; i< RELAY_MAX_ID; ++i)
 	{
 		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,1);
-		SLEEP_MS(2000);
-		if(!gpioProtocol -> gpio_get(i)) id_relay_check[i] = 0;
+	}
+
+	SLEEP_MS(500);
+	for(int i =0; i< RELAY_MAX_ID; ++i)
+	{
+		if(!gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test_pcba_dhpt)) id_relay_check[i] = 0;
 	}
 
 	for(int i = RELAY_MAX_ID-1; i>=0; --i)
 	{
 		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,0);
-		SLEEP_MS(2000);
-		if(gpioProtocol -> gpio_get(i)) id_relay_check[i] = 0;
+	}
+
+	SLEEP_MS(500);
+	for(int i =0; i< RELAY_MAX_ID; ++i)
+	{
+		if(gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test_pcba_dhpt)) id_relay_check[i] = 0;
 	}
 }
 
