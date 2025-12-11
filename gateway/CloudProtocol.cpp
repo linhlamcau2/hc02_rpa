@@ -403,18 +403,19 @@ void CloudProtocol::OnServerTestHC(std::string &topic, std::string &payload)
 
     for (const auto &item : dataJson) {
         if (!item.isMember("serial") || !item["serial"].isString() ||
-            !item.isMember("version") || !item["version"].isString())
+            !item.isMember("version") || !item["version"].isString() ||
+						!item.isMember("pos") || !item["pos"].isInt())
         {
             std::cout << "Invalid item in data array" << std::endl;
             continue;
         }
 
+
         std::string serial  = item["serial"].asString();
         std::string version = item["version"].asString();
-
-				active_test_pcba_dhpt(rqi,serial,version,cmd);
+				int pos = item["pos"].asInt();
+				active_test_pcba_dhpt(rqi,serial,version,cmd, pos);
         std::cout << "Serial: " <<serial<< ", Version: " << version << std::endl;
-				break;
     }
 }
 

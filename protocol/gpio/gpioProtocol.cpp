@@ -9,14 +9,16 @@ int pin_pow_k9b = 14;
 
 int led_success = 17;
 
-int gpio_arr_dhpt_test_tc[] = {14,37,3,2,0};
-int gpio_arr_dhpt_test_smt[] = {19,18,17,16,15};
+int gpio_arr_dhpt_test_tc_pos0[] = {19,18,17,16,15};
+int gpio_arr_dhpt_test_tc_pos1[] = {14,37,3,2,0};
+int gpio_arr_dhpt_test_smt_pos0[] = {19,18,17,16,15};
+int gpio_arr_dhpt_test_smt_pos1[] = {14,37,3,2,0};
 
 GPIOProtocol *gpioProtocol = NULL;
 
 int GPIOProtocol ::gpio_get(int index)
 {
-    string cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_tc[index]) + "/value";
+    string cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr[index]) + "/value";
     int status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
     LOGE("CMD: %s; status: %d", cmd.c_str(), status);
     return status;
@@ -26,15 +28,30 @@ int GPIOProtocol ::gpio_get_pin_test_dhpt(int index, uint8_t type)
 {
     string cmd;
     int status;
-    if(type)    
+    if(type == PCBA_TEST_SMT_POS0)    
     {
-        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_smt[index]) + "/value";
+        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_smt_pos0[index]) + "/value";
         status = !(std::stoi(Util::ExecuteCMD(cmd.c_str())));
     }
-    else 
+    else if(type == PCBA_TEST_SMT_POS1)    
     {
-        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_tc[index]) + "/value";
+        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_smt_pos1[index]) + "/value";
+        status = !(std::stoi(Util::ExecuteCMD(cmd.c_str())));
+    }
+    else if(type == PCBA_TEST_TC_POS0 )
+    {
+        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_tc_pos0[index]) + "/value";
         status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
+    }
+    else if(type == PCBA_TEST_TC_POS1 )
+    {
+        cmd = "cat /sys/class/gpio/gpio" + to_string(gpio_arr_dhpt_test_tc_pos1[index]) + "/value";
+        status = std::stoi(Util::ExecuteCMD(cmd.c_str()));
+    }
+    else
+    {
+        LOGE("Invalid type for gpio_get_pin_test_dhpt: %d", type);
+        return -1;
     }
     LOGE("CMD: %s; status: %d", cmd.c_str(), status);
     return status;

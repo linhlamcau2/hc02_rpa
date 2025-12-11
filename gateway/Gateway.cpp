@@ -87,8 +87,22 @@ void Gateway::init()
 	}
 	vTaskDelay(10);
 #else
-	thread testSwitchThread(bind(&Gateway::TestSwitch, this));
-	testSwitchThread.detach();
+	// thread testSwitchThread(bind(&Gateway::TestSwitch, this));
+	// testSwitchThread.detach();
+
+	//Test_PCBA_DHPT_SMT_POS0 Test_PCBA_DHPT_TC()
+	thread test_dhpt_smt_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS0, this));
+	test_dhpt_smt_pos0_thread.detach();
+
+	thread test_dhpt_smt_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS1, this));
+	test_dhpt_smt_pos1_thread.detach();
+
+	thread test_dhpt_tc_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS0, this));
+	test_dhpt_tc_pos0_thread.detach();
+
+	thread test_dhpt_tc_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS1, this));
+	test_dhpt_tc_pos1_thread.detach();
+
 #endif
 	// LocalConnect();
 	CloudConnect();
@@ -179,42 +193,52 @@ enum
 	RELAY_MAX_ID
 };
 
-enum 
+typedef struct inf_test_dhpt_s
 {
-	PCBA_TEST_TC =0,
-	PCBA_TEST_SMT ,
-};
+	int type_test;
+	string rqi;
+	string serial;
+	string version;
+	bool is_ready_test;
+	bool stt_relay_check[RELAY_MAX_ID];
+} inf_test_dhpt_t;
 
-static bool id_relay_check[RELAY_MAX_ID] = {0};
-string rqi;
-string serial;
-string version;
-uint8_t type_test_pcba_dhpt = PCBA_TEST_TC;
-bool is_ready_test_pcba = false;
+inf_test_dhpt_t inf_test_dhpt[PCBA_TEST_DHPT_MAX_ID];
 
-void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv,const string& cmd)
+int type_test_check_dhpt(const string& cmd, int pos)
 {
-	if(!is_ready_test_pcba)
+	if (cmd == "startTestPCBASmt")
+		return PCBA_TEST_SMT_POS0 + pos;
+	else if (cmd == "startTestPCBATc")
+		return PCBA_TEST_TC_POS0 + pos;
+	else 
+		return -1;
+}
+
+void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv,const string& cmd, int pos)
+{
+	int type_test = type_test_check_dhpt(cmd,pos);
+	if(type_test == -1) return;
+	if(!inf_test_dhpt[type_test].is_ready_test)
 	{
-		if (cmd == "startTestPCBASmt") type_test_pcba_dhpt = PCBA_TEST_SMT;
-		else type_test_pcba_dhpt = PCBA_TEST_TC;
-		rqi = rqi_recv;
-		serial = serial_recv;
-		version = ver_recv;
-		is_ready_test_pcba = true;
+		inf_test_dhpt[type_test].rqi = rqi_recv;
+		inf_test_dhpt[type_test].serial = serial_recv;
+		inf_test_dhpt[type_test].version = ver_recv;
+		memset(inf_test_dhpt[type_test].stt_relay_check,1,sizeof(inf_test_dhpt[type_test].stt_relay_check));
+		inf_test_dhpt[type_test].is_ready_test = true;
 	}
 }
+
 auto get_sub_string = [](const std::string &s){
 	size_t pos = s.find('-');
 	return (pos != std::string::npos)? s.substr(pos +1) : std::string{};
 };
 
-void process_test_dhpt()
+void process_test_pcba_dhpt(int type_test)
 {
-	string mac = get_sub_string(serial);
+	string mac = get_sub_string(inf_test_dhpt[type_test].serial);
 	uint16_t addr = getLast4HexAsUint16(mac);
 	addr = (addr > 0x8000 ) ? (addr - 0x8000) : addr;
-	memset(id_relay_check,1,sizeof(id_relay_check));
 	for(int i =0; i< RELAY_MAX_ID; ++i)
 	{
 		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,1);
@@ -223,7 +247,7 @@ void process_test_dhpt()
 	SLEEP_MS(500);
 	for(int i =0; i< RELAY_MAX_ID; ++i)
 	{
-		if(!gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test_pcba_dhpt)) id_relay_check[i] = 0;
+		if(!gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test)) inf_test_dhpt[type_test].stt_relay_check[i] = 0;
 	}
 
 	for(int i = RELAY_MAX_ID-1; i>=0; --i)
@@ -234,23 +258,34 @@ void process_test_dhpt()
 	SLEEP_MS(500);
 	for(int i =0; i< RELAY_MAX_ID; ++i)
 	{
-		if(gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test_pcba_dhpt)) id_relay_check[i] = 0;
+		if(gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test)) inf_test_dhpt[type_test].stt_relay_check[i] = 0;
 	}
 }
 
-void report_to_server()
+void report_to_server(int type_test)
 {
 Json::Value rs;
 	// rs["mac"] = qrProtocol->mac;
 	// rs["addr"] = qrProtocol->addr;
-	rs["version"] = version;
-	rs["serial"] = serial;
+	rs["version"] = inf_test_dhpt[type_test].version;
+	rs["serial"] = inf_test_dhpt[type_test].serial;
 	rs["deviceType"] = "none";
-	rs["rlCoolingFanPcbaTc"] = (id_relay_check[RELAY_COOL_FAN]) ;
-	rs["rlExhaustFanPcbaTc"] = (id_relay_check[RELAY_EXHAUST_FAN]) ;
-	rs["rlLightPcbaTc"] = (id_relay_check[RELAY_LIGHTING]) ;
-	rs["rlHeatLowPcbaTc"] = (id_relay_check[RELAY_HEATING_LOW]) ;
-	rs["rlHeatHighPcbaTc"] = (id_relay_check[RELAY_HEATING_HIGH]) ;
+	if(type_test == PCBA_TEST_TC_POS0 || type_test == PCBA_TEST_TC_POS1)
+	{
+		rs["rlCoolingFanPcbaTc"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_COOL_FAN]) ;
+		rs["rlExhaustFanPcbaTc"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_EXHAUST_FAN]) ;
+		rs["rlLightPcbaTc"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_LIGHTING]) ;
+		rs["rlHeatLowPcbaTc"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_HEATING_LOW]) ;
+		rs["rlHeatHighPcbaTc"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_HEATING_HIGH]) ;
+	}
+	else if(type_test == PCBA_TEST_SMT_POS0 || type_test == PCBA_TEST_SMT_POS1)
+	{
+		rs["rlCoolingFanPcbaSmt"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_COOL_FAN]) ;
+		rs["rlExhaustFanPcbaSmt"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_EXHAUST_FAN]) ;
+		rs["rlLightPcbaSmt"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_LIGHTING]) ;
+		rs["rlHeatLowPcbaSmt"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_HEATING_LOW]) ;
+		rs["rlHeatHighPcbaSmt"] = (inf_test_dhpt[type_test].stt_relay_check[RELAY_HEATING_HIGH]) ;
+	}
 
 	Json::Value deviceJson = Json::arrayValue;
 	deviceJson.append(rs);
@@ -258,27 +293,73 @@ Json::Value rs;
 	Json::Value devJson;
 
 	devJson["device"] = deviceJson;
-	dataPush["cmd"] = "hcReportLogPcbaTcAirConditionLight";
+	dataPush["cmd"] = (type_test == PCBA_TEST_TC_POS0 || type_test == PCBA_TEST_TC_POS1) ?"hcReportLogPcbaTcAirConditionLight" : "hcReportLogPcbaSmtAirConditionLight";
 	// dataPush["rqi"] = Util::genRandRQI(16);
-	dataPush["rqi"] = rqi;
+	dataPush["rqi"] = inf_test_dhpt[type_test].rqi;
 	dataPush["data"] = devJson;
 
 	LOGE("%s", dataPush.toString().c_str());
 	gateway->CloudPublish(dataPush.toString());
 }
 
-int Gateway::TestSwitch()
+int Gateway::Test_PCBA_DHPT_SMT_POS0()
 {
-	while (1)
+	while(1)
 	{
-		if(is_ready_test_pcba)
+		if(inf_test_dhpt[PCBA_TEST_SMT_POS0].is_ready_test)
 		{
-			process_test_dhpt();
-			report_to_server();
-			is_ready_test_pcba = false;	
+			process_test_pcba_dhpt(PCBA_TEST_SMT_POS0);
+			report_to_server(PCBA_TEST_SMT_POS0);
+			inf_test_dhpt[PCBA_TEST_SMT_POS0].is_ready_test = false;	
 		}
-		SLEEP_MS(2000);
+		SLEEP_MS(1000);
 	}
+	return 1;
+}
+
+int Gateway::Test_PCBA_DHPT_SMT_POS1()
+{
+	while(1)
+	{
+		if(inf_test_dhpt[PCBA_TEST_SMT_POS1].is_ready_test)
+		{
+			process_test_pcba_dhpt(PCBA_TEST_SMT_POS1);
+			report_to_server(PCBA_TEST_SMT_POS1);
+			inf_test_dhpt[PCBA_TEST_SMT_POS1].is_ready_test = false;	
+		}
+		SLEEP_MS(1000);
+	}
+	return 1;
+}
+
+int Gateway::Test_PCBA_DHPT_TC_POS0()
+{
+	while(1)
+	{
+		if(inf_test_dhpt[PCBA_TEST_TC_POS0].is_ready_test)
+		{
+			process_test_pcba_dhpt(PCBA_TEST_TC_POS0);
+			report_to_server(PCBA_TEST_TC_POS0);
+			inf_test_dhpt[PCBA_TEST_TC_POS0].is_ready_test = false;	
+		}
+		SLEEP_MS(1000);
+	}
+	return 1;
+}
+
+int Gateway::Test_PCBA_DHPT_TC_POS1()
+{
+	while(1)
+	{
+		if(inf_test_dhpt[PCBA_TEST_TC_POS1].is_ready_test)
+		{
+			process_test_pcba_dhpt(PCBA_TEST_TC_POS1);
+			report_to_server(PCBA_TEST_TC_POS1);
+			inf_test_dhpt[PCBA_TEST_TC_POS1].is_ready_test = false;	
+		}
+		SLEEP_MS(1000);
+	}
+	return 1;
 }
 
 uint16_t Gateway::getBleAddr()
