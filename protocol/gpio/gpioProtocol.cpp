@@ -9,10 +9,10 @@ int pin_pow_k9b = 14;
 
 int led_success = 17;
 
-int gpio_arr_dhpt_test_tc_pos0[] = {19,18,17,16,15};
-int gpio_arr_dhpt_test_tc_pos1[] = {14,37,3,2,0};
-int gpio_arr_dhpt_test_smt_pos0[] = {19,18,17,16,15};
-int gpio_arr_dhpt_test_smt_pos1[] = {14,37,3,2,0};
+int gpio_arr_dhpt_test_tc_pos1[] = {19,18,17,16,15};
+int gpio_arr_dhpt_test_tc_pos0[] = {14,37,3,2,0};
+int gpio_arr_dhpt_test_smt_pos1[] = {19,18,17,16,15};
+int gpio_arr_dhpt_test_smt_pos0[] = {14,37,3,2,0};
 
 GPIOProtocol *gpioProtocol = NULL;
 
@@ -165,6 +165,52 @@ void GPIOProtocol ::gpio_init()
 
     Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio1/value");
 
+    Util::ExecuteCMD("echo 4 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio4/direction");
+
+    Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio4/value");
+
+    Util::ExecuteCMD("echo 5 > /sys/class/gpio/export");
+    Util::ExecuteCMD("echo out > /sys/class/gpio/gpio5/direction");
+
+    Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio5/value");
+
+}
+
+void restart_chip_tlsr8253(int pos)
+{
+    if(pos == 0)
+    {
+        Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio4/value");
+        SLEEP_MS(1000);
+        Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio4/value");
+        SLEEP_MS(1000);
+    }
+    else 
+    {
+        Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio5/value");
+        SLEEP_MS(1000);
+        Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio5/value");
+        SLEEP_MS(1000);
+    }
+}
+
+void start_process_test_smt(int pos)
+{
+    Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio1/value");
+    SLEEP_MS(1000);
+    if(pos == 0) Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio4/value");
+    else Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio5/value");
+    SLEEP_MS(1000);
+}
+
+void end_process_test_smt(int pos)
+{
+    if(pos == 0) Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio4/value");
+    else Util::ExecuteCMD("echo 0 > /sys/class/gpio/gpio5/value");
+    SLEEP_MS(1000);
+    Util::ExecuteCMD("echo 1 > /sys/class/gpio/gpio1/value");
+    SLEEP_MS(1000);
 }
 
 void GPIOProtocol ::gpio_supply_power_k9b()

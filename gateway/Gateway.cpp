@@ -90,12 +90,15 @@ void Gateway::init()
 	// thread testSwitchThread(bind(&Gateway::TestSwitch, this));
 	// testSwitchThread.detach();
 
-	//Test_PCBA_DHPT_SMT_POS0 Test_PCBA_DHPT_TC()
-	thread test_dhpt_smt_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS0, this));
-	test_dhpt_smt_pos0_thread.detach();
+	//Test_PCBA_DHPT_SMT_POS0 Test_PCBA_DHPT_TC() int Test_PCBA_DHPT_SMT();
+	thread test_dhpt_smt_thread(bind(&Gateway::Test_PCBA_DHPT_SMT, this));
+	test_dhpt_smt_thread.detach();
 
-	thread test_dhpt_smt_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS1, this));
-	test_dhpt_smt_pos1_thread.detach();
+	// thread test_dhpt_smt_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS0, this));
+	// test_dhpt_smt_pos0_thread.detach();
+
+	// thread test_dhpt_smt_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS1, this));
+	// test_dhpt_smt_pos1_thread.detach();
 
 	thread test_dhpt_tc_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS0, this));
 	test_dhpt_tc_pos0_thread.detach();
@@ -203,7 +206,22 @@ typedef struct inf_test_dhpt_s
 	bool stt_relay_check[RELAY_MAX_ID];
 } inf_test_dhpt_t;
 
+typedef struct inf_test_smt_t
+{
+	string rqi;
+	string serial;
+	string version;
+}inf_test_smt_t;
+
+inf_test_smt_t inf_test_smt[2];
 inf_test_dhpt_t inf_test_dhpt[PCBA_TEST_DHPT_MAX_ID];
+bool is_ready_test_pcba_smt = false;
+
+void active_test_pcba_dhpt_smt()
+{
+	if(is_ready_test_pcba_smt) return;
+	is_ready_test_pcba_smt = true;
+}
 
 int type_test_check_dhpt(const string& cmd, int pos)
 {
@@ -237,11 +255,14 @@ auto get_sub_string = [](const std::string &s){
 void process_test_pcba_dhpt(int type_test)
 {
 	string mac = get_sub_string(inf_test_dhpt[type_test].serial);
+	
 	uint16_t addr = getLast4HexAsUint16(mac);
 	addr = (addr > 0x8000 ) ? (addr - 0x8000) : addr;
+	cout << "addr hex" << addr << endl;
 	for(int i =0; i< RELAY_MAX_ID; ++i)
 	{
 		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,1);
+		SLEEP_MS(500);
 	}
 
 	SLEEP_MS(500);
@@ -253,10 +274,11 @@ void process_test_pcba_dhpt(int type_test)
 	for(int i = RELAY_MAX_ID-1; i>=0; --i)
 	{
 		bleProtocol -> Ctrl_Relay_DHPT(addr,i+1,0);
+		SLEEP_MS(500);
 	}
 
 	SLEEP_MS(500);
-	for(int i =0; i< RELAY_MAX_ID; ++i)
+	for(int i = RELAY_MAX_ID-1; i>=0; --i)
 	{
 		if(gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test)) inf_test_dhpt[type_test].stt_relay_check[i] = 0;
 	}
@@ -301,16 +323,44 @@ Json::Value rs;
 	LOGE("%s", dataPush.toString().c_str());
 	gateway->CloudPublish(dataPush.toString());
 }
-
+int Gateway::Test_PCBA_DHPT_SMT()
+{
+	while(1)
+	{
+		if(is_ready_test_pcba_smt)
+		{
+			for(int i=0; i<2; ++i)
+			{
+				if(inf_test_dhpt[PCBA_TEST_SMT_POS0+i].is_ready_test)
+				{
+					cout<<"start Test PCBA SMT POS"<<i<<endl;
+					start_process_test_smt(i);
+					// restart_chip_tlsr8253(0);
+					process_test_pcba_dhpt(PCBA_TEST_SMT_POS0+i);
+					report_to_server(PCBA_TEST_SMT_POS0+i);
+					end_process_test_smt(i);
+					inf_test_dhpt[PCBA_TEST_SMT_POS0+i].is_ready_test = false;
+				}
+			}
+			is_ready_test_pcba_smt = false;	
+		}
+		SLEEP_MS(1000);
+	}
+}
 int Gateway::Test_PCBA_DHPT_SMT_POS0()
 {
 	while(1)
 	{
-		if(inf_test_dhpt[PCBA_TEST_SMT_POS0].is_ready_test)
+		if(inf_test_dhpt[PCBA_TEST_SMT_POS0].is_ready_test && is_ready_test_pcba_smt)
 		{
+			cout<<"start Test PCBA SMT POS0"<<endl;
+			start_process_test_smt(0);
+			// restart_chip_tlsr8253(0);
 			process_test_pcba_dhpt(PCBA_TEST_SMT_POS0);
 			report_to_server(PCBA_TEST_SMT_POS0);
-			inf_test_dhpt[PCBA_TEST_SMT_POS0].is_ready_test = false;	
+			end_process_test_smt(0);
+			inf_test_dhpt[PCBA_TEST_SMT_POS0].is_ready_test = false;
+			is_ready_test_pcba_smt = false;	
 		}
 		SLEEP_MS(1000);
 	}
@@ -321,11 +371,16 @@ int Gateway::Test_PCBA_DHPT_SMT_POS1()
 {
 	while(1)
 	{
-		if(inf_test_dhpt[PCBA_TEST_SMT_POS1].is_ready_test)
+		if(inf_test_dhpt[PCBA_TEST_SMT_POS1].is_ready_test && is_ready_test_pcba_smt)
 		{
+			cout<<"start Test PCBA SMT POS1"<<endl;
+			start_process_test_smt(1);
+			// restart_chip_tlsr8253(1);
 			process_test_pcba_dhpt(PCBA_TEST_SMT_POS1);
 			report_to_server(PCBA_TEST_SMT_POS1);
+			end_process_test_smt(1);
 			inf_test_dhpt[PCBA_TEST_SMT_POS1].is_ready_test = false;	
+			is_ready_test_pcba_smt = false;
 		}
 		SLEEP_MS(1000);
 	}
@@ -338,6 +393,8 @@ int Gateway::Test_PCBA_DHPT_TC_POS0()
 	{
 		if(inf_test_dhpt[PCBA_TEST_TC_POS0].is_ready_test)
 		{
+			cout<<"start Test PCBA TC POS0"<<endl;
+			restart_chip_tlsr8253(0);
 			process_test_pcba_dhpt(PCBA_TEST_TC_POS0);
 			report_to_server(PCBA_TEST_TC_POS0);
 			inf_test_dhpt[PCBA_TEST_TC_POS0].is_ready_test = false;	
@@ -353,6 +410,8 @@ int Gateway::Test_PCBA_DHPT_TC_POS1()
 	{
 		if(inf_test_dhpt[PCBA_TEST_TC_POS1].is_ready_test)
 		{
+			cout<<"start Test PCBA TC POS1"<<endl;
+			restart_chip_tlsr8253(1);
 			process_test_pcba_dhpt(PCBA_TEST_TC_POS1);
 			report_to_server(PCBA_TEST_TC_POS1);
 			inf_test_dhpt[PCBA_TEST_TC_POS1].is_ready_test = false;	

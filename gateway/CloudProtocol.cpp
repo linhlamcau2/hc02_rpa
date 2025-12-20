@@ -401,6 +401,7 @@ void CloudProtocol::OnServerTestHC(std::string &topic, std::string &payload)
     std::cout << "CMD OK: " << cmd << std::endl;
     std::cout << "Rqi: " << rqi << std::endl;
 
+		int err = -1;
     for (const auto &item : dataJson) {
         if (!item.isMember("serial") || !item["serial"].isString() ||
             !item.isMember("version") || !item["version"].isString() ||
@@ -415,8 +416,10 @@ void CloudProtocol::OnServerTestHC(std::string &topic, std::string &payload)
         std::string version = item["version"].asString();
 				int pos = item["pos"].asInt();
 				active_test_pcba_dhpt(rqi,serial,version,cmd, pos);
+				err = 0;
         std::cout << "Serial: " <<serial<< ", Version: " << version << std::endl;
     }
+		if(cmd == "startTestPCBASmt" && err ==0)	active_test_pcba_dhpt_smt();
 }
 
 

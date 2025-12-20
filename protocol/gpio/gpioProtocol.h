@@ -35,3 +35,7 @@ public:
 };
 
 extern GPIOProtocol *gpioProtocol;
+
+void restart_chip_tlsr8253(int pos);
+void start_process_test_smt(int pos);
+void end_process_test_smt(int pos);

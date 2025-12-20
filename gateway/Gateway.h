@@ -47,6 +47,7 @@ public:
 
 	int RestartBleGw();
 	int TestSwitch();
+	int Test_PCBA_DHPT_SMT();
 	int Test_PCBA_DHPT_SMT_POS0();
 	int Test_PCBA_DHPT_SMT_POS1();
 	int Test_PCBA_DHPT_TC_POS0();
@@ -98,6 +99,7 @@ public:
 
 extern Gateway *gateway;
 
+void active_test_pcba_dhpt_smt();
 void active_test_pcba_dhpt(const string& rqi_recv,const string& serial_recv,const string& ver_recv,const string& cmd,int pos);
 
 enum 
