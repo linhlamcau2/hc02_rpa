@@ -90,9 +90,12 @@ void Gateway::init()
 	// thread testSwitchThread(bind(&Gateway::TestSwitch, this));
 	// testSwitchThread.detach();
 
-	//Test_PCBA_DHPT_SMT_POS0 Test_PCBA_DHPT_TC() int Test_PCBA_DHPT_SMT();
+	//Test_PCBA_DHPT_SMT_POS0 Test_PCBA_DHPT_TC() int Test_PCBA_DHPT_SMT(); int Gateway::Test_PCBA_DHPT_TC()
 	thread test_dhpt_smt_thread(bind(&Gateway::Test_PCBA_DHPT_SMT, this));
 	test_dhpt_smt_thread.detach();
+
+	thread test_dhpt_tc_thread(bind(&Gateway::Test_PCBA_DHPT_TC, this));
+	test_dhpt_tc_thread.detach();
 
 	// thread test_dhpt_smt_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS0, this));
 	// test_dhpt_smt_pos0_thread.detach();
@@ -100,11 +103,11 @@ void Gateway::init()
 	// thread test_dhpt_smt_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_SMT_POS1, this));
 	// test_dhpt_smt_pos1_thread.detach();
 
-	thread test_dhpt_tc_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS0, this));
-	test_dhpt_tc_pos0_thread.detach();
+	// thread test_dhpt_tc_pos0_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS0, this));
+	// test_dhpt_tc_pos0_thread.detach();
 
-	thread test_dhpt_tc_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS1, this));
-	test_dhpt_tc_pos1_thread.detach();
+	// thread test_dhpt_tc_pos1_thread(bind(&Gateway::Test_PCBA_DHPT_TC_POS1, this));
+	// test_dhpt_tc_pos1_thread.detach();
 
 #endif
 	// LocalConnect();
@@ -216,11 +219,18 @@ typedef struct inf_test_smt_t
 inf_test_smt_t inf_test_smt[2];
 inf_test_dhpt_t inf_test_dhpt[PCBA_TEST_DHPT_MAX_ID];
 bool is_ready_test_pcba_smt = false;
+bool is_ready_test_pcba_tc = false;
 
 void active_test_pcba_dhpt_smt()
 {
 	if(is_ready_test_pcba_smt) return;
 	is_ready_test_pcba_smt = true;
+}
+
+void active_test_pcba_dhpt_tc()
+{
+	if(is_ready_test_pcba_tc) return;
+	is_ready_test_pcba_tc = true;
 }
 
 int type_test_check_dhpt(const string& cmd, int pos)
@@ -278,6 +288,27 @@ void process_test_pcba_dhpt(int type_test)
 	}
 
 	SLEEP_MS(500);
+	for(int i = RELAY_MAX_ID-1; i>=0; --i)
+	{
+		if(gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test)) inf_test_dhpt[type_test].stt_relay_check[i] = 0;
+	}
+}
+
+void process_test_pcba_tc_dhpt(int type_test)
+{
+	string mac = get_sub_string(inf_test_dhpt[type_test].serial);
+	
+	uint16_t addr = getLast4HexAsUint16(mac);
+	addr = (addr > 0x8000 ) ? (addr - 0x8000) : addr;
+	cout << "addr hex" << addr << endl;
+	bleProtocol -> Ctrl_Relay_DHPT(addr,0xff,1);
+	SLEEP_MS(1000);
+	for(int i =0; i< RELAY_MAX_ID; ++i)
+	{
+		if(!gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test)) inf_test_dhpt[type_test].stt_relay_check[i] = 0;
+	}
+	bleProtocol -> Ctrl_Relay_DHPT(addr,0xff,0);
+	SLEEP_MS(1000);
 	for(int i = RELAY_MAX_ID-1; i>=0; --i)
 	{
 		if(gpioProtocol -> gpio_get_pin_test_dhpt(i,type_test)) inf_test_dhpt[type_test].stt_relay_check[i] = 0;
@@ -347,6 +378,29 @@ int Gateway::Test_PCBA_DHPT_SMT()
 		SLEEP_MS(1000);
 	}
 }
+
+int Gateway::Test_PCBA_DHPT_TC()
+{
+	while(1)
+	{
+		if(is_ready_test_pcba_tc)
+		{
+			for(int i=0; i<2; ++i)
+			{
+				if(inf_test_dhpt[PCBA_TEST_TC_POS0+i].is_ready_test)
+				{
+					cout<<"start Test PCBA TC POS"<<i<<endl;
+					process_test_pcba_tc_dhpt(PCBA_TEST_TC_POS0+i);
+					report_to_server(PCBA_TEST_TC_POS0+i);
+					inf_test_dhpt[PCBA_TEST_TC_POS0+i].is_ready_test = false;
+				}
+			}
+			is_ready_test_pcba_tc = false;	
+		}
+		SLEEP_MS(1000);
+	}
+}
+
 int Gateway::Test_PCBA_DHPT_SMT_POS0()
 {
 	while(1)

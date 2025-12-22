@@ -420,6 +420,7 @@ void CloudProtocol::OnServerTestHC(std::string &topic, std::string &payload)
         std::cout << "Serial: " <<serial<< ", Version: " << version << std::endl;
     }
 		if(cmd == "startTestPCBASmt" && err ==0)	active_test_pcba_dhpt_smt();
+		else if(cmd == "startTestPCBATc" && err ==0)	active_test_pcba_dhpt_tc();
 }
 
 
